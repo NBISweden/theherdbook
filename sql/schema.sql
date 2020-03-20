@@ -69,8 +69,49 @@ CREATE TABLE bodyfat (
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
 
+-- This is a static table of colour codes.
 DROP TABLE IF EXISTS colour;
 CREATE TABLE colour (
-	colour_id	SERIAL PRIMARY KEY,
-	name		VARCHAR(20) NOT NULL
+	colour_id	INTEGER PRIMARY KEY,
+	name		VARCHAR(50) NOT NULL
+	comment		VARCHAR(50) DEFAULT NULL
 );
+
+-- Data for the colour table.
+INSERT INTO colour (colour_id, name, comment) VALUES
+	("11","Svart","Kaninen ska vara helsvart"),
+	("12","Vit albino","Ska ha röda ögon"),
+	("13","Brun","Kan ha svarta inslag"),
+	("14","Blå","Även buken ska vara blå"),
+	("15","Gulbrun med blågrå mask (Isabella)","Även gul siames räknas hit"),
+	("16","Brun med mörk mask (Madagaskar)","Även Thyringer räknas hit"),
+	("17","Ljusbeige med mörk mask (Sallander)","Även siames räkans hit"),
+	("18","Vit med blå eller bruna ögon","Kan ha mörkare öron"),
+	("19","Svartbrun med vita stänk",NULL),
+	("21","Järngrå","Även järnblå och grafitgrå räknas hit"),
+	("22","Hargrå / viltfärgad","Varierar, kan vara ljus till mörk"),
+	("23","Snöhare","Vit med svart slöja"),
+	("24","Rödgul eller orange","Inte klart åtskild från 25"),
+	("25","Gul (äv. gul mage) och viltgul (ljus mage)","Inte klart åtskild från 24"),
+	("26","Viltblå (blå med ljus mage) och Pearl egern","Gråbrun med blått skimmer"),
+	("27","Gråmelerad (Chinchilla)","Även grå och blå chinchilla räknas hit"),
+	("31","Svartbrokig (vit med svarta tecken)","Även med järngrå tecken räknas hit"),
+	("32","Blåbrokig (vit med blå tecken)",NULL),
+	("33","Viltbrokig (vit med hargrå tecken)",NULL),
+	("34","Gulbrokig (vit med gula tecken)","Även orange eller röda tecken"),
+	("35","Madagaskarbrokig","Alltså madagaskartecknad bottenfärg"),
+	("36","Trefärgad (Tricolor)","Oftast vit med svarta och gula tecken"),
+	("37","Chinchillabrokig (vit med chinchillatecken)","Även blå chinchilla eller grå färg"),
+	("38","Brunbrokig (vit med (mörk)bruna tecken)",NULL),
+	("39","Färgad med enstaka vita tecken (Wiener)","Ofta vit bläs eller vit tass"),
+	("41","Gul-blå tigrerad (Japan)",NULL),
+	("42","Gul-svart tigrerad (Japan)",NULL),
+	("43","Vit-svart tigrerad (Japan)",NULL),
+	("44","Svart med vita stickelhår (Svensk päls)","Även med grå eller ljusbruna s-hår"),
+	("45","Blå med vi buk på särskilt sätt","Blue & White, även otter"),
+	("46","Vit-blå tigrerad (Japan)",NULL),
+	("49","Japanteckning av annat slag","Även Japanteckning av okänt slag"),
+	("51","Rexpälsade att alla färger och teckningar",NULL),
+	("52","Svart med brun buk på särskilt sätt","Black & tan, även otter"),
+	("53","Svart med vit buk på särskilt sätt","Black & White, även otter"),
+	("99","Allt annat",NULL);
