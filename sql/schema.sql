@@ -18,10 +18,10 @@ CREATE TABLE individual (
 	name		VARCHAR(50) NOT NULL,
 	-- "genb"
 	genbank_nr	INTEGER NOT NULL,
-	-- "intyg"
-	certificate	INTEGER UNIQUE NOT NULL,
+	-- "intyg" (FIXME: should this be in a separate table/view with a computed field?)
+	certificate	VARCHAR(20) UNIQUE NOT NULL,
 	-- "kön"
-	sex		ENUM ('male', 'female', 'eunuch', 'unknown') DEFAULT 'unknown',
+	sex		ENUM ('male', 'female', 'eunuch', 'unknown') DEFAULT 'unknown' NOT NULL,
 	-- "år" / "född"
 	birth_date	DATE DEFAULT now(),
 	-- "mor" ("mor nr" is not included explicitly)
@@ -38,8 +38,14 @@ CREATE TABLE individual (
 	death_date	DATE DEFAULT NULL,
 	-- "död" (the rest of the field)
 	death_note	VARCHAR(50) DEFAULT NULL,
+	-- "vikt u"
+	weight_young	REAL DEFAULT NULL,
+	-- "kull"
+	litter		INTEGER NOT NULL,
+	-- "övrigt" (general notes)
+	notes		VARCHAR(100) DEFAULT NULL
 
-	UNIQUE (genbank_nr)
+	UNIQUE (certificate)
 	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
 	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
 );
@@ -61,4 +67,10 @@ CREATE TABLE bodyfat (
 	fat		ENUM ('low', 'normal', 'high'),
 
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+);
+
+DROP TABLE IF EXISTS colour;
+CREATE TABLE colour (
+	colour_id	SERIAL PRIMARY KEY,
+	name		VARCHAR(20) NOT NULL
 );
