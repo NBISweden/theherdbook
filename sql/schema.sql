@@ -4,24 +4,26 @@
 -- Note: Loading this file into a PostgreSQL database will replace any
 -- existing tables with the same names.
 
+DROP TYPE IF EXISTS sex_type CASCADE;
+DROP TYPE IF EXISTS bodyfat_type CASCADE;
 CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch', 'unknown');
 CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 
-DROP TABLE IF EXISTS herd;
+DROP TABLE IF EXISTS herd CASCADE;
 CREATE TABLE herd (
 	herd_id		SERIAL PRIMARY KEY,
 	name		VARCHAR(100) NOT NULL
 );
 
 -- This is a static table of colour codes.
-DROP TABLE IF EXISTS colour;
+DROP TABLE IF EXISTS colour CASCADE;
 CREATE TABLE colour (
 	colour_id	INTEGER PRIMARY KEY,
 	name		VARCHAR(50) NOT NULL,
 	comment		VARCHAR(50) DEFAULT NULL
 );
 
-DROP TABLE IF EXISTS individual;
+DROP TABLE IF EXISTS individual CASCADE;
 CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
 	herd_id		INTEGER NOT NULL,
@@ -85,7 +87,7 @@ CREATE TABLE bodyfat (
 
 -- The genebank table only holds genebank numbers. Tracking of
 -- individuals over time is done in the genebank_tracking table.
-DROP TABLE IF EXISTS genebank;
+DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
 	genebank_id	SERIAL PRIMARY KEY,
 	genebank	INTEGER NOT NULL
