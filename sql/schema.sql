@@ -46,6 +46,8 @@ CREATE TABLE individual (
 	notes		VARCHAR(100) DEFAULT NULL
 
 	UNIQUE (certificate)
+	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
+	FOREIGN KEY (color_id)  REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
 	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
 );
