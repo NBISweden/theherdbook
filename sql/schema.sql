@@ -13,6 +13,14 @@ CREATE TABLE herd (
 	name		VARCHAR(100) NOT NULL
 );
 
+-- This is a static table of colour codes.
+DROP TABLE IF EXISTS colour;
+CREATE TABLE colour (
+	colour_id	INTEGER PRIMARY KEY,
+	name		VARCHAR(50) NOT NULL,
+	comment		VARCHAR(50) DEFAULT NULL
+);
+
 DROP TABLE IF EXISTS individual;
 CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
@@ -72,14 +80,6 @@ CREATE TABLE bodyfat (
 	fat		fat_type DEFAULT NULL,
 
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
-);
-
--- This is a static table of colour codes.
-DROP TABLE IF EXISTS colour;
-CREATE TABLE colour (
-	colour_id	INTEGER PRIMARY KEY,
-	name		VARCHAR(50) NOT NULL
-	comment		VARCHAR(50) DEFAULT NULL
 );
 
 -- Data for the colour table.
