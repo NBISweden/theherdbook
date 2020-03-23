@@ -5,7 +5,7 @@
 -- existing tables with the same names.
 
 CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch', 'unknown');
-CREATE TYPE fat_type AS ENUM ('low', 'normal', 'high');
+CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 
 DROP TABLE IF EXISTS herd;
 CREATE TABLE herd (
@@ -77,8 +77,8 @@ DROP TABLE IF EXISTS bodyfat;
 CREATE TABLE bodyfat (
 	bodyfat_id	SERIAL PRIMARY KEY,
 	individual_id	INTEGER NOT NULL,
-	fat		fat_type DEFAULT NULL,
-	fat_date	DATE NOT NULL,
+	bodyfat		bodyfat_type DEFAULT NULL,
+	bodyfat_date	DATE NOT NULL,
 
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
