@@ -78,6 +78,7 @@ CREATE TABLE bodyfat (
 	bodyfat_id	SERIAL PRIMARY KEY,
 	individual_id	INTEGER NOT NULL,
 	fat		fat_type DEFAULT NULL,
+	fat_date	DATE NOT NULL,
 
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
