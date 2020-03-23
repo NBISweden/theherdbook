@@ -4,6 +4,9 @@
 -- Note: Loading this file into a PostgreSQL database will replace any
 -- existing tables with the same names.
 
+CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch', 'unknown');
+CREATE TYPE fat_type AS ENUM ('low', 'normal', 'high');
+
 DROP TABLE IF EXISTS herd;
 CREATE TABLE herd (
 	herd_id		SERIAL PRIMARY KEY,
@@ -21,7 +24,7 @@ CREATE TABLE individual (
 	-- "intyg" (FIXME: should this be in a separate table/view with a computed field?)
 	certificate	VARCHAR(20) UNIQUE NOT NULL,
 	-- "kön"
-	sex		ENUM ('male', 'female', 'eunuch', 'unknown') DEFAULT 'unknown' NOT NULL,
+	sex		sex_type DEFAULT 'unknown' NOT NULL,
 	-- "år" / "född"
 	birth_date	DATE DEFAULT now(),
 	-- "mor" ("mor nr" is not included explicitly)
@@ -66,7 +69,7 @@ DROP TABLE IF EXISTS bodyfat;
 CREATE TABLE bodyfat (
 	bodyfat_id	SERIAL PRIMARY KEY,
 	individual_id	INTEGER NOT NULL,
-	fat		ENUM ('low', 'normal', 'high'),
+	fat		fat_type DEFAULT NULL,
 
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
