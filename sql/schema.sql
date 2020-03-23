@@ -83,6 +83,28 @@ CREATE TABLE bodyfat (
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
 
+-- The genebank table only holds genebank numbers. Tracking of
+-- individuals over time is done in the genebank_tracking table.
+DROP TABLE IF EXISTS genebank;
+CREATE TABLE genebank (
+	genebank_id	SERIAL PRIMARY KEY,
+	genebank	INTEGER NOT NULL
+);
+
+-- The genebank_tracking represents documented instances of an
+-- individual belonging to a particular genebank.  It connects the two
+-- tables individual and genebank in a N:M fashion.
+DROP TABLE IF EXISTS genebank_tracking;
+CREATE TABLE genebank_tracking (
+	genebank_tracking_id	SERIAL PRIMARY KEY,
+	genebank_id		INTEGER NOT NULL,
+	individual_id		INTEGER NOT NULL,
+	genebank_tracking_date	DATE NOT NULL,
+
+	FOREIGN KEY (genebank_id) REFERENCES genebank(genebank_id),
+	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+);
+
 -- Data for the colour table.
 INSERT INTO colour (colour_id, name, comment) VALUES
 	(11,'Svart','Kaninen ska vara helsvart'),
