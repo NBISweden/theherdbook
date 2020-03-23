@@ -29,8 +29,6 @@ CREATE TABLE individual (
 	herd_id		INTEGER NOT NULL,
 	-- "name"
 	name		VARCHAR(50) NOT NULL,
-	-- "genb"
-	genbank_nr	INTEGER NOT NULL,
 	-- "intyg"
 	certificate	VARCHAR(20) UNIQUE NOT NULL,
 	-- "kön"
@@ -45,8 +43,6 @@ CREATE TABLE individual (
 	colour_id	INTEGER DEFAULT NULL,
 	-- "färg"
 	colour_note	VARCHAR(50) DEFAULT NULL,
-	-- "ny G" (NULL = "none", 0 == unknown or N/A)
-	new_genebank_nr	INTEGER DEFAULT NULL,
 	-- "död" (only the date/year from the field)
 	death_date	DATE DEFAULT NULL,
 	-- "död" (the rest of the field)
@@ -93,7 +89,7 @@ CREATE TABLE genebank (
 	genebank	INTEGER NOT NULL
 );
 
--- The genebank_tracking represents documented instances of an
+-- The genebank_tracking table represents documented instances of an
 -- individual belonging to a particular genebank.  It connects the two
 -- tables individual and genebank in a N:M fashion.
 DROP TABLE IF EXISTS genebank_tracking;
