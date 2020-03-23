@@ -54,11 +54,11 @@ CREATE TABLE individual (
 	-- "kull"
 	litter		INTEGER NOT NULL,
 	-- "övrigt" (general notes)
-	notes		VARCHAR(100) DEFAULT NULL
+	notes		VARCHAR(100) DEFAULT NULL,
 
-	UNIQUE (certificate)
+	UNIQUE (certificate),
 	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
-	FOREIGN KEY (color_id)  REFERENCES colour(colour_id),
+	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
 	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
 );
