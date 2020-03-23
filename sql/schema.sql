@@ -29,7 +29,7 @@ CREATE TABLE individual (
 	name		VARCHAR(50) NOT NULL,
 	-- "genb"
 	genbank_nr	INTEGER NOT NULL,
-	-- "intyg" (FIXME: should this be in a separate table/view with a computed field?)
+	-- "intyg"
 	certificate	VARCHAR(20) UNIQUE NOT NULL,
 	-- "kön"
 	sex		sex_type DEFAULT 'unknown' NOT NULL,
