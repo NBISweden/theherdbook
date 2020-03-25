@@ -28,7 +28,7 @@ CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
 	herd_id		INTEGER NOT NULL,
 	-- "name"
-	name		VARCHAR(50) NOT NULL,
+	name		VARCHAR(50) DEFAULT NULL,
 	-- "intyg"
 	certificate	VARCHAR(20) NOT NULL,
 	-- "kön"
@@ -50,7 +50,7 @@ CREATE TABLE individual (
 	-- "vikt u"
 	weight_young	REAL DEFAULT NULL,
 	-- "kull"
-	litter		INTEGER NOT NULL,
+	litter		INTEGER DEFAULT NULL,
 	-- "övrigt" (general notes)
 	notes		VARCHAR(100) DEFAULT NULL,
 
