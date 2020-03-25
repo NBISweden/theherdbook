@@ -6,7 +6,7 @@
 
 DROP TYPE IF EXISTS sex_type CASCADE;
 DROP TYPE IF EXISTS bodyfat_type CASCADE;
-CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch', 'unknown');
+CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch');
 CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 
 DROP TABLE IF EXISTS herd CASCADE;
@@ -32,7 +32,7 @@ CREATE TABLE individual (
 	-- "intyg"
 	certificate	VARCHAR(20) UNIQUE NOT NULL,
 	-- "kön"
-	sex		sex_type DEFAULT 'unknown' NOT NULL,
+	sex		sex_type DEFAULT NULL,
 	-- "år" / "född"
 	birth_date	DATE DEFAULT now(),
 	-- "mor" ("mor nr" is not included explicitly)
