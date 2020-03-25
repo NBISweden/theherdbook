@@ -30,7 +30,7 @@ CREATE TABLE individual (
 	-- "name"
 	name		VARCHAR(50) NOT NULL,
 	-- "intyg"
-	certificate	VARCHAR(20) UNIQUE NOT NULL,
+	certificate	VARCHAR(20) NOT NULL,
 	-- "kön"
 	sex		sex_type DEFAULT NULL,
 	-- "år" / "född"
