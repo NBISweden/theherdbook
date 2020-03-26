@@ -31,6 +31,8 @@ CREATE TABLE individual (
 	name		VARCHAR(50) DEFAULT NULL,
 	-- "intyg"
 	certificate	VARCHAR(20) NOT NULL,
+	-- "nummer"
+	number		VARCHAR(20) NOT NULL,
 	-- "kön"
 	sex		sex_type DEFAULT NULL,
 	-- "år" / "född"
@@ -55,6 +57,7 @@ CREATE TABLE individual (
 	notes		VARCHAR(100) DEFAULT NULL,
 
 	UNIQUE (certificate),
+	UNIQUE (number),
 	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
 	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
