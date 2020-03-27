@@ -56,7 +56,11 @@ CREATE TABLE individual (
 	-- "övrigt" (general notes)
 	notes		VARCHAR(100) DEFAULT NULL,
 
+        -- FIXME: Can't be unique while there are duplicated
+        --        certificates in the data set.  Related to
+        --        Github issue #12.
 	-- UNIQUE (certificate),
+
 	UNIQUE (number),
 	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
 	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
