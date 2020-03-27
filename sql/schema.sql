@@ -44,7 +44,7 @@ CREATE TABLE individual (
 	-- "färgnr" (reference to separate table)
 	colour_id	INTEGER DEFAULT NULL,
 	-- "färg"
-	colour_note	VARCHAR(50) DEFAULT NULL,
+	colour_note	VARCHAR(100) DEFAULT NULL,
 	-- "död" (only the date/year from the field)
 	death_date	DATE DEFAULT NULL,
 	-- "död" (the rest of the field)
