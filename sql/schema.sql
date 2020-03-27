@@ -30,7 +30,7 @@ CREATE TABLE individual (
 	-- "name"
 	name		VARCHAR(50) DEFAULT NULL,
 	-- "intyg"
-	certificate	VARCHAR(20) NOT NULL,
+	certificate	VARCHAR(20),
 	-- "nummer"
 	number		VARCHAR(20) NOT NULL,
 	-- "kön"
@@ -56,7 +56,7 @@ CREATE TABLE individual (
 	-- "övrigt" (general notes)
 	notes		VARCHAR(100) DEFAULT NULL,
 
-	UNIQUE (certificate),
+	-- UNIQUE (certificate),
 	UNIQUE (number),
 	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
 	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
