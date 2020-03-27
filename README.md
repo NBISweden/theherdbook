@@ -1,4 +1,4 @@
-# theherdbook
+# The Herdbook
 The Herd Book Is a NBIS project Supporting the Swedish Board of Agriculture (Jordbruksverket) Action Plan for the Long-term
 Sustainable Management of Swedish Animal Genetic Resources 2010–2020.
 
