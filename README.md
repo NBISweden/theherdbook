@@ -6,3 +6,9 @@ Mainly measure 5 “Keeping herd books and planning genetic conservation breedin
 
 The aim here is to set up a online web-service for keeping a herd book. And spreading admin task to all local genebank holders.
 
+## Wordlist Descriptions
+
+### Genbanksansvarig = Genebankmanager
+
+The one responsible for a specific animal breed and the relevant herd book.
+
