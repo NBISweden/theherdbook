@@ -6,8 +6,15 @@
 
 DROP TYPE IF EXISTS sex_type CASCADE;
 DROP TYPE IF EXISTS bodyfat_type CASCADE;
+DROP TYPE IF EXISTS auth_type CASCADE;
+DROP TYPE IF EXISTS privacy_type CASCADE;
+
 CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch');
 CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
+CREATE TYPE auth_type AS ENUM ('federated', 'password', 'totp');
+CREATE TYPE privacy_type AS ENUM ('private',
+       	    		    	  'authenticated',
+				  'public');
 
 DROP TABLE IF EXISTS herd CASCADE;
 CREATE TABLE herd (
@@ -88,12 +95,40 @@ CREATE TABLE bodyfat (
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
 
--- The genebank table only holds genebank numbers. Tracking of
+
+
+
+-- The genebank table only holds genebank information. Tracking of
 -- individuals over time is done in the genebank_tracking table.
+--
+-- Latitude/longitude in WGS84.
+-- Location should be a place name
+
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
-	genebank_id	SERIAL PRIMARY KEY,
-	genebank	INTEGER NOT NULL
+	genebank_id	 SERIAL PRIMARY KEY,
+	genebank	 INTEGER NOT NULL,
+	name		 TEXT,
+	name_privacy	 privacy_type,
+	physical_address TEXT,
+	physical_address_privacy
+			 privacy_type,
+	location         TEXT,
+	location_privacy privacy_type,
+	email		 TEXT,
+	email_privacy    privacy_type,
+	www		 TEXT,
+	www_privacy      privacy_type,
+	mobile_phone	 TEXT,
+	mobile_phone_privacy
+	                 privacy_type,
+	wire_phone	 TEXT,
+	wire_phone_privacy
+			 privacy_type,
+	latitude	 REAL,
+	longitude	 REAL,
+	coordinates_privacy
+			 privacy_type
 );
 
 -- The genebank_tracking table represents documented instances of an
@@ -148,3 +183,25 @@ INSERT INTO colour (colour_id, name, comment) VALUES
 	(52,'Svart med brun buk på särskilt sätt','Black & tan, även otter'),
 	(53,'Svart med vit buk på särskilt sätt','Black & White, även otter'),
 	(99,'Allt annat',NULL);
+
+--
+--
+DROP TABLE IF EXISTS hbuser CASCADE;
+
+CREATE TABLE hbuser (
+  user_id    SERIAL PRIMARY KEY,
+  email      TEXT NOT NULL,
+  privileges TEXT
+);
+
+--
+--
+
+DROP TABLE IF EXISTS authenticators;
+CREATE TABLE authenticators (
+   auth_id  SERIAL PRIMARY KEY,
+   user_id  INTEGER NOT NULL,
+   auth auth_type NOT NULL,
+   auth_data TEXT,
+   FOREIGN KEY (user_id) references hbuser(user_id)
+);
