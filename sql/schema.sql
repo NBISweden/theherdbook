@@ -12,9 +12,7 @@ DROP TYPE IF EXISTS privacy_type CASCADE;
 CREATE TYPE sex_type AS ENUM ('male', 'female', 'eunuch');
 CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 CREATE TYPE auth_type AS ENUM ('federated', 'password', 'totp');
-CREATE TYPE privacy_type AS ENUM ('private',
-       	    		    	  'authenticated',
-				  'public');
+CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 
 DROP TABLE IF EXISTS herd CASCADE;
 CREATE TABLE herd (
@@ -95,51 +93,52 @@ CREATE TABLE bodyfat (
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
 );
 
-
-
-
--- The genebank table only holds genebank information. Tracking of
--- individuals over time is done in the genebank_tracking table.
+-- The genebank table only holds genebank information.
+-- Tracking of individuals over time is done in
+-- the genebank_tracking table.
 --
 -- Latitude/longitude in WGS84.
--- Location should be a place name
+-- Location should be a place name.
 
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
-	genebank_id	 SERIAL PRIMARY KEY,
-	genebank	 INTEGER NOT NULL,
-	name		 TEXT,
-	name_privacy	 privacy_type,
-	physical_address TEXT,
-	physical_address_privacy
-			 privacy_type,
-	location         TEXT,
-	location_privacy privacy_type,
-	email		 TEXT,
-	email_privacy    privacy_type,
-	www		 TEXT,
-	www_privacy      privacy_type,
-	mobile_phone	 TEXT,
-	mobile_phone_privacy
-	                 privacy_type,
-	wire_phone	 TEXT,
-	wire_phone_privacy
-			 privacy_type,
-	latitude	 REAL,
-	longitude	 REAL,
-	coordinates_privacy
-			 privacy_type
+	genebank_id			SERIAL PRIMARY KEY,
+	genebank			INTEGER NOT NULL,
+	name				TEXT,
+	name_privacy			privacy_type,
+	physical_address		TEXT,
+	physical_address_privacy	privacy_type,
+	location			TEXT,
+	location_privacy		privacy_type,
+	email				TEXT,
+	email_privacy			privacy_type,
+	www				TEXT,
+	www_privacy			privacy_type,
+	mobile_phone			TEXT,
+	mobile_phone_privacy		privacy_type,
+	wire_phone			TEXT,
+	wire_phone_privacy		privacy_type,
+	latitude			REAL,
+	longitude			REAL,
+	coordinates_privacy		privacy_type,
+
+	UNIQUE (genebank)
 );
 
 -- The genebank_tracking table represents documented instances of an
 -- individual belonging to a particular genebank.  It connects the two
 -- tables individual and genebank in a N:M fashion.
+
 DROP TABLE IF EXISTS genebank_tracking;
 CREATE TABLE genebank_tracking (
 	genebank_tracking_id	SERIAL PRIMARY KEY,
 	genebank_id		INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
-	genebank_tracking_date	DATE NOT NULL,
+
+	-- FIXME: When individuals "1185-1921" and "1185-1951" have
+	-- birth dates, the following column may be set to "NOT NULL".
+	-- Related to issue #9.
+	genebank_tracking_date	DATE,
 
 	FOREIGN KEY (genebank_id) REFERENCES genebank(genebank_id),
 	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
@@ -186,12 +185,12 @@ INSERT INTO colour (colour_id, name, comment) VALUES
 
 --
 --
-DROP TABLE IF EXISTS hbuser CASCADE;
 
+DROP TABLE IF EXISTS hbuser CASCADE;
 CREATE TABLE hbuser (
-  user_id    SERIAL PRIMARY KEY,
-  email      TEXT NOT NULL,
-  privileges TEXT
+	user_id		SERIAL PRIMARY KEY,
+	email		TEXT NOT NULL,
+	privileges	TEXT
 );
 
 --
@@ -199,9 +198,10 @@ CREATE TABLE hbuser (
 
 DROP TABLE IF EXISTS authenticators;
 CREATE TABLE authenticators (
-   auth_id  SERIAL PRIMARY KEY,
-   user_id  INTEGER NOT NULL,
-   auth auth_type NOT NULL,
-   auth_data TEXT,
-   FOREIGN KEY (user_id) references hbuser(user_id)
+	auth_id		SERIAL PRIMARY KEY,
+	user_id		INTEGER NOT NULL,
+	auth		auth_type NOT NULL,
+	auth_data	TEXT,
+
+	FOREIGN KEY (user_id) references hbuser(user_id)
 );
