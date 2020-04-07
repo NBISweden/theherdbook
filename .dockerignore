@@ -1,0 +1,8 @@
+# Reserve a directory for personal stuff
+personal
+
+# OS X
+.DS_Store
+
+# database files
+postgres-data/
