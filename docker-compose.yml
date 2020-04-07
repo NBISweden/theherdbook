@@ -8,23 +8,9 @@ services:
         environment:
             - POSTGRES_DB=herdbook
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insecure}
-            - POSTGRES_USER=herdbook   
+            - POSTGRES_USER=herdbook
         volumes:
+            - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
             - ./postgres-data:/var/lib/postgresql/data
         ports:
             - 5432:5432
-    dbsetup:
-        build:
-            context: ./
-            dockerfile: .docker/dbsetup
-        environment:
-            - PGHOST=database
-            - PGUSER=herdbook
-            - PGDATABASE=herdbook
-            - PGPASS=${POSTGRES_PASSWORD:-insecure}
-        volumes:
-            - type: bind
-              source: ./data
-              target: /data
-        depends_on:
-            - database

@@ -1,5 +1,0 @@
-FROM postgres:12
-
-COPY sql /sql
-
-CMD /sql/run_setup
