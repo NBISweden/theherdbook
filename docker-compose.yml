@@ -14,3 +14,15 @@ services:
             - ./postgres-data:/var/lib/postgresql/data
         ports:
             - 5432:5432
+    dev-server:
+        build:
+            context: ./
+            dockerfile: .docker/herdbook-dev
+        ports:
+            - "4200:5000"
+        volumes:
+            - type: bind
+              source: ./app
+              target: /app
+        depends_on:
+            - database
