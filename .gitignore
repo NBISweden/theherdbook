@@ -22,3 +22,6 @@ __pycache__/
 
 # database files
 postgres-data/
+
+# config files
+config.ini
