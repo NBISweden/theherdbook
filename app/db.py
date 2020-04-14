@@ -78,7 +78,6 @@ class Colour(BaseModel):
     name = CharField(50)
     comment = CharField(50, null=True)
 
-
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -102,7 +101,6 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
-
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
@@ -111,7 +109,6 @@ class Weight(BaseModel):
     individual = ForeignKeyField(Individual)
     weight = FloatField()
     weight_date = DateField()
-
 
 class Bodyfat(BaseModel):
     """
@@ -194,7 +191,6 @@ class User(BaseModel):
         the table name 'hbuser.
         """
         table_name = "hbuser"
-
 
 class Authenticators(BaseModel):
     """
