@@ -3,16 +3,9 @@
 Database handler for 'the herdbook'.
 """
 
-import datetime
-import csv
-import gzip
-import logging
-from collections import defaultdict
-from pathlib import Path
 from peewee import (PostgresqlDatabase,
                     Model,
                     AutoField,
-                    BooleanField,
                     CharField,
                     DateField,
                     ForeignKeyField,
@@ -20,7 +13,6 @@ from peewee import (PostgresqlDatabase,
                     IntegerField,
                     TextField,
                     )
-from playhouse.postgres_ext import ArrayField
 
 import settings
 
@@ -149,7 +141,7 @@ class GenebankTracking(BaseModel):
     individual = ForeignKeyField(Individual)
     genebank_tracking_date = DateField()
 
-    class Meta:
+    class Meta: # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
         here to set the table name, as the table name is in snake case, which
@@ -166,7 +158,7 @@ class User(BaseModel):
     email = TextField()
     privileges = TextField()
 
-    class Meta:
+    class Meta: # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
         here to set the table name, as 'User' is a clearer system user name than
