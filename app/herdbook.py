@@ -6,15 +6,20 @@ The server uses Flask to serve a React frontend, connect to a postgres database,
 and do calculations with R.
 """
 
-import db
 from flask import Flask, render_template, jsonify
 
-app = Flask(__name__,
+import db
+
+APP = Flask(__name__,
             template_folder="/templates",
             static_folder="/static")
 
-@app.route('/api/herds')
-def herds():
+@APP.route('/api/herds')
+def get_herds():
+    """
+    Returns a json list of the current herds in the database, including id,
+    name, and the number of individual animals in the herd.
+    """
     herds = []
     for herd in db.Herd.select():
         herds += [{'id': herd.id,
@@ -23,8 +28,12 @@ def herds():
                    }]
     return jsonify(herds=herds)
 
-@app.route('/api/individual/<int:individual_id>')
-def individual(individual_id):
+@APP.route('/api/individual/<int:individual_id>')
+def get_individual(individual_id):
+    """
+    Given an id, this function returns a json representation of that individual
+    animal.
+    """
     individual = db.Individual.get(individual_id)
     return jsonify(individual={
         'id': individual.id,
@@ -51,6 +60,10 @@ def individual(individual_id):
         'notes': individual.notes
     })
 
-@app.route('/')
+@APP.route('/')
 def main():
+    """
+    Serves the main template of the application. Right now this is just a blank
+    placeholder which will be replaced with the intended webapp.
+    """
     return render_template('index.html')
