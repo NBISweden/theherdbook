@@ -112,6 +112,7 @@ CREATE TABLE genebank (
 	location_privacy		privacy_type,
 	email				TEXT,
 	email_privacy			privacy_type,
+	email_verified                  TIMESTAMP,
 	www				TEXT,
 	www_privacy			privacy_type,
 	mobile_phone			TEXT,
