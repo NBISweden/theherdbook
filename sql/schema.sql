@@ -14,6 +14,8 @@ CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 CREATE TYPE auth_type AS ENUM ('federated', 'password', 'totp');
 CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 
+-- "Genbank".
+-- The initial genebanks are "Gottlandskanin" and "Mellerudskanin".
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
 	genebank_id	SERIAL PRIMARY KEY,
@@ -28,6 +30,7 @@ CREATE TABLE colour (
 	comment		VARCHAR(50) DEFAULT NULL
 );
 
+-- Data for a single individual.
 DROP TABLE IF EXISTS individual CASCADE;
 CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
@@ -67,10 +70,10 @@ CREATE TABLE individual (
 	-- UNIQUE (certificate),
 
 	UNIQUE (number),
-	FOREIGN KEY (genebank_id) REFERENCES genebank(genebank_id),
-	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
-	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
-	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (genebank_id)	REFERENCES genebank(genebank_id),
+	FOREIGN KEY (colour_id)		REFERENCES colour(colour_id),
+	FOREIGN KEY (mother_id)		REFERENCES individual(individual_id),
+	FOREIGN KEY (father_id)		REFERENCES individual(individual_id)
 );
 
 DROP TABLE IF EXISTS weight;
@@ -80,7 +83,7 @@ CREATE TABLE weight (
 	weight		REAL NOT NULL,
 	weight_date	DATE NOT NULL,
 
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
 DROP TABLE IF EXISTS bodyfat;
@@ -90,9 +93,10 @@ CREATE TABLE bodyfat (
 	bodyfat		bodyfat_type DEFAULT NULL,
 	bodyfat_date	DATE NOT NULL,
 
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
+-- "Besättning"
 -- The herd table only holds herd information.
 -- Tracking of individuals over time is done in
 -- the herd_tracking table.
@@ -140,8 +144,8 @@ CREATE TABLE herd_tracking (
 	-- Related to issue #9.
 	herd_tracking_date	DATE,
 
-	FOREIGN KEY (herd_id) REFERENCES herd(herd_id),
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (herd_id)		REFERENCES herd(herd_id),
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
 -- Data for the colour table.
