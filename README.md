@@ -8,7 +8,15 @@ The aim here is to set up a online web-service for keeping a herd book. And spre
 
 ## Wordlist Descriptions
 
+### Genbank = Genbank (Herdbook)
+
+A specific pool of animals containing several local gene pools
+
+
 ### Genbanksansvarig = Genebankmanager
 
 The one responsible for a specific animal breed and the relevant herd book.
 
+### Genbanksbesättning = 
+
+The local pool of animals
