@@ -14,9 +14,11 @@ CREATE TYPE bodyfat_type AS ENUM ('low', 'normal', 'high');
 CREATE TYPE auth_type AS ENUM ('federated', 'password', 'totp');
 CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 
-DROP TABLE IF EXISTS herd CASCADE;
-CREATE TABLE herd (
-	herd_id		SERIAL PRIMARY KEY,
+-- "Genbank".
+-- The initial genebanks are "Gottlandskanin" and "Mellerudskanin".
+DROP TABLE IF EXISTS genebank CASCADE;
+CREATE TABLE genebank (
+	genebank_id	SERIAL PRIMARY KEY,
 	name		VARCHAR(100) NOT NULL
 );
 
@@ -28,10 +30,11 @@ CREATE TABLE colour (
 	comment		VARCHAR(50) DEFAULT NULL
 );
 
+-- Data for a single individual.
 DROP TABLE IF EXISTS individual CASCADE;
 CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
-	herd_id		INTEGER NOT NULL,
+	genebank_id	INTEGER NOT NULL,
 	-- "name"
 	name		VARCHAR(50) DEFAULT NULL,
 	-- "intyg"
@@ -67,10 +70,10 @@ CREATE TABLE individual (
 	-- UNIQUE (certificate),
 
 	UNIQUE (number),
-	FOREIGN KEY (herd_id)   REFERENCES herd(herd_id),
-	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
-	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
-	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (genebank_id)	REFERENCES genebank(genebank_id),
+	FOREIGN KEY (colour_id)		REFERENCES colour(colour_id),
+	FOREIGN KEY (mother_id)		REFERENCES individual(individual_id),
+	FOREIGN KEY (father_id)		REFERENCES individual(individual_id)
 );
 
 DROP TABLE IF EXISTS weight;
@@ -80,7 +83,7 @@ CREATE TABLE weight (
 	weight		REAL NOT NULL,
 	weight_date	DATE NOT NULL,
 
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
 DROP TABLE IF EXISTS bodyfat;
@@ -90,20 +93,21 @@ CREATE TABLE bodyfat (
 	bodyfat		bodyfat_type DEFAULT NULL,
 	bodyfat_date	DATE NOT NULL,
 
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
--- The genebank table only holds genebank information.
+-- "Besättning"
+-- The herd table only holds herd information.
 -- Tracking of individuals over time is done in
--- the genebank_tracking table.
+-- the herd_tracking table.
 --
 -- Latitude/longitude in WGS84.
 -- Location should be a place name.
 
-DROP TABLE IF EXISTS genebank CASCADE;
-CREATE TABLE genebank (
-	genebank_id			SERIAL PRIMARY KEY,
-	genebank			INTEGER NOT NULL,
+DROP TABLE IF EXISTS herd CASCADE;
+CREATE TABLE herd (
+	herd_id				SERIAL PRIMARY KEY,
+	herd				INTEGER NOT NULL,
 	name				TEXT,
 	name_privacy			privacy_type,
 	physical_address		TEXT,
@@ -122,26 +126,26 @@ CREATE TABLE genebank (
 	longitude			REAL,
 	coordinates_privacy		privacy_type,
 
-	UNIQUE (genebank)
+	UNIQUE (herd)
 );
 
--- The genebank_tracking table represents documented instances of an
--- individual belonging to a particular genebank.  It connects the two
--- tables individual and genebank in a N:M fashion.
+-- The herd_tracking table represents documented instances of an
+-- individual belonging to a particular herd.  It connects the two
+-- tables individual and herd in a N:M fashion.
 
-DROP TABLE IF EXISTS genebank_tracking;
-CREATE TABLE genebank_tracking (
-	genebank_tracking_id	SERIAL PRIMARY KEY,
-	genebank_id		INTEGER NOT NULL,
+DROP TABLE IF EXISTS herd_tracking;
+CREATE TABLE herd_tracking (
+	herd_tracking_id	SERIAL PRIMARY KEY,
+	herd_id			INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
 
 	-- FIXME: When individuals "1185-1921" and "1185-1951" have
 	-- birth dates, the following column may be set to "NOT NULL".
 	-- Related to issue #9.
-	genebank_tracking_date	DATE,
+	herd_tracking_date	DATE,
 
-	FOREIGN KEY (genebank_id) REFERENCES genebank(genebank_id),
-	FOREIGN KEY (individual_id) REFERENCES individual(individual_id)
+	FOREIGN KEY (herd_id)		REFERENCES herd(herd_id),
+	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
 );
 
 -- Data for the colour table.
