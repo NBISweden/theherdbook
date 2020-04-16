@@ -10,7 +10,7 @@ The aim here is to set up a online web-service for keeping a herd book. And spre
 
 ### Genbank = Genbank (Herdbook)
 
-A specific pool of animals containing several local gene pools
+The total genebank of a specific animal breed containing several local gene pools (Genbanksbesättningar)
 
 
 ### Genbanksansvarig = Genebankmanager
