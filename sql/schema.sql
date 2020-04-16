@@ -16,7 +16,7 @@ CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
-	genebank_id		SERIAL PRIMARY KEY,
+	genebank_id	SERIAL PRIMARY KEY,
 	name		VARCHAR(100) NOT NULL
 );
 
@@ -31,7 +31,7 @@ CREATE TABLE colour (
 DROP TABLE IF EXISTS individual CASCADE;
 CREATE TABLE individual (
 	individual_id	SERIAL PRIMARY KEY,
-	genebank_id		INTEGER NOT NULL,
+	genebank_id	INTEGER NOT NULL,
 	-- "name"
 	name		VARCHAR(50) DEFAULT NULL,
 	-- "intyg"
@@ -67,7 +67,7 @@ CREATE TABLE individual (
 	-- UNIQUE (certificate),
 
 	UNIQUE (number),
-	FOREIGN KEY (genebank_id)   REFERENCES genebank(genebank_id),
+	FOREIGN KEY (genebank_id) REFERENCES genebank(genebank_id),
 	FOREIGN KEY (colour_id) REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id) REFERENCES individual(individual_id),
 	FOREIGN KEY (father_id) REFERENCES individual(individual_id)
@@ -102,8 +102,8 @@ CREATE TABLE bodyfat (
 
 DROP TABLE IF EXISTS herd CASCADE;
 CREATE TABLE herd (
-	herd_id			SERIAL PRIMARY KEY,
-	herd			INTEGER NOT NULL,
+	herd_id				SERIAL PRIMARY KEY,
+	herd				INTEGER NOT NULL,
 	name				TEXT,
 	name_privacy			privacy_type,
 	physical_address		TEXT,
@@ -132,7 +132,7 @@ CREATE TABLE herd (
 DROP TABLE IF EXISTS herd_tracking;
 CREATE TABLE herd_tracking (
 	herd_tracking_id	SERIAL PRIMARY KEY,
-	herd_id		INTEGER NOT NULL,
+	herd_id			INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
 
 	-- FIXME: When individuals "1185-1921" and "1185-1951" have
