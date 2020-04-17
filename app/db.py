@@ -3,7 +3,10 @@
 Database handler for 'the herdbook'.
 """
 
+import logging
+
 from peewee import (PostgresqlDatabase,
+                    Proxy,
                     Model,
                     AutoField,
                     CharField,
@@ -14,14 +17,31 @@ from peewee import (PostgresqlDatabase,
                     TextField,
                     )
 
-import settings
 
+DB_PROXY = Proxy()
 
-DATABASE = PostgresqlDatabase(settings.postgres.name,
-                              host=settings.postgres.host,
-                              port=settings.postgres.port,
-                              user=settings.postgres.user,
-                              password=settings.postgres.password)
+def set_database(name, host, port, user, password):
+    """
+    This function makes it possible to set the database manually when settings
+    aren't loaded.
+    """
+    DB_PROXY.initialize(
+        PostgresqlDatabase(name,
+                           host=host,
+                           port=port,
+                           user=user,
+                           password=password))
+
+try:
+    import settings
+    set_database(settings.postgres.name,
+                 settings.postgres.host,
+                 settings.postgres.port,
+                 settings.postgres.user,
+                 settings.postgres.password)
+except ModuleNotFoundError:
+    logging.warning("No settings file found. Database must be set manually")
+
 
 class BaseModel(Model):
     """
@@ -34,17 +54,19 @@ class BaseModel(Model):
         """
         The Meta class is read automatically for Model information.
         """
-        database = DATABASE
+        database = DB_PROXY
 
 
-class Herd(BaseModel):
+class Genebank(BaseModel):
     """
-    Table for herds.
+    Table for Genebanks.
 
-    This table keep tracks of the names of herds.
+    This table keep tracks of the names of genebanks.
+    A genebank is comprised of several herds of animals.
     """
-    id = AutoField(primary_key=True, column_name="herd_id")
+    id = AutoField(primary_key=True, column_name="genebank_id")
     name = CharField(100)
+
 
 class Colour(BaseModel):
     """
@@ -56,6 +78,7 @@ class Colour(BaseModel):
     name = CharField(50)
     comment = CharField(50, null=True)
 
+
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -63,7 +86,7 @@ class Individual(BaseModel):
     The sex is an enum with the values 'male', 'female', and 'eunuch'.
     """
     id = AutoField(primary_key=True, column_name="individual_id")
-    herd = ForeignKeyField(Herd)
+    genebank = ForeignKeyField(Genebank)
     name = CharField(50, null=True)
     certificate = CharField(20)
     number = CharField(20, unique=True)
@@ -79,6 +102,7 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
+
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
@@ -87,6 +111,7 @@ class Weight(BaseModel):
     individual = ForeignKeyField(Individual)
     weight = FloatField()
     weight_date = DateField()
+
 
 class Bodyfat(BaseModel):
     """
@@ -98,13 +123,14 @@ class Bodyfat(BaseModel):
     bodyfat = CharField(6, null=True)
     bodyfat_date = DateField()
 
-class Genebank(BaseModel):
-    """
-    Table for keeping track of genebanks
 
-    The genebank table only holds genebank information.
+class Herd(BaseModel):
+    """
+    Table for keeping track of herds
+
+    The herd table only holds herd information.
     Tracking of individuals over time is done in
-    the genebank_tracking table.
+    the herd_tracking table.
 
     Latitude/longitude in WGS84.
     Location should be a place name.
@@ -112,12 +138,14 @@ class Genebank(BaseModel):
     *_privacy fields are enums with the values 'private', 'authenticated', and
     'public'.
     """
-    id = AutoField(primary_key=True, column_name="genebank_id")
-    genebank = IntegerField(unique=True)
+    id = AutoField(primary_key=True, column_name="herd_id")
+    herd = IntegerField(unique=True)
     name = TextField()
     name_privacy = CharField(15)
     physical_address = TextField()
     physical_address_privacy = CharField(15)
+    location = TextField()
+    location_privacy = CharField(15)
     email = TextField()
     email_privacy = CharField(15)
     www = TextField()
@@ -130,16 +158,17 @@ class Genebank(BaseModel):
     longitude = FloatField()
     coordinates_privacy = CharField(15)
 
-class GenebankTracking(BaseModel):
+
+class HerdTracking(BaseModel):
     """
-    The genebank_tracking table represents documented instances of an
-    individual belonging to a particular genebank.  It connects the two
-    tables individual and genebank in a N:M fashion.
+    The herd_tracking table represents documented instances of an
+    individual belonging to a particular herd.  It connects the two
+    tables individual and herd in a N:M fashion.
     """
-    id = AutoField(primary_key=True, column_name="genebank_tracking_id")
-    genebank = ForeignKeyField(Genebank)
+    id = AutoField(primary_key=True, column_name="herd_tracking_id")
+    herd = ForeignKeyField(Herd)
     individual = ForeignKeyField(Individual)
-    genebank_tracking_date = DateField()
+    herd_tracking_date = DateField()
 
     class Meta: # pylint: disable=too-few-public-methods
         """
@@ -147,7 +176,7 @@ class GenebankTracking(BaseModel):
         here to set the table name, as the table name is in snake case, which
         didn't fit the camel case class names.
         """
-        table_name = "genebank_tracking"
+        table_name = "herd_tracking"
 
 
 class User(BaseModel):
@@ -165,6 +194,7 @@ class User(BaseModel):
         the table name 'hbuser.
         """
         table_name = "hbuser"
+
 
 class Authenticators(BaseModel):
     """

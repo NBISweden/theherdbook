@@ -14,19 +14,19 @@ APP = Flask(__name__,
             template_folder="/templates",
             static_folder="/static")
 
-@APP.route('/api/herds')
+@APP.route('/api/genebanks')
 def get_herds():
     """
-    Returns a json list of the current herds in the database, including id,
-    name, and the number of individual animals in the herd.
+    Returns a json list of the current genebanks in the database, including id,
+    name, and the number of individual animals in the genebank.
     """
-    herds = []
-    for herd in db.Herd.select():
-        herds += [{'id': herd.id,
-                   'name': herd.name,
-                   'individuals': herd.individual_set.count()
-                   }]
-    return jsonify(herds=herds)
+    genebanks = []
+    for genebank in db.Genebank.select():
+        genebanks += [{'id': genebank.id,
+                       'name': genebank.name,
+                       'individuals': genebank.individual_set.count()
+                      }]
+    return jsonify(genebanks=genebanks)
 
 @APP.route('/api/individual/<int:individual_id>')
 def get_individual(individual_id):
@@ -37,7 +37,7 @@ def get_individual(individual_id):
     individual = db.Individual.get(individual_id)
     return jsonify(individual={
         'id': individual.id,
-        'herd': individual.herd.id,
+        'genebank': individual.genebank.id,
         'name': individual.name,
         'certificate': individual.certificate,
         'number': individual.number,
