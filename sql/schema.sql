@@ -111,6 +111,7 @@ CREATE TABLE bodyfat (
 DROP TABLE IF EXISTS herd CASCADE;
 CREATE TABLE herd (
 	herd_id				SERIAL PRIMARY KEY,
+	genebank_id			INTEGER NOT NULL,
 	herd				INTEGER NOT NULL,
 	name				TEXT,
 	name_privacy			privacy_type,
@@ -130,7 +131,7 @@ CREATE TABLE herd (
 	longitude			REAL,
 	coordinates_privacy		privacy_type,
 
-	UNIQUE (herd)
+	UNIQUE (herd, genebank_id)
 );
 
 -- The herd_tracking table represents documented instances of an
