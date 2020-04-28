@@ -19,7 +19,9 @@ CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
 	genebank_id	SERIAL PRIMARY KEY,
-	name		VARCHAR(100) NOT NULL
+	name		VARCHAR(100) NOT NULL,
+
+	UNIQUE (name)
 );
 
 -- This is a static table of colour codes.
