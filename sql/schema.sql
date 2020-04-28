@@ -29,7 +29,9 @@ DROP TABLE IF EXISTS colour CASCADE;
 CREATE TABLE colour (
 	colour_id	INTEGER PRIMARY KEY,
 	name		VARCHAR(50) NOT NULL,
-	comment		VARCHAR(50) DEFAULT NULL
+	comment		VARCHAR(50) DEFAULT NULL,
+
+	UNIQUE (name)
 );
 
 -- Data for a single individual.
