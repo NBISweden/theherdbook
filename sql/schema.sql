@@ -73,7 +73,7 @@ CREATE TABLE individual (
 	--        Github issue #12.
 	-- UNIQUE (certificate),
 
-	UNIQUE (number),
+	UNIQUE (number, genebank_id),
 	FOREIGN KEY (genebank_id)	REFERENCES genebank(genebank_id),
 	FOREIGN KEY (colour_id)		REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id)		REFERENCES individual(individual_id),
