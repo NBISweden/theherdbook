@@ -143,8 +143,8 @@ CREATE TABLE herd_tracking (
 	herd_id			INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
 
-	-- FIXME: When individuals "1185-1921" and "1185-1951" have
-	-- birth dates, the following column may be set to "NOT NULL".
+	-- FIXME: When individual "G1185-1921" has birth dates, the
+	-- following column may be set to "NOT NULL".
 	-- Related to issue #9.
 	herd_tracking_date	DATE,
 
