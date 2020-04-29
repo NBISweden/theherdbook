@@ -68,11 +68,7 @@ CREATE TABLE individual (
 	-- "övrigt" (general notes)
 	notes		VARCHAR(100) DEFAULT NULL,
 
-	-- FIXME: Can't be unique while there are duplicated
-	--        certificates in the data set.  Related to
-	--        Github issue #12.
-	-- UNIQUE (certificate),
-
+	UNIQUE (certificate),
 	UNIQUE (number, genebank_id),
 	FOREIGN KEY (genebank_id)	REFERENCES genebank(genebank_id),
 	FOREIGN KEY (colour_id)		REFERENCES colour(colour_id),
@@ -142,11 +138,7 @@ CREATE TABLE herd_tracking (
 	herd_tracking_id	SERIAL PRIMARY KEY,
 	herd_id			INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
-
-	-- FIXME: When individual "G1185-1921" has birth dates, the
-	-- following column may be set to "NOT NULL".
-	-- Related to issue #9.
-	herd_tracking_date	DATE,
+	herd_tracking_date	DATE NOT NULL,
 
 	FOREIGN KEY (herd_id)		REFERENCES herd(herd_id),
 	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
