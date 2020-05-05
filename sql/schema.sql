@@ -19,7 +19,9 @@ CREATE TYPE privacy_type AS ENUM ('private', 'authenticated', 'public');
 DROP TABLE IF EXISTS genebank CASCADE;
 CREATE TABLE genebank (
 	genebank_id	SERIAL PRIMARY KEY,
-	name		VARCHAR(100) NOT NULL
+	name		VARCHAR(100) NOT NULL,
+
+	UNIQUE (name)
 );
 
 -- This is a static table of colour codes.
@@ -27,7 +29,9 @@ DROP TABLE IF EXISTS colour CASCADE;
 CREATE TABLE colour (
 	colour_id	INTEGER PRIMARY KEY,
 	name		VARCHAR(50) NOT NULL,
-	comment		VARCHAR(50) DEFAULT NULL
+	comment		VARCHAR(50) DEFAULT NULL,
+
+	UNIQUE (name)
 );
 
 -- Data for a single individual.
@@ -64,12 +68,8 @@ CREATE TABLE individual (
 	-- "övrigt" (general notes)
 	notes		VARCHAR(100) DEFAULT NULL,
 
-        -- FIXME: Can't be unique while there are duplicated
-        --        certificates in the data set.  Related to
-        --        Github issue #12.
-	-- UNIQUE (certificate),
-
-	UNIQUE (number),
+	UNIQUE (certificate),
+	UNIQUE (number, genebank_id),
 	FOREIGN KEY (genebank_id)	REFERENCES genebank(genebank_id),
 	FOREIGN KEY (colour_id)		REFERENCES colour(colour_id),
 	FOREIGN KEY (mother_id)		REFERENCES individual(individual_id),
@@ -139,11 +139,7 @@ CREATE TABLE herd_tracking (
 	herd_tracking_id	SERIAL PRIMARY KEY,
 	herd_id			INTEGER NOT NULL,
 	individual_id		INTEGER NOT NULL,
-
-	-- FIXME: When individuals "1185-1921" and "1185-1951" have
-	-- birth dates, the following column may be set to "NOT NULL".
-	-- Related to issue #9.
-	herd_tracking_date	DATE,
+	herd_tracking_date	DATE NOT NULL,
 
 	FOREIGN KEY (herd_id)		REFERENCES herd(herd_id),
 	FOREIGN KEY (individual_id)	REFERENCES individual(individual_id)
