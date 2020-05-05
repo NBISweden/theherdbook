@@ -65,7 +65,7 @@ class Genebank(BaseModel):
     A genebank is comprised of several herds of animals.
     """
     id = AutoField(primary_key=True, column_name="genebank_id")
-    name = CharField(100)
+    name = CharField(100, unique=True)
 
 
 class Colour(BaseModel):
@@ -87,10 +87,10 @@ class Individual(BaseModel):
     id = AutoField(primary_key=True, column_name="individual_id")
     genebank = ForeignKeyField(Genebank)
     name = CharField(50, null=True)
-    certificate = CharField(20)
-    number = CharField(20, unique=True)
+    certificate = CharField(20, unique=True)
+    number = CharField(20)
     sex = CharField(15, null=True)
-    birth_date = DateField()
+    birth_date = DateField(null=True)
     mother = ForeignKeyField('self', null=True)
     father = ForeignKeyField('self', null=True)
     colour = ForeignKeyField(Colour, null=True)
@@ -101,6 +101,14 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        Add a unique index to number+genebank
+        """
+        indexes = (
+            (('number', 'genebank'), True)
+        )
+
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
@@ -109,6 +117,7 @@ class Weight(BaseModel):
     individual = ForeignKeyField(Individual)
     weight = FloatField()
     weight_date = DateField()
+
 
 class Bodyfat(BaseModel):
     """
@@ -137,23 +146,24 @@ class Herd(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="herd_id")
     herd = IntegerField(unique=True)
-    name = TextField()
-    name_privacy = CharField(15)
-    physical_address = TextField()
-    physical_address_privacy = CharField(15)
-    location = TextField()
-    location_privacy = CharField(15)
-    email = TextField()
-    email_privacy = CharField(15)
-    www = TextField()
-    www_privacy = CharField(15)
-    mobile_phone = TextField()
-    mobile_phone_privacy = CharField(15)
-    wire_phone = TextField()
-    wire_phone_privacy = CharField(15)
-    latitude = FloatField()
-    longitude = FloatField()
-    coordinates_privacy = CharField(15)
+    name = TextField(null=True)
+    name_privacy = CharField(15, null=True)
+    physical_address = TextField(null=True)
+    physical_address_privacy = CharField(15, null=True)
+    location = TextField(null=True)
+    location_privacy = CharField(15, null=True)
+    email = TextField(null=True)
+    email_privacy = CharField(15, null=True)
+    email_verified = DateField(null=True)
+    www = TextField(null=True)
+    www_privacy = CharField(15, null=True)
+    mobile_phone = TextField(null=True)
+    mobile_phone_privacy = CharField(15, null=True)
+    wire_phone = TextField(null=True)
+    wire_phone_privacy = CharField(15, null=True)
+    latitude = FloatField(null=True)
+    longitude = FloatField(null=True)
+    coordinates_privacy = CharField(15, null=True)
 
 
 class HerdTracking(BaseModel):
@@ -182,7 +192,7 @@ class User(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="user_id")
     email = TextField()
-    privileges = TextField()
+    privileges = TextField(null=True)
 
     class Meta: # pylint: disable=too-few-public-methods
         """
@@ -199,4 +209,4 @@ class Authenticators(BaseModel):
     id = AutoField(primary_key=True, column_name="auth_id")
     user = ForeignKeyField(User)
     auth = CharField(9)
-    auth_data = TextField()
+    auth_data = TextField(null=True)
