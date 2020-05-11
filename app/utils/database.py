@@ -3,6 +3,7 @@
 Database handler for 'the herdbook'.
 """
 
+import json
 import logging
 
 from peewee import (PostgresqlDatabase,
@@ -243,6 +244,45 @@ class Authenticators(BaseModel):
 MODELS = [Genebank, Colour, Individual, Weight, Bodyfat, Herd, HerdTracking,
           User, Authenticators]
 
+def insert_data(filename='default_data.json'):
+    """
+    Takes a json file, `filename`, and inserts the data into the database. If
+    the data contains id values, the data will be updated if already in the
+    database.
+
+    The json data should be formatted like:
+    ```
+    {
+        "<table name>": [
+            {
+                "key-1": "value",
+                "key-2": "value",
+                "key-3": null,
+                [... more key, value pairs]
+            },
+            [... more data rows]
+        ],
+        [... more table names with data lists]
+    }
+    ```
+    """
+    data = json.load(open(filename))
+
+    for table, values in data.items():
+        if table not in [m.__name__ for m in MODELS]:
+            logging.error(
+                "Unknown data table '%s' in file '%s'",
+                table,
+                filename
+            )
+            continue
+        model = [m for m in MODELS if m.__name__ == table][0]
+        logging.error("Inserting %s data from %s", model.__name__, filename)
+        # insert one-by-one so that we can upsert
+        for value in values:
+            model(DATABASE).get_or_create(**value)
+    DATABASE.commit()
+
 def init():
     """
     Initializes all tables in the database, if they're not already available.
@@ -254,6 +294,9 @@ def init():
                 model.__name__
             )
             model.create_table()
+
+    logging.info("Inserting default data")
+    insert_data('default_data.json')
 
 def verify(try_init=True):
     """
