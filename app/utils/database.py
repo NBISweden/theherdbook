@@ -14,26 +14,29 @@ from peewee import (PostgresqlDatabase,
                     ForeignKeyField,
                     FloatField,
                     IntegerField,
+                    OperationalError,
                     TextField,
                     )
 
 
 DB_PROXY = Proxy()
+DATABASE = None
 
 def set_database(name, host, port, user, password):
     """
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
-    DB_PROXY.initialize(
-        PostgresqlDatabase(name,
-                           host=host,
-                           port=port,
-                           user=user,
-                           password=password))
+    global DATABASE #pylint: disable=global-statement
+    DATABASE = PostgresqlDatabase(name,
+                                  host=host,
+                                  port=port,
+                                  user=user,
+                                  password=password)
+    DB_PROXY.initialize(DATABASE)
 
 try:
-    import settings
+    import utils.settings as settings
     set_database(settings.postgres.name,
                  settings.postgres.host,
                  settings.postgres.port,
@@ -41,6 +44,31 @@ try:
                  settings.postgres.password)
 except ModuleNotFoundError:
     logging.warning("No settings file found. Database must be set manually")
+
+def connect():
+    """
+    Connects to the database if it isn't already connected.
+    """
+    if DATABASE and DATABASE.is_closed():
+        try:
+            DATABASE.connect()
+        except OperationalError as exception:
+            logging.error(exception)
+
+def disconnect():
+    """
+    Disconnects from the database if it isn't already disconnected,
+    """
+    if not DATABASE.is_closed():
+        DATABASE.close()
+
+def is_connected():
+    """
+    Wrapper around `DATABASE.is_connection_usable()`.
+    """
+    if not DATABASE:
+        return False
+    return DATABASE.is_connection_usable()
 
 
 class BaseModel(Model):
@@ -101,12 +129,12 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
-    class Meta:  # pylint: disable=too-few-public-methods
+    class Meta:  #pylint: disable=too-few-public-methods
         """
         Add a unique index to number+genebank
         """
         indexes = (
-            (('number', 'genebank'), True)
+            (('number', 'genebank'), True),
         )
 
 class Weight(BaseModel):
@@ -210,3 +238,39 @@ class Authenticators(BaseModel):
     user = ForeignKeyField(User)
     auth = CharField(9)
     auth_data = TextField(null=True)
+
+
+MODELS = [Genebank, Colour, Individual, Weight, Bodyfat, Herd, HerdTracking,
+          User, Authenticators]
+
+def init():
+    """
+    Initializes all tables in the database, if they're not already available.
+    """
+    for model in MODELS:
+        if not model.table_exists():
+            logging.info(
+                "Creating database table %s",
+                model.__name__
+            )
+            model.create_table()
+
+def verify(try_init=True):
+    """
+    Initialize the database, verify the tables in the database, and verify that
+    we can select on each table.
+    """
+    all_ok = True
+    for model in MODELS:
+        if model.table_exists():
+            model(database=DATABASE).select().execute()
+        else:
+            all_ok = False
+            break
+
+    if not all_ok and try_init:
+        logging.warning("Database has problems. Attempting re-initialization.")
+        init()
+        return verify(False)
+
+    return all_ok
