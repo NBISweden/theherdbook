@@ -277,7 +277,7 @@ def insert_data(filename='default_data.json'):
             )
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
-        logging.error("Inserting %s data from %s", model.__name__, filename)
+        logging.info("Inserting %s data from %s", model.__name__, filename)
         # insert one-by-one so that we can upsert
         for value in values:
             model(DATABASE).get_or_create(**value)
