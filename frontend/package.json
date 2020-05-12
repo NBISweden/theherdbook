@@ -1,0 +1,36 @@
+{
+  "name": "herdbook",
+  "version": "0.1",
+  "description": "The Herdbook",
+  "repository": "git@github.com:NBISweden/theherdbook.git",
+  "author": "NBIS",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@types/react": "^16.9.23",
+    "@types/react-dom": "^16.9.5",
+    "@types/styled-components": "^5.1.0",
+    "parcel": "2.0.0-alpha.3.2",
+    "typescript": "^3.8.2"
+  },
+  "scripts": {
+    "start": "parcel serve index.html --port 2345 --hmr-port 2346 --no-source-maps",
+    "build": "rm dist/* -rf; parcel build index.html --no-source-maps"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.9.11",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.50",
+    "styled-components": "^5.1.0",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "react-is": "^16.8.0"
+  },
+  "targets": {
+    "browser": {
+      "publicUrl": "./"
+    }
+  },
+  "browserslist": [
+    "since 2017-06"
+  ]
+}
