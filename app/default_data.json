@@ -1,0 +1,184 @@
+{
+ "Colour": [
+  {
+   "id": 11,
+   "name": "Svart",
+   "comment": "Kaninen ska vara helsvart"
+  },
+  {
+   "id": 12,
+   "name": "Vit albino",
+   "comment": "Ska ha r\u00f6da \u00f6gon"
+  },
+  {
+   "id": 13,
+   "name": "Brun",
+   "comment": "Kan ha svarta inslag"
+  },
+  {
+   "id": 14,
+   "name": "Bl\u00e5",
+   "comment": "\u00c4ven buken ska vara bl\u00e5"
+  },
+  {
+   "id": 15,
+   "name": "Gulbrun med bl\u00e5gr\u00e5 mask (Isabella",
+   "comment": "\u00c4ven gul siames r\u00e4knas hit"
+  },
+  {
+   "id": 16,
+   "name": "Brun med m\u00f6rk mask (Madagaskar",
+   "comment": "\u00c4ven Thyringer r\u00e4knas hit"
+  },
+  {
+   "id": 17,
+   "name": "Ljusbeige med m\u00f6rk mask (Sallander",
+   "comment": "\u00c4ven siames r\u00e4kans hit"
+  },
+  {
+   "id": 18,
+   "name": "Vit med bl\u00e5 eller bruna \u00f6gon",
+   "comment": "Kan ha m\u00f6rkare \u00f6ron"
+  },
+  {
+   "id": 19,
+   "name": "Svartbrun med vita st\u00e4nk",
+   "comment": null
+  },
+  {
+   "id": 21,
+   "name": "J\u00e4rngr\u00e5",
+   "comment": "\u00c4ven j\u00e4rnbl\u00e5 och grafitgr\u00e5 r\u00e4knas hit"
+  },
+  {
+   "id": 22,
+   "name": "Hargr\u00e5 / viltf\u00e4rgad",
+   "comment": "Varierar, kan vara ljus till m\u00f6rk"
+  },
+  {
+   "id": 23,
+   "name": "Sn\u00f6hare",
+   "comment": "Vit med svart sl\u00f6ja"
+  },
+  {
+   "id": 24,
+   "name": "R\u00f6dgul eller orange",
+   "comment": "Inte klart \u00e5tskild fr\u00e5n 25"
+  },
+  {
+   "id": 25,
+   "name": "Gul (\u00e4v. gul mage och viltgul (ljus mage",
+   "comment": "Inte klart \u00e5tskild fr\u00e5n 24"
+  },
+  {
+   "id": 26,
+   "name": "Viltbl\u00e5 (bl\u00e5 med ljus mage och Pearl egern",
+   "comment": "Gr\u00e5brun med bl\u00e5tt skimmer"
+  },
+  {
+   "id": 27,
+   "name": "Gr\u00e5melerad (Chinchilla",
+   "comment": "\u00c4ven gr\u00e5 och bl\u00e5 chinchilla r\u00e4knas hit"
+  },
+  {
+   "id": 31,
+   "name": "Svartbrokig (vit med svarta tecken",
+   "comment": "\u00c4ven med j\u00e4rngr\u00e5 tecken r\u00e4knas hit"
+  },
+  {
+   "id": 32,
+   "name": "Bl\u00e5brokig (vit med bl\u00e5 tecken",
+   "comment": null
+  },
+  {
+   "id": 33,
+   "name": "Viltbrokig (vit med hargr\u00e5 tecken",
+   "comment": null
+  },
+  {
+   "id": 34,
+   "name": "Gulbrokig (vit med gula tecken",
+   "comment": "\u00c4ven orange eller r\u00f6da tecken"
+  },
+  {
+   "id": 35,
+   "name": "Madagaskarbrokig",
+   "comment": "Allts\u00e5 madagaskartecknad bottenf\u00e4rg"
+  },
+  {
+   "id": 36,
+   "name": "Tref\u00e4rgad (Tricolor",
+   "comment": "Oftast vit med svarta och gula tecken"
+  },
+  {
+   "id": 37,
+   "name": "Chinchillabrokig (vit med chinchillatecken",
+   "comment": "\u00c4ven bl\u00e5 chinchilla eller gr\u00e5 f\u00e4rg"
+  },
+  {
+   "id": 38,
+   "name": "Brunbrokig (vit med (m\u00f6rkbruna tecken",
+   "comment": null
+  },
+  {
+   "id": 39,
+   "name": "F\u00e4rgad med enstaka vita tecken (Wiener",
+   "comment": "Ofta vit bl\u00e4s eller vit tass"
+  },
+  {
+   "id": 41,
+   "name": "Gul-bl\u00e5 tigrerad (Japan",
+   "comment": null
+  },
+  {
+   "id": 42,
+   "name": "Gul-svart tigrerad (Japan",
+   "comment": null
+  },
+  {
+   "id": 43,
+   "name": "Vit-svart tigrerad (Japan",
+   "comment": null
+  },
+  {
+   "id": 44,
+   "name": "Svart med vita stickelh\u00e5r (Svensk p\u00e4ls",
+   "comment": "\u00c4ven med gr\u00e5 eller ljusbruna s-h\u00e5r"
+  },
+  {
+   "id": 45,
+   "name": "Bl\u00e5 med vi buk p\u00e5 s\u00e4rskilt s\u00e4tt",
+   "comment": "Blue & White, \u00e4ven otter"
+  },
+  {
+   "id": 46,
+   "name": "Vit-bl\u00e5 tigrerad (Japan",
+   "comment": null
+  },
+  {
+   "id": 49,
+   "name": "Japanteckning av annat slag",
+   "comment": "\u00c4ven Japanteckning av ok\u00e4nt slag"
+  },
+  {
+   "id": 51,
+   "name": "Rexp\u00e4lsade att alla f\u00e4rger och teckningar",
+   "comment": null
+  },
+  {
+   "id": 52,
+   "name": "Svart med brun buk p\u00e5 s\u00e4rskilt s\u00e4tt",
+   "comment": "Black & tan, \u00e4ven otter"
+  },
+  {
+   "id": 53,
+   "name": "Svart med vit buk p\u00e5 s\u00e4rskilt s\u00e4tt",
+   "comment": "Black & White, \u00e4ven otter"
+  },
+  {
+   "id": 99,
+   "name": "Allt annat",
+   "comment": null
+  }
+ ]
+}

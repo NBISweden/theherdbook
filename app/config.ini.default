@@ -1,0 +1,6 @@
+[postgres]
+name=herdbook
+host=database
+port=5432
+user=herdbook
+password=insecure

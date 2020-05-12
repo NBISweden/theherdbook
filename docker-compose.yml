@@ -5,12 +5,26 @@ services:
     database:
         restart: always
         image: postgres:12
+        container_name: herdbook-db
         environment:
             - POSTGRES_DB=herdbook
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insecure}
             - POSTGRES_USER=herdbook
+            - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
-            - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
             - ./postgres-data:/var/lib/postgresql/data
         ports:
             - 5432:5432
+    dev-server:
+        build:
+            context: ./
+            dockerfile: .docker/herdbook-dev
+        container_name: herdbook-server
+        ports:
+            - "4200:5000"
+        volumes:
+            - type: bind
+              source: ./app
+              target: /app
+        depends_on:
+            - database
