@@ -126,7 +126,6 @@ class Individual(BaseModel):
     colour_note = CharField(100, null=True)
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
-    weight_young = FloatField(null=True)
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
