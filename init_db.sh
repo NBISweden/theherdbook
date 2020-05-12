@@ -1,6 +1,7 @@
 #
 # This script reads the configuration file in app/config.ini to access a
-# Postgres database and create the tables for the herdbook schema.
+# an existing PostgreSQL database and create the tables for the herdbook
+# schema.
 #
 # Note that this script only needs to be run if you wish to initialize
 # the database without using the herdbook application, as the app will
