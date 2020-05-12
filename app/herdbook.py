@@ -2,8 +2,8 @@
 """
 This file contains the main webserver of 'the herdbook'.
 
-The server uses Flask to serve a React frontend, connect to a postgres database,
-and do calculations with R.
+The server uses Flask to serve a React frontend, and connect to a postgres
+database.
 """
 
 import sys
