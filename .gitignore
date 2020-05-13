@@ -15,6 +15,9 @@ venv.bak/
 .vscode
 .tox/
 
+# built frontend files
+frontend/dist/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
