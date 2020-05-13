@@ -5,7 +5,8 @@ on: push
 
 jobs:
   lintonpush:
-    runs-on: ubuntu-latest
+# We need to pull yarn from another source anyway, use 16.04 to lower amount of upgrades needed
+    runs-on: ubuntu-16.04
     steps:
       - name: Get the code
         uses: actions/checkout@v2
@@ -21,8 +22,17 @@ jobs:
       - name: Run apt-get dist-upgrade -y
         run: sudo apt-get dist-upgrade -y
 
-      - name: Install yarnpkg
-        run: 'sudo apt-get -f -y install yarnpkg'
+      - name: Get and add key for yarn
+        run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+
+      - name: Setup repo for yarn
+        run: echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+
+      - name: Run apt-get update again to pick up yarn
+        run: sudo apt-get update
+
+      - name: Install yarn
+        run: 'sudo apt-get -f -y install yarn'
 
       - name: Grab packages
         working-directory: frontend 
