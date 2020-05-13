@@ -28,3 +28,14 @@ services:
               target: /app
         depends_on:
             - database
+    dev-frontend:
+        build:
+            context: ./frontend
+        volumes:
+            - type: bind
+              source: ./frontend
+              target: /frontend
+        working_dir: /frontend
+        ports:
+            - 2345:2345
+            - 2346:2346
