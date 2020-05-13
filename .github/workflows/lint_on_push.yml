@@ -36,7 +36,7 @@ jobs:
 
       - name: Grab packages
         working-directory: frontend 
-        run: cd frontend && yarnpkg install
+        run: yarnpkg install
 
       - name: Do the lint
         working-directory: frontend
