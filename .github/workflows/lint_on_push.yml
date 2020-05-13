@@ -17,7 +17,7 @@ jobs:
         run: sudo apt-get update
 
       - name: Remove packages we don't care for
-        run: sudo apt-get remove php.* dotnet.*
+        run: sudo apt-get remove php.* dotnet.* mono.* mysql.* libmono.*
 
       - name: Run apt-get dist-upgrade -y
         run: sudo apt-get dist-upgrade -y
