@@ -9,6 +9,11 @@
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",
     "@types/styled-components": "^5.1.0",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "eslint": "^7.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-react": "^7.20.0",
     "parcel": "2.0.0-alpha.3.2",
     "typescript": "^3.8.2"
   },
@@ -20,10 +25,10 @@
     "@material-ui/core": "^4.9.11",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.50",
-    "styled-components": "^5.1.0",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
-    "react-is": "^16.8.0"
+    "react-is": "^16.8.0",
+    "styled-components": "^5.1.0"
   },
   "targets": {
     "browser": {

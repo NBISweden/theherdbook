@@ -1,0 +1,33 @@
+---
+
+name: Run lint on push
+on: push
+
+jobs:
+  lintonpush:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v2
+
+# Avoid running into issues because of out-of-sync by doing a upgrade
+
+      - name: Run apt-get update
+        run: sudo apt-get update
+
+      - name: Remove packages we don't care for
+        run: sudo apt-get remove php.* dotnet.*
+
+      - name: Run apt-get dist-upgrade -y
+        run: sudo apt-get dist-upgrade -y
+
+      - name: Install yarnpkg
+        run: 'sudo apt-get -f -y install yarnpkg'
+
+      - name: Grab packages
+        working-directory: frontend 
+        run: cd frontend && yarnpkg install
+
+      - name: Do the lint
+        working-directory: frontend
+        run: find . -name '*.tsx' -print0 | xargs -0 yarnpkg run eslint || true
