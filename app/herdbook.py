@@ -7,12 +7,28 @@ database.
 """
 
 import sys
+import uuid
 import time
 from flask import Flask, render_template, jsonify
 
 import utils.database as db
 
 APP = Flask(__name__, static_folder="/static")
+APP.secret_key = uuid.uuid4().hex
+
+@APP.after_request
+def after_request(response):
+    """
+    Callback that triggers after each request. Currently this is used to set
+    CORS headers to allow a different origin when using the development server.
+    """
+    if APP.config['ENV'] == 'development':
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:2345')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+
+    return response
+
 
 
 @APP.route('/')
