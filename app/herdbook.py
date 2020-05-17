@@ -12,18 +12,15 @@ from flask import Flask, render_template, jsonify
 
 import utils.database as db
 
-APP = Flask(__name__,
-            template_folder="/templates",
-            static_folder="/static")
+APP = Flask(__name__, static_folder="/static")
 
 
 @APP.route('/')
 def main():
     """
-    Serves the main template of the application. Right now this is just a blank
-    placeholder which will be replaced with the intended webapp.
+    Serves the single-page webapp.
     """
-    return render_template('index.html')
+    return APP.send_static_file('index.html')
 
 if __name__ == '__main__':
     # Connect to the database, or wait for database and then connect.
