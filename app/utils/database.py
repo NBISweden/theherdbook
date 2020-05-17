@@ -235,6 +235,14 @@ class User(BaseModel):
     validated = BooleanField(default=False)
     privileges = TextField(null=True)
 
+    def frontend_data(self):
+        """
+        Returns the information that is needed in the frontend.
+        """
+        return {'email': self.email,
+                'validated': self.validated if self.validated else False,
+                }
+
     class Meta: # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
@@ -360,7 +368,7 @@ def authenticate_user(email, password):
         # attacks
         check_password_hash("This-always-fails", password)
     logging.info("Failed login attempt for %s", email)
-    return None
+    return User()
 
 def fetch_user_info(user_id):
     """

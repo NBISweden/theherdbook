@@ -9,7 +9,12 @@ database.
 import sys
 import uuid
 import time
-from flask import Flask, render_template, jsonify
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    session,
+)
 
 import utils.database as db
 
@@ -29,7 +34,38 @@ def after_request(response):
 
     return response
 
+@APP.route('/api/user')
+def get_user():
+    """
+    Returns information on the current logged in user.
+    """
+    user = session.get('user')
+    if user:
+        return user
+    return jsonify(db.User().frontend_data())
 
+@APP.route('/api/login', methods=['POST'])
+def login():
+    """
+    Parses a login form and sets session variables when logged in.
+    If login fails the system will default to an anonymous user.
+    """
+
+    form = request.json
+    # Authenticate the user and return a user object
+    user = db.authenticate_user(form.get('username'), form.get('password'))
+    session['user'] = user.frontend_data()
+    session.modified = True
+
+    return get_user()
+
+@APP.route('/api/logout')
+def logout():
+    """
+    Logs out the current user from the system and redirects back to main.
+    """
+    session.pop('user', None)
+    return get_user()
 
 @APP.route('/')
 def main():
