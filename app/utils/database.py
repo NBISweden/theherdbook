@@ -4,12 +4,15 @@ Database handler for 'the herdbook'.
 """
 
 import json
+import uuid
 import logging
 
 from peewee import (PostgresqlDatabase,
                     Proxy,
                     Model,
+                    DoesNotExist,
                     AutoField,
+                    BooleanField,
                     CharField,
                     DateField,
                     ForeignKeyField,
@@ -17,8 +20,13 @@ from peewee import (PostgresqlDatabase,
                     IntegerField,
                     OperationalError,
                     TextField,
+                    UUIDField,
                     )
 
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
 
 DB_PROXY = Proxy()
 DATABASE = None
@@ -107,6 +115,7 @@ class Colour(BaseModel):
     name = CharField(50)
     comment = CharField(50, null=True)
 
+
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -136,6 +145,7 @@ class Individual(BaseModel):
         indexes = (
             (('number', 'genebank'), True),
         )
+
 
 class Weight(BaseModel):
     """
@@ -220,6 +230,9 @@ class User(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="user_id")
     email = TextField()
+    uuid = UUIDField()
+    password_hash = CharField(128)
+    validated = BooleanField(default=False)
     privileges = TextField(null=True)
 
     class Meta: # pylint: disable=too-few-public-methods
@@ -229,6 +242,7 @@ class User(BaseModel):
         the table name 'hbuser.
         """
         table_name = "hbuser"
+
 
 class Authenticators(BaseModel):
     """
@@ -316,3 +330,44 @@ def verify(try_init=True):
         return verify(False)
 
     return all_ok
+
+def register_user(email, password):
+    """
+    Creates a new user from an e-mail and password, returning the new user
+    object.
+    """
+    print("inserting user %s, %s" % (email, password))
+    user = User(email=email,
+                uuid=uuid.uuid4().hex,
+                password_hash=generate_password_hash(password),
+                validated=False,
+                privileges=""
+                )
+    user.save()
+
+def authenticate_user(email, password):
+    """
+    Authenticates an email/password pair against the database. Returns the
+    user info for the authenticated user on success, or None on failure.
+    """
+    try:
+        user_info = User.get(User.email == email)
+        if check_password_hash(user_info.password_hash, password):
+            logging.info("Login from %s", email)
+            return user_info
+    except DoesNotExist:
+        # Perform password check regardless of username to prevent timing
+        # attacks
+        check_password_hash("This-always-fails", password)
+    logging.info("Failed login attempt for %s", email)
+    return None
+
+def fetch_user_info(user_id):
+    """
+    Fetches user information for a given user id.
+    """
+    try:
+        return User.get(User.uuid == user_id)
+    except DoesNotExist:
+        logging.error("could not find user_id = %s", user_id)
+        return None
