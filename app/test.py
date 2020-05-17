@@ -24,25 +24,6 @@ class TestEndpoints(unittest.TestCase):
             200
         )
 
-    def test_get_genebanks(self):
-        """
-        Checks that the genebanks endpoint (/api/genebanks) is available.
-        """
-        self.assertEqual(
-            requests.get(HOST + '/api/genebanks').status_code,
-            200
-        )
-
-    def test_get_individual(self):
-        """
-        Checks that the individuals endpoint (/api/individual/:id) is available.
-        """
-        self.assertEqual(
-            requests.get(HOST + '/api/individual/23').status_code,
-            200
-        )
-
-
 class TestDatabaseMapping(unittest.TestCase):
     """
     Checks that the database mapping is valid.
