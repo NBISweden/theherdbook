@@ -33,7 +33,8 @@ then
     python3 -m venv venv >/dev/null
     echo DONE
     printf 'Installing app dependencies                      '
-    pip3 install -r app/requirements.txt >/dev/null
+    . venv/bin/activate
+    pip install -r app/requirements.txt >/dev/null
     echo DONE
 fi
 
