@@ -1,9 +1,20 @@
+# React build stage
+FROM node:13 as build-stage
+
+COPY ./frontend /build/
+
+WORKDIR /build
+
+RUN yarn install
+RUN yarn run build
+
 FROM python:3.8-buster
 
 COPY app/requirements.txt /
 RUN pip3 install -r /requirements.txt
 
-COPY app/static/* /static/
+COPY --from=build-stage /build/dist/index.html /static/
+COPY --from=build-stage /build/dist/*.js /static/
 
 WORKDIR /app
 
