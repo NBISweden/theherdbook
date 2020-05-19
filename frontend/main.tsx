@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom'
 import styled, * as sc from 'styled-components'
 
 import { Login } from './login';
-import { User, UserContext } from './user-context';
+import { UserContext } from './user-context';
 import { UserInfo } from './user';
 
 const CSS = sc.createGlobalStyle`
@@ -14,7 +14,7 @@ const CSS = sc.createGlobalStyle`
 `
 
 function Main() {
-  const [user, setUser] = useState(new User());
+  const [user, setUser] = useState({email: null, active: false});
   const userState = { user, setUser };
   return <>
     <h1>The herdbook</h1>

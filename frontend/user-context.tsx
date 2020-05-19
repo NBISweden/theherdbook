@@ -1,11 +1,11 @@
 import {createContext} from 'react';
 
-export class User {
-  email: string | null = null;
-  active: boolean = false;
+export interface User {
+  email: string | null;
+  active: boolean;
 }
 
 export const UserContext = createContext({
-  user: new User(),
+  user: {},
   setUser: () => {}
 });
