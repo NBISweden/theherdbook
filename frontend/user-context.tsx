@@ -6,6 +6,6 @@ export class User {
 }
 
 export const UserContext = createContext({
-  user: {'email': null, active: false},
+  user: new User(),
   setUser: () => {}
 });
