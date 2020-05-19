@@ -1,6 +1,8 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 
-import {post} from './communication';
+import {UserContext} from './user-context';
+
+import {get, post} from './communication';
 
 /**
  * Returns a login form that will send a POST request to the given url.
@@ -10,20 +12,28 @@ import {post} from './communication';
  */
 export function Login(props: any) {
   const url = props.url ?? '/login'
-  const [username, set_username] = useState('')
-  const [password, set_password] = useState('')
+  const {user, setUser} = useContext(UserContext);
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   /**
    * Submits the form (using the values stored in `state`) to the url given to
    * this module.
    */
-  const submitLogin = () => {
+  const submitLogin = (e) => {
+    e.preventDefault();
     const state = {username, password}
     post(url, state).then(
-      data => console.debug("user:", data),
+      data => setUser(data),
       error => console.error(error)
     );
-    return false;
+  }
+
+  const logout = () => {
+    get('/api/logout').then(
+      data => setUser(data),
+      error => console.error(error)
+    );
   }
 
   return <>
@@ -31,14 +41,15 @@ export function Login(props: any) {
       user: <input type='text'
                    id='username'
                    value={username}
-                   onChange={e => set_username(e.target.value)}
+                   onChange={e => setUsername(e.target.value)}
             />
       pass: <input type='password'
                    id='password'
                    value={password}
-                   onChange={e => set_password(e.target.value)}
+                   onChange={e => setPassword(e.target.value)}
             />
       <button type="button" onClick={submitLogin}>Login</button>
     </form>
+    <button onClick={logout}>Logout</button>
   </>
 }
