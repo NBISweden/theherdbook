@@ -2,7 +2,8 @@ import * as React from 'react'
 
 import {post, get} from './communication'
 
-interface User {
+/** The currently logged in user, if any */
+export interface User {
   email: string | null
   active: boolean
 }
@@ -12,7 +13,14 @@ const null_user: User = {
   active: false
 }
 
-const dummy_user_context = {
+/** The currently logged in user, if any, and functionality to log in and log out */
+export interface UserContext {
+  user: User
+  login(username: string, password: string)
+  logout()
+}
+
+const dummy_user_context: UserContext = {
   user: null_user,
   login(username: string, password: string) {},
   logout() {}
@@ -20,10 +28,23 @@ const dummy_user_context = {
 
 const UserContext = React.createContext(dummy_user_context)
 
-export function useUserContext() {
+/** Get the currently logged in user, if any, and functionality to log in and log out */
+export function useUserContext(): UserContext {
   return React.useContext(UserContext)
 }
 
+/** Setup context for the logged in user and functionality to log in and log out
+
+  Wrap the main app in this to have access to the user context:
+    <WithUserContext>
+      // app...
+    </WithUserContext>
+
+  The actual user state is stored in a cookie synced with a session on the backend.
+  When this component is mounted it checks if there is currently a cookie and sets
+  the state accordingly if so.
+
+*/
 export function WithUserContext(props: {children: React.ReactNode[]}) {
   const [user, set_state] = React.useState(null_user)
 

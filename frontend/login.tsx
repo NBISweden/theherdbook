@@ -3,8 +3,7 @@ import React, {useState} from 'react'
 import {useUserContext} from './user_context'
 
 /**
- * Shows login and logout in a form, submits it on the callbacks in the
- * User context
+ * Shows login and logout in a form, submits it to the user context callbacks
  */
 export function Login() {
   const {login, logout} = useUserContext()
