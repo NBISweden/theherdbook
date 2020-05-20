@@ -368,7 +368,7 @@ def authenticate_user(email, password):
         # attacks
         check_password_hash("This-always-fails", password)
     logging.info("Failed login attempt for %s", email)
-    return User()
+    return None
 
 def fetch_user_info(user_id):
     """

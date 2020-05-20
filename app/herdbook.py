@@ -43,12 +43,11 @@ def after_request(response):
 @APP.route('/api/user')
 def get_user():
     """
-    Returns information on the current logged in user.
+    Returns information on the current logged in user, or an empty user object
+    representing an anonymous user.
     """
-    user = session.get('user')
-    if user:
-        return user
-    return jsonify(db.User().frontend_data())
+    user_data = session.get('user_data')
+    return user_data if user_data else jsonify(db.User().frontend_data())
 
 @APP.route('/api/login', methods=['POST'])
 def login():
@@ -60,8 +59,9 @@ def login():
     form = request.json
     # Authenticate the user and return a user object
     user = db.authenticate_user(form.get('username'), form.get('password'))
-    session['user'] = user.frontend_data()
-    session.modified = True
+    if user:
+        session['user_data'] = user.frontend_data()
+        session.modified = True
 
     return get_user()
 
@@ -70,7 +70,7 @@ def logout():
     """
     Logs out the current user from the system and redirects back to main.
     """
-    session.pop('user', None)
+    session.pop('user_data', None)
     return get_user()
 
 @APP.route('/')
