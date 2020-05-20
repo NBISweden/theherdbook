@@ -22,7 +22,7 @@ APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    SESSION_COOKIR_SECURE = False if APP.config['ENV'] == 'development' else True,
+    SESSION_COOKIE_SECURE = False if APP.config['ENV'] == 'development' else True,
     SESSION_COOKIE_HTTPONLY = True,
     SESSION_COOKIE_SAMESITE = 'Lax' if APP.config['ENV'] == 'development' else 'Strict',
 )
