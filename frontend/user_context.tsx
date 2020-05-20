@@ -5,12 +5,12 @@ import {post, get} from './communication'
 /** The currently logged in user, if any */
 export interface User {
   email: string | null
-  active: boolean
+  validated: boolean
 }
 
 const null_user: User = {
   email: null,
-  active: false
+  validated: false
 }
 
 /** The currently logged in user, if any, and functionality to log in and log out */
