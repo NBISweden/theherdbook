@@ -7,68 +7,78 @@ database.
 """
 
 import sys
+import uuid
 import time
-from flask import Flask, render_template, jsonify
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    session,
+)
 
 import utils.database as db
 
-APP = Flask(__name__,
-            template_folder="/templates",
-            static_folder="/static")
+APP = Flask(__name__, static_folder="/static")
+APP.secret_key = uuid.uuid4().hex
+# cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
+APP.config.update(
+    SESSION_COOKIE_SECURE=APP.config['ENV'] != 'development',
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax' if APP.config['ENV'] == 'development' else 'Strict',
+)
 
-@APP.route('/api/genebanks')
-def get_herds():
+@APP.after_request
+def after_request(response):
     """
-    Returns a json list of the current genebanks in the database, including id,
-    name, and the number of individual animals in the genebank.
+    Callback that triggers after each request. Currently this is used to set
+    CORS headers to allow a different origin when using the development server.
     """
-    genebanks = []
-    for genebank in db.Genebank.select():
-        genebanks += [{'id': genebank.id,
-                       'name': genebank.name,
-                       'individuals': genebank.individual_set.count()
-                      }]
-    return jsonify(genebanks=genebanks)
+    if APP.config['ENV'] == 'development':
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:2345')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
 
-@APP.route('/api/individual/<int:individual_id>')
-def get_individual(individual_id):
+    return response
+
+@APP.route('/api/user')
+def get_user():
     """
-    Given an id, this function returns a json representation of that individual
-    animal.
+    Returns information on the current logged in user, or an empty user object
+    representing an anonymous user.
     """
-    individual = db.Individual.get(individual_id)
-    return jsonify(individual={
-        'id': individual.id,
-        'genebank': individual.genebank.id,
-        'name': individual.name,
-        'certificate': individual.certificate,
-        'number': individual.number,
-        'sex': individual.sex,
-        'birth_date': individual.birth_date,
-        'mother': {
-            'id': individual.mother.id,
-            'name': individual.mother.name
-            },
-        'father': {
-            'id': individual.father.id,
-            'name': individual.father.name
-            },
-        'colour': individual.colour.name,
-        'colour_note': individual.colour_note,
-        'death_date': individual.death_date,
-        'death_note': individual.death_note,
-        'weight_young': individual.weight_young,
-        'litter': individual.litter,
-        'notes': individual.notes
-    })
+    user_data = session.get('user_data')
+    return jsonify(user=user_data)
+
+@APP.route('/api/login', methods=['POST'])
+def login():
+    """
+    Parses a login form and sets session variables when logged in.
+    If login fails the system will default to an anonymous user.
+    """
+
+    form = request.json
+    # Authenticate the user and return a user object
+    user = db.authenticate_user(form.get('username'), form.get('password'))
+    if user:
+        session['user_data'] = user.frontend_data()
+        session.modified = True
+
+    return get_user()
+
+@APP.route('/api/logout')
+def logout():
+    """
+    Logs out the current user from the system and redirects back to main.
+    """
+    session.pop('user_data', None)
+    return get_user()
 
 @APP.route('/')
 def main():
     """
-    Serves the main template of the application. Right now this is just a blank
-    placeholder which will be replaced with the intended webapp.
+    Serves the single-page webapp.
     """
-    return render_template('index.html')
+    return APP.send_static_file('index.html')
 
 if __name__ == '__main__':
     # Connect to the database, or wait for database and then connect.

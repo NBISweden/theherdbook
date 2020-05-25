@@ -1,6 +1,6 @@
 {
   "name": "herdbook",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "The Herdbook",
   "repository": "git@github.com:NBISweden/theherdbook.git",
   "author": "NBIS",
@@ -27,7 +27,7 @@
   },
   "targets": {
     "browser": {
-      "publicUrl": "./"
+      "publicUrl": "./static"
     }
   },
   "browserslist": [

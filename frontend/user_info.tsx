@@ -1,0 +1,14 @@
+import * as React from 'react'
+
+import {useUserContext} from './user_context'
+
+/** Component to write some info about the logged in user */
+export function UserInfo() {
+  const {user} = useUserContext()
+  return <>
+    {user ? <>Email: {user.email ? user.email : 'anonymous'}
+              ({user.validated ? 'validated' : 'not validated'})
+            </>
+          : ''}
+  </>
+}

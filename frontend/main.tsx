@@ -2,6 +2,10 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import styled, * as sc from 'styled-components'
 
+import {Login} from './login'
+import {UserInfo} from './user_info'
+import {WithUserContext} from './user_context'
+
 const CSS = sc.createGlobalStyle`
   body {
     font-family: 'Roboto';
@@ -11,7 +15,13 @@ const CSS = sc.createGlobalStyle`
 
 function Main() {
   return <>
-    <h1>The herdbook</h1>
+    <WithUserContext>
+      <h1>The herdbook</h1>
+      <Login/>
+      <div>
+        <UserInfo/>
+      </div>
+    </WithUserContext>
     <CSS/>
   </>
 }

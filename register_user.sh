@@ -1,12 +1,19 @@
 #
-# This script reads the configuration file in app/config.ini to access a
-# an existing PostgreSQL database and create the tables for the herdbook
-# schema.
+# This script inserts a new user into the database given a username and password
+# combination.
 #
-# Note that this script only needs to be run if you wish to initialize
-# the database without using the herdbook application, as the app will
-# initialize the database on startup.
-#
+
+if [[ "$#" < 2 ]]
+then
+	cat <<-'END_ERROR' >&2
+	Please provide an email and password to insert into the user database
+	USAGE: ./register_user.sh <user> <pass>
+	END_ERROR
+	exit 1
+fi
+
+user="$1"
+pass="$2"
 
 cd "$( dirname "$0" )" || { echo 'cd error' >&2; exit 1; }
 
@@ -25,14 +32,14 @@ then
 	printf 'Creating python3 virtual environment in ./venv   '
 	python3 -m venv venv >/dev/null
 	echo DONE
-	. venv/bin/activate
 	printf 'Installing app dependencies                      '
-	pip3 install -r app/requirements.txt >/dev/null
+	. venv/bin/activate
+	pip install -r app/requirements.txt >/dev/null
 	echo DONE
 fi
 
-printf 'Initializing database                            '
+printf 'Insert into database                             '
 . venv/bin/activate
 cd app/
-python3 -c 'import utils.database as db; db.init()'
+python3 -c "from utils.database import register_user; register_user('${user}', '${pass}')"
 echo DONE
