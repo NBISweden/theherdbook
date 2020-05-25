@@ -8,20 +8,15 @@ export interface User {
   validated: boolean
 }
 
-const null_user: User = {
-  email: null,
-  validated: false
-}
-
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
-  user: User
+  user: User | undefined
   login(username: string, password: string)
   logout()
 }
 
 const dummy_user_context: UserContext = {
-  user: null_user,
+  user: undefined,
   login(username: string, password: string) {},
   logout() {}
 }
@@ -46,17 +41,17 @@ export function useUserContext(): UserContext {
 
 */
 export function WithUserContext(props: {children: React.ReactNode[]}) {
-  const [user, set_state] = React.useState(null_user)
+  const [user, set_state] = React.useState(undefined)
 
   function handle_promise(promise: Promise<User | undefined>) {
     promise.then(
       data => {
         console.log(data)
-        set_state(data as any)
+        set_state(data['user'] as any)
       },
       error => {
         console.error(error)
-        set_state(null_user)
+        set_state(undefined)
       })
   }
 

@@ -22,9 +22,9 @@ APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    SESSION_COOKIE_SECURE = False if APP.config['ENV'] == 'development' else True,
-    SESSION_COOKIE_HTTPONLY = True,
-    SESSION_COOKIE_SAMESITE = 'Lax' if APP.config['ENV'] == 'development' else 'Strict',
+    SESSION_COOKIE_SECURE=not APP.config['ENV'] == 'development',
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax' if APP.config['ENV'] == 'development' else 'Strict',
 )
 
 @APP.after_request
@@ -47,7 +47,7 @@ def get_user():
     representing an anonymous user.
     """
     user_data = session.get('user_data')
-    return user_data if user_data else jsonify(db.User().frontend_data())
+    return jsonify(user=user_data)
 
 @APP.route('/api/login', methods=['POST'])
 def login():
