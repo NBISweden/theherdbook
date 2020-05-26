@@ -387,3 +387,47 @@ def fetch_user_info(user_id):
     except DoesNotExist:
         logging.error("could not find user_id = %s", user_id)
         return None
+
+def get_genebank(genebank_id):
+    """
+    Returns information on the genebank given by `genebank_id`.
+    """
+    try:
+        genebank = Genebank.get(genebank_id).as_dict()
+        herd_query = Herd(database=DATABASE).select() \
+                                            .where(Herd.genebank == genebank_id)
+        genebank['herds'] = [h.as_dict() for h in herd_query.execute()]
+        return genebank
+    except DoesNotExist:
+        return None
+
+def get_genebanks():
+    """
+    Returns all genebanks.
+    """
+    genebanks_query = Genebank(database=DATABASE).select()
+    return [g.as_dict() for g in genebanks_query.execute()]
+
+def get_herd(herd_id):
+    """
+    Returns information on the herd given by `herd_id`, including a list of all
+    individuals belonging to that herd.
+    """
+    try:
+        herd = Herd.get(herd_id).as_dict()
+        individuals_query = Individual(database=DATABASE).select() \
+                                .where(Individual.herd == herd_id)
+        herd['individuals'] = [i.as_dict() for i in individuals_query.execute()]
+        return herd
+    except DoesNotExist:
+        return None
+
+def get_individual(individual_id):
+    """
+    Returns information on a given individual id.
+    """
+    try:
+        individual = Individual.get(individual_id)
+        return individual.as_dict()
+    except DoesNotExist:
+        return None

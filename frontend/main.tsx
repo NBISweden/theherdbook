@@ -11,6 +11,10 @@ import {
 import {Login} from './login'
 import {UserInfo} from './user_info'
 import {WithUserContext} from './user_context'
+import {Genebanks} from './genebanks'
+import {Genebank} from './genebank'
+import {Herd} from './herd'
+import {Individual} from './individual'
 
 const CSS = sc.createGlobalStyle`
   body {
@@ -34,6 +38,7 @@ function Main() {
         <h1>The herdbook</h1>
         <nav>
           <Link to="/">Home</Link>
+          <Link to="/genebanks">Genebanks</Link>
           <Link to="/login">Login</Link>
           <UserInfo/>
         </nav>
@@ -41,6 +46,18 @@ function Main() {
           <Switch>
             <Route path="/login">
               <Login/>
+            </Route>
+            <Route path="/genebanks">
+              <Genebanks/>
+            </Route>
+            <Route path="/genebank/:genebankId">
+              <Genebank/>
+            </Route>
+            <Route path="/herd/:herdId">
+              <Herd/>
+            </Route>
+            <Route path="/individual/:individualId">
+              <Individual/>
             </Route>
             <Route path="/">
               Welcome!

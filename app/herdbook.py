@@ -73,6 +73,31 @@ def logout():
     session.pop('user_data', None)
     return get_user()
 
+@APP.route('/api/genebanks')
+@APP.route('/api/genebank/<int:g_id>')
+def genebank(g_id=None):
+    """
+    Returns information on the genebank given by `g_id`, or a list of all
+    genebanks if no `g_id` is given.
+    """
+    if g_id:
+        return jsonify(genebank=db.get_genebank(g_id))
+    return jsonify(genebanks=db.get_genebanks())
+
+@APP.route('/api/herd/<int:h_id>')
+def herd(h_id):
+    """
+    Returns information on the herd given by `h_id`.
+    """
+    data = db.get_herd(h_id)
+    return jsonify(herd=data)
+
+@APP.route('/api/individual/<int:i_id>')
+def individual(i_id):
+    """
+    Returns information on the individual given by `i_id`.
+    """
+    return jsonify(individual=db.get_individual(i_id))
 
 @APP.route('/', defaults={'path': ''})
 @APP.route('/<path:path>') # catch-all to allow react routing
