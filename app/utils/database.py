@@ -105,6 +105,44 @@ class Genebank(BaseModel):
     name = CharField(100, unique=True)
 
 
+class Herd(BaseModel):
+    """
+    Table for keeping track of herds.
+    A herd is part of a genebank, and contains individuals.
+
+    The herd table only holds herd information.
+    Tracking of individuals over time is done in
+    the herd_tracking table.
+
+    Latitude/longitude in WGS84.
+    Location should be a place name.
+
+    *_privacy fields are enums with the values 'private', 'authenticated', and
+    'public'.
+    """
+    id = AutoField(primary_key=True, column_name="herd_id")
+    genebank = ForeignKeyField(Genebank)
+    herd = IntegerField(unique=True)
+    name = TextField(null=True)
+    name_privacy = CharField(15, null=True)
+    physical_address = TextField(null=True)
+    physical_address_privacy = CharField(15, null=True)
+    location = TextField(null=True)
+    location_privacy = CharField(15, null=True)
+    email = TextField(null=True)
+    email_privacy = CharField(15, null=True)
+    email_verified = DateField(null=True)
+    www = TextField(null=True)
+    www_privacy = CharField(15, null=True)
+    mobile_phone = TextField(null=True)
+    mobile_phone_privacy = CharField(15, null=True)
+    wire_phone = TextField(null=True)
+    wire_phone_privacy = CharField(15, null=True)
+    latitude = FloatField(null=True)
+    longitude = FloatField(null=True)
+    coordinates_privacy = CharField(15, null=True)
+
+
 class Colour(BaseModel):
     """
     Table for colors.
@@ -166,44 +204,6 @@ class Bodyfat(BaseModel):
     individual = ForeignKeyField(Individual)
     bodyfat = CharField(6, null=True)
     bodyfat_date = DateField()
-
-
-class Herd(BaseModel):
-    """
-    Table for keeping track of herds.
-    A herd is part of a genebank, and contains individuals.
-
-    The herd table only holds herd information.
-    Tracking of individuals over time is done in
-    the herd_tracking table.
-
-    Latitude/longitude in WGS84.
-    Location should be a place name.
-
-    *_privacy fields are enums with the values 'private', 'authenticated', and
-    'public'.
-    """
-    id = AutoField(primary_key=True, column_name="herd_id")
-    genebank = ForeignKeyField(Genebank)
-    herd = IntegerField(unique=True)
-    name = TextField(null=True)
-    name_privacy = CharField(15, null=True)
-    physical_address = TextField(null=True)
-    physical_address_privacy = CharField(15, null=True)
-    location = TextField(null=True)
-    location_privacy = CharField(15, null=True)
-    email = TextField(null=True)
-    email_privacy = CharField(15, null=True)
-    email_verified = DateField(null=True)
-    www = TextField(null=True)
-    www_privacy = CharField(15, null=True)
-    mobile_phone = TextField(null=True)
-    mobile_phone_privacy = CharField(15, null=True)
-    wire_phone = TextField(null=True)
-    wire_phone_privacy = CharField(15, null=True)
-    latitude = FloatField(null=True)
-    longitude = FloatField(null=True)
-    coordinates_privacy = CharField(15, null=True)
 
 
 class HerdTracking(BaseModel):
