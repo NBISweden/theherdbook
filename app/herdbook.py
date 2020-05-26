@@ -73,8 +73,10 @@ def logout():
     session.pop('user_data', None)
     return get_user()
 
-@APP.route('/')
-def main():
+
+@APP.route('/', defaults={'path': ''})
+@APP.route('/<path:path>') # catch-all to allow react routing
+def main(path): #pylint: disable=unused-argument
     """
     Serves the single-page webapp.
     """
