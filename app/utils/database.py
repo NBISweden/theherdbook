@@ -170,7 +170,8 @@ class Bodyfat(BaseModel):
 
 class Herd(BaseModel):
     """
-    Table for keeping track of herds
+    Table for keeping track of herds.
+    A herd is part of a genebank, and contains individuals.
 
     The herd table only holds herd information.
     Tracking of individuals over time is done in
@@ -263,7 +264,7 @@ class Authenticators(BaseModel):
     auth_data = TextField(null=True)
 
 
-MODELS = [Genebank, Colour, Individual, Weight, Bodyfat, Herd, HerdTracking,
+MODELS = [Genebank, Herd, Colour, Individual, Weight, Bodyfat, HerdTracking,
           User, Authenticators]
 
 def insert_data(filename='default_data.json'):
