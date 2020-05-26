@@ -87,6 +87,12 @@ class BaseModel(Model):
     This class sets the database to use the postgres database.
     """
 
+    def as_dict(self):
+        """
+        Returns the objects key/value pair as a dictionary.
+        """
+        return self.__dict__['__data__']
+
     class Meta:  # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information.
