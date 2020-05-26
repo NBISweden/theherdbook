@@ -123,7 +123,7 @@ class Individual(BaseModel):
     The sex is an enum with the values 'male', 'female', and 'eunuch'.
     """
     id = AutoField(primary_key=True, column_name="individual_id")
-    genebank = ForeignKeyField(Genebank)
+    herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, unique=True)
     number = CharField(20)
@@ -143,7 +143,7 @@ class Individual(BaseModel):
         Add a unique index to number+genebank
         """
         indexes = (
-            (('number', 'genebank'), True),
+            (('number', 'herd'), True),
         )
 
 
@@ -183,6 +183,7 @@ class Herd(BaseModel):
     'public'.
     """
     id = AutoField(primary_key=True, column_name="herd_id")
+    genebank = ForeignKeyField(Genebank)
     herd = IntegerField(unique=True)
     name = TextField(null=True)
     name_privacy = CharField(15, null=True)
