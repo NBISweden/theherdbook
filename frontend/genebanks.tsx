@@ -21,9 +21,12 @@ export function Genebanks() {
   }, [])
 
   return <>
+    <h2>Genbanker</h2>
     <ul>
       {genebanks.map(genebank => {
-        return <Link key={genebank.id} to={`/genebank/${genebank.id}`}><li>{genebank.name}</li></Link>
+        return <Link key={genebank.id} to={`/genebank/${genebank.id}`}>
+            <li>{genebank.name ?? genebank.id}</li>
+          </Link>
       })}
     </ul>
   </>

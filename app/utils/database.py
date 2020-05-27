@@ -190,6 +190,51 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
+    def as_dict(self):
+        """
+        Returns the objects key/value pair as a dictionary, including data from
+        the weight, colour, and bodyfat tables.
+        """
+        data = super().as_dict()
+        data['herd'] = {'id': self.herd.id, 'name':self.herd.name}
+        data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
+            if self.mother else None
+        data['father'] = {'id': self.father.id, 'name': self.father.name} \
+            if self.father else None
+        data['colour'] = self.colour.name if self.colour else None
+        data['weights'] = [{'weight':w.weight, 'date':w.weight_date}
+            for w in self.weight_set]
+        data['bodyfat'] = [{'bodyfat':b.bodyfat, 'date':b.bodyfat_date}
+            for b in self.bodyfat_set]
+        data['herd_tracking'] = [
+            {
+                'herd_id':h.herd.id,
+                'herd':h.herd.name,
+                'date':h.herd_tracking_date
+            }
+            for h in self.herdtracking_set
+        ]
+
+        return data
+
+    def short_info(self):
+        """
+        Returns a dictionary with a subset of fields so that all data doesn't
+        have to be sent when rendering tables.
+        Included fields.
+            - id
+            - name
+        """
+        return {'id': self.id, 'name': self.name}
+
+    class Meta:  #pylint: disable=too-few-public-methods
+        """
+        Add a unique index to number+genebank
+        """
+        indexes = (
+            (('number', 'herd'), True),
+        )
+
 
 class Weight(BaseModel):
     """
@@ -417,7 +462,7 @@ def get_herd(herd_id):
         herd = Herd.get(herd_id).as_dict()
         individuals_query = Individual(database=DATABASE).select() \
                                 .where(Individual.herd == herd_id)
-        herd['individuals'] = [i.as_dict() for i in individuals_query.execute()]
+        herd['individuals'] = [i.short_info() for i in individuals_query.execute()]
         return herd
     except DoesNotExist:
         return None
