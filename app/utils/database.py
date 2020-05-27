@@ -430,7 +430,6 @@ def fetch_user_info(user_id):
     try:
         return User.get(User.uuid == user_id)
     except DoesNotExist:
-        logging.error("could not find user_id = %s", user_id)
         return None
 
 def get_genebank(genebank_id):

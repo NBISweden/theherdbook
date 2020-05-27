@@ -46,8 +46,8 @@ def get_user():
     Returns information on the current logged in user, or an empty user object
     representing an anonymous user.
     """
-    user_data = session.get('user_data')
-    return jsonify(user=user_data)
+    user = db.fetch_user_info(session.get('user_id'))
+    return jsonify(user=user.frontend_data() if user else None)
 
 @APP.route('/api/login', methods=['POST'])
 def login():
@@ -60,7 +60,7 @@ def login():
     # Authenticate the user and return a user object
     user = db.authenticate_user(form.get('username'), form.get('password'))
     if user:
-        session['user_data'] = user.frontend_data()
+        session['user_id'] = user.uuid
         session.modified = True
 
     return get_user()
@@ -70,7 +70,7 @@ def logout():
     """
     Logs out the current user from the system and redirects back to main.
     """
-    session.pop('user_data', None)
+    session.pop('user_id', None)
     return get_user()
 
 @APP.route('/api/genebanks')
