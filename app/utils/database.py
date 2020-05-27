@@ -171,7 +171,7 @@ class Individual(BaseModel):
     id = AutoField(primary_key=True, column_name="individual_id")
     herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
-    certificate = CharField(20, unique=True)
+    certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
     birth_date = DateField(null=True)
