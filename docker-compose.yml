@@ -35,6 +35,9 @@ services:
             - type: bind
               source: ./frontend
               target: /frontend
+            - /frontend/node_modules
+            - /frontend/.parcel-cache
+            - /frontend/.cache
         working_dir: /frontend
         ports:
             - 2345:2345
