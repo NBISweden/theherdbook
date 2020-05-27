@@ -432,10 +432,13 @@ def fetch_user_info(user_id):
     except DoesNotExist:
         return None
 
-def get_genebank(genebank_id):
+def get_genebank(genebank_id, user_uuid=None):
     """
-    Returns information on the genebank given by `genebank_id`.
+    Returns the information about the genebank given by `genebank_id` that is
+    accessible to the user identified by `user_uuid`.
     """
+    if user_uuid is None:
+        return None
     try:
         genebank = Genebank.get(genebank_id).as_dict()
         herd_query = Herd(database=DATABASE).select() \
@@ -445,18 +448,24 @@ def get_genebank(genebank_id):
     except DoesNotExist:
         return None
 
-def get_genebanks():
+def get_genebanks(user_uuid=None):
     """
-    Returns all genebanks.
+    Returns all genebanks that are accessible to the user identified by
+    `user_uuid`.
     """
+    if user_uuid is None:
+        return None
     genebanks_query = Genebank(database=DATABASE).select()
     return [g.as_dict() for g in genebanks_query.execute()]
 
-def get_herd(herd_id):
+def get_herd(herd_id, user_uuid=None):
     """
     Returns information on the herd given by `herd_id`, including a list of all
-    individuals belonging to that herd.
+    individuals belonging to that herd. The returned data is limited to the
+    access permission of the user identified by `user_uuid`.
     """
+    if user_uuid is None:
+        return None
     try:
         herd = Herd.get(herd_id).as_dict()
         individuals_query = Individual(database=DATABASE).select() \
@@ -466,10 +475,13 @@ def get_herd(herd_id):
     except DoesNotExist:
         return None
 
-def get_individual(individual_id):
+def get_individual(individual_id, user_uuid=None):
     """
-    Returns information on a given individual id.
+    Returns information on a given individual id, if it's accessible to the user
+    identified by `user_uuid`.
     """
+    if user_uuid is None:
+        return None
     try:
         individual = Individual.get(individual_id)
         return individual.as_dict()

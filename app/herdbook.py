@@ -81,15 +81,15 @@ def genebank(g_id=None):
     genebanks if no `g_id` is given.
     """
     if g_id:
-        return jsonify(genebank=db.get_genebank(g_id))
-    return jsonify(genebanks=db.get_genebanks())
+        return jsonify(genebank=db.get_genebank(g_id, session['user_id']))
+    return jsonify(genebanks=db.get_genebanks(session['user_id']))
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.
     """
-    data = db.get_herd(h_id)
+    data = db.get_herd(h_id, session['user_id'])
     return jsonify(herd=data)
 
 @APP.route('/api/individual/<int:i_id>')
@@ -97,7 +97,7 @@ def individual(i_id):
     """
     Returns information on the individual given by `i_id`.
     """
-    return jsonify(individual=db.get_individual(i_id))
+    return jsonify(individual=db.get_individual(i_id, session['user_id']))
 
 @APP.route('/', defaults={'path': ''})
 @APP.route('/<path:path>') # catch-all to allow react routing
