@@ -122,7 +122,7 @@ class Herd(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="herd_id")
     genebank = ForeignKeyField(Genebank)
-    herd = IntegerField(unique=True)
+    herd = IntegerField()
     name = TextField(null=True)
     name_privacy = CharField(15, null=True)
     physical_address = TextField(null=True)
@@ -141,6 +141,14 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    class Meta:  #pylint: disable=too-few-public-methods
+        """
+        Add a unique index to herd+genebank
+        """
+        indexes = (
+            (('herd', 'genebank'), True),
+        )
 
 
 class Colour(BaseModel):
@@ -163,7 +171,7 @@ class Individual(BaseModel):
     id = AutoField(primary_key=True, column_name="individual_id")
     herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
-    certificate = CharField(20, unique=True)
+    certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
     birth_date = DateField(null=True)
@@ -175,14 +183,6 @@ class Individual(BaseModel):
     death_note = CharField(50, null=True)
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
-
-    class Meta:  #pylint: disable=too-few-public-methods
-        """
-        Add a unique index to number+genebank
-        """
-        indexes = (
-            (('number', 'herd'), True),
-        )
 
 
 class Weight(BaseModel):
