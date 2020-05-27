@@ -122,7 +122,7 @@ class Herd(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="herd_id")
     genebank = ForeignKeyField(Genebank)
-    herd = IntegerField(unique=True)
+    herd = IntegerField()
     name = TextField(null=True)
     name_privacy = CharField(15, null=True)
     physical_address = TextField(null=True)
@@ -141,6 +141,14 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    class Meta:  #pylint: disable=too-few-public-methods
+        """
+        Add a unique index to herd+genebank
+        """
+        indexes = (
+            (('herd', 'genebank'), True),
+        )
 
 
 class Colour(BaseModel):
