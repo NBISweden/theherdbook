@@ -184,14 +184,6 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
-    class Meta:  #pylint: disable=too-few-public-methods
-        """
-        Add a unique index to number+genebank
-        """
-        indexes = (
-            (('number', 'herd'), True),
-        )
-
 
 class Weight(BaseModel):
     """
