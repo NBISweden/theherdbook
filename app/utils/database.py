@@ -22,6 +22,9 @@ from peewee import (PostgresqlDatabase,
                     TextField,
                     UUIDField,
                     )
+from playhouse.postgres_ext import (
+    JSONField
+)
 
 from werkzeug.security import (
     check_password_hash,
@@ -286,7 +289,7 @@ class User(BaseModel):
     uuid = UUIDField()
     password_hash = CharField(128)
     validated = BooleanField(default=False)
-    privileges = TextField(null=True)
+    privileges = JSONField(default={'roles':[]})
 
     def frontend_data(self):
         """
@@ -402,7 +405,7 @@ def register_user(email, password):
                 uuid=uuid.uuid4().hex,
                 password_hash=generate_password_hash(password),
                 validated=False,
-                privileges=""
+                privileges={'roles':[]}
                 )
     user.save()
 
