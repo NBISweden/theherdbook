@@ -504,14 +504,61 @@ def get_herd(herd_id, user_uuid=None):
     individuals belonging to that herd. The returned data is limited to the
     access permission of the user identified by `user_uuid`.
     """
-    if user_uuid is None:
+    user = fetch_user_info(user_uuid)
+    if user is None:
         return None
     try:
-        herd = Herd.get(herd_id).as_dict()
-        query = Individual(database=DATABASE).select() \
-                           .where(Individual.herd == herd_id)
-        herd['individuals'] = [i.short_info() for i in query.execute()]
-        return herd
+        herd = Herd.get(herd_id)
+        # figure out access level
+        access_level = 'public'
+        for role in user.privileges['roles']:
+            if role['role'] == 'admin':
+                access_level = 'private'
+                break
+            elif role['role'] in ['specialist', 'manager']:
+                if role['target'] == herd.genebank.id:
+                    access_level = 'private'
+                    break
+            elif role['role'] == 'owner':
+                if herd_id == role['target']:
+                    access_level = 'private'
+                    break
+                user_herd = Herd.get(role['target'])
+                if user_herd.genebank.id == herd.genebank.id:
+                    access_level = 'authenticated'
+
+        levels = ['public', 'authenticated', 'private']
+        access_level = levels.index(access_level)
+
+        data = herd.as_dict()
+
+        # prune system data
+        del data['email_verified']
+
+        # prune data according to access level
+        for field in [f for f in data.keys() if f.endswith('_privacy')]:
+            # remove values if access_level is less than required
+            field_level = levels.index(herd[field]) if data[field] \
+                                                    else levels.index('private')
+            if access_level < field_level:
+                if field == 'coordinates_privacy':
+                    del data['latitude']
+                    del data['longitude']
+                else:
+                    target_field = field[:-8]
+                    del data[target_field]
+            # remove the access level value if the user doesn't have private
+            # access
+            if access_level != levels.index('private'):
+                del data[field]
+
+        # include the herd animals if the user is authenticated
+        if access_level >= levels.index('authenticated'):
+            individuals_query = Individual(database=DATABASE).select() \
+                                    .where(Individual.herd == herd_id)
+            data['individuals'] = \
+                [i.short_info() for i in individuals_query.execute()]
+        return data
     except DoesNotExist:
         return None
 
