@@ -39,7 +39,7 @@
   },
   "targets": {
     "browser": {
-      "publicUrl": "./static"
+      "publicUrl": "/static"
     }
   },
   "browserslist": [
