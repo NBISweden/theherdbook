@@ -11,13 +11,13 @@ export interface User {
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
   user: User | undefined
-  login(username: string, password: string)
-  logout()
+  login(username: string, password: string): void
+  logout(): void
 }
 
 const dummy_user_context: UserContext = {
   user: undefined,
-  login(username: string, password: string) {},
+  login() {},
   logout() {}
 }
 
