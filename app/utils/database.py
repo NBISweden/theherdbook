@@ -577,10 +577,14 @@ def get_individual(individual_id, user_uuid=None):
     Returns information on a given individual id, if it's accessible to the user
     identified by `user_uuid`.
     """
-    if user_uuid is None:
+    user = fetch_user_info(user_uuid)
+    if user is None:
         return None
     try:
         individual = Individual.get(individual_id)
-        return individual.as_dict()
+        access_level = user.herd_permission(individual.herd.id)
+        if access_level in ['authenticated', 'private']:
+            return individual.as_dict()
+        return None
     except DoesNotExist:
         return None
