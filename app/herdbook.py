@@ -46,7 +46,7 @@ def get_user():
     Returns information on the current logged in user, or an empty user object
     representing an anonymous user.
     """
-    user = db.fetch_user_info(session.get('user_id'))
+    user = db.fetch_user_info(session.get('user_id', None))
     return jsonify(user=user.frontend_data() if user else None)
 
 @APP.route('/api/login', methods=['POST'])
@@ -80,16 +80,17 @@ def genebank(g_id=None):
     Returns information on the genebank given by `g_id`, or a list of all
     genebanks if no `g_id` is given.
     """
+    user_id = session.get('user_id', None)
     if g_id:
-        return jsonify(genebank=db.get_genebank(g_id, session['user_id']))
-    return jsonify(genebanks=db.get_genebanks(session['user_id']))
+        return jsonify(genebank=db.get_genebank(g_id, user_id))
+    return jsonify(genebanks=db.get_genebanks(user_id))
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.
     """
-    data = db.get_herd(h_id, session['user_id'])
+    data = db.get_herd(h_id, session.get('user_id', None))
     return jsonify(herd=data)
 
 @APP.route('/api/individual/<int:i_id>')
@@ -97,7 +98,8 @@ def individual(i_id):
     """
     Returns information on the individual given by `i_id`.
     """
-    return jsonify(individual=db.get_individual(i_id, session['user_id']))
+    user_id = session.get('user_id', None)
+    return jsonify(individual=db.get_individual(i_id, user_id))
 
 @APP.route('/', defaults={'path': ''})
 @APP.route('/<path:path>') # catch-all to allow react routing
