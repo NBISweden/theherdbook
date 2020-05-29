@@ -440,10 +440,30 @@ def get_genebank(genebank_id, user_uuid=None):
     Returns the information about the genebank given by `genebank_id` that is
     accessible to the user identified by `user_uuid`.
     """
-    if user_uuid is None:
+    user = fetch_user_info(user_uuid)
+    if user is None:
         return None
     try:
+        has_access = False
+        for role in user.privileges['roles']:
+            if role['role'] == 'admin':
+                has_access = True
+                break
+            if role['role'] in ['specialist', 'manager']:
+                if role['target'] == genebank_id:
+                    has_access = True
+                    break
+            elif role['role'] == 'owner':
+                herd = Herd.get(role['target'])
+                if genebank_id == herd.genebank.id:
+                    has_access = True
+                    break
+        if not has_access:
+            return None
+
         genebank = Genebank.get(genebank_id).as_dict()
+        # No limit to viewing herds at this point. If you can view the genebank
+        # you can view all the herds.
         query = Herd(database=DATABASE).select() \
                                        .where(Herd.genebank == genebank_id)
         genebank['herds'] = [h.as_dict() for h in query.execute()]
