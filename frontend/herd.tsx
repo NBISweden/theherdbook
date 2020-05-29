@@ -18,7 +18,7 @@ export function Herd() {
 
   React.useLayoutEffect(() => {
     get(`/api/herd/${herdId}`).then(
-      data => setHerd(data.herd),
+      data => data && setHerd(data),
       error => console.error(error)
     )
   }, [])

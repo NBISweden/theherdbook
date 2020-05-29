@@ -47,7 +47,7 @@ export function WithUserContext(props: {children: React.ReactNode[]}) {
     promise.then(
       data => {
         console.log(data)
-        set_state(data['user'] as any)
+        set_state(data ?? undefined as any)
       },
       error => {
         console.error(error)

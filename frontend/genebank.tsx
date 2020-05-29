@@ -18,7 +18,7 @@ export function Genebank() {
 
   React.useLayoutEffect(() => {
     get(`/api/genebank/${genebankId}`).then(
-      data => setGenebank(data.genebank),
+      data => data && setGenebank(data),
       error => console.error(error)
     )
   }, [])

@@ -16,7 +16,7 @@ export function Individual() {
 
   React.useLayoutEffect(() => {
     get(`/api/individual/${individualId}`).then(
-      data => {console.debug(data); setIndividual(data.individual)},
+      data => data && setIndividual(data),
       error => console.error(error)
     )
   }, [])
