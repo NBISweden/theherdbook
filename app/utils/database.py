@@ -299,6 +299,48 @@ class User(BaseModel):
                 'validated': self.validated if self.validated else False,
                 }
 
+    def genebank_permission(self, genebank_id):
+        """
+        Returns the permission level for the genebank given by `genebank_id`.
+        Permission levels are set as 'public', 'authenticated', 'private'.
+        """
+
+        access_level = 'public'
+        for role in self.privileges['roles']:
+            if role['role'] == 'admin':
+                return 'private'
+            if role['role'] in ['specialist', 'manager']:
+                if role['target'] == genebank_id:
+                    return 'private'
+            elif role['role'] == 'owner':
+                herd = Herd.get(role['target'])
+                if genebank_id == herd.genebank.id:
+                    access_level = 'authenticated'
+        return access_level
+
+    def herd_permission(self, herd_id):
+        """
+        Returns the permission level for the herd given by `herd_id`.
+        Permission levels are set as 'public', 'authenticated', 'private'.
+        """
+        genebank_id = Herd.get(herd_id).genebank.id
+
+        # figure out access level
+        access_level = 'public'
+        for role in self.privileges['roles']:
+            if role['role'] == 'admin':
+                return 'private'
+            if role['role'] in ['specialist', 'manager']:
+                if role['target'] == genebank_id:
+                    return 'private'
+            elif role['role'] == 'owner':
+                if herd_id == role['target']:
+                    return 'private'
+                user_herd = Herd.get(role['target'])
+                if user_herd.genebank.id == genebank_id:
+                    access_level = 'authenticated'
+        return access_level
+
     class Meta: # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
@@ -444,21 +486,8 @@ def get_genebank(genebank_id, user_uuid=None):
     if user is None:
         return None
     try:
-        has_access = False
-        for role in user.privileges['roles']:
-            if role['role'] == 'admin':
-                has_access = True
-                break
-            if role['role'] in ['specialist', 'manager']:
-                if role['target'] == genebank_id:
-                    has_access = True
-                    break
-            elif role['role'] == 'owner':
-                herd = Herd.get(role['target'])
-                if genebank_id == herd.genebank.id:
-                    has_access = True
-                    break
-        if not has_access:
+        access_level = user.genebank_permission(genebank_id)
+        if access_level not in ['authenticated', 'private']:
             return None
 
         genebank = Genebank.get(genebank_id).as_dict()
@@ -508,29 +537,10 @@ def get_herd(herd_id, user_uuid=None):
     if user is None:
         return None
     try:
-        herd = Herd.get(herd_id)
-        # figure out access level
-        access_level = 'public'
-        for role in user.privileges['roles']:
-            if role['role'] == 'admin':
-                access_level = 'private'
-                break
-            elif role['role'] in ['specialist', 'manager']:
-                if role['target'] == herd.genebank.id:
-                    access_level = 'private'
-                    break
-            elif role['role'] == 'owner':
-                if herd_id == role['target']:
-                    access_level = 'private'
-                    break
-                user_herd = Herd.get(role['target'])
-                if user_herd.genebank.id == herd.genebank.id:
-                    access_level = 'authenticated'
-
         levels = ['public', 'authenticated', 'private']
-        access_level = levels.index(access_level)
+        access_level = levels.index(user.herd_permission(herd_id))
 
-        data = herd.as_dict()
+        data = Herd.get(herd_id).as_dict()
 
         # prune system data
         del data['email_verified']
@@ -538,7 +548,7 @@ def get_herd(herd_id, user_uuid=None):
         # prune data according to access level
         for field in [f for f in data.keys() if f.endswith('_privacy')]:
             # remove values if access_level is less than required
-            field_level = levels.index(herd[field]) if data[field] \
+            field_level = levels.index(data[field]) if data[field] \
                                                     else levels.index('private')
             if access_level < field_level:
                 if field == 'coordinates_privacy':
