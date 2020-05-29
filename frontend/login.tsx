@@ -12,14 +12,18 @@ export function Login() {
 
   return <>
     <form>
-      user: <input type='text'
-                   value={username}
-                   onChange={e => set_username(e.target.value)}
-            />
-      pass: <input type='password'
-                   value={password}
-                   onChange={e => set_password(e.target.value)}
-            />
+      <label>
+        user: <input type='text'
+                     value={username}
+                     onChange={e => set_username(e.target.value)}
+              />
+      </label>
+      <label>
+        pass: <input type='password'
+                     value={password}
+                     onChange={e => set_password(e.target.value)}
+              />
+      </label>
       <button type="button" onClick={() => login(username, password)}>Login</button>
     </form>
     <button type="button" onClick={logout}>Logout</button>

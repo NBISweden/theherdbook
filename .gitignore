@@ -17,6 +17,7 @@ venv.bak/
 
 # built frontend files
 frontend/dist/
+frontend/coverage/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
