@@ -456,9 +456,26 @@ def get_genebanks(user_uuid=None):
     Returns all genebanks that are accessible to the user identified by
     `user_uuid`.
     """
-    if user_uuid is None:
+    user = fetch_user_info(user_uuid)
+    if user is None:
         return None
     query = Genebank(database=DATABASE).select()
+
+    # Find which genebanks the user has access to.
+    is_admin = False
+    has_access = []
+    for role in user.privileges['roles']:
+        if role['role'] == 'admin':
+            is_admin = True
+        if role['role'] in ['specialist', 'manager']:
+            has_access += [role['target']]
+        elif role['role'] == 'owner':
+            herd = Herd.get(role['target'])
+            has_access += [herd.genebank.id]
+
+    if not is_admin:
+        query = query.where(Genebank.id.in_(has_access))
+
     return [g.as_dict() for g in query.execute()]
 
 def get_herd(herd_id, user_uuid=None):
