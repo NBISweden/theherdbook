@@ -5,12 +5,17 @@ import {
   BrowserRouter,
   Switch,
   Route,
-  Link
+  Link,
+  useParams
 } from 'react-router-dom'
 
 import {Login} from './login'
 import {UserInfo} from './user_info'
 import {WithUserContext} from './user_context'
+import {Genebanks} from './genebanks'
+import {Genebank} from './genebank'
+import {Herd} from './herd'
+import {Individual} from './individual'
 
 const CSS = sc.createGlobalStyle`
   body {
@@ -27,6 +32,20 @@ const CSS = sc.createGlobalStyle`
   }
 `
 
+function Routed(props: {path: string, children: (params: Record<string, string>) => React.ReactNode}) {
+  function Inner() {
+    const params = useParams()
+    return <>
+      {props.children(params)}
+    </>
+  }
+  return (
+    <Route path={props.path}>
+      <Inner/>
+    </Route>
+  )
+}
+
 function Main() {
   return <>
     <WithUserContext>
@@ -34,6 +53,7 @@ function Main() {
         <h1>The herdbook</h1>
         <nav>
           <Link to="/">Home</Link>
+          <Link to="/genebanks">Genebanks</Link>
           <Link to="/login">Login</Link>
           <UserInfo/>
         </nav>
@@ -42,6 +62,18 @@ function Main() {
             <Route path="/login">
               <Login/>
             </Route>
+            <Route path="/genebanks">
+              <Genebanks/>
+            </Route>
+            <Routed path="/genebank/:id">
+              {params => <Genebank id={params.id}/>}
+            </Routed>
+            <Routed path="/herd/:id">
+              {params => <Herd id={params.id}/>}
+            </Routed>
+            <Routed path="/individual/:id">
+              {params => <Individual id={params.id}/>}
+            </Routed>
             <Route path="/">
               Welcome!
             </Route>

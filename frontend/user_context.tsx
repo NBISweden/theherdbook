@@ -46,7 +46,8 @@ export function WithUserContext(props: {children: React.ReactNode}) {
   function handle_promise(promise: Promise<{user: User | null}>) {
     promise.then(
       data => {
-        set_state(data.user || undefined)
+        console.log(data)
+        set_state(data ?? undefined as any)
       },
       error => {
         console.error(error)
@@ -66,7 +67,7 @@ export function WithUserContext(props: {children: React.ReactNode}) {
     handle_promise(get('/api/user'))
   }
 
-  React.useLayoutEffect(on_mount, [])
+  React.useEffect(on_mount, [])
 
   return (
     <UserContext.Provider value={{user, login, logout}}>

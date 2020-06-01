@@ -87,6 +87,12 @@ class BaseModel(Model):
     This class sets the database to use the postgres database.
     """
 
+    def as_dict(self):
+        """
+        Returns the objects key/value pair as a dictionary.
+        """
+        return self.__dict__['__data__']
+
     class Meta:  # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information.
@@ -183,6 +189,51 @@ class Individual(BaseModel):
     death_note = CharField(50, null=True)
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
+
+    def as_dict(self):
+        """
+        Returns the objects key/value pair as a dictionary, including data from
+        the weight, colour, and bodyfat tables.
+        """
+        data = super().as_dict()
+        data['herd'] = {'id': self.herd.id, 'name':self.herd.name}
+        data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
+            if self.mother else None
+        data['father'] = {'id': self.father.id, 'name': self.father.name} \
+            if self.father else None
+        data['colour'] = self.colour.name if self.colour else None
+        data['weights'] = [{'weight':w.weight, 'date':w.weight_date}
+                           for w in self.weight_set] #pylint: disable=no-member
+        data['bodyfat'] = [{'bodyfat':b.bodyfat, 'date':b.bodyfat_date}
+                           for b in self.bodyfat_set] #pylint: disable=no-member
+        data['herd_tracking'] = [
+            {
+                'herd_id':h.herd.id,
+                'herd':h.herd.name,
+                'date':h.herd_tracking_date
+            }
+            for h in self.herdtracking_set #pylint: disable=no-member
+        ]
+
+        return data
+
+    def short_info(self):
+        """
+        Returns a dictionary with a subset of fields so that all data doesn't
+        have to be sent when rendering tables.
+        Included fields.
+            - id
+            - name
+        """
+        return {'id': self.id, 'name': self.name}
+
+    class Meta:  #pylint: disable=too-few-public-methods
+        """
+        Add a unique index to number+genebank
+        """
+        indexes = (
+            (('number', 'herd'), True),
+        )
 
 
 class Weight(BaseModel):
@@ -379,5 +430,60 @@ def fetch_user_info(user_id):
     try:
         return User.get(User.uuid == user_id)
     except DoesNotExist:
-        logging.error("could not find user_id = %s", user_id)
+        return None
+
+def get_genebank(genebank_id, user_uuid=None):
+    """
+    Returns the information about the genebank given by `genebank_id` that is
+    accessible to the user identified by `user_uuid`.
+    """
+    if user_uuid is None:
+        return None
+    try:
+        genebank = Genebank.get(genebank_id).as_dict()
+        query = Herd(database=DATABASE).select() \
+                                       .where(Herd.genebank == genebank_id)
+        genebank['herds'] = [h.as_dict() for h in query.execute()]
+        return genebank
+    except DoesNotExist:
+        return None
+
+def get_genebanks(user_uuid=None):
+    """
+    Returns all genebanks that are accessible to the user identified by
+    `user_uuid`.
+    """
+    if user_uuid is None:
+        return None
+    query = Genebank(database=DATABASE).select()
+    return [g.as_dict() for g in query.execute()]
+
+def get_herd(herd_id, user_uuid=None):
+    """
+    Returns information on the herd given by `herd_id`, including a list of all
+    individuals belonging to that herd. The returned data is limited to the
+    access permission of the user identified by `user_uuid`.
+    """
+    if user_uuid is None:
+        return None
+    try:
+        herd = Herd.get(herd_id).as_dict()
+        query = Individual(database=DATABASE).select() \
+                           .where(Individual.herd == herd_id)
+        herd['individuals'] = [i.short_info() for i in query.execute()]
+        return herd
+    except DoesNotExist:
+        return None
+
+def get_individual(individual_id, user_uuid=None):
+    """
+    Returns information on a given individual id, if it's accessible to the user
+    identified by `user_uuid`.
+    """
+    if user_uuid is None:
+        return None
+    try:
+        individual = Individual.get(individual_id)
+        return individual.as_dict()
+    except DoesNotExist:
         return None
