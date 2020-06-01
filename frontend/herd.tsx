@@ -24,15 +24,15 @@ export function Herd() {
   }, [herdId])
 
   return <>
-    {herd
-      ? <>
-          <h2>{herd.name ?? `Besättning ${herd.id}`}</h2>
-          <ul>
-            {herd.individuals.map(individual => {
-              return <Link key={individual.id} to={`/individual/${individual.id}`}><li>{individual.name}</li></Link>
-            })}
-          </ul>
-        </>
-      : ''}
+    {herd &&
+      <>
+        <h2>{herd.name ?? `Besättning ${herd.id}`}</h2>
+        <ul>
+          {herd.individuals.map(individual => {
+            return <Link key={individual.id} to={`/individual/${individual.id}`}><li>{individual.name}</li></Link>
+          })}
+        </ul>
+      </>
+    }
   </>
 }
