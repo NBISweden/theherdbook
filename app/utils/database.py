@@ -203,16 +203,16 @@ class Individual(BaseModel):
             if self.father else None
         data['colour'] = self.colour.name if self.colour else None
         data['weights'] = [{'weight':w.weight, 'date':w.weight_date}
-            for w in self.weight_set]
+                           for w in self.weight_set] #pylint: disable=no-member
         data['bodyfat'] = [{'bodyfat':b.bodyfat, 'date':b.bodyfat_date}
-            for b in self.bodyfat_set]
+                           for b in self.bodyfat_set] #pylint: disable=no-member
         data['herd_tracking'] = [
             {
                 'herd_id':h.herd.id,
                 'herd':h.herd.name,
                 'date':h.herd_tracking_date
             }
-            for h in self.herdtracking_set
+            for h in self.herdtracking_set #pylint: disable=no-member
         ]
 
         return data
@@ -441,9 +441,9 @@ def get_genebank(genebank_id, user_uuid=None):
         return None
     try:
         genebank = Genebank.get(genebank_id).as_dict()
-        herd_query = Herd(database=DATABASE).select() \
-                                            .where(Herd.genebank == genebank_id)
-        genebank['herds'] = [h.as_dict() for h in herd_query.execute()]
+        query = Herd(database=DATABASE).select() \
+                                       .where(Herd.genebank == genebank_id)
+        genebank['herds'] = [h.as_dict() for h in query.execute()]
         return genebank
     except DoesNotExist:
         return None
@@ -455,8 +455,8 @@ def get_genebanks(user_uuid=None):
     """
     if user_uuid is None:
         return None
-    genebanks_query = Genebank(database=DATABASE).select()
-    return [g.as_dict() for g in genebanks_query.execute()]
+    query = Genebank(database=DATABASE).select()
+    return [g.as_dict() for g in query.execute()]
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -468,9 +468,9 @@ def get_herd(herd_id, user_uuid=None):
         return None
     try:
         herd = Herd.get(herd_id).as_dict()
-        individuals_query = Individual(database=DATABASE).select() \
-                                .where(Individual.herd == herd_id)
-        herd['individuals'] = [i.short_info() for i in individuals_query.execute()]
+        query = Individual(database=DATABASE).select() \
+                           .where(Individual.herd == herd_id)
+        herd['individuals'] = [i.short_info() for i in query.execute()]
         return herd
     except DoesNotExist:
         return None
