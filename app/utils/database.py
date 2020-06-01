@@ -22,9 +22,6 @@ from peewee import (PostgresqlDatabase,
                     TextField,
                     UUIDField,
                     )
-from playhouse.postgres_ext import (
-    JSONField
-)
 
 from werkzeug.security import (
     check_password_hash,
@@ -289,7 +286,54 @@ class User(BaseModel):
     uuid = UUIDField()
     password_hash = CharField(128)
     validated = BooleanField(default=False)
-    privileges = JSONField(default={'roles':[]})
+    _privileges = TextField(column_name="privileges", default='{"roles":[]}')
+
+    @property
+    def privileges(self):
+        """
+        Wrapper property to convert a json text string to a python object
+        """
+        try:
+            return json.loads(self._privileges)
+        except json.JSONDecodeError:
+            logging.error("Couldn't load user privileges. Defaulting to None")
+            return {'roles':[]}
+
+    @privileges.setter
+    def privileges(self, value):
+        """
+        Set the _privileges field to a json string from a python object.
+        """
+        try:
+            self._privileges = json.dumps(value)
+        except json.JSONDecodeError:
+            logging.error("Couldn't encode '%s' as json string", value)
+
+    @privileges.deleter
+    def privileges(self):
+        """
+        Resets the _privilege field to a list of empty roles.
+        """
+        self._privileges = json.dumps({'roles':[]})
+
+    def add_role(self, role, target):
+        """
+        Add `role` with `target` to the user privilege list. Allowed role/target
+        combinations are:
+            - role: admin, (no target)
+            - role: specialist, target: genebank_id
+            - role: manager, target: genebank_id
+            - role: owner, target: herd_id
+        """
+
+        privs = self.privileges
+        if role not in ['admin', 'specialist', 'manager', 'owner']:
+            logging.error('Unknown role %s with target %s', role, target)
+            return
+
+        privs['roles'] += [{'role': role, 'target': target}]
+        self.privileges = privs
+        self.save()
 
     def frontend_data(self):
         """
