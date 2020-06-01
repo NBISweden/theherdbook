@@ -10,7 +10,7 @@ import {Login} from './login'
 
 
 test('login information set at mount (logged in)', async () => {
-  fetch_mock.mockOnce(JSON.stringify({user: {email: 'testuser@nbis.se', validated: false}}))
+  fetch_mock.mockOnce(JSON.stringify({email: 'testuser@nbis.se', validated: false}))
 
   render(<WithUserContext><UserInfo/></WithUserContext>)
 
@@ -29,7 +29,7 @@ test('login information set at mount (logged in)', async () => {
 
 
 test('login information set at mount (not logged in)', async () => {
-  fetch_mock.mockOnce(JSON.stringify({user: null}))
+  fetch_mock.mockOnce(JSON.stringify(null))
 
   render(<WithUserContext><UserInfo/></WithUserContext>)
 
@@ -47,11 +47,11 @@ test('login information set at mount (not logged in)', async () => {
 
 
 test('can be logged in', async () => {
-  fetch_mock.mockOnce(JSON.stringify({user: null}))
+  fetch_mock.mockOnce(JSON.stringify(null))
 
   render(<WithUserContext><Login/><UserInfo/></WithUserContext>)
 
-  fetch_mock.mockOnce(JSON.stringify({user: {email: 'testuser@nbis.se', validated: false}}))
+  fetch_mock.mockOnce(JSON.stringify({email: 'testuser@nbis.se', validated: false}))
 
   fireEvent.change(screen.getByLabelText(/user:/), {target: {value: 'testuser@nbis.se'}})
 
@@ -82,7 +82,7 @@ test('can be logged in', async () => {
 })
 
 test('can be logged out', async () => {
-  fetch_mock.mockOnce(JSON.stringify({user: {email: 'testuser@nbis.se', validated: false}}))
+  fetch_mock.mockOnce(JSON.stringify({email: 'testuser@nbis.se', validated: false}))
 
   render(<WithUserContext><Login/><UserInfo/></WithUserContext>)
 
@@ -94,7 +94,7 @@ test('can be logged out', async () => {
     expect(params?.method).toBe('GET')
   }
 
-  fetch_mock.mockOnce(JSON.stringify({user: null}))
+  fetch_mock.mockOnce(JSON.stringify(null))
   fireEvent.click(screen.getByText('Logout'))
 
   await waitFor(() => screen.getByText(/anonymous/))
