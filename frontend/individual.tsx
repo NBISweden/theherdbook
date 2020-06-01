@@ -1,25 +1,24 @@
 /**
  * @file This file contains the Individual function. This function fetches
- *       individual for a given `individualId` (parsed from the url).
+ *       individual for a given `id` (parsed from the url).
  */
 import React from 'react'
-import {Link, useParams} from "react-router-dom";
+import {Link} from "react-router-dom";
 
 import { get } from './communication';
 
 /**
  * Shows information for a given individual in a herd
  */
-export function Individual() {
-  let { individualId } = useParams();
+export function Individual({id}: {id: string}) {
   const [individual, setIndividual] = React.useState(undefined as any)
 
   React.useEffect(() => {
-    get(`/api/individual/${individualId}`).then(
+    get(`/api/individual/${id}`).then(
       data => data && setIndividual(data),
       error => console.error(error)
     )
-  }, [individualId])
+  }, [id])
 
   return <>
     {individual

@@ -1,10 +1,10 @@
 /**
  * @file This file contains the Genebank function. This function fetches
- *       genebank information for a given `genebankId` (parsed from the url), as
+ *       genebank information for a given `id` (parsed from the url), as
  *       well as the herds belonging to that genebank.
  */
 import React from 'react'
-import {Link, useParams} from "react-router-dom";
+import {Link} from "react-router-dom";
 
 import { get } from './communication';
 
@@ -12,16 +12,15 @@ import { get } from './communication';
  * Shows genebank information, with a list of all herds belonging to that
  * genebank.
  */
-export function Genebank() {
-  let { genebankId } = useParams();
+export function Genebank({id}: {id: string}) {
   const [genebank, setGenebank] = React.useState(undefined as any)
 
   React.useEffect(() => {
-    get(`/api/genebank/${genebankId}`).then(
+    get(`/api/genebank/${id}`).then(
       data => data && setGenebank(data),
       error => console.error(error)
     )
-  }, [genebankId])
+  }, [id])
 
   return <>
     {genebank

@@ -5,7 +5,8 @@ import {
   BrowserRouter,
   Switch,
   Route,
-  Link
+  Link,
+  useParams
 } from 'react-router-dom'
 
 import {Login} from './login'
@@ -31,6 +32,20 @@ const CSS = sc.createGlobalStyle`
   }
 `
 
+function Routed(props: {path: string, children: (params: Record<string, string>) => React.ReactNode}) {
+  function Inner() {
+    const params = useParams()
+    return <>
+      {props.children(params)}
+    </>
+  }
+  return (
+    <Route path={props.path}>
+      <Inner/>
+    </Route>
+  )
+}
+
 function Main() {
   return <>
     <WithUserContext>
@@ -50,15 +65,15 @@ function Main() {
             <Route path="/genebanks">
               <Genebanks/>
             </Route>
-            <Route path="/genebank/:genebankId">
-              <Genebank/>
-            </Route>
-            <Route path="/herd/:herdId">
-              <Herd/>
-            </Route>
-            <Route path="/individual/:individualId">
-              <Individual/>
-            </Route>
+            <Routed path="/genebank/:id">
+              {params => <Genebank id={params.id}/>}
+            </Routed>
+            <Routed path="/herd/:id">
+              {params => <Herd id={params.id}/>}
+            </Routed>
+            <Routed path="/individual/:id">
+              {params => <Individual id={params.id}/>}
+            </Routed>
             <Route path="/">
               Welcome!
             </Route>
