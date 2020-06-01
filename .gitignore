@@ -15,8 +15,10 @@ venv.bak/
 .vscode
 .tox/
 
-# built frontend files
+# frontend files that shouldn't be committed
 frontend/dist/
+frontend/coverage/
+frontend/node_modules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
