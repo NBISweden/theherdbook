@@ -8,6 +8,7 @@ import uuid
 import logging
 
 from peewee import (PostgresqlDatabase,
+                    SqliteDatabase,
                     Proxy,
                     Model,
                     DoesNotExist,
@@ -31,17 +32,20 @@ from werkzeug.security import (
 DB_PROXY = Proxy()
 DATABASE = None
 
-def set_database(name, host, port, user, password):
+def set_database(name, host=None, port=None, user=None, password=None, test=False):
     """
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
     global DATABASE #pylint: disable=global-statement
-    DATABASE = PostgresqlDatabase(name,
-                                  host=host,
-                                  port=port,
-                                  user=user,
-                                  password=password)
+    if test:
+        DATABASE = SqliteDatabase(name)
+    else:
+        DATABASE = PostgresqlDatabase(name,
+                                    host=host,
+                                    port=port,
+                                    user=user,
+                                    password=password)
     DB_PROXY.initialize(DATABASE)
 
 try:
