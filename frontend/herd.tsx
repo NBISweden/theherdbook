@@ -16,12 +16,12 @@ export function Herd() {
   let { herdId } = useParams();
   const [herd, setHerd] = React.useState(undefined)
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     get(`/api/herd/${herdId}`).then(
       data => data && setHerd(data),
       error => console.error(error)
     )
-  }, [])
+  }, [herdId])
 
   return <>
     {herd

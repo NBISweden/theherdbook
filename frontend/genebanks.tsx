@@ -13,7 +13,7 @@ import { get } from './communication';
 export function Genebanks() {
   const [genebanks, setGenebanks] = React.useState([])
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     get('/api/genebanks').then(
       data => data && setGenebanks(data),
       error => console.error(error)

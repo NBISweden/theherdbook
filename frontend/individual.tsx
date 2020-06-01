@@ -14,12 +14,12 @@ export function Individual() {
   let { individualId } = useParams();
   const [individual, setIndividual] = React.useState(undefined)
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     get(`/api/individual/${individualId}`).then(
       data => data && setIndividual(data),
       error => console.error(error)
     )
-  }, [])
+  }, [individualId])
 
   return <>
     {individual
@@ -38,14 +38,14 @@ export function Individual() {
             </Link>
             <dt>Mor</dt>
             {individual.mother
-              ? <Link to={`/herd/${individual.mother.id}`}>
+              ? <Link to={`/individual/${individual.mother.id}`}>
                   <dd>{individual.mother.name}</dd>
                 </Link>
               : <dd>-</dd>
             }
             <dt>Far</dt>
             {individual.father
-              ? <Link to={`/herd/${individual.father.id}`}>
+              ? <Link to={`/individual/${individual.father.id}`}>
                   <dd>{individual.father.name}</dd>
                 </Link>
               : <dd>-</dd>

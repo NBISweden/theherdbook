@@ -67,7 +67,7 @@ export function WithUserContext(props: {children: React.ReactNode[]}) {
     handle_promise(get('/api/user'))
   }
 
-  React.useLayoutEffect(on_mount, [])
+  React.useEffect(on_mount, [])
 
   return (
     <UserContext.Provider value={{user, login, logout}}>

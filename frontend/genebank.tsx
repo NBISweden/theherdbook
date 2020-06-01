@@ -16,12 +16,12 @@ export function Genebank() {
   let { genebankId } = useParams();
   const [genebank, setGenebank] = React.useState(undefined)
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     get(`/api/genebank/${genebankId}`).then(
       data => data && setGenebank(data),
       error => console.error(error)
     )
-  }, [])
+  }, [genebankId])
 
   return <>
     {genebank
