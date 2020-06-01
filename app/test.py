@@ -3,6 +3,7 @@
 Unit tests for the herdbook.
 """
 
+import os
 import unittest
 import requests
 
@@ -24,12 +25,34 @@ class TestEndpoints(unittest.TestCase):
             200
         )
 
-class TestDatabaseMapping(unittest.TestCase):
+class DatabaseTest(unittest.TestCase):
+    """
+    Database test wrapper that sets up the database connection.
+    """
+    TEST_DATABASE='test_database.sql'
+
+    def setUp(self):
+        """
+        Initializes a sqlite3 test database with some data needed for testing.
+        """
+        db.set_database(self.TEST_DATABASE, test=True)
+        db.init()
+
+    def tearDown(self):
+        """
+        Removes the sqlite3 test database file.
+        """
+        try:
+            os.stat(self.TEST_DATABASE)
+            os.remove(self.TEST_DATABASE)
+        except FileNotFoundError:
+            pass
+
+
+class TestDatabaseMapping(DatabaseTest):
     """
     Checks that the database mapping is valid.
     """
-    def setUp(self):
-        db.set_database("herdbook", "localhost", "5432", "herdbook", "insecure")
 
     def test_genebank(self):
         """
