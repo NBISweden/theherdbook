@@ -14,7 +14,7 @@ import { get } from './communication';
  */
 export function Herd() {
   let { herdId } = useParams();
-  const [herd, setHerd] = React.useState(undefined)
+  const [herd, setHerd] = React.useState(undefined as any)
 
   React.useEffect(() => {
     get(`/api/herd/${herdId}`).then(

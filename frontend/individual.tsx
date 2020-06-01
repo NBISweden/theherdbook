@@ -12,7 +12,7 @@ import { get } from './communication';
  */
 export function Individual() {
   let { individualId } = useParams();
-  const [individual, setIndividual] = React.useState(undefined)
+  const [individual, setIndividual] = React.useState(undefined as any)
 
   React.useEffect(() => {
     get(`/api/individual/${individualId}`).then(

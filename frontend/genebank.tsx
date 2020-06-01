@@ -14,7 +14,7 @@ import { get } from './communication';
  */
 export function Genebank() {
   let { genebankId } = useParams();
-  const [genebank, setGenebank] = React.useState(undefined)
+  const [genebank, setGenebank] = React.useState(undefined as any)
 
   React.useEffect(() => {
     get(`/api/genebank/${genebankId}`).then(
