@@ -429,7 +429,9 @@ def insert_data(filename='default_data.json'):
     }
     ```
     """
-    data = json.load(open(filename))
+    infile = open(filename)
+    data = json.load(infile)
+    infile.close()
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
