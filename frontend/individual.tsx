@@ -23,7 +23,7 @@ export function Individual() {
 
   return <>
     {individual
-      ? <>
+      && <>
           <h2>{individual.name ?? 'unnamed'}</h2>
           <dl>
             <dt>Nummer</dt> <dd>{individual.number}</dd>
@@ -63,6 +63,6 @@ export function Individual() {
               </dd>
           </dl>
         </>
-      : ''}
+      }
   </>
 }
