@@ -11,13 +11,13 @@ export interface User {
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
   user: User | undefined
-  login(username: string, password: string)
-  logout()
+  login(username: string, password: string): void
+  logout(): void
 }
 
 const dummy_user_context: UserContext = {
   user: undefined,
-  login(username: string, password: string) {},
+  login() {},
   logout() {}
 }
 
@@ -41,9 +41,9 @@ export function useUserContext(): UserContext {
 
 */
 export function WithUserContext(props: {children: React.ReactNode}) {
-  const [user, set_state] = React.useState(undefined)
+  const [user, set_state] = React.useState(undefined as undefined | User)
 
-  function handle_promise(promise: Promise<User | undefined>) {
+  function handle_promise(promise: Promise<{user: User | null}>) {
     promise.then(
       data => {
         console.log(data)
