@@ -28,7 +28,7 @@ export function Herd() {
       <>
         <h2>{herd.name ?? `Besättning ${herd.id}`}</h2>
         <ul>
-          {herd.individuals.map(individual => {
+          {herd.individuals.map((individual: any) => {
             return <Link key={individual.id} to={`/individual/${individual.id}`}><li>{individual.name}</li></Link>
           })}
         </ul>

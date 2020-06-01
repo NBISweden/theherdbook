@@ -28,7 +28,7 @@ export function Genebank() {
       ? <>
           <h2>{genebank.name}</h2>
           <ul>
-            {genebank.herds.map(herd => {
+            {genebank.herds.map((herd: any) => {
               return <Link key={herd.id} to={`/herd/${herd.id}`}><li>{herd.name ?? `Besättning ${herd.id}`}</li></Link>
             })}
           </ul>

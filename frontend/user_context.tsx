@@ -40,7 +40,7 @@ export function useUserContext(): UserContext {
   the state accordingly if so.
 
 */
-export function WithUserContext(props: {children: React.ReactNode[]}) {
+export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined)
 
   function handle_promise(promise: Promise<User | undefined>) {

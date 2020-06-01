@@ -11,7 +11,7 @@ import { get } from './communication';
  * Shows a list of all genebanks, with links to the individual genebanks.
  */
 export function Genebanks() {
-  const [genebanks, setGenebanks] = React.useState([])
+  const [genebanks, setGenebanks] = React.useState([] as any[])
 
   React.useEffect(() => {
     get('/api/genebanks').then(

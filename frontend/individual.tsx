@@ -57,7 +57,7 @@ export function Individual() {
             <dt>Vikter</dt>
               <dd>
                 {individual.weights.length > 1
-                  ? individual.weights.map(w => `${w.date}: ${w.weight}`).join(", ")
+                  ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
                   : '-'
                 }
               </dd>
