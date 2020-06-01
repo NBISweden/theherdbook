@@ -1,4 +1,4 @@
-FROM node:11
+FROM node:14.3
 WORKDIR /frontend
 COPY package.json yarn.lock ./
 RUN yarn install
