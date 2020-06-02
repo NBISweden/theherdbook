@@ -29,7 +29,7 @@ class DatabaseTest(unittest.TestCase):
     """
     Database test wrapper that sets up the database connection.
     """
-    TEST_DATABASE='test_database.sql'
+    TEST_DATABASE='test_database.sqlite3'
 
     def setUp(self):
         """
@@ -37,6 +37,8 @@ class DatabaseTest(unittest.TestCase):
         """
         db.set_database(self.TEST_DATABASE, test=True)
         db.init()
+
+        self.insert_default()
 
     def tearDown(self):
         """
@@ -48,6 +50,32 @@ class DatabaseTest(unittest.TestCase):
         except FileNotFoundError:
             pass
 
+    def insert_default(self):
+        """
+        This function saves all variables to be easily accessible later.
+        """
+        self.gb1 = db.Genebank(name="genebank1")
+        self.gb1.save()
+        self.gb2 = db.Genebank(name="genebank2")
+        self.gb2.save()
+        self.h1 = db.Herd(genebank=self.gb1, herd=1, name="herd1")
+        self.h1.save()
+        self.h2 = db.Herd(genebank=self.gb1, herd=2, name="herd2")
+        self.h2.save()
+        self.h3 = db.Herd(genebank=self.gb2, herd=3, name="herd3")
+        self.h3.save()
+        self.i1 = db.Individual(herd=self.h1, number="ind-1")
+        self.i1.save()
+        self.i2 = db.Individual(herd=self.h1, number="ind-2")
+        self.i2.save()
+        self.adm = db.register_user("admin", "pass")
+        self.spec = db.register_user("spec", "pass")
+        self.man = db.register_user("man", "pass")
+        self.own = db.register_user("owner", "pass")
+        self.adm.add_role("admin", None)
+        self.spec.add_role("specialist", self.gb1.id)
+        self.man.add_role("manager", self.gb1.id)
+        self.own.add_role("owner", self.h1.id)
 
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -60,6 +88,52 @@ class TestDatabaseMapping(DatabaseTest):
         using the db.verify() function.
         """
         self.assertTrue(db.verify(False))
+
+
+class TestPermissions(DatabaseTest):
+    """
+    Checks that users have correct permissions.
+    """
+
+    def test_admin(self):
+        """
+        Checks that the admin role has all permissions.
+        """
+        self.assertEqual(self.adm.genebank_permission(self.gb1.id), "private")
+        self.assertEqual(self.adm.genebank_permission(self.gb2.id), "private")
+        self.assertEqual(self.adm.herd_permission(self.h1.id), "private")
+        self.assertEqual(self.adm.herd_permission(self.h2.id), "private")
+        self.assertEqual(self.adm.herd_permission(self.h3.id), "private")
+
+    def test_specialist(self):
+        """
+        Checks that the specialist role has the correct permissions.
+        """
+        self.assertEqual(self.spec.genebank_permission(self.gb1.id), "private")
+        self.assertEqual(self.spec.genebank_permission(self.gb2.id), "public")
+        self.assertEqual(self.spec.herd_permission(self.h1.id), "private")
+        self.assertEqual(self.spec.herd_permission(self.h2.id), "private")
+        self.assertEqual(self.spec.herd_permission(self.h3.id), "public")
+
+    def test_manager(self):
+        """
+        Checks that the manager role has the correct permissions.
+        """
+        self.assertEqual(self.man.genebank_permission(self.gb1.id), "private")
+        self.assertEqual(self.man.genebank_permission(self.gb2.id), "public")
+        self.assertEqual(self.man.herd_permission(self.h1.id), "private")
+        self.assertEqual(self.man.herd_permission(self.h2.id), "private")
+        self.assertEqual(self.man.herd_permission(self.h3.id), "public")
+
+    def test_owner(self):
+        """
+        Checks that the manager role has the correct permissions.
+        """
+        self.assertEqual(self.own.genebank_permission(self.gb1.id), "authenticated")
+        self.assertEqual(self.own.genebank_permission(self.gb2.id), "public")
+        self.assertEqual(self.own.herd_permission(self.h1.id), "private")
+        self.assertEqual(self.own.herd_permission(self.h2.id), "authenticated")
+        self.assertEqual(self.own.herd_permission(self.h3.id), "public")
 
 if __name__ == '__main__':
     unittest.main()
