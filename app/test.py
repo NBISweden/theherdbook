@@ -68,6 +68,8 @@ class DatabaseTest(unittest.TestCase):
         self.i1.save()
         self.i2 = db.Individual(herd=self.h1, number="ind-2")
         self.i2.save()
+        self.i3 = db.Individual(herd=self.h3, number="ind-3")
+        self.i3.save()
         self.adm = db.register_user("admin", "pass")
         self.spec = db.register_user("spec", "pass")
         self.man = db.register_user("man", "pass")
@@ -134,6 +136,91 @@ class TestPermissions(DatabaseTest):
         self.assertEqual(self.own.herd_permission(self.h1.id), "private")
         self.assertEqual(self.own.herd_permission(self.h2.id), "authenticated")
         self.assertEqual(self.own.herd_permission(self.h3.id), "public")
+
+    def test_get_genebanks(self):
+        """
+        Checks that `utils.database.get_genebanks` returns the correct
+        information for all test users.
+        """
+        # admin
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.adm.uuid)]
+        self.assertTrue(self.gb1.id in genebank_ids)
+        self.assertTrue(self.gb2.id in genebank_ids)
+        # specialist
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.spec.uuid)]
+        self.assertTrue(self.gb1.id in genebank_ids)
+        self.assertTrue(self.gb2.id not in genebank_ids)
+        # manager
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.man.uuid)]
+        self.assertTrue(self.gb1.id in genebank_ids)
+        self.assertTrue(self.gb2.id not in genebank_ids)
+        # owner
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.own.uuid)]
+        self.assertTrue(self.gb1.id in genebank_ids)
+        self.assertTrue(self.gb2.id not in genebank_ids)
+
+    def test_get_genebank(self):
+        """
+        Checks that `utils.database.get_genebank` returns the correct
+        information for all test users.
+        """
+        # admin
+        self.assertTrue(db.get_genebank(self.gb1.id, self.adm.uuid))
+        self.assertTrue(db.get_genebank(self.gb2.id, self.adm.uuid))
+        # specialist
+        self.assertTrue(db.get_genebank(self.gb1.id, self.spec.uuid))
+        self.assertFalse(db.get_genebank(self.gb2.id, self.spec.uuid))
+        # manager
+        self.assertTrue(db.get_genebank(self.gb1.id, self.man.uuid))
+        self.assertFalse(db.get_genebank(self.gb2.id, self.man.uuid))
+        # owner
+        self.assertTrue(db.get_genebank(self.gb1.id, self.own.uuid))
+        self.assertFalse(db.get_genebank(self.gb2.id, self.own.uuid))
+
+    def test_get_herd(self):
+        """
+        Checks that `utils.database.get_herd` returns the correct information
+        for all test users.
+        """
+        # admin
+        self.assertTrue(db.get_herd(self.h1.id, self.adm.uuid))
+        self.assertTrue(db.get_herd(self.h2.id, self.adm.uuid))
+        self.assertTrue(db.get_herd(self.h3.id, self.adm.uuid))
+        # specialist
+        self.assertTrue(db.get_herd(self.h1.id, self.spec.uuid))
+        self.assertTrue(db.get_herd(self.h2.id, self.spec.uuid))
+        self.assertFalse(db.get_herd(self.h3.id, self.spec.uuid))
+        # manager
+        self.assertTrue(db.get_herd(self.h1.id, self.man.uuid))
+        self.assertTrue(db.get_herd(self.h2.id, self.man.uuid))
+        self.assertFalse(db.get_herd(self.h3.id, self.man.uuid))
+        # owner
+        self.assertTrue(db.get_herd(self.h1.id, self.own.uuid))
+        self.assertTrue(db.get_herd(self.h2.id, self.own.uuid))
+        self.assertFalse(db.get_herd(self.h3.id, self.own.uuid))
+
+    def test_get_individual(self):
+        """
+        Checks that `utils.database.get_individual` return the correct
+        information for all test users.
+        """
+        # admin
+        self.assertTrue(db.get_individual(self.i1.id, self.adm.uuid))
+        self.assertTrue(db.get_individual(self.i2.id, self.adm.uuid))
+        self.assertTrue(db.get_individual(self.i3.id, self.adm.uuid))
+        # specialist
+        self.assertTrue(db.get_individual(self.i1.id, self.spec.uuid))
+        self.assertTrue(db.get_individual(self.i2.id, self.spec.uuid))
+        self.assertFalse(db.get_individual(self.i3.id, self.spec.uuid))
+        # manager
+        self.assertTrue(db.get_individual(self.i1.id, self.man.uuid))
+        self.assertTrue(db.get_individual(self.i2.id, self.man.uuid))
+        self.assertFalse(db.get_individual(self.i3.id, self.man.uuid))
+        # owner
+        self.assertTrue(db.get_individual(self.i1.id, self.own.uuid))
+        self.assertTrue(db.get_individual(self.i2.id, self.own.uuid))
+        self.assertFalse(db.get_individual(self.i3.id, self.own.uuid))
+
 
 if __name__ == '__main__':
     unittest.main()
