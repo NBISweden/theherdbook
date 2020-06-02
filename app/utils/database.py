@@ -676,7 +676,7 @@ def get_all_individuals():
     Returns the neccessary information about all individuals for computing genetic coefficients.
 
     :return: A list of dictionaries containing genetic features of the individuals
-    :rtype: dict(dict)
+    :rtype: list(dict)
     """
     try:
         individuals_dict = []

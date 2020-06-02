@@ -1,12 +1,12 @@
 """
-Inbreeding coefficent calculation from a specified pedigree file.
+Inbreeding coefficent calculations from the Herdbook's database records.
 The inbreeding coefficient is the Malecot coefficient of coancestry of the two parents of an individual.
 """
 
 from pydigree.population import Population
 from pydigree.individual import Individual
 from pydigree.pedigree import Pedigree
-from pydigree.pedigreecollection import PedigreeCollection
+from pydigree.io.base import PEDRecord
 import database
 
 
@@ -19,7 +19,7 @@ class IndividualPEDRecord(PEDRecord):
         :type individual: dict
         """
         self.ind_id = individual["id"]
-        self.fam = individual["nerd_id"]
+        self.fam = individual["herd_id"]
         self.fa = individual["father"]
         self.mo = individual["mother"]
         self.sex =  "M" if individual["sex"] == "male" else "F"
@@ -32,17 +32,17 @@ def calculate_inbreeding(ped):
 
     :param ped: A pydigree collection of pedigrees
     :type ped: pydigree.pedigreecollection.PedigreeCollection
-    :return: A list of tuples containing the coefficient and the id of the individual
-    :rtype: list(tuple(str))
+    :return: A dictionary containing the coefficient and the id of the individual
+    :rtype: dict[str]str
     """
-    coefficients = []
+    coefficients = dict()
 
     for pedigree in ped.pedigrees:
         lab = pedigree.label
         ids = sorted([x.label for x in pedigree.individuals])
 
         for x in ids:
-            coefficients.append((x, pedigree.inbreeding(x)))
+            coefficients[x] = pedigree.inbreeding(x)
 
     return coefficients
 
@@ -64,7 +64,7 @@ def get_pedigree_collections():
     p = Pedigree()
     population_handler(p)
 
-    # Step 1: Fetch the data from the db the data and create the individuals
+    # Step 1: Fetch the data from the db and create the individuals
     individuals = database.get_all_individuals()
 
     for i in individuals:
