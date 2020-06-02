@@ -1,3 +1,4 @@
+Cython==0.29.19
 astroid==2.3.3
 click==7.1.1
 Flask==1.1.2
@@ -7,9 +8,13 @@ Jinja2==2.11.1
 lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
 mccabe==0.6.1
+numpy==1.18.4
+pandas==1.0.4
 peewee==3.13.2
 psycopg2-binary==2.8.5
+git+git://github.com/jameshicks/pydigree@master
 pylint==2.4.4
+scipy==1.4.1
 six==1.14.0
 Werkzeug==1.0.1
 wrapt==1.11.2
