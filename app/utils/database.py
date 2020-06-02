@@ -590,6 +590,9 @@ def get_herd(herd_id, user_uuid=None):
         levels = ['public', 'authenticated', 'private']
         access_level = levels.index(user.herd_permission(herd_id))
 
+        if access_level <= 0:
+            return None
+
         data = Herd.get(herd_id).as_dict()
 
         # prune system data
