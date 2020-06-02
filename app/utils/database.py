@@ -670,3 +670,25 @@ def get_individual(individual_id, user_uuid=None):
         return None
     except DoesNotExist:
         return None
+
+def get_all_individuals():
+    """
+    Returns the neccessary information about all individuals for computing genetic coefficients.
+
+    :return: A list of dictionaries containing genetic features of the individuals
+    :rtype: dict(dict)
+    """
+    try:
+        individuals_dict = []
+        for individual in Individual.select():
+            ind = dict()
+            ind["id"] = individual.id
+            ind["herd_id"] = individual.herd.id
+            ind["father"] = individual.father
+            ind["mother"] = individual.mother
+            ind["sex"] = individual.sex
+            ind["phenotype"] = individual.colour.id
+            individuals_dict.append(ind)
+        return individuals_dict
+    except DoesNotExist:
+        return []
