@@ -296,18 +296,26 @@ class User(BaseModel):
     uuid = UUIDField()
     password_hash = CharField(128)
     validated = BooleanField(default=False)
-    _privileges = TextField(column_name="privileges", default='{"roles":[]}')
+    _privileges = TextField(column_name="privileges", default='[]')
 
     @property
     def privileges(self):
         """
-        Wrapper property to convert a json text string to a python object
+        Wrapper property to convert a json text string to a python object.
+        The privileges are a list of roles, formatted as:
+        [
+            {'level': 'admin' | 'specialist' | 'manager' | 'owner',
+             'target_id: None        (if level == 'admin') |
+                         hard_id     (if level == 'owner') |
+                         genebank_id
+            }
+        ]
         """
         try:
             return json.loads(self._privileges)
         except json.JSONDecodeError:
             logging.error("Couldn't load user privileges. Defaulting to None")
-            return {'roles':[]}
+            return []
 
     @privileges.setter
     def privileges(self, value):
@@ -324,24 +332,24 @@ class User(BaseModel):
         """
         Resets the _privilege field to a list of empty roles.
         """
-        self._privileges = json.dumps({'roles':[]})
+        self._privileges = json.dumps([])
 
-    def add_role(self, role, target):
+    def add_role(self, level, target_id=None):
         """
-        Add `role` with `target` to the user privilege list. Allowed role/target
-        combinations are:
-            - role: admin, (no target)
-            - role: specialist, target: genebank_id
-            - role: manager, target: genebank_id
-            - role: owner, target: herd_id
+        Add `level` with `target_id` to the user privilege list. Allowed
+        level/target_id combinations are:
+            - level: admin, (no target)
+            - level: specialist, target_id: genebank_id
+            - level: manager, target_id: genebank_id
+            - level: owner, target_id: herd_id
         """
 
         privs = self.privileges
-        if role not in ['admin', 'specialist', 'manager', 'owner']:
-            logging.error('Unknown role %s with target %s', role, target)
+        if level not in ['admin', 'specialist', 'manager', 'owner']:
+            logging.error('Unknown role level %s', level)
             return
 
-        privs['roles'] += [{'role': role, 'target': target}]
+        privs += [{'level': level, 'target_id': target_id}]
         self.privileges = privs
         self.save()
 
@@ -360,14 +368,14 @@ class User(BaseModel):
         """
 
         access_level = 'public'
-        for role in self.privileges['roles']:
-            if role['role'] == 'admin':
+        for role in self.privileges:
+            if role['level'] == 'admin':
                 return 'private'
-            if role['role'] in ['specialist', 'manager']:
-                if role['target'] == genebank_id:
+            if role['level'] in ['specialist', 'manager']:
+                if role['target_id'] == genebank_id:
                     return 'private'
-            elif role['role'] == 'owner':
-                herd = Herd.get(role['target'])
+            elif role['level'] == 'owner':
+                herd = Herd.get(role['target_id'])
                 if genebank_id == herd.genebank.id:
                     access_level = 'authenticated'
         return access_level
@@ -381,16 +389,16 @@ class User(BaseModel):
 
         # figure out access level
         access_level = 'public'
-        for role in self.privileges['roles']:
-            if role['role'] == 'admin':
+        for role in self.privileges:
+            if role['level'] == 'admin':
                 return 'private'
-            if role['role'] in ['specialist', 'manager']:
-                if role['target'] == genebank_id:
+            if role['level'] in ['specialist', 'manager']:
+                if role['target_id'] == genebank_id:
                     return 'private'
-            elif role['role'] == 'owner':
-                if herd_id == role['target']:
+            elif role['level'] == 'owner':
+                if herd_id == role['target_id']:
                     return 'private'
-                user_herd = Herd.get(role['target'])
+                user_herd = Herd.get(role['target_id'])
                 if user_herd.genebank.id == genebank_id:
                     access_level = 'authenticated'
         return access_level
@@ -502,7 +510,7 @@ def register_user(email, password):
                 uuid=uuid.uuid4().hex,
                 password_hash=generate_password_hash(password),
                 validated=False,
-                privileges={'roles':[]}
+                privileges=[]
                 )
     user.save()
     return user
@@ -569,13 +577,13 @@ def get_genebanks(user_uuid=None):
     # Find which genebanks the user has access to.
     is_admin = False
     has_access = []
-    for role in user.privileges['roles']:
-        if role['role'] == 'admin':
+    for role in user.privileges:
+        if role['level'] == 'admin':
             is_admin = True
-        if role['role'] in ['specialist', 'manager']:
-            has_access += [role['target']]
-        elif role['role'] == 'owner':
-            herd = Herd.get(role['target'])
+        if role['level'] in ['specialist', 'manager']:
+            has_access += [role['target_id']]
+        elif role['level'] == 'owner':
+            herd = Herd.get(role['target_id'])
             has_access += [herd.genebank.id]
 
     if not is_admin:
