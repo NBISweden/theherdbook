@@ -29,13 +29,13 @@ class DatabaseTest(unittest.TestCase):
     """
     Database test wrapper that sets up the database connection.
     """
-    TEST_DATABASE='test_database.sqlite3'
+    TEST_DATABASE = 'test_database.sqlite3'
 
     def setUp(self):
         """
         Initializes a sqlite3 test database with some data needed for testing.
         """
-        db.set_database(self.TEST_DATABASE, test=True)
+        db.set_test_database(self.TEST_DATABASE)
         db.init()
 
         self.insert_default()
@@ -54,30 +54,37 @@ class DatabaseTest(unittest.TestCase):
         """
         This function saves all variables to be easily accessible later.
         """
-        self.gb1 = db.Genebank(name="genebank1")
-        self.gb1.save()
-        self.gb2 = db.Genebank(name="genebank2")
-        self.gb2.save()
-        self.h1 = db.Herd(genebank=self.gb1, herd=1, name="herd1")
-        self.h1.save()
-        self.h2 = db.Herd(genebank=self.gb1, herd=2, name="herd2")
-        self.h2.save()
-        self.h3 = db.Herd(genebank=self.gb2, herd=3, name="herd3")
-        self.h3.save()
-        self.i1 = db.Individual(herd=self.h1, number="ind-1")
-        self.i1.save()
-        self.i2 = db.Individual(herd=self.h1, number="ind-2")
-        self.i2.save()
-        self.i3 = db.Individual(herd=self.h3, number="ind-3")
-        self.i3.save()
-        self.adm = db.register_user("admin", "pass")
-        self.spec = db.register_user("spec", "pass")
-        self.man = db.register_user("man", "pass")
-        self.own = db.register_user("owner", "pass")
-        self.adm.add_role("admin", None)
-        self.spec.add_role("specialist", self.gb1.id)
-        self.man.add_role("manager", self.gb1.id)
-        self.own.add_role("owner", self.h1.id)
+        self.genebanks = [
+            db.Genebank(name="genebank1"),
+            db.Genebank(name="genebank2"),
+        ]
+        for genebank in self.genebanks:
+            genebank.save()
+
+        self.herds = [
+            db.Herd(genebank=self.genebanks[0], herd=1, name="herd1"),
+            db.Herd(genebank=self.genebanks[0], herd=2, name="herd2"),
+            db.Herd(genebank=self.genebanks[1], herd=3, name="herd3"),
+        ]
+        for herd in self.herds:
+            herd.save()
+
+        self.individuals = [
+            db.Individual(herd=self.herds[0], number="ind-1"),
+            db.Individual(herd=self.herds[1], number="ind-2"),
+            db.Individual(herd=self.herds[2], number="ind-3")
+        ]
+        for individual in self.individuals:
+            individual.save()
+
+        self.admin = db.register_user("admin", "pass")
+        self.specialist = db.register_user("spec", "pass")
+        self.manager = db.register_user("man", "pass")
+        self.owner = db.register_user("owner", "pass")
+        self.admin.add_role("admin", None)
+        self.specialist.add_role("specialist", self.genebanks[0].id)
+        self.manager.add_role("manager", self.genebanks[0].id)
+        self.owner.add_role("owner", self.herds[0].id)
 
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -101,41 +108,41 @@ class TestPermissions(DatabaseTest):
         """
         Checks that the admin role has all permissions.
         """
-        self.assertEqual(self.adm.genebank_permission(self.gb1.id), "private")
-        self.assertEqual(self.adm.genebank_permission(self.gb2.id), "private")
-        self.assertEqual(self.adm.herd_permission(self.h1.id), "private")
-        self.assertEqual(self.adm.herd_permission(self.h2.id), "private")
-        self.assertEqual(self.adm.herd_permission(self.h3.id), "private")
+        self.assertEqual(self.admin.genebank_permission(self.genebanks[0].id), "private")
+        self.assertEqual(self.admin.genebank_permission(self.genebanks[1].id), "private")
+        self.assertEqual(self.admin.herd_permission(self.herds[0].id), "private")
+        self.assertEqual(self.admin.herd_permission(self.herds[1].id), "private")
+        self.assertEqual(self.admin.herd_permission(self.herds[2].id), "private")
 
     def test_specialist(self):
         """
         Checks that the specialist role has the correct permissions.
         """
-        self.assertEqual(self.spec.genebank_permission(self.gb1.id), "private")
-        self.assertEqual(self.spec.genebank_permission(self.gb2.id), "public")
-        self.assertEqual(self.spec.herd_permission(self.h1.id), "private")
-        self.assertEqual(self.spec.herd_permission(self.h2.id), "private")
-        self.assertEqual(self.spec.herd_permission(self.h3.id), "public")
+        self.assertEqual(self.specialist.genebank_permission(self.genebanks[0].id), "private")
+        self.assertEqual(self.specialist.genebank_permission(self.genebanks[1].id), "public")
+        self.assertEqual(self.specialist.herd_permission(self.herds[0].id), "private")
+        self.assertEqual(self.specialist.herd_permission(self.herds[1].id), "private")
+        self.assertEqual(self.specialist.herd_permission(self.herds[2].id), "public")
 
     def test_manager(self):
         """
         Checks that the manager role has the correct permissions.
         """
-        self.assertEqual(self.man.genebank_permission(self.gb1.id), "private")
-        self.assertEqual(self.man.genebank_permission(self.gb2.id), "public")
-        self.assertEqual(self.man.herd_permission(self.h1.id), "private")
-        self.assertEqual(self.man.herd_permission(self.h2.id), "private")
-        self.assertEqual(self.man.herd_permission(self.h3.id), "public")
+        self.assertEqual(self.manager.genebank_permission(self.genebanks[0].id), "private")
+        self.assertEqual(self.manager.genebank_permission(self.genebanks[1].id), "public")
+        self.assertEqual(self.manager.herd_permission(self.herds[0].id), "private")
+        self.assertEqual(self.manager.herd_permission(self.herds[1].id), "private")
+        self.assertEqual(self.manager.herd_permission(self.herds[2].id), "public")
 
     def test_owner(self):
         """
         Checks that the manager role has the correct permissions.
         """
-        self.assertEqual(self.own.genebank_permission(self.gb1.id), "authenticated")
-        self.assertEqual(self.own.genebank_permission(self.gb2.id), "public")
-        self.assertEqual(self.own.herd_permission(self.h1.id), "private")
-        self.assertEqual(self.own.herd_permission(self.h2.id), "authenticated")
-        self.assertEqual(self.own.herd_permission(self.h3.id), "public")
+        self.assertEqual(self.owner.genebank_permission(self.genebanks[0].id), "authenticated")
+        self.assertEqual(self.owner.genebank_permission(self.genebanks[1].id), "public")
+        self.assertEqual(self.owner.herd_permission(self.herds[0].id), "private")
+        self.assertEqual(self.owner.herd_permission(self.herds[1].id), "authenticated")
+        self.assertEqual(self.owner.herd_permission(self.herds[2].id), "public")
 
     def test_get_genebanks(self):
         """
@@ -143,21 +150,21 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.adm.uuid)]
-        self.assertTrue(self.gb1.id in genebank_ids)
-        self.assertTrue(self.gb2.id in genebank_ids)
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.admin.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id in genebank_ids)
         # specialist
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.spec.uuid)]
-        self.assertTrue(self.gb1.id in genebank_ids)
-        self.assertTrue(self.gb2.id not in genebank_ids)
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.specialist.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
         # manager
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.man.uuid)]
-        self.assertTrue(self.gb1.id in genebank_ids)
-        self.assertTrue(self.gb2.id not in genebank_ids)
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.manager.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
         # owner
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.own.uuid)]
-        self.assertTrue(self.gb1.id in genebank_ids)
-        self.assertTrue(self.gb2.id not in genebank_ids)
+        genebank_ids = [g['id'] for g in db.get_genebanks(self.owner.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
 
     def test_get_genebank(self):
         """
@@ -165,17 +172,17 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        self.assertTrue(db.get_genebank(self.gb1.id, self.adm.uuid))
-        self.assertTrue(db.get_genebank(self.gb2.id, self.adm.uuid))
+        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.admin.uuid))
+        self.assertTrue(db.get_genebank(self.genebanks[1].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_genebank(self.gb1.id, self.spec.uuid))
-        self.assertFalse(db.get_genebank(self.gb2.id, self.spec.uuid))
+        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.specialist.uuid))
+        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_genebank(self.gb1.id, self.man.uuid))
-        self.assertFalse(db.get_genebank(self.gb2.id, self.man.uuid))
+        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.manager.uuid))
+        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_genebank(self.gb1.id, self.own.uuid))
-        self.assertFalse(db.get_genebank(self.gb2.id, self.own.uuid))
+        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.owner.uuid))
+        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.owner.uuid))
 
     def test_get_herd(self):
         """
@@ -183,21 +190,21 @@ class TestPermissions(DatabaseTest):
         for all test users.
         """
         # admin
-        self.assertTrue(db.get_herd(self.h1.id, self.adm.uuid))
-        self.assertTrue(db.get_herd(self.h2.id, self.adm.uuid))
-        self.assertTrue(db.get_herd(self.h3.id, self.adm.uuid))
+        self.assertTrue(db.get_herd(self.herds[0].id, self.admin.uuid))
+        self.assertTrue(db.get_herd(self.herds[1].id, self.admin.uuid))
+        self.assertTrue(db.get_herd(self.herds[2].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_herd(self.h1.id, self.spec.uuid))
-        self.assertTrue(db.get_herd(self.h2.id, self.spec.uuid))
-        self.assertFalse(db.get_herd(self.h3.id, self.spec.uuid))
+        self.assertTrue(db.get_herd(self.herds[0].id, self.specialist.uuid))
+        self.assertTrue(db.get_herd(self.herds[1].id, self.specialist.uuid))
+        self.assertFalse(db.get_herd(self.herds[2].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_herd(self.h1.id, self.man.uuid))
-        self.assertTrue(db.get_herd(self.h2.id, self.man.uuid))
-        self.assertFalse(db.get_herd(self.h3.id, self.man.uuid))
+        self.assertTrue(db.get_herd(self.herds[0].id, self.manager.uuid))
+        self.assertTrue(db.get_herd(self.herds[1].id, self.manager.uuid))
+        self.assertFalse(db.get_herd(self.herds[2].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_herd(self.h1.id, self.own.uuid))
-        self.assertTrue(db.get_herd(self.h2.id, self.own.uuid))
-        self.assertFalse(db.get_herd(self.h3.id, self.own.uuid))
+        self.assertTrue(db.get_herd(self.herds[0].id, self.owner.uuid))
+        self.assertTrue(db.get_herd(self.herds[1].id, self.owner.uuid))
+        self.assertFalse(db.get_herd(self.herds[2].id, self.owner.uuid))
 
     def test_get_individual(self):
         """
@@ -205,21 +212,21 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        self.assertTrue(db.get_individual(self.i1.id, self.adm.uuid))
-        self.assertTrue(db.get_individual(self.i2.id, self.adm.uuid))
-        self.assertTrue(db.get_individual(self.i3.id, self.adm.uuid))
+        self.assertTrue(db.get_individual(self.individuals[0].id, self.admin.uuid))
+        self.assertTrue(db.get_individual(self.individuals[1].id, self.admin.uuid))
+        self.assertTrue(db.get_individual(self.individuals[2].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_individual(self.i1.id, self.spec.uuid))
-        self.assertTrue(db.get_individual(self.i2.id, self.spec.uuid))
-        self.assertFalse(db.get_individual(self.i3.id, self.spec.uuid))
+        self.assertTrue(db.get_individual(self.individuals[0].id, self.specialist.uuid))
+        self.assertTrue(db.get_individual(self.individuals[1].id, self.specialist.uuid))
+        self.assertFalse(db.get_individual(self.individuals[2].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_individual(self.i1.id, self.man.uuid))
-        self.assertTrue(db.get_individual(self.i2.id, self.man.uuid))
-        self.assertFalse(db.get_individual(self.i3.id, self.man.uuid))
+        self.assertTrue(db.get_individual(self.individuals[0].id, self.manager.uuid))
+        self.assertTrue(db.get_individual(self.individuals[1].id, self.manager.uuid))
+        self.assertFalse(db.get_individual(self.individuals[2].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_individual(self.i1.id, self.own.uuid))
-        self.assertTrue(db.get_individual(self.i2.id, self.own.uuid))
-        self.assertFalse(db.get_individual(self.i3.id, self.own.uuid))
+        self.assertTrue(db.get_individual(self.individuals[0].id, self.owner.uuid))
+        self.assertTrue(db.get_individual(self.individuals[1].id, self.owner.uuid))
+        self.assertFalse(db.get_individual(self.individuals[2].id, self.owner.uuid))
 
 
 if __name__ == '__main__':
