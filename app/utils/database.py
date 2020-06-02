@@ -492,7 +492,6 @@ def register_user(email, password):
     Creates a new user from an e-mail and password, returning the new user
     object.
     """
-    print("inserting user %s, %s" % (email, password))
     user = User(email=email,
                 uuid=uuid.uuid4().hex,
                 password_hash=generate_password_hash(password),
@@ -500,6 +499,7 @@ def register_user(email, password):
                 privileges={'roles':[]}
                 )
     user.save()
+    return user
 
 def authenticate_user(email, password):
     """
