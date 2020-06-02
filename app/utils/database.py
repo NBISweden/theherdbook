@@ -32,20 +32,26 @@ from werkzeug.security import (
 DB_PROXY = Proxy()
 DATABASE = None
 
-def set_database(name, host=None, port=None, user=None, password=None, test=False):
+def set_test_database(name):
+    """
+    This function sets the database to a named sqlite3 database for testing.
+    """
+    global DATABASE #pylint: disable=global-statement
+    DATABASE = SqliteDatabase(name)
+
+    DB_PROXY.initialize(DATABASE)
+
+def set_database(name, host=None, port=None, user=None, password=None):
     """
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
     global DATABASE #pylint: disable=global-statement
-    if test:
-        DATABASE = SqliteDatabase(name)
-    else:
-        DATABASE = PostgresqlDatabase(name,
-                                    host=host,
-                                    port=port,
-                                    user=user,
-                                    password=password)
+    DATABASE = PostgresqlDatabase(name,
+                                  host=host,
+                                  port=port,
+                                  user=user,
+                                  password=password)
     DB_PROXY.initialize(DATABASE)
 
 try:
