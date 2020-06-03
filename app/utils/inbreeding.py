@@ -7,7 +7,7 @@ from pydigree.population import Population
 from pydigree.individual import Individual
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
-import database
+import utils.database as database
 
 
 class IndividualPEDRecord(PEDRecord):
