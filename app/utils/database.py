@@ -681,13 +681,14 @@ def get_all_individuals():
     try:
         individuals_dict = []
         for individual in Individual.select():
+            data = individual.__dict__['__data__']
             ind = dict()
-            ind["id"] = individual.id
-            ind["herd_id"] = individual.herd.id
-            ind["father"] = individual.father
-            ind["mother"] = individual.mother
-            ind["sex"] = individual.sex
-            ind["phenotype"] = individual.colour.id
+            ind["id"] = str(data['id'])
+            ind["herd_id"] = str(data['herd'])
+            ind["father"] = str(data["father"]) if data["father"] else "0"
+            ind["mother"] = str(data["mother"]) if data["mother"] else "0"
+            ind["sex"] = "M" if data["sex"] == "male" else "F"
+            ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
             individuals_dict.append(ind)
         return individuals_dict
     except DoesNotExist:

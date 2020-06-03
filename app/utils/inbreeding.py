@@ -7,6 +7,7 @@ from pydigree.population import Population
 from pydigree.individual import Individual
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
+from pydigree.io.base import connect_individuals, sort_pedigrees
 import utils.database as database
 
 
@@ -20,9 +21,9 @@ class IndividualPEDRecord(PEDRecord):
         """
         self.ind_id = individual["id"]
         self.fam = individual["herd_id"]
-        self.fa = individual["father"]
-        self.mo = individual["mother"]
-        self.sex =  "M" if individual["sex"] == "male" else "F"
+        self.fa = "0" # individual["father"]
+        self.mo = "0" # individual["mother"]
+        self.sex = individual["sex"]
         self.aff = individual["phenotype"]
 
 
