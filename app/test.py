@@ -108,41 +108,29 @@ class TestPermissions(DatabaseTest):
         """
         Checks that the admin role has all permissions.
         """
-        self.assertEqual(self.admin.genebank_permission(self.genebanks[0].id), "private")
-        self.assertEqual(self.admin.genebank_permission(self.genebanks[1].id), "private")
-        self.assertEqual(self.admin.herd_permission(self.herds[0].id), "private")
-        self.assertEqual(self.admin.herd_permission(self.herds[1].id), "private")
-        self.assertEqual(self.admin.herd_permission(self.herds[2].id), "private")
+        self.assertTrue(self.admin.is_admin)
+        self.assertEqual(self.admin.accessible_genebanks, [1,2])
 
     def test_specialist(self):
         """
         Checks that the specialist role has the correct permissions.
         """
-        self.assertEqual(self.specialist.genebank_permission(self.genebanks[0].id), "private")
-        self.assertEqual(self.specialist.genebank_permission(self.genebanks[1].id), "public")
-        self.assertEqual(self.specialist.herd_permission(self.herds[0].id), "private")
-        self.assertEqual(self.specialist.herd_permission(self.herds[1].id), "private")
-        self.assertEqual(self.specialist.herd_permission(self.herds[2].id), "public")
+        self.assertFalse(self.specialist.is_admin)
+        self.assertEqual(self.specialist.accessible_genebanks, [1])
 
     def test_manager(self):
         """
         Checks that the manager role has the correct permissions.
         """
-        self.assertEqual(self.manager.genebank_permission(self.genebanks[0].id), "private")
-        self.assertEqual(self.manager.genebank_permission(self.genebanks[1].id), "public")
-        self.assertEqual(self.manager.herd_permission(self.herds[0].id), "private")
-        self.assertEqual(self.manager.herd_permission(self.herds[1].id), "private")
-        self.assertEqual(self.manager.herd_permission(self.herds[2].id), "public")
+        self.assertFalse(self.manager.is_admin)
+        self.assertEqual(self.manager.accessible_genebanks, [1])
 
     def test_owner(self):
         """
         Checks that the manager role has the correct permissions.
         """
-        self.assertEqual(self.owner.genebank_permission(self.genebanks[0].id), "authenticated")
-        self.assertEqual(self.owner.genebank_permission(self.genebanks[1].id), "public")
-        self.assertEqual(self.owner.herd_permission(self.herds[0].id), "private")
-        self.assertEqual(self.owner.herd_permission(self.herds[1].id), "authenticated")
-        self.assertEqual(self.owner.herd_permission(self.herds[2].id), "public")
+        self.assertFalse(self.owner.is_admin)
+        self.assertEqual(self.owner.accessible_genebanks, [1])
 
     def test_get_genebanks(self):
         """
