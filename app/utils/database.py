@@ -707,8 +707,7 @@ def get_individual(individual_id, user_uuid=None):
         return None
     try:
         individual = Individual.get(individual_id)
-        access_level = user.herd_permission(individual.herd.id)
-        if access_level in ['authenticated', 'private']:
+        if individual and individual.herd.genebank.id in user.accessible_genebanks:
             return individual.as_dict()
         return None
     except DoesNotExist:
