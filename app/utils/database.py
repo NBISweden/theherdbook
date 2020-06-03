@@ -206,7 +206,7 @@ class Herd(BaseModel):
                     del data['latitude']
                     del data['longitude']
                 else:
-                    target_field = field[:-8]
+                    target_field = field[:-len('_privacy')]
                     del data[target_field]
             # remove the access level value if the user doesn't have private
             # access
