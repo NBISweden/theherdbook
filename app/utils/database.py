@@ -476,48 +476,6 @@ class User(BaseModel):
         genebank['herds'] = herds
         return genebank
 
-    def genebank_permission(self, genebank_id):
-        """
-        Returns the permission level for the genebank given by `genebank_id`.
-        Permission levels are set as 'public', 'authenticated', 'private'.
-        """
-
-        access_level = 'public'
-        for role in self.privileges:
-            if role['level'] == 'admin':
-                return 'private'
-            if role['level'] in ['specialist', 'manager']:
-                if role['genebank'] == genebank_id:
-                    return 'private'
-            elif role['level'] == 'owner':
-                herd = Herd.get(role['herd'])
-                if genebank_id == herd.genebank.id:
-                    access_level = 'authenticated'
-        return access_level
-
-    def herd_permission(self, herd_id):
-        """
-        Returns the permission level for the herd given by `herd_id`.
-        Permission levels are set as 'public', 'authenticated', 'private'.
-        """
-        genebank_id = Herd.get(herd_id).genebank.id
-
-        # figure out access level
-        access_level = 'public'
-        for role in self.privileges:
-            if role['level'] == 'admin':
-                return 'private'
-            if role['level'] in ['specialist', 'manager']:
-                if role['genebank'] == genebank_id:
-                    return 'private'
-            elif role['level'] == 'owner':
-                if herd_id == role['herd']:
-                    return 'private'
-                user_herd = Herd.get(role['herd'])
-                if user_herd.genebank.id == genebank_id:
-                    access_level = 'authenticated'
-        return access_level
-
     class Meta: # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
