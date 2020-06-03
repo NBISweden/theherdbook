@@ -120,6 +120,19 @@ class Genebank(BaseModel):
     id = AutoField(primary_key=True, column_name="genebank_id")
     name = CharField(100, unique=True)
 
+    def get_herds(self, user):
+        """
+        Returns all herds that the user identified by `user_id` has access to,
+        with restricted fields filtered by access level.
+        """
+        if self.id not in user.accessible_genebanks:
+            return None
+
+        herds = []
+        for herd in Herd.select().where(Herd.genebank == self):
+            herds += [herd.filtered_dict(user)]
+        return herds
+
 
 class Herd(BaseModel):
     """
@@ -157,6 +170,50 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    def filtered_dict(self, user=None):
+        """
+        Returns the model data filtered by the access level of the given `user`.
+        """
+
+        access_level = 'public'
+        if user and user.is_admin:
+            access_level = 'private'
+        elif user:
+            for role in user.privileges:
+                if role['level'] in ['specialist', 'manager']:
+                    if role['genebank'] == self.genebank.id:
+                        access_level = 'private'
+                        break
+                elif role['level'] == 'owner':
+                    if role['herd'] == self.id:
+                        access_level = 'private'
+                        break
+                    access_level = 'authenticated'
+
+        data = self.as_dict()
+
+        # prune system data
+        del data['email_verified']
+
+        levels = ['public', 'authenticated', 'private']
+        # prune data according to access level
+        for field in [f for f in data.keys() if f.endswith('_privacy')]:
+            # remove values if access_level is less than required
+            field_level = data[field] or 'private'
+            if levels.index(access_level) < levels.index(field_level):
+                if field == 'coordinates_privacy':
+                    del data['latitude']
+                    del data['longitude']
+                else:
+                    target_field = field[:-8]
+                    del data[target_field]
+            # remove the access level value if the user doesn't have private
+            # access
+            if access_level != levels.index('private'):
+                del data[field]
+
+        return data
 
     class Meta:  #pylint: disable=too-few-public-methods
         """
@@ -355,6 +412,30 @@ class User(BaseModel):
         self.privileges = privs
         self.save()
 
+    @property
+    def is_admin(self):
+        """
+        Returns `True` if the admin permission is in the user privileges, false
+        otherwise.
+        """
+        return 'admin' in [p['level'] for p in self.privileges]
+
+    @property
+    def accessible_genebanks(self):
+        """
+        Returns a list of all genebank id's that the user has access to.
+        """
+        if self.is_admin:
+            return [g.id for g in Genebank(database=DATABASE).select()]
+        has_access = []
+        for role in self.privileges:
+            if role['level'] in ['specialist', 'manager']:
+                has_access += [role['genebank']]
+            elif role['level'] == 'owner':
+                herd = Herd.get(role['herd'])
+                has_access += [herd.genebank.id]
+        return has_access
+
     def frontend_data(self):
         """
         Returns the information that is needed in the frontend.
@@ -362,6 +443,38 @@ class User(BaseModel):
         return {'email': self.email,
                 'validated': self.validated if self.validated else False,
                 }
+
+    def get_genebanks(self):
+        """
+        Returns a list of all genebanks that the user has access to.
+        """
+        query = Genebank(database=DATABASE).select()
+
+        if not self.is_admin:
+            query = query.where(Genebank.id.in_(self.accessible_genebanks))
+
+        # Using a list comprehension here will turn the iterator into a list
+        return [g for g in query.execute()] #pylint: disable=unnecessary-comprehension
+
+    def get_genebank(self, genebank_id):
+        """
+        Returns all information for the given genebank that the user has access
+        to, returning `None` if the user doesn't have genebank access.
+        """
+        if genebank_id not in self.accessible_genebanks:
+            return None
+
+        try:
+            genebank = Genebank.get(genebank_id)
+        except DoesNotExist:
+            return None
+
+        # No limit to viewing herds at this point. If you can view the genebank
+        # you can view all the herds.
+        herds = genebank.get_herds(user=self)
+        genebank = genebank.as_dict()
+        genebank['herds'] = herds
+        return genebank
 
     def genebank_permission(self, genebank_id):
         """
@@ -551,20 +664,8 @@ def get_genebank(genebank_id, user_uuid=None):
     user = fetch_user_info(user_uuid)
     if user is None:
         return None
-    try:
-        access_level = user.genebank_permission(genebank_id)
-        if access_level not in ['authenticated', 'private']:
-            return None
 
-        genebank = Genebank.get(genebank_id).as_dict()
-        # No limit to viewing herds at this point. If you can view the genebank
-        # you can view all the herds.
-        query = Herd(database=DATABASE).select() \
-                                       .where(Herd.genebank == genebank_id)
-        genebank['herds'] = [h.as_dict() for h in query.execute()]
-        return genebank
-    except DoesNotExist:
-        return None
+    return user.get_genebank(genebank_id)
 
 def get_genebanks(user_uuid=None):
     """
@@ -574,24 +675,8 @@ def get_genebanks(user_uuid=None):
     user = fetch_user_info(user_uuid)
     if user is None:
         return None
-    query = Genebank(database=DATABASE).select()
 
-    # Find which genebanks the user has access to.
-    is_admin = False
-    has_access = []
-    for role in user.privileges:
-        if role['level'] == 'admin':
-            is_admin = True
-        if role['level'] in ['specialist', 'manager']:
-            has_access += [role['genebank']]
-        elif role['level'] == 'owner':
-            herd = Herd.get(role['herd'])
-            has_access += [herd.genebank.id]
-
-    if not is_admin:
-        query = query.where(Genebank.id.in_(has_access))
-
-    return [g.as_dict() for g in query.execute()]
+    return [g.as_dict() for g in user.get_genebanks()]
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -603,40 +688,11 @@ def get_herd(herd_id, user_uuid=None):
     if user is None:
         return None
     try:
-        levels = ['public', 'authenticated', 'private']
-        access_level = levels.index(user.herd_permission(herd_id))
-
-        if access_level <= 0:
+        data = Herd.get(herd_id).filtered_dict(user)
+        if data['genebank'] not in user.accessible_genebanks:
             return None
-
-        data = Herd.get(herd_id).as_dict()
-
-        # prune system data
-        del data['email_verified']
-
-        # prune data according to access level
-        for field in [f for f in data.keys() if f.endswith('_privacy')]:
-            # remove values if access_level is less than required
-            field_level = levels.index(data[field]) if data[field] \
-                                                    else levels.index('private')
-            if access_level < field_level:
-                if field == 'coordinates_privacy':
-                    del data['latitude']
-                    del data['longitude']
-                else:
-                    target_field = field[:-8]
-                    del data[target_field]
-            # remove the access level value if the user doesn't have private
-            # access
-            if access_level != levels.index('private'):
-                del data[field]
-
-        # include the herd animals if the user is authenticated
-        if access_level >= levels.index('authenticated'):
-            individuals_query = Individual(database=DATABASE).select() \
-                                    .where(Individual.herd == herd_id)
-            data['individuals'] = \
-                [i.short_info() for i in individuals_query.execute()]
+        query = Individual(datbase=DATABASE).select().where(Individual.herd == herd_id)
+        data['individuals'] = [i.short_info() for i in query.execute()]
         return data
     except DoesNotExist:
         return None
