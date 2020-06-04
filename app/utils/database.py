@@ -684,7 +684,6 @@ def get_all_individuals():
             data = individual.__dict__['__data__']
             ind = dict()
             ind["id"] = str(data['id'])
-            ind["herd_id"] = str(data['herd'])
             ind["father"] = str(data["father"]) if data["father"] else "0"
             ind["mother"] = str(data["mother"]) if data["mother"] else "0"
             ind["sex"] = "M" if data["sex"] == "male" else "F"
