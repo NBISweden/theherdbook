@@ -8,7 +8,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
-import {Link} from 'react-router-dom'
+import {useHistory} from 'react-router-dom'
 
 import {useUserContext} from './user_context'
 
@@ -25,13 +25,31 @@ const useMenuStyles = makeStyles({
  */
 export function TabMenu() {
   const classes = useMenuStyles();
-  const [value, setValue] = React.useState(0);
+  const [value, setTab] = React.useState(0);
   const {login, logout} = useUserContext();
   const {user} = useUserContext();
+  const history = useHistory();
+
+  const tabs = [
+    {icon: <HomeIcon />, label: "Hem", route: "/"},
+    {icon: <AccountBalanceIcon />, label: "Genbanker", route: "/genebanks", hide: user ? undefined : true},
+    {icon: <MeetingRoom />, label: "Logga in", route: "/login", hide: user ? true : undefined },
+    {icon: <VpnKeyIcon />, label: "Logga ut", route: "/", hide: user ? undefined : true, func: logout},
+  ];
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setValue(newValue);
+    if (tabs[newValue].func) {
+      tabs[newValue].func()
+    }
+    if (tabs[newValue].route) {
+      history.push(tabs[newValue].route);
+    }
+    setTab(tabs.findIndex((t:any) => t.route == tabs[newValue].route));
   };
+
+  React.useEffect(() => {
+    setTab(tabs.findIndex((t:any) => t.route == location.pathname))
+  }, [])
 
   return (
     <Paper className={classes.root}>
@@ -42,18 +60,10 @@ export function TabMenu() {
         textColor="primary"
         centered
       >
-        <Link to="/">
-          <Tab icon={<HomeIcon />} label="Hem" />
-        </Link>
-        <Link to="/genebanks" hidden={user ? undefined : true}>
-          <Tab icon={<AccountBalanceIcon />} label="Genbanker" />
-        </Link>
-        <Link to="/" onClick={logout} hidden={user ? undefined : true}>
-          <Tab icon={<MeetingRoom />} label="Logga ut" />
-        </Link>
-        <Link to="/login" hidden={user ? true : undefined}>
-          <Tab icon={<VpnKeyIcon />} label="Logga in" />
-        </Link>
+        { tabs.map((tab: any, i: number) => {
+            return <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.hide ? 'none' : undefined}}/>
+          })
+        }
       </Tabs>
     </Paper>
   );
