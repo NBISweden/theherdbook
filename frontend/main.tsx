@@ -15,6 +15,7 @@ import {TabMenu} from './navigation'
 import {Genebanks} from './genebanks'
 import {Genebank} from './genebank'
 import {Herd} from './herd'
+import {Manage} from './manage'
 import {Individual} from './individual'
 
 const CSS = sc.createGlobalStyle`
@@ -65,6 +66,9 @@ function Main() {
           <Routed path="/individual/:id">
             {params => <Individual id={params.id}/>}
           </Routed>
+          <Route path="/manage">
+            <Manage/>
+          </Route>
           <Route path="/">
             Welcome!
           </Route>
