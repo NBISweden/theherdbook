@@ -7,8 +7,8 @@ export interface User {
   email: string | null
   validated: boolean
   is_admin: boolean
-  is_manager: boolean
-  is_owner: boolean
+  is_manager: Array<number> | undefined
+  is_owner: Array<number> | undefined
 }
 
 /** The currently logged in user, if any, and functionality to log in and log out */
