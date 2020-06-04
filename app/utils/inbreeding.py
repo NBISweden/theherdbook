@@ -20,9 +20,9 @@ class IndividualPEDRecord(PEDRecord):
         :type individual: dict
         """
         self.ind_id = individual["id"]
-        self.fam = individual["herd_id"]
-        self.fa = "0" # individual["father"]
-        self.mo = "0" # individual["mother"]
+        self.fam = "0" #individual["herd_id"]
+        self.fa = individual["father"]
+        self.mo = individual["mother"]
         self.sex = individual["sex"]
         self.aff = individual["phenotype"]
 
