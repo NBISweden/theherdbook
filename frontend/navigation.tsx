@@ -8,6 +8,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
+import GroupIcon from '@material-ui/icons/Group';
 import {useHistory} from 'react-router-dom'
 
 import {useUserContext} from './user_context'
@@ -33,6 +34,7 @@ export function TabMenu() {
   const tabs = [
     {icon: <HomeIcon />, label: "Hem", route: "/"},
     {icon: <AccountBalanceIcon />, label: "Genbanker", route: "/genebanks", hide: user ? undefined : true},
+    {icon: <GroupIcon />, label: "Administrera", route: "/manage", hide: user?.is_manager || user?.is_admin ? undefined : true},
     {icon: <MeetingRoom />, label: "Logga in", route: "/login", hide: user ? true : undefined },
     {icon: <VpnKeyIcon />, label: "Logga ut", route: "/", hide: user ? undefined : true, func: logout},
   ];
