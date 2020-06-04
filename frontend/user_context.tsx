@@ -6,6 +6,9 @@ import {post, get} from './communication'
 export interface User {
   email: string | null
   validated: boolean
+  is_admin: boolean
+  is_manager: boolean
+  is_owner: boolean
 }
 
 /** The currently logged in user, if any, and functionality to log in and log out */

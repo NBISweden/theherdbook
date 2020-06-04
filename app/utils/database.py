@@ -460,6 +460,30 @@ class User(BaseModel):
         return 'admin' in [p['level'] for p in self.privileges]
 
     @property
+    def is_manager(self):
+        """
+        Returns a list of id's of the genebanks that the user is manager of, or
+        `None`.
+        """
+        genebanks = []
+        for role in self.privileges:
+            if role['level'] == 'manager':
+                genebanks += [role['genebank']]
+        return genebanks or None
+
+    @property
+    def is_owner(self):
+        """
+        Returns a list of id's of the herds that the user is owner of, or
+        `None`.
+        """
+        herds = []
+        for role in self.privileges:
+            if role['level'] == 'owner':
+                herds += [role['herd']]
+        return herds or None
+
+    @property
     def accessible_genebanks(self):
         """
         Returns a list of all genebank id's that the user has access to.
@@ -481,6 +505,9 @@ class User(BaseModel):
         """
         return {'email': self.email,
                 'validated': self.validated if self.validated else False,
+                'is_admin': self.is_admin,
+                'is_manager': self.is_manager,
+                'is_owner': self.is_owner,
                 }
 
     def get_genebanks(self):

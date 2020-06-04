@@ -26,6 +26,5 @@ export function Login() {
       </label>
       <button type="button" onClick={() => login(username, password)}>Login</button>
     </form>
-    <button type="button" onClick={logout}>Logout</button>
   </>
 }
