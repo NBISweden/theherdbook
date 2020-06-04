@@ -109,7 +109,7 @@ class TestPermissions(DatabaseTest):
         Checks that the admin role has all permissions.
         """
         self.assertTrue(self.admin.is_admin)
-        self.assertEqual(self.admin.accessible_genebanks, [1,2])
+        self.assertEqual(self.admin.accessible_genebanks, [1, 2])
 
     def test_specialist(self):
         """
