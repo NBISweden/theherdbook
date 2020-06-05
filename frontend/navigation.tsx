@@ -10,6 +10,7 @@ import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
 import {useHistory} from 'react-router-dom'
+import {Location} from 'history'
 
 import {useUserContext} from './user_context'
 
@@ -39,18 +40,28 @@ export function TabMenu() {
     {icon: <VpnKeyIcon />, label: "Logga ut", route: "/", hide: user ? undefined : true, func: logout},
   ];
 
-  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    if (tabs[newValue].func) {
-      tabs[newValue].func()
+  const handleChange = (_: any, index: number) => {
+    const tab = tabs[index]
+    if (tab.func) {
+      tab.func()
     }
-    if (tabs[newValue].route) {
-      history.push(tabs[newValue].route);
+    if (tab.route) {
+      history.push(tab.route)
     }
-    setTab(tabs.findIndex((t:any) => t.route == tabs[newValue].route));
   };
 
   React.useEffect(() => {
-    setTab(tabs.findIndex((t:any) => t.route == location.pathname))
+    const with_location = (location: Location) => {
+      const index = tabs.findIndex(t => t.route == location.pathname)
+      if (index != -1) {
+        setTab(index)
+      } else {
+        console.warn('Route', location.pathname, 'has no corresponding tab')
+      }
+    }
+    with_location(history.location)
+    const unsubscribe = history.listen(with_location)
+    return unsubscribe
   }, [])
 
   return (
