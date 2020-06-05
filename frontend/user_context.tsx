@@ -46,20 +46,24 @@ export function useUserContext(): UserContext {
 export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined as undefined | User)
 
-  function handle_promise(promise: Promise<{user: User | null}>) {
-    promise.then(
+  async function handle_promise(promise: Promise<{user: User | null}>) {
+    return await promise.then(
       data => {
         console.log(data)
         set_state(data ?? undefined as any)
+        return data && true
       },
       error => {
         console.error(error)
         set_state(undefined)
+          return false
       })
   }
 
-  function login(username: string, password: string) {
-    handle_promise(post('/api/login', {username, password}))
+  async function login(username: string, password: string) {
+    return await handle_promise(post('/api/login', {username, password})).then(
+      success => success
+    )
   }
 
   function logout() {
