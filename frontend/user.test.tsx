@@ -53,11 +53,11 @@ test('can be logged in', async () => {
 
   fetch_mock.mockOnce(JSON.stringify({email: 'testuser@nbis.se', validated: false}))
 
-  fireEvent.change(screen.getByLabelText(/user:/), {target: {value: 'testuser@nbis.se'}})
+  fireEvent.change(screen.getByLabelText(/E-postadress/), {target: {value: 'testuser@nbis.se'}})
 
-  fireEvent.change(screen.getByLabelText(/pass:/), {target: {value: 'hunter3'}})
+  fireEvent.change(screen.getByLabelText(/Lösenord/), {target: {value: 'hunter3'}})
 
-  fireEvent.click(screen.getByText('Login'))
+  fireEvent.click(screen.getByLabelText(/Logga in/))
 
   await waitFor(() => screen.getByText(/testuser@nbis.se/))
 

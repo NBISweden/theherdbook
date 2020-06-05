@@ -10,6 +10,7 @@ import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
 import {useHistory} from 'react-router-dom'
+import {Location} from 'history'
 
 import {useUserContext} from './user_context'
 
@@ -27,30 +28,43 @@ const useMenuStyles = makeStyles({
 export function TabMenu() {
   const classes = useMenuStyles();
   const [value, setTab] = React.useState(0);
-  const {login, logout} = useUserContext();
+  const {logout} = useUserContext();
   const {user} = useUserContext();
   const history = useHistory();
 
-  const tabs = [
-    {icon: <HomeIcon />, label: "Hem", route: "/"},
-    {icon: <AccountBalanceIcon />, label: "Genbanker", route: "/genebanks", hide: user ? undefined : true},
-    {icon: <GroupIcon />, label: "Administrera", route: "/manage", hide: user?.is_manager || user?.is_admin ? undefined : true},
-    {icon: <MeetingRoom />, label: "Logga in", route: "/login", hide: user ? true : undefined },
-    {icon: <VpnKeyIcon />, label: "Logga ut", route: "/", hide: user ? undefined : true, func: logout},
-  ];
+  const is_admin = !!(user?.is_manager || user?.is_admin)
+  const is_logged_in = !!user
 
-  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    if (tabs[newValue].func) {
-      tabs[newValue].func()
+  const tabs = [
+    {label: "Hem",          route: "/",          show: true,                            icon: <HomeIcon />           },
+    {label: "Genbanker",    route: "/genebanks", show: is_logged_in,                    icon: <AccountBalanceIcon /> },
+    {label: "Administrera", route: "/manage",    show: is_admin,                        icon: <GroupIcon />          },
+    {label: "Logga in",     route: "/login",     show: !is_logged_in,                   icon: <MeetingRoom />        },
+    {label: "Logga ut",     route: "/",          show: is_logged_in,  on_click: logout, icon: <VpnKeyIcon />         },
+  ]
+
+  const handleChange = (_: any, index: number) => {
+    const tab = tabs[index]
+    if (tab.on_click) {
+      tab.on_click()
     }
-    if (tabs[newValue].route) {
-      history.push(tabs[newValue].route);
+    if (tab.route) {
+      history.push(tab.route)
     }
-    setTab(tabs.findIndex((t:any) => t.route == tabs[newValue].route));
   };
 
   React.useEffect(() => {
-    setTab(tabs.findIndex((t:any) => t.route == location.pathname))
+    const with_location = (location: Location) => {
+      const index = tabs.findIndex(t => t.route == location.pathname)
+      if (index != -1) {
+        setTab(index)
+      } else {
+        console.warn('Route', location.pathname, 'has no corresponding tab')
+      }
+    }
+    with_location(history.location)
+    const unsubscribe = history.listen(with_location)
+    return unsubscribe
   }, [])
 
   return (
@@ -63,7 +77,7 @@ export function TabMenu() {
         centered
       >
         { tabs.map((tab: any, i: number) => {
-            return <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.hide ? 'none' : undefined}}/>
+            return <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.show ? undefined : 'none'}}/>
           })
         }
       </Tabs>
