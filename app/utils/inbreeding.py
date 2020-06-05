@@ -1,18 +1,23 @@
 """
 Inbreeding coefficent calculations from the Herdbook's database records.
-The inbreeding coefficient is the Malecot coefficient of coancestry of the two parents of an individual.
+The Malecot coefficient of coancestry of the two parents is calculated.
 """
 
 from pydigree.population import Population
-from pydigree.individual import Individual
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
 from pydigree.io.base import connect_individuals, sort_pedigrees
 import utils.database as database
 
 
-class IndividualPEDRecord(PEDRecord):
-    def __init__(self, individual):
+class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
+    """
+    Class that encapsulates an individual's pedigree information.
+
+    :param PEDRecord: Base class corresponding to a pydigree PEDRecord
+    :type PEDRecord: class
+    """
+    def __init__(self, individual): #pylint: disable=super-init-not-called
         """
         Creates pedigree record from a dictionary of an individual
 
@@ -39,11 +44,10 @@ def calculate_inbreeding(ped):
     coefficients = dict()
 
     for pedigree in ped.pedigrees:
-        lab = pedigree.label
         ids = sorted([x.label for x in pedigree.individuals])
 
-        for x in ids:
-            coefficients[x] = pedigree.inbreeding(x)
+        for i_id in ids:
+            coefficients[i_id] = pedigree.inbreeding(i_id)
 
     return coefficients
 
@@ -57,13 +61,13 @@ def get_pedigree_collections():
     """
 
     affected_labels = {'1': 0, '2': 1, 'A': 1, 'U': 0,
-                           'X': None, '-9': None}
+                       'X': None, '-9': None}
 
     population_handler = lambda *x: None
 
     population = Population()
-    p = Pedigree()
-    population_handler(p)
+    ped = Pedigree()
+    population_handler(ped)
 
     # Step 1: Fetch the data from the db and create the individuals
     individuals = database.get_all_individuals()
@@ -71,17 +75,17 @@ def get_pedigree_collections():
     for i in individuals:
         rec = IndividualPEDRecord(i)
         ind = rec.create_individual(population)
-        ind.pedigree = p
+        ind.pedigree = ped
         ind.phenotypes['affected'] = affected_labels.get(rec.aff, None)
-        p[ind.label] = ind
+        ped[ind.label] = ind
 
     # Step 2: Create between-individual relationships
-    connect_individuals(p)
+    connect_individuals(ped)
 
     # Step 3: Separate the individuals into pedigrees
-    pc = sort_pedigrees(p.individuals, population_handler)
+    sorted_ped = sort_pedigrees(ped.individuals, population_handler)
 
-    return pc
+    return sorted_ped
 
 
 def main():
