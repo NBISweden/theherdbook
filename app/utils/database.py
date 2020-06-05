@@ -193,27 +193,9 @@ class Herd(BaseModel):
 
         data = self.as_dict()
 
-        # prune system data
         del data['email_verified']
 
-        levels = ['public', 'authenticated', 'private']
-        # prune data according to access level
-        for field in [f for f in data.keys() if f.endswith('_privacy')]:
-            # remove values if access_level is less than required
-            field_level = data[field] or 'private'
-            if levels.index(access_level) < levels.index(field_level):
-                if field == 'coordinates_privacy':
-                    del data['latitude']
-                    del data['longitude']
-                else:
-                    target_field = field[:-8]
-                    del data[target_field]
-            # remove the access level value if the user doesn't have private
-            # access
-            if access_level != levels.index('private'):
-                del data[field]
-
-        return data
+        return remove_fields_by_privacy(data, access_level)
 
     class Meta:  #pylint: disable=too-few-public-methods
         """
@@ -222,6 +204,63 @@ class Herd(BaseModel):
         indexes = (
             (('herd', 'genebank'), True),
         )
+
+
+def remove_fields_by_privacy(data, access_level):
+    """
+    Removes fields according to a given access level (private, authenticated
+    or public) by looking at the _privacy fields in the data.
+
+    >>> test_data = {
+    ...     'high': 3,
+    ...     'high_privacy': 'private',
+    ...     'mid': 4,
+    ...     'mid_privacy': 'authenticated',
+    ...     'low': 5,
+    ...     'low_privacy': 'public',
+    ... }
+    >>> remove_fields_by_privacy(test_data, 'private') == test_data
+    True
+    >>> remove_fields_by_privacy(test_data, 'authenticated')
+    {'mid': 4, 'low': 5}
+    >>> remove_fields_by_privacy(test_data, 'public')
+    {'low': 5}
+
+    The privacy level of the fields 'latitude' and 'longitude' are
+    under 'coordinates_privacy'.
+
+    >>> test_data = {
+    ...     'coordinates_privacy': 'authenticated',
+    ...     'latitude': 59,
+    ...     'longitude': 17,
+    ... }
+    >>> remove_fields_by_privacy(test_data, 'authenticated')
+    {'latitude': 59, 'longitude': 17}
+    >>> remove_fields_by_privacy(test_data, 'public')
+    {}
+
+    """
+
+    data = {**data}
+
+    levels = ['public', 'authenticated', 'private']
+    # prune data according to access level
+    for field in [f for f in data.keys() if f.endswith('_privacy')]:
+        # remove values if access_level is less than required
+        field_level = data[field] or 'private'
+        if levels.index(access_level) < levels.index(field_level):
+            if field == 'coordinates_privacy':
+                del data['latitude']
+                del data['longitude']
+            else:
+                target_field = field[:-len('_privacy')]
+                del data[target_field]
+        # remove the access level value if the user doesn't have private
+        # access
+        if access_level != 'private':
+            del data[field]
+
+    return data
 
 
 class Colour(BaseModel):
