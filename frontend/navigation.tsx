@@ -28,22 +28,25 @@ const useMenuStyles = makeStyles({
 export function TabMenu() {
   const classes = useMenuStyles();
   const [value, setTab] = React.useState(0);
-  const {login, logout} = useUserContext();
+  const {logout} = useUserContext();
   const {user} = useUserContext();
   const history = useHistory();
 
+  const is_admin = !!(user?.is_manager || user?.is_admin)
+  const is_logged_in = !!user
+
   const tabs = [
-    {icon: <HomeIcon />, label: "Hem", route: "/"},
-    {icon: <AccountBalanceIcon />, label: "Genbanker", route: "/genebanks", hide: user ? undefined : true},
-    {icon: <GroupIcon />, label: "Administrera", route: "/manage", hide: user?.is_manager || user?.is_admin ? undefined : true},
-    {icon: <MeetingRoom />, label: "Logga in", route: "/login", hide: user ? true : undefined },
-    {icon: <VpnKeyIcon />, label: "Logga ut", route: "/", hide: user ? undefined : true, func: logout},
-  ];
+    {label: "Hem",          route: "/",          show: true,                            icon: <HomeIcon />           },
+    {label: "Genbanker",    route: "/genebanks", show: is_logged_in,                    icon: <AccountBalanceIcon /> },
+    {label: "Administrera", route: "/manage",    show: is_admin,                        icon: <GroupIcon />          },
+    {label: "Logga in",     route: "/login",     show: !is_logged_in,                   icon: <MeetingRoom />        },
+    {label: "Logga ut",     route: "/",          show: is_logged_in,  on_click: logout, icon: <VpnKeyIcon />         },
+  ]
 
   const handleChange = (_: any, index: number) => {
     const tab = tabs[index]
-    if (tab.func) {
-      tab.func()
+    if (tab.on_click) {
+      tab.on_click()
     }
     if (tab.route) {
       history.push(tab.route)
@@ -74,7 +77,7 @@ export function TabMenu() {
         centered
       >
         { tabs.map((tab: any, i: number) => {
-            return <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.hide ? 'none' : undefined}}/>
+            return <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.show ? undefined : 'none'}}/>
           })
         }
       </Tabs>
