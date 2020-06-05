@@ -17,6 +17,8 @@ from flask import (
 )
 
 import utils.database as db
+import utils.inbreeding as ibc
+
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -100,6 +102,23 @@ def individual(i_id):
     """
     user_id = session.get('user_id', None)
     return jsonify(db.get_individual(i_id, user_id))
+
+
+@APP.route('/api/inbreeding/<int:i_id>')
+def inbreeding(i_id):
+    """
+    Returns the inbreeding coefficient of the individual given by `i_id`.
+    """
+    user_id = session.get('user_id', None)
+    collections = ibc.get_pedigree_collections()
+    coefficients = ibc.calculate_inbreeding(collections)
+    i_id = str(i_id)
+
+    if i_id in coefficients:
+        return jsonify({i_id : coefficients[i_id]})
+
+    return jsonify({i_id: "Not found"}), 404
+
 
 @APP.route('/', defaults={'path': ''})
 @APP.route('/<path:path>') # catch-all to allow react routing

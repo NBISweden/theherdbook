@@ -9,6 +9,7 @@ MarkupSafe==1.1.1
 mccabe==0.6.1
 peewee==3.13.2
 psycopg2-binary==2.8.5
+git+git://github.com/jameshicks/pydigree@master
 pylint==2.4.4
 six==1.14.0
 Werkzeug==1.0.1

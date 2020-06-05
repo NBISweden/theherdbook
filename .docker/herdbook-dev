@@ -10,7 +10,9 @@ RUN yarn run build
 
 FROM python:3.8-buster
 
-COPY app/requirements.txt /
+COPY app/requirements*.txt /
+
+RUN pip3 install -r /requirements-pydigree.txt
 RUN pip3 install -r /requirements.txt
 
 COPY --from=build-stage /build/dist/index.html /static/
