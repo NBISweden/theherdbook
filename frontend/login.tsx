@@ -13,9 +13,9 @@ import {useUserContext} from './user_context'
 /**
  * Shows login and logout in a form, submits it to the user context callbacks
  */
-export function Login(props) {
+export function Login() {
   const [open, setOpen] = React.useState(true);
-  const {login, logout} = useUserContext()
+  const {login} = useUserContext()
   const [username, set_username] = useState('')
   const [password, set_password] = useState('')
   const history = useHistory()
@@ -27,44 +27,61 @@ export function Login(props) {
 
   const submitLogin = () => {
     login(username, password).then(
-      success => success && history.push("/")
+      status => {
+        if (status == 'logged_in') {
+          history.push("/")
+        }
+      }
     )
   }
 
+  const keydown = (e: React.KeyboardEvent<any>) => {
+    // Cannot get TextField to trigger onSubmit so listen for keydown instead
+    if (e.key == 'Enter') {
+      submitLogin()
+    }
+  }
 
   return <>
     <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
-      <DialogTitle id="form-dialog-title">Logga in</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Logga in med din E-post-adress och ditt lösenord.
-        </DialogContentText>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="E-postadress"
-          type="email"
-          value={username}
-          onChange={e => set_username(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          margin="dense"
-          label="Lösenord"
-          type="password"
-          value={password}
-          onChange={e => set_password(e.target.value)}
-          fullWidth
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={close} color="primary">
-          Avbryt
-        </Button>
-        <Button onClick={submitLogin} color="primary">
-          Logga in
-        </Button>
-      </DialogActions>
+      <DialogTitle>Logga in</DialogTitle>
+      <form onSubmit={submitLogin} onKeyDown={keydown}>
+        <DialogContent>
+          <DialogContentText>
+            Logga in med din e-postadress och ditt lösenord.
+          </DialogContentText>
+          <TextField
+            id="username"
+            variant="outlined"
+            autoFocus
+            margin="dense"
+            label="E-postadress"
+            type="email"
+            value={username}
+            onChange={e => set_username(e.target.value)}
+            onSubmit={submitLogin}
+            fullWidth
+          />
+          <TextField
+            id="password"
+            variant="outlined"
+            margin="dense"
+            label="Lösenord"
+            type="password"
+            value={password}
+            onChange={e => set_password(e.target.value)}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={close} color="primary">
+            Avbryt
+          </Button>
+          <Button onClick={submitLogin} color="primary" aria-label="Logga in">
+            Logga in
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   </>
 }
