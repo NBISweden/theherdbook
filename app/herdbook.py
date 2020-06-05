@@ -104,8 +104,8 @@ def individual(i_id):
     return jsonify(db.get_individual(i_id, user_id))
 
 
-@APP.route('/api/coefficient/<int:i_id>')
-def coefficients(i_id):
+@APP.route('/api/inbreeding/<int:i_id>')
+def inbreeding(i_id):
     """
     Returns the inbreeding coefficient of the individual given by `i_id`.
     """
