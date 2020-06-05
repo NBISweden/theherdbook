@@ -11,17 +11,19 @@ export interface User {
   is_owner: Array<number> | undefined
 }
 
+export type Result = 'logged_in' | 'logged_out' | 'error'
+
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
   user: User | undefined
-  login(username: string, password: string): void
-  logout(): void
+  login(username: string, password: string): Promise<Result>
+  logout(): Promise<Result>
 }
 
 const dummy_user_context: UserContext = {
   user: undefined,
-  login() {},
-  logout() {}
+  async login() { return 'error' },
+  async logout() { return 'error' }
 }
 
 const UserContext = React.createContext(dummy_user_context)
@@ -46,17 +48,17 @@ export function useUserContext(): UserContext {
 export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined as undefined | User)
 
-  async function handle_promise(promise: Promise<{user: User | null}>) {
+  async function handle_promise(promise: Promise<User | null>): Promise<Result> {
     return await promise.then(
       data => {
         console.log(data)
-        set_state(data ?? undefined as any)
-        return data && true
+        set_state(data ?? undefined)
+        return data ? 'logged_in' : 'logged_out'
       },
       error => {
         console.error(error)
         set_state(undefined)
-          return false
+        return 'error'
       })
   }
 
@@ -67,7 +69,7 @@ export function WithUserContext(props: {children: React.ReactNode}) {
   }
 
   function logout() {
-    handle_promise(get('/api/logout'))
+    return handle_promise(get('/api/logout'))
   }
 
   function on_mount() {
