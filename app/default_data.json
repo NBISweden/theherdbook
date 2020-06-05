@@ -179,6 +179,16 @@
    "id": 99,
    "name": "Allt annat",
    "comment": null
+  },
+  {
+   "id": 100,
+   "name": "Svart/vit",
+   "comment": "Svart/vit Melleruds-kanin"
+  },
+  {
+   "id": 101,
+   "name": "Albino",
+   "comment": "Albino Melleruds-kanin"
   }
  ]
 }
