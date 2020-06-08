@@ -118,7 +118,9 @@ export function Manage() {
            <Tab label="Användare" />
       </Tabs>
       <TabPanel value={currentTab} index={0}>
-        {genebank.name} innehar {genebank.herds.length} besättningar.
+        {genebank && <>
+          {genebank.name} innehar {genebank.herds.length} besättningar.
+        </>}
       </TabPanel>
       <TabPanel value={currentTab} index={1}>
         Användarkontroller kommer att hamna här.
