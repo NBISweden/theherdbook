@@ -51,6 +51,16 @@ def get_user():
     user = db.fetch_user_info(session.get('user_id', None))
     return jsonify(user.frontend_data() if user else None)
 
+@APP.route('/api/users')
+def get_users():
+    """
+    Returns all users that the logged in user has access to. This is all users
+    for admin, all users except admin users for managers, and None for regular
+    users.
+    """
+    users = db.get_users(session.get('user_id', None))
+    return jsonify(users=users)
+
 @APP.route('/api/login', methods=['POST'])
 def login():
     """
@@ -109,7 +119,6 @@ def inbreeding(i_id):
     """
     Returns the inbreeding coefficient of the individual given by `i_id`.
     """
-    user_id = session.get('user_id', None)
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
     i_id = str(i_id)

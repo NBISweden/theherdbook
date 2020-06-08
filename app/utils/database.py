@@ -737,6 +737,27 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
+def get_users(user_uuid=None):
+    """
+    Returns all users that the logged in user has access to. This is all users
+    for admin, all users except admin users for managers, and None for regular
+    users.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return None
+    try:
+        if not user.is_admin and not user.is_manager:
+            return None
+        users = list(User.select())
+        if user.is_admin:
+            return users
+        # user is manager
+        return [user for user in users if not user.is_admin]
+    except DoesNotExist:
+        return None
+
+
 def get_all_individuals():
     """
     Returns the neccessary information about all individuals for computing genetic coefficients.

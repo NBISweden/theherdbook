@@ -216,6 +216,24 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(db.get_individual(self.individuals[1].id, self.owner.uuid))
         self.assertFalse(db.get_individual(self.individuals[2].id, self.owner.uuid))
 
+    def test_get_users(self):
+        """
+        Checks that `utils.database.get_users` return the correct information
+        for all test users.
+        """
+        # admin
+        user_ids = [u.id for u in db.get_users(self.admin.uuid)]
+        self.assertEqual(user_ids, [1, 2, 3, 4])
+        # specialist
+        user_ids = db.get_users(self.specialist.uuid)
+        self.assertEqual(user_ids, None)
+        # manager
+        user_ids = [u.id for u in db.get_users(self.manager.uuid)]
+        self.assertEqual(user_ids, [2, 3, 4])
+        # owner
+        user_ids = db.get_users(self.owner.uuid)
+        self.assertEqual(user_ids, None)
+
 
 if __name__ == '__main__':
     unittest.main()
