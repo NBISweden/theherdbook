@@ -454,6 +454,50 @@ class User(BaseModel):
         self.privileges = privs
         self.save()
 
+    def has_role(self, level, target_id=None):
+        """
+        Check if role `level` with target `target_id` is in the user privilege
+        list. Returns `True` or `False`.
+
+        Allowed level/target_id combinations are:
+            - level: admin, (no target)
+            - level: specialist, genebank: target_id
+            - level: manager, genebank: target_id
+            - level: owner, herd: target_id
+        """
+        for role in self.privileges:
+            if role['level'] == level:
+                if level == 'admin':
+                    return True
+                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                    return True
+                if level == 'owner' and target_id == role['herd']:
+                    return True
+        return False
+
+    def remove_role(self, level, target_id=None):
+        """
+        Check if role `level` with target `target_id` is in the user privilege
+        list, and remove it if it is present.
+
+        Allowed level/target_id combinations are:
+            - level: admin, (no target)
+            - level: specialist, genebank: target_id
+            - level: manager, genebank: target_id
+            - level: owner, herd: target_id
+        """
+        new_privs = []
+        for role in self.privileges:
+            if role['level'] == level:
+                if level == 'admin':
+                    continue
+                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                    continue
+                if level == 'owner' and target_id == role['herd']:
+                    continue
+            new_privs += [role]
+        self.privileges = new_privs
+
     @property
     def is_admin(self):
         """
@@ -760,6 +804,66 @@ def get_users(user_uuid=None):
     except DoesNotExist:
         return None
 
+def update_role(operation, user_uuid=None):
+    """
+    Takes a role change description `operation`, and returns a status message.
+
+    The input data should be formatted like:
+        {action: add | remove,
+         role: owner | manager | specialist,
+         user: <id>,
+         herd | genebank: <id>
+        }
+
+    The return value will be `updated`, `unchanged` or `failed`.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return "failed" # not logged in
+    # check for malformed data
+    if type(operation) is not dict:
+        return "failed"
+    if operation.get('action', None) not in ['add', 'remove']:
+        return "failed"
+    if operation.get('role', None) not in ['owner', 'manager', 'specialist']:
+        return "failed"
+    if operation.get('user', "").isdigit():
+        return "failed"
+    if operation['role'] in ['manager', 'specialist'] and not operation.get('genebank'):
+        return "failed"
+    if operation['role'] in ['owner'] and not operation.get('herd'):
+        return "failed"
+    # check permissions
+
+    if user.is_manager:
+        genebank = operation.get('genebank', None)
+        if genebank is None:
+            try:
+                herd = Herd.get(operation['herd'])
+                genebank = herd.as_dict()['genebank']
+            except DoesNotExist:
+                return "failed" # unknown herd
+        if genebank not in user.is_manager:
+                return "failed" # lacking permission
+    elif not user.is_admin:
+        return "failed" # lacking permissions
+
+    # check target user
+    try:
+        target_user = User.get(int(operation['user']))
+    except DoesNotExist:
+        return "failed" # target user does not exist
+
+    # everything seems ok - update roles
+    if operation['action'] == 'add':
+        if target_user.has_role(operation['role'], operation['genebank']):
+            return "unchanged"
+        target_user.add_role(operation['role'], operation['genebank'])
+    if operation['action'] == 'remove':
+        if not target_user.has_role(operation['role'], operation['genebank']):
+            return "unchanged"
+        target_user.remove_role(operation['role'], operation['genebank'])
+    return "updated"
 
 def get_all_individuals():
     """
