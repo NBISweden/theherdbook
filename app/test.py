@@ -234,6 +234,32 @@ class TestPermissions(DatabaseTest):
         user_ids = db.get_users(self.owner.uuid)
         self.assertEqual(user_ids, None)
 
+    def test_has_role(self):
+        """
+        Checks that `utils.database.User.has_role`return the correct information
+        for all test users.
+        """
+        # admin
+        self.assertTrue(self.admin.has_role('admin'))
+        self.assertFalse(self.admin.has_role('manager', 1))
+        self.assertFalse(self.admin.has_role('specialist', 1))
+        self.assertFalse(self.admin.has_role('owner', 1))
+        # specialist
+        self.assertFalse(self.specialist.has_role('admin'))
+        self.assertFalse(self.specialist.has_role('manager', 1))
+        self.assertTrue(self.specialist.has_role('specialist', 1))
+        self.assertFalse(self.specialist.has_role('owner', 1))
+        # manager
+        self.assertFalse(self.manager.has_role('admin'))
+        self.assertTrue(self.manager.has_role('manager', 1))
+        self.assertFalse(self.manager.has_role('specialist', 1))
+        self.assertFalse(self.manager.has_role('owner', 1))
+        # owner
+        self.assertFalse(self.owner.has_role('admin'))
+        self.assertFalse(self.owner.has_role('manager', 1))
+        self.assertFalse(self.owner.has_role('specialist', 1))
+        self.assertTrue(self.owner.has_role('owner', 1))
+
 
 if __name__ == '__main__':
     unittest.main()
