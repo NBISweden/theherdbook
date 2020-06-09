@@ -20,10 +20,14 @@ class TestEndpoints(unittest.TestCase):
         """
         Checks that the main endpoint (/) is available.
         """
-        self.assertEqual(
-            requests.get(HOST + '/').status_code,
-            200
-        )
+
+        try:
+            self.assertEqual(
+                requests.get(HOST + '/').status_code,
+                200
+                )
+        except requests.exceptions.ConnectionError:
+            self.skipTest("Server not running")
 
 class DatabaseTest(unittest.TestCase):
     """
