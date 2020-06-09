@@ -23,7 +23,14 @@ const useStyles = makeStyles({
   breadcrumbs: {
     padding: "15px",
     paddingBottom: 0,
-  }
+  },
+  mainTab: {
+    height: "80%"
+  },
+  verticalTabs: {
+    height: "calc(90% - 10%)",
+    borderRight: `1px solid rgba(0,0,0,0.2)`,
+  },
 });
 
 /**
@@ -34,6 +41,7 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: any;
   value: any;
+  className?: any;
 }
 
 /**
@@ -43,12 +51,13 @@ interface TabPanelProps {
  * @param props - A set of `TabPanelProps` used to set content and visibility
  */
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, value, index, className, ...other } = props;
 
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
+      className={className}
       {...other}
     >
       {value === index && (
@@ -70,6 +79,7 @@ export function Manage() {
   const [genebanks, setGenebanks] = React.useState([] as any[])
   const [genebank, setGenebank] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
+  const [herdTab, setHerd] = React.useState(0);
   const classes = useStyles();
 
   function selectGenebank(id: number) {
@@ -92,9 +102,14 @@ export function Manage() {
     );
   }, [user])
 
-  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+  const tabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
   };
+
+  const herdChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setHerd(newValue);
+  };
+
 
   return <>
     <Breadcrumbs className={classes.breadcrumbs} separator="&bull;" aria-label="breadcrumb">
@@ -110,19 +125,29 @@ export function Manage() {
     </Breadcrumbs>
     <Paper className={classes.root}>
       <Tabs value={currentTab}
-            onChange={handleChange}
+            onChange={tabChange}
             indicatorColor="primary"
             textColor="primary"
         >
            <Tab label="Besättningar" />
            <Tab label="Användare" />
       </Tabs>
-      <TabPanel value={currentTab} index={0}>
-        {genebank && <>
-          {genebank.name} innehar {genebank.herds.length} besättningar.
-        </>}
+      <TabPanel value={currentTab} index={0} className={classes.mainTab}>
+
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={herdTab}
+          onChange={herdChange}
+          className={classes.verticalTabs}
+        >
+          {genebank &&
+            genebank.herds.map((h:any, i:number) => {
+              return <Tab key={i} label={h.name ?? `Besättning ${h.id}`} />
+            })}
+        </Tabs>
       </TabPanel>
-      <TabPanel value={currentTab} index={1}>
+      <TabPanel value={currentTab} index={1} className={classes.mainTab}>
         Användarkontroller kommer att hamna här.
       </TabPanel>
     </Paper>
