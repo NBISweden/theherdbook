@@ -65,7 +65,13 @@ class DatabaseTest(unittest.TestCase):
             db.Herd(genebank=self.genebanks[0], herd=1, name="herd1"),
             db.Herd(genebank=self.genebanks[0], herd=2, name="herd2"),
             db.Herd(genebank=self.genebanks[1], herd=3, name="herd3"),
+            db.Herd(genebank=self.genebanks[1], herd=4, name="herd4"),
         ]
+
+        # Set up some public info in a herd
+        self.herds[3].location = 'here'
+        self.herds[3].location_privacy = 'public'
+
         for herd in self.herds:
             herd.save()
 
@@ -193,6 +199,10 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(db.get_herd(self.herds[0].id, self.owner.uuid))
         self.assertTrue(db.get_herd(self.herds[1].id, self.owner.uuid))
         self.assertFalse(db.get_herd(self.herds[2].id, self.owner.uuid))
+        # unknown
+        self.assertTrue(db.get_herd(self.herds[3].id, 'some id').location)
+        # noone
+        self.assertTrue(db.get_herd(self.herds[3].id).location)
 
     def test_get_individual(self):
         """
