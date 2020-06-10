@@ -9,7 +9,6 @@ import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Box from '@material-ui/core/Box';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { useUserContext } from './user_context'
@@ -17,18 +16,20 @@ import { get } from './communication';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
-  root: {
-    flexGrow: 1,
-  },
   breadcrumbs: {
     padding: "15px",
     paddingBottom: 0,
   },
-  mainTab: {
-    height: "80%"
+  paper: {
+    height: "calc(100% - 39px)", // remove breadcrumb height
+  },
+  tabPanel: {
+    height: "calc(100% - 48px)",
+    padding: "0",
   },
   verticalTabs: {
-    height: "calc(90% - 10%)",
+    height: "100%",
+    margin: "0",
     borderRight: `1px solid rgba(0,0,0,0.2)`,
   },
 });
@@ -61,9 +62,9 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box p={3}>
+        <>
           {children}
-        </Box>
+        </>
       )}
     </div>
   );
@@ -123,7 +124,7 @@ export function Manage() {
         })
       }
     </Breadcrumbs>
-    <Paper className={classes.root}>
+    <Paper className={classes.paper}>
       <Tabs value={currentTab}
             onChange={tabChange}
             indicatorColor="primary"
@@ -132,7 +133,7 @@ export function Manage() {
            <Tab label="Besättningar" />
            <Tab label="Användare" />
       </Tabs>
-      <TabPanel value={currentTab} index={0} className={classes.mainTab}>
+      <TabPanel value={currentTab} index={0} className={classes.tabPanel}>
 
         <Tabs
           orientation="vertical"
@@ -147,7 +148,7 @@ export function Manage() {
             })}
         </Tabs>
       </TabPanel>
-      <TabPanel value={currentTab} index={1} className={classes.mainTab}>
+      <TabPanel value={currentTab} index={1} className={classes.tabPanel}>
         Användarkontroller kommer att hamna här.
       </TabPanel>
     </Paper>
