@@ -20,15 +20,24 @@ import {Manage} from './manage'
 import {Individual} from './individual'
 
 const CSS = sc.createGlobalStyle`
+  html, #root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
   body {
     font-family: 'Roboto';
+    height: calc(100% - 1.1cm);
+    padding: 0;
     margin: 1cm;
+    margin-bottom: 0.1cm;
   }
+
 `
 const useMainStyle = makeStyles({
   main: {
-    padding: "1cm",
-    paddingTop: 0,
+    height: "calc(100% - 72px)",
   }
 });
 
