@@ -32,8 +32,8 @@ const CSS = sc.createGlobalStyle`
     padding: 0;
     margin: 1cm;
     margin-bottom: 0.1cm;
+    overflow-y: hidden;
   }
-
 `
 const useMainStyle = makeStyles({
   main: {
