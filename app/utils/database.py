@@ -334,7 +334,7 @@ class Individual(BaseModel):
             - id
             - name
         """
-        return {'id': self.id, 'name': self.name}
+        return {'id': self.id, 'name': self.name, 'number': self.number}
 
     class Meta:  #pylint: disable=too-few-public-methods
         """
