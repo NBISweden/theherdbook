@@ -5,25 +5,11 @@ Unit tests for the herdbook.
 
 import os
 import unittest
-import requests
+
+import flask
 
 import utils.database as db
-
-HOST = "http://localhost:4200"
-
-class TestEndpoints(unittest.TestCase):
-    """
-    Checks that all endpoints are valid.
-    """
-
-    def test_main(self):
-        """
-        Checks that the main endpoint (/) is available.
-        """
-        self.assertEqual(
-            requests.get(HOST + '/').status_code,
-            200
-        )
+from herdbook import APP
 
 class DatabaseTest(unittest.TestCase):
     """
@@ -260,6 +246,43 @@ class TestPermissions(DatabaseTest):
         self.assertFalse(self.owner.has_role('specialist', 1))
         self.assertTrue(self.owner.has_role('owner', 1))
 
+
+class FlaskTest(DatabaseTest):
+    """
+    Starts and stops the flask application so that endpoints can be tested.
+    """
+    def setUp(self):
+        """
+        Starts the flask APP on port `self.PORT`.
+        """
+        APP.config['TESTING'] = True
+        APP.config['DEBUG'] = False
+        APP.static_folder = "../frontend/"
+        self.app = APP.test_client()
+        super().setUp()
+
+class EndpointTest(FlaskTest):
+    """
+    Tests flask endpoints.
+    """
+
+    def test_main(self):
+        """
+        Checks that the main endpoint (/) is available.
+        """
+        self.assertEqual(self.app.get('/').status_code, 200)
+
+    def test_get_user(self):
+        """
+        Checks that `herdbook.get_user` returns the correct user.
+        """
+        self.assertEqual(self.app.get('/api/user').get_json(), None)
+        with self.app as context:
+            context.post('/api/login',
+                         json={"username": "admin", "password": "pass"})
+            self.assertEqual(flask.session['user_id'].hex, self.admin.uuid)
+            context.get('/api/logout')
+            self.assertEqual(self.app.get('/api/user').get_json(), None)
 
 if __name__ == '__main__':
     unittest.main()
