@@ -65,7 +65,10 @@ def get_users():
 def login():
     """
     Parses a login form and sets session variables when logged in.
-    If login fails the system will default to an anonymous user.
+    If login fails the system will return `None`.
+    The login form should be in json-format like:
+
+        {'username': '<user>', 'password': '<pass>'}
     """
 
     form = request.json
