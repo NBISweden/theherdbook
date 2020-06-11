@@ -494,6 +494,7 @@ class User(BaseModel):
                     continue
             new_privs += [role]
         self.privileges = new_privs
+        self.save()
 
     @property
     def is_admin(self):
@@ -817,21 +818,21 @@ def update_role(operation, user_uuid=None):
     user = fetch_user_info(user_uuid)
     if user is None:
         return "failed" # not logged in
-    # check for malformed data
-    if type(operation) is not dict:
-        return "failed"
-    if operation.get('action', None) not in ['add', 'remove']:
-        return "failed"
-    if operation.get('role', None) not in ['owner', 'manager', 'specialist']:
-        return "failed"
-    if operation.get('user', "").isdigit():
-        return "failed"
-    if operation['role'] in ['manager', 'specialist'] and not operation.get('genebank'):
-        return "failed"
-    if operation['role'] in ['owner'] and not operation.get('herd'):
-        return "failed"
-    # check permissions
 
+    # Check data
+    valid = True
+    if not isinstance(operation, dict) \
+       or operation.get('action', {}) not in ['add', 'remove'] \
+       or (not isinstance(operation.get('user', ""), int) \
+           and not operation.get('user', "").isdigit()):
+        valid = False
+    elif operation.get('role', {}) not in ['owner', 'manager', 'specialist'] \
+       or (operation['role'] in ['manager', 'specialist'] and not operation.get('genebank')) \
+       or (operation['role'] in ['owner'] and not operation.get('herd')):
+        valid = False
+
+    # Check permissions
+    permitted = True
     if user.is_manager:
         genebank = operation.get('genebank', None)
         if genebank is None:
@@ -839,10 +840,13 @@ def update_role(operation, user_uuid=None):
                 herd = Herd.get(operation['herd'])
                 genebank = herd.as_dict()['genebank']
             except DoesNotExist:
-                return "failed" # unknown herd
+                permitted = False # unknown herd
         if genebank not in user.is_manager:
-                return "failed" # lacking permission
+            permitted = False
     elif not user.is_admin:
+        permitted = False
+
+    if not valid or not permitted:
         return "failed" # lacking permissions
 
     # check target user
@@ -851,16 +855,16 @@ def update_role(operation, user_uuid=None):
     except DoesNotExist:
         return "failed" # target user does not exist
 
-    # everything seems ok - update roles
-    if operation['action'] == 'add':
-        if target_user.has_role(operation['role'], operation['genebank']):
-            return "unchanged"
-        target_user.add_role(operation['role'], operation['genebank'])
-    if operation['action'] == 'remove':
-        if not target_user.has_role(operation['role'], operation['genebank']):
-            return "unchanged"
+    # update roles if needed
+    has_role = target_user.has_role(operation['role'], operation['genebank'])
+    updated = False
+    if has_role and operation['action'] == 'remove':
         target_user.remove_role(operation['role'], operation['genebank'])
-    return "updated"
+        updated = True
+    elif not has_role and operation['action'] == 'add':
+        target_user.add_role(operation['role'], operation['genebank'])
+        updated = True
+    return "updated" if updated else "unchanged"
 
 def get_all_individuals():
     """
