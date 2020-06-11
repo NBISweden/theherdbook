@@ -246,6 +246,47 @@ class TestPermissions(DatabaseTest):
         self.assertFalse(self.owner.has_role('specialist', 1))
         self.assertTrue(self.owner.has_role('owner', 1))
 
+    def test_update_role(self):
+        """
+        Checks that `utils.database.update_role` performs correctly for all
+        operations.
+        """
+
+        # malformed data
+        self.assertEqual(db.update_role(None, self.admin.uuid), "failed")
+        operation = {'action': 'dad', 'role': 'manager', 'user': 1, 'genebank': 1}
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "failed")
+        operation = {'action': 'add', 'role': 'owner', 'user': 1, 'genebank': 1}
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "failed")
+        operation = {'action': 'add', 'role': 'manager', 'user': 1, 'herd': 1}
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "failed")
+
+        # insufficient permissions
+        operation = {'action': 'add', 'role': 'manager', 'user': 1, 'genebank': 1}
+        self.assertEqual(db.update_role(operation, self.owner.uuid), "failed")
+        self.assertEqual(db.update_role(operation, self.specialist.uuid), "failed")
+        operation['genebank'] = 2
+        self.assertEqual(db.update_role(operation, self.manager.uuid), "failed")
+
+        # unknown target user
+        operation = {'action': 'add', 'role': 'manager', 'user':-1, 'genebank': 1}
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "failed")
+
+        # successful remove
+        operation = {'action': 'remove', 'role': 'manager', 'user': self.manager.id, 'genebank': 1}
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "updated")
+
+        # unnecessary remove
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "unchanged")
+
+        # successful insert
+        operation['action'] = 'add'
+        operation['user'] = str(operation['user'])
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "updated")
+
+        # unnecessary insert
+        self.assertEqual(db.update_role(operation, self.admin.uuid), "unchanged")
+
 
 class FlaskTest(DatabaseTest):
     """
