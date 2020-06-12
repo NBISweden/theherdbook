@@ -3,10 +3,10 @@
  * changing herd attributes in the database.
  */
 import React from 'react'
-import { TextField } from '@material-ui/core';
+import { TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {Link} from "react-router-dom";
-import { get } from './communication';
+import { get, update } from './communication';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -22,8 +22,7 @@ const useStyles = makeStyles({
 });
 
 /**
- * Provides genebanks management forms for granting and revoking herd
- * permissions, and managing herd animals.
+ * Provides herd management forms for setting herd metadata.
  */
 export function HerdForm(props: {id: any | undefined}) {
   const [herd, setHerd] = React.useState(undefined as any)
@@ -56,22 +55,49 @@ export function HerdForm(props: {id: any | undefined}) {
     setHerd(herd);
   }
 
+  const submitForm = () => {
+    let postData = Object.assign({}, herd);
+    delete postData["individuals"];
+    update('/api/manage/herd', postData).then(
+      data => {
+        switch (data.status) {
+          case "updated": console.debug("updated successfully"); break;
+          default: console.debug("status:", data)// "failed" or other erro
+        }
+      },
+      error => console.error(error)
+    )
+  }
+
   return <>
     {loading && <h2>Loading...</h2> ||  herd &&
       <>
-        <h1>{herd.name ?? `Besättning ${herd.id}`}</h1>
+        <h1>{herd.name || `Besättning ${herd.id}`}</h1>
         <form className={classes.form} noValidate autoComplete="off">
           {simpleFields.map((field: any, i: number) => {
             return <TextField
                     key={i}
                     id={field.key}
                     label={field.title}
-                    value={herd[field.key] ?? undefined}
+                    defaultValue={herd[field.key] ?? undefined}
                     className={classes.simpleField}
                     onChange={e => setFormField(field.key, e.target.value)} />
             })
           }
+          <TextField label='Latitude'
+                     defaultValue={herd['latitude'] ?? undefined}
+                     className={classes.simpleField}
+                     onChange={e => setFormField('latitude', e.target.value)} />
+          <TextField label='Longitud'
+                     defaultValue={herd['longitud'] ?? undefined}
+                     className={classes.simpleField}
+                     onChange={e => setFormField('longitude', e.target.value)} />
         </form>
+        <Button variant="contained"
+                color="primary"
+                onClick={() => submitForm()}>
+          Spara
+        </Button>
         <h2>Individer</h2>
         <ul>
           {herd.individuals.map((individual: any, i:number) => {

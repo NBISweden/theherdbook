@@ -38,6 +38,7 @@ def after_request(response):
     if APP.config['ENV'] == 'development':
         response.headers.add('Access-Control-Allow-Origin', 'http://localhost:2345')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,UPDATE')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
 
     return response
@@ -51,7 +52,7 @@ def get_user():
     user = db.fetch_user_info(session.get('user_id', None))
     return jsonify(user.frontend_data() if user else None)
 
-@APP.route('/api/users')
+@APP.route('/api/manage/users')
 def get_users():
     """
     Returns all users that the logged in user has access to. This is all users
@@ -60,6 +61,20 @@ def get_users():
     """
     users = db.get_users(session.get('user_id', None))
     return jsonify(users=users)
+
+@APP.route('/api/manage/herd', methods=['POST', 'UPDATE'])
+def manage_herd():
+    """
+    Used to insert and update herd information in the database.
+    Returns "created", "updated", or "failed".
+    """
+    form = request.json
+    status = "failed"
+    if request.method == 'POST':
+        status = db.add_herd(form, session.get('user_id', None))
+    elif request.method == 'UPDATE':
+        status = db.update_herd(form, session.get('user_id', None))
+    return jsonify(status=status)
 
 @APP.route('/api/login', methods=['POST'])
 def login():

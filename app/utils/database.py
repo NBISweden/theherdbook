@@ -769,6 +769,39 @@ def get_herd(herd_id, user_uuid=None):
     except DoesNotExist:
         return None
 
+def add_herd(form, user_uuid):
+    """
+    Adds a new herd, defined by `form`, into the database, if the given `user`
+    has sufficient permissions to insert herds.
+    """
+    logging.warning("add_herd is not yet implemented")
+    return "failed"
+
+def update_herd(form, user_uuid):
+    """
+    Updates a herd, identified by `form.id`, by the values in `form`, if the
+    given `user` has sufficient permissions to do so.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return None
+    try:
+        herd = Herd.get(form['id'])
+        # check permission to update herd
+        permission = user.is_admin \
+                     or user.has_role('owner', herd.id) \
+                     or (user.is_manager and herd.genebank in user.is_manager)
+        if not permission:
+            return "failed" # no permission to change
+
+        for key, value in form.items():
+            if hasattr(herd, key):
+                setattr(herd, key, value)
+        herd.save()
+        return "updated"
+    except DoesNotExist:
+        return "failed" # unknown herd
+
 def get_individual(individual_id, user_uuid=None):
     """
     Returns information on a given individual id, if it's accessible to the user
