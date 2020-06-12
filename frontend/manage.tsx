@@ -9,12 +9,12 @@ import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import { Box, TextField } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import {Link} from "react-router-dom";
 
 import { useUserContext } from './user_context'
 import { get } from './communication';
+import { HerdForm } from '~herdForm';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -24,15 +24,6 @@ const useStyles = makeStyles({
   },
   paper: {
     height: "calc(100% - 39px)", // remove breadcrumb height
-  },
-  form: {
-    borderLeft: "1px solid rgba(0,0,0,0.1)",
-    paddingLeft: "0.5cm",
-    display: "flex",
-    flexDirection: "column",
-  },
-  simpleField: {
-    width: "400px",
   },
   controls: {
     height: "100%",
@@ -102,16 +93,7 @@ export function Manage() {
   const [herd, setHerd] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
   const [herdTab, setHerdTab] = React.useState(0);
-  const [loading, setLoading] = React.useState(true);
   const classes = useStyles();
-  const simpleFields = [
-    {key: 'name', title: "Namn"},
-    {key: 'email', title: "E-post"},
-    {key: 'mobile_phone', title: "Mobiltelefon"},
-    {key: 'wire_phone', title: "Fast telefon"},
-    {key: 'physical_address', title: "Adress"},
-    {key: 'www', title: "Hemsida"},
-  ];
 
   function selectGenebank(id: number) {
     get(`/api/genebank/${id}`).then(
@@ -120,18 +102,7 @@ export function Manage() {
           return;
         }
         setGenebank(data);
-        fetchHerd(data.herds[herdTab].id);
-      },
-      error => console.error(error)
-    );
-  }
-
-  function fetchHerd(id: number) {
-    setLoading(true);
-    get(`/api/herd/${id}`).then(
-      data => {
-        data && setHerd(data);
-        setLoading(false);
+        setHerd(data.herds[herdTab].id);
       },
       error => console.error(error)
     );
@@ -157,14 +128,9 @@ export function Manage() {
   const herdChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setHerdTab(newValue);
     if (genebank) {
-      fetchHerd(genebank.herds[newValue].id);
+      setHerd(genebank.herds[newValue].id);
     }
   };
-
-  const setFormField = (label: string, value: string | number) => {
-    herd[label] = value;
-    setHerd(herd);
-  }
 
   return <>
     <Breadcrumbs className={classes.breadcrumbs} separator="&bull;" aria-label="breadcrumb">
@@ -207,28 +173,7 @@ export function Manage() {
         </Tabs>
 
         <Box className={classes.controls}>
-          {loading && <h2>Loading...</h2> || herd && <>
-            <h1>{herd.name ?? `Besättning ${herd.id}`}</h1>
-            <form className={classes.form} noValidate autoComplete="off">
-              {simpleFields.map((field: any, i: number) => {
-                return <TextField
-                        key={i}
-                        id={field.key}
-                        label={field.title}
-                        value={herd[field.key] ?? undefined}
-                        className={classes.simpleField}
-                        onChange={e => setFormField(field.key, e.target.value)} />
-              })}
-            </form>
-            <h2>Individer</h2>
-            <ul>
-              {herd.individuals.map((individual: any, i:number) => {
-                return <Link key={i} to={`/individual/${individual.id}`}>
-                <li>{individual.name ?? individual.number}</li>
-                </Link>
-              })}
-            </ul>
-          </>}
+          <HerdForm id={herd} />
         </Box>
       </TabPanel>
       <TabPanel value={currentTab} index={1} className={classes.tabPanel}>
