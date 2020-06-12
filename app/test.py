@@ -317,13 +317,21 @@ class EndpointTest(FlaskTest):
         """
         Checks that `herdbook.get_user` returns the correct user.
         """
-        self.assertEqual(self.app.get('/api/user').get_json(), None)
-        with self.app as context:
-            context.post('/api/login',
-                         json={"username": "admin", "password": "pass"})
-            self.assertEqual(flask.session['user_id'].hex, self.admin.uuid)
-            context.get('/api/logout')
+        for test_user in [self.admin, self.manager, self.specialist, self.owner]:
+            user_data = {'email': test_user.email,
+                         'is_admin': test_user.is_admin,
+                         'is_manager': test_user.is_manager,
+                         'is_owner': test_user.is_owner,
+                         'validated': test_user.validated,
+                        }
             self.assertEqual(self.app.get('/api/user').get_json(), None)
+            with self.app as context:
+                context.post('/api/login', json={'username': test_user.email,
+                                                 'password': 'pass'})
+                self.assertEqual(flask.session['user_id'].hex, test_user.uuid)
+                self.assertEqual(self.app.get('/api/user').get_json(), user_data)
+                context.get('/api/logout')
+                self.assertEqual(self.app.get('/api/user').get_json(), None)
 
 if __name__ == '__main__':
     unittest.main()
