@@ -798,10 +798,10 @@ def get_users(user_uuid=None):
         if not user.is_admin and not user.is_manager:
             return None
         users = list(User.select())
-        if user.is_admin:
-            return users
-        # user is manager
-        return [user for user in users if not user.is_admin]
+        if not user.is_admin:
+            users = [user for user in users if not user.is_admin]
+
+        return [{'email': u.email, 'id': u.id} for u in users]
     except DoesNotExist:
         return None
 
