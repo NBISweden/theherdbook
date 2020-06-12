@@ -333,5 +333,26 @@ class EndpointTest(FlaskTest):
                 context.get('/api/logout')
                 self.assertEqual(self.app.get('/api/user').get_json(), None)
 
+    def test_get_users(self):
+        """
+        Checks that `herdbook.get_users` returns the correct user.
+        """
+        user_results = [(self.admin, [{'id': u.id, 'email': u.email} for u in \
+                                      [self.admin, self.specialist, self.manager, self.owner]]
+                        ),
+                        (self.manager, [{'id': u.id, 'email': u.email} for u in \
+                                    [self.specialist, self.manager, self.owner]]
+                        ),
+                        (self.specialist, None),
+                        (self.owner, None),]
+
+        for user, result in user_results:
+            with self.app as context:
+                context.post('/api/login',
+                            json={"username": user.email, "password": "pass"})
+                self.assertDictEqual(self.app.get('/api/manage/users').get_json(), {'users': result})
+                context.get('/api/logout')
+                self.assertEqual(self.app.get('/api/manage/users').get_json(), {'users': None})
+
 if __name__ == '__main__':
     unittest.main()
