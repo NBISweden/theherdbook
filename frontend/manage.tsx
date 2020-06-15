@@ -15,6 +15,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useUserContext } from './user_context'
 import { get } from './communication';
 import { HerdForm } from '~herdForm';
+import { ManageUser } from '~manage_user';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -27,17 +28,16 @@ const useStyles = makeStyles({
   },
   controls: {
     height: "100%",
-    width: "100%",
+    width: "calc(100% - 250px)",
     padding: "0.5cm 1cm",
     overflowY: "scroll",
   },
   tabPanel: {
     height: "calc(100% - 48px)",
     padding: "0",
-    display: "flex",
-    flexDirection: "row",
   },
   verticalTabs: {
+    float: "left",
     height: "100%",
     width: "250px",
     margin: "0",
@@ -88,11 +88,13 @@ function TabPanel(props: TabPanelProps) {
  */
 export function Manage() {
   const {user} = useUserContext();
+  const [users, setUsers] = React.useState([] as any[])
   const [genebanks, setGenebanks] = React.useState([] as any[])
   const [genebank, setGenebank] = React.useState(undefined as any)
   const [herd, setHerd] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
   const [herdTab, setHerdTab] = React.useState(0);
+  const [userTab, setUserTab] = React.useState(0);
   const classes = useStyles();
 
   function selectGenebank(id: number) {
@@ -119,6 +121,12 @@ export function Manage() {
       },
       error => console.error(error)
     );
+    get('/api/manage/users').then(
+      data => {
+        data && setUsers(data.users)
+      },
+      error => console.error(error)
+    );
   }, [user])
 
   const tabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
@@ -131,6 +139,10 @@ export function Manage() {
       setHerd(genebank.herds[newValue].id);
     }
   };
+
+  const userChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setUserTab(newValue);
+  }
 
   return <>
     <Breadcrumbs className={classes.breadcrumbs} separator="&bull;" aria-label="breadcrumb">
@@ -177,7 +189,19 @@ export function Manage() {
         </Box>
       </TabPanel>
       <TabPanel value={currentTab} index={1} className={classes.tabPanel}>
-        Användarkontroller kommer att hamna här.
+        <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            value={userTab}
+            onChange={userChange}
+            className={classes.verticalTabs}
+          >
+            {users.map((u:any, i:number) => <Tab key={i} label={u.email} />)}
+          </Tabs>
+
+          <Box className={classes.controls}>
+            <ManageUser id={userTab} />
+          </Box>
       </TabPanel>
     </Paper>
   </>
