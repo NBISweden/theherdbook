@@ -70,11 +70,29 @@ def manage_user(u_id):
     if request.method == 'GET':
         user = db.get_user(u_id, session.get('user_id', None))
         return jsonify(user)
-    elif request.method == 'UPDATE':
+    if request.method == 'UPDATE':
         form = request.json
         status = db.update_user(form, session.get('user_id', None))
     return jsonify(status=status)
 
+@APP.route('/api/manage/role', methods=['POST'])
+def manage_roles():
+    """
+    Changes or adds roles for the user identified by `u_id`, and returns a
+    status a json status message.
+    The input data should be formatted like:
+        {action: add | remove,
+         role: owner | manager | specialist,
+         user: <id>,
+         herd | genebank: <id>
+        }
+
+    The return value will be formatted like: `{status: <message>}`, where the
+    message is `updated`, `unchanged` or `failed`.
+    """
+    form = request.json
+    status = db.update_role(form, session.get('user_id', None))
+    return jsonify(status=status)
 
 @APP.route('/api/manage/herd', methods=['POST', 'UPDATE'])
 def manage_herd():

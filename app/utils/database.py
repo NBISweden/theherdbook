@@ -305,7 +305,7 @@ class Individual(BaseModel):
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data['herd'] = {'id': self.herd.id, 'name':self.herd.name}
+        data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
         data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
             if self.mother else None
         data['father'] = {'id': self.father.id, 'name': self.father.name} \
@@ -318,7 +318,7 @@ class Individual(BaseModel):
         data['herd_tracking'] = [
             {
                 'herd_id':h.herd.id,
-                'herd':h.herd.name,
+                'herd':h.herd.herd_name,
                 'date':h.herd_tracking_date
             }
             for h in self.herdtracking_set #pylint: disable=no-member

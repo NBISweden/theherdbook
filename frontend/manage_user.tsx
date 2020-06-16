@@ -5,7 +5,7 @@
 import React from 'react'
 import { TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { get, update } from './communication';
+import { get, post, update } from './communication';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -56,6 +56,18 @@ export function ManageUser({id}: {id: string}) {
     )
   }
 
+  const updateRole = (operation: any) => {
+    post('/api/manage/role', operation).then(
+      data => {
+        switch (data.status) {
+          case "updated": console.debug("updated successfully"); break;
+          default: console.debug("status:", data)// "failed" or other erro
+        }
+      },
+      error => console.error(error)
+    )
+  }
+
   return <>
     {user && <>
       <h2>{user.email}</h2>
@@ -91,6 +103,16 @@ export function ManageUser({id}: {id: string}) {
               {role.level}
               {role.genebank && `, Genebank: ${role.genebank}`}
               {role.herd && `, herd: ${role.herd}`}
+              <Button variant="contained"
+                      color="primary"
+                      onClick={() => updateRole({action: 'remove',
+                                                 role: role.level,
+                                                 user: user.id,
+                                                 genebank: role?.genebank,
+                                                 herd: role?.herd}
+                              )}>
+                Ta bort
+              </Button>
             </li>
           })
         }
