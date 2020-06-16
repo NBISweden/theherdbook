@@ -349,8 +349,9 @@ class EndpointTest(FlaskTest):
         for user, result in user_results:
             with self.app as context:
                 context.post('/api/login',
-                            json={"username": user.email, "password": "pass"})
-                self.assertDictEqual(self.app.get('/api/manage/users').get_json(), {'users': result})
+                             json={"username": user.email, "password": "pass"})
+                self.assertDictEqual(self.app.get('/api/manage/users').get_json(),
+                                     {'users': result})
                 context.get('/api/logout')
                 self.assertEqual(self.app.get('/api/manage/users').get_json(), {'users': None})
 

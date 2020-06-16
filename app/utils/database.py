@@ -835,6 +835,72 @@ def get_users(user_uuid=None):
     except DoesNotExist:
         return None
 
+def get_user(user_id, user_uuid=None):
+    """
+    Returns the user identified by `user_id`, if the user identified by
+    `user_uuid` has admin or manager privileges. Note that the user does not
+    need manager privileges over any particular genebank or herd.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return None
+    if not (user.is_admin or user.is_manager):
+        return None
+    try:
+        target = User.get(int(user_id))
+    except DoesNotExist:
+        return None
+
+    return {'id': target.id,
+            'email': target.email,
+            'validated': target.validated,
+            'privileges': target.privileges}
+
+def update_user(form, user_uuid=None):
+    """
+    Takes a role change description `form` and updates the user given by
+    `form.id` with the values in `form`, and returns a status message.
+
+    The input data should be formatted like:
+        {id: <number>, email: <string>, validated: <boolean>}
+
+    The return value will be `updated`, `unchanged` or `failed`.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return "failed" # not logged in
+
+    logging.warning("a")
+    # Check data
+    if not isinstance(form, dict) \
+       or not form.get('id', None) \
+       or not form.get('email', None) \
+       or form.get('validated') not in [True, False]:
+        return "failed"
+
+    # Check permissions
+    if not (user.is_admin or user.is_manager):
+        return "failed"
+
+    # check target user
+    try:
+        target_user = User.get(form['id'])
+    except DoesNotExist:
+        return "failed" # target user does not exist
+
+    # update target user data if needed
+    updated = False
+    for field in ['email', 'validated']:
+        if getattr(target_user, field) != form[field]:
+            setattr(target_user, field, form[field])
+            updated = True
+
+    if updated:
+        target_user.save()
+        return "updated"
+
+    return "unchanged"
+
 def update_role(operation, user_uuid=None):
     """
     Takes a role change description `operation`, and returns a status message.

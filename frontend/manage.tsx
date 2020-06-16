@@ -95,6 +95,7 @@ export function Manage() {
   const [currentTab, setTab] = React.useState(0);
   const [herdTab, setHerdTab] = React.useState(0);
   const [userTab, setUserTab] = React.useState(0);
+  const [selectedUser, selectUser] = React.useState(undefined as number | undefined)
   const classes = useStyles();
 
   function selectGenebank(id: number) {
@@ -123,7 +124,11 @@ export function Manage() {
     );
     get('/api/manage/users').then(
       data => {
-        data && setUsers(data.users)
+        if (!data) {
+          return
+        }
+        setUsers(data.users)
+        selectUser(data.users[0].id)
       },
       error => console.error(error)
     );
@@ -142,6 +147,7 @@ export function Manage() {
 
   const userChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setUserTab(newValue);
+    selectUser(users[newValue].id)
   }
 
   return <>
@@ -200,7 +206,7 @@ export function Manage() {
           </Tabs>
 
           <Box className={classes.controls}>
-            <ManageUser id={userTab} />
+            <ManageUser id={selectedUser} />
           </Box>
       </TabPanel>
     </Paper>
