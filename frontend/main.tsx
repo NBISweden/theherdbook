@@ -12,6 +12,7 @@ import {
 
 import {Login} from './login'
 import {WithUserContext} from './user_context'
+import {WithDataContext} from './data_context'
 import {TabMenu} from './navigation'
 import {Genebanks} from './genebanks'
 import {Genebank} from './genebank'
@@ -67,31 +68,34 @@ function Main() {
         {/* Declare routes, and what component should be rendered for each
           * route.
           */}
-        <div className={classes.main}>
-          <Switch>
-            <Route path="/login">
-              <Login/>
-            </Route>
-            <Route path="/genebanks">
-              <Genebanks/>
-            </Route>
-            <Routed path="/genebank/:id">
-              {params => <Genebank id={params.id}/>}
-            </Routed>
-            <Routed path="/herd/:id">
-              {params => <Herd id={params.id}/>}
-            </Routed>
-            <Routed path="/individual/:id">
-              {params => <Individual id={params.id}/>}
-            </Routed>
-            <Route path="/manage">
-              <Manage/>
-            </Route>
-            <Route path="/">
-              Welcome!
-            </Route>
-          </Switch>
-        </div>
+
+        <WithDataContext>
+          <div className={classes.main}>
+            <Switch>
+              <Route path="/login">
+                <Login/>
+              </Route>
+              <Route path="/genebanks">
+                <Genebanks/>
+              </Route>
+              <Routed path="/genebank/:id">
+                {params => <Genebank id={params.id}/>}
+              </Routed>
+              <Routed path="/herd/:id">
+                {params => <Herd id={params.id}/>}
+              </Routed>
+              <Routed path="/individual/:id">
+                {params => <Individual id={params.id}/>}
+              </Routed>
+              <Route path="/manage">
+                <Manage/>
+              </Route>
+              <Route path="/">
+                Welcome!
+              </Route>
+            </Switch>
+          </div>
+        </WithDataContext>
       </BrowserRouter>
     </WithUserContext>
     <CSS/>

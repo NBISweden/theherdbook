@@ -4,6 +4,7 @@
  */
 import React from 'react'
 import {Link} from "react-router-dom";
+import {useDataContext} from './data_context'
 
 import { get } from './communication';
 
@@ -11,16 +12,9 @@ import { get } from './communication';
  * Shows a list of all genebanks, with links to the individual genebanks.
  */
 export function Genebanks() {
-  const [genebanks, setGenebanks] = React.useState([] as any[])
+  const {genebanks} = useDataContext()
 
-  React.useEffect(() => {
-    get('/api/genebanks').then(
-      data => data && setGenebanks(data),
-      error => console.error(error)
-    )
-  }, [])
-
-  return <>
+return <>
     <h2>Genbanker</h2>
     <ul>
       {genebanks.map(genebank => {
