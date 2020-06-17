@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import {post, get} from './communication'
+import {useDataContext} from './data_context'
 
 /** The currently logged in user, if any */
 export interface User {
@@ -47,6 +48,7 @@ export function useUserContext(): UserContext {
 */
 export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined as undefined | User)
+  const {loadData} = useDataContext()
 
   async function handle_promise(promise: Promise<User | null>): Promise<Result> {
     return await promise.then(
@@ -64,12 +66,19 @@ export function WithUserContext(props: {children: React.ReactNode}) {
 
   async function login(username: string, password: string) {
     return await handle_promise(post('/api/login', {username, password})).then(
-      success => success
+      success => {
+        if (success == 'logged_in') {
+          loadData('all')
+        }
+        return success;
+      }
     )
   }
 
   function logout() {
-    return handle_promise(get('/api/logout'))
+    let status = handle_promise(get('/api/logout'))
+    loadData('none')
+    return status
   }
 
   function on_mount() {

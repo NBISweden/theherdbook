@@ -60,16 +60,16 @@ function Main() {
   const classes = useMainStyle();
   return <>
     <CssBaseline />
-    <WithUserContext>
-      <BrowserRouter>
-        {/* Insert the tab menu */}
-        <TabMenu/>
+    <WithDataContext>
+      <WithUserContext>
+        <BrowserRouter>
+          {/* Insert the tab menu */}
+          <TabMenu/>
 
-        {/* Declare routes, and what component should be rendered for each
-          * route.
-          */}
+          {/* Declare routes, and what component should be rendered for each
+            * route.
+            */}
 
-        <WithDataContext>
           <div className={classes.main}>
             <Switch>
               <Route path="/login">
@@ -95,9 +95,9 @@ function Main() {
               </Route>
             </Switch>
           </div>
-        </WithDataContext>
-      </BrowserRouter>
-    </WithUserContext>
+        </BrowserRouter>
+      </WithUserContext>
+    </WithDataContext>
     <CSS/>
   </>
 }

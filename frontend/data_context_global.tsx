@@ -63,13 +63,13 @@ export interface Herd {
 export interface DataContext {
     genebanks: Array<NameID>
     herds: Array<Herd>
-    getGenebanks(): Promise<boolean>
+    loadData(data: string | Array<string>): Promise<boolean>
 }
 
 const emptyContext: DataContext = {
   genebanks: [],
   herds: [],
-  async getGenebanks() {return false},
+  async loadData() {return false},
 }
 
 console.debug('Reloading data_context_global')

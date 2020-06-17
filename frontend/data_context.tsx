@@ -1,8 +1,8 @@
 import * as React from 'react'
 
-import {post, get} from './communication'
+import {get} from './communication'
 
-import {DataContext} from "./data_context_global"
+import {DataContext, NameID, Herd} from "./data_context_global"
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -12,7 +12,7 @@ import {DataContext} from "./data_context_global"
  */
 
 /**
- *
+ * Exports the context variables and functions to be used by other components
  */
 export function useDataContext(): DataContext {
   return React.useContext(DataContext)
@@ -22,6 +22,11 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   const [genebanks, setGenebanks] = React.useState([] as Array<NameID>)
   const [herds, setHerds] = React.useState([] as Array<Herd>)
 
+  /**
+   * Fetches all genebank names and id's from the backend (that the currently
+   * logged in user has access to). Returns `true` on success and `false`
+   * otherwise.
+   */
   async function getGenebanks() {
     return await get('/api/genebanks').then(
       data => {
@@ -29,7 +34,6 @@ export function WithDataContext(props: {children: React.ReactNode}) {
           return false;
         }
         setGenebanks(data);
-        console.debug("geniebynky:",  data, genebanks)
         return true;
       },
       error => {
@@ -39,12 +43,35 @@ export function WithDataContext(props: {children: React.ReactNode}) {
     )
   }
 
+  /**
+   * Loads data from the backend into the data context. Returns `true` if all
+   * operations were successful and `false` otherwise.
+   *
+   * @param data either a list of strings including `genebanks`, `herds`, or
+   *     `individuals`, the string `all` to load all data, or the string `none`
+   *     to unload all data.
+   */
+  async function loadData(data: string | Array<string>) {
+    let updates: Array<Promise<boolean>> = []
+    if (data == 'none') {
+      setGenebanks([])
+      setHerds([])
+    }
+    if (data == 'all' || data.includes('genebanks')) {
+      updates.push(getGenebanks())
+    }
+
+    return await Promise.all(updates).then(statuses => {
+      return statuses.reduce((a,b) => a && b, true)
+    })
+  }
+
   React.useEffect(() => {
-    getGenebanks()
+    loadData('all')
   }, [])
 
   return (
-    <DataContext.Provider value={{genebanks, herds, getGenebanks}}>
+    <DataContext.Provider value={{genebanks, herds, loadData}}>
       {props.children}
     </DataContext.Provider>
   )
