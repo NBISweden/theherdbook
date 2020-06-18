@@ -2,7 +2,7 @@ import * as React from 'react'
 
 import {get} from './communication'
 
-import {DataContext, Genebank} from "./data_context_global"
+import {DataContext, Genebank, NameID} from "./data_context_global"
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -20,19 +20,15 @@ export function useDataContext(): DataContext {
 
 export function WithDataContext(props: {children: React.ReactNode}) {
   const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>)
+  const [users, setUsers] = React.useState([] as Array<NameID>)
 
-  /**
-   * Fetches all genebank names and id's from the backend (that the currently
-   * logged in user has access to). Returns `true` on success and `false`
-   * otherwise.
-   */
-  async function getGenebanks() {
-    return await get('/api/genebanks').then(
+  async function fetchAndSet(url: string, set: Function, field: string | undefined = undefined) {
+    return await get(url).then(
       data => {
         if (!data) {
           return false;
         }
-        setGenebanks(data);
+        set(field ? data[field] : data);
         return true;
       },
       error => {
@@ -40,6 +36,24 @@ export function WithDataContext(props: {children: React.ReactNode}) {
         return false;
       }
     )
+  }
+
+  /**
+   * Fetches all genebank names, id's and herd lists from the backend (that the
+   * currently logged in user has access to). Returns `true` on success and
+   * `false` otherwise.
+   */
+  async function getGenebanks() {
+    return fetchAndSet('/api/genebanks', setGenebanks)
+  }
+
+  /**
+   * Fetches all users names, id's, validation status, and roles that the
+   * currently logged in user has access to. Returns `true` on success and `false`
+   * otherwise.
+   */
+  async function getUsers() {
+    return fetchAndSet('/api/manage/users', setUsers, 'users')
   }
 
   /**
@@ -58,6 +72,9 @@ export function WithDataContext(props: {children: React.ReactNode}) {
     if (data == 'all' || data.includes('genebanks')) {
       updates.push(getGenebanks())
     }
+    if (data == 'all' || data.includes('users')) {
+      updates.push(getUsers())
+    }
 
     return await Promise.all(updates).then(statuses => {
       return statuses.reduce((a,b) => a && b, true)
@@ -69,7 +86,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   }, [])
 
   return (
-    <DataContext.Provider value={{genebanks, loadData}}>
+    <DataContext.Provider value={{genebanks, users, loadData}}>
       {props.children}
     </DataContext.Provider>
   )

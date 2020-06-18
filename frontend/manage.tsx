@@ -14,7 +14,6 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { useDataContext } from './data_context'
 import { useUserContext } from './user_context'
-import { get } from './communication';
 import { HerdForm } from '~herdForm';
 import { ManageUser } from '~manage_user';
 
@@ -88,9 +87,8 @@ function TabPanel(props: TabPanelProps) {
  * permissions, and managing herd animals.
  */
 export function Manage() {
-  const {genebanks} = useDataContext()
+  const {genebanks, users} = useDataContext()
   const {user} = useUserContext();
-  const [users, setUsers] = React.useState([] as any[])
   const [genebank, setGenebank] = React.useState(undefined as any)
   const [herd, setHerd] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
@@ -111,17 +109,10 @@ export function Manage() {
     if (genebanks.length) {
       selectGenebank(genebanks[0].id);
     }
-    get('/api/manage/users').then(
-      data => {
-        if (!data) {
-          return
-        }
-        setUsers(data.users)
-        selectUser(data.users[0].id)
-      },
-      error => console.error(error)
-    );
-  }, [user])
+    if (users.length > 0) {
+      selectUser(users[0].id)
+    }
+  }, [users])
 
   const tabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTab(newValue);
