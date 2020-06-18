@@ -9,11 +9,10 @@ import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import { Box } from '@material-ui/core';
+import { Box, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { useDataContext } from './data_context'
-import { useUserContext } from './user_context'
 import { HerdForm } from '~herdForm';
 import { ManageUser } from '~manage_user';
 
@@ -36,13 +35,24 @@ const useStyles = makeStyles({
     height: "calc(100% - 48px)",
     padding: "0",
   },
-  verticalTabs: {
+  sidebar: {
     float: "left",
     height: "100%",
     width: "250px",
     margin: "0",
     borderRight: `1px solid rgba(0,0,0,0.2)`,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
   },
+  verticalTabs: {
+    height: "calc(100% - 40px)",
+    width: "250px",
+  },
+  centerButton: {
+    width: "80%",
+    marginBottom: "10px",
+  }
 });
 
 /**
@@ -88,7 +98,6 @@ function TabPanel(props: TabPanelProps) {
  */
 export function Manage() {
   const {genebanks, users} = useDataContext()
-  const {user} = useUserContext();
   const [genebank, setGenebank] = React.useState(undefined as any)
   const [herd, setHerd] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
@@ -152,42 +161,51 @@ export function Manage() {
            <Tab label="Användare" />
       </Tabs>
       <TabPanel value={currentTab} index={0} className={classes.tabPanel}>
-
-        <Tabs
-          orientation="vertical"
-          variant="scrollable"
-          value={herdTab}
-          onChange={herdChange}
-          className={classes.verticalTabs}
-        >
-          {genebank &&
-            genebank.herds.map((h:any, i:number) => {
-              let label = `G${h.herd}`;
-              if (h.name) {
-                label += ` - ${h.name}`;
-              }
-              return <Tab key={i} label={label} />
-            })}
-        </Tabs>
+        <div className={classes.sidebar}>
+          <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            value={herdTab}
+            onChange={herdChange}
+            className={classes.verticalTabs}
+          >
+            {genebank &&
+              genebank.herds.map((h:any, i:number) => {
+                let label = `G${h.herd}`;
+                if (h.name) {
+                  label += ` - ${h.name}`;
+                }
+                return <Tab key={i} label={label} />
+              })}
+          </Tabs>
+        </div>
 
         <Box className={classes.controls}>
           <HerdForm id={herd} />
         </Box>
       </TabPanel>
       <TabPanel value={currentTab} index={1} className={classes.tabPanel}>
-        <Tabs
-            orientation="vertical"
-            variant="scrollable"
-            value={userTab}
-            onChange={userChange}
-            className={classes.verticalTabs}
-          >
+        <div className={classes.sidebar}>
+          <Tabs
+              orientation="vertical"
+              variant="scrollable"
+              value={userTab}
+              onChange={userChange}
+              className={classes.verticalTabs}
+            >
             {users.map((u:any, i:number) => <Tab key={i} label={u.email} />)}
           </Tabs>
+          <Button className={classes.centerButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() => console.debug("add user")}>
+            Lägg till användare
+          </Button>
+        </div>
 
-          <Box className={classes.controls}>
-            <ManageUser id={selectedUser} />
-          </Box>
+        <Box className={classes.controls}>
+          <ManageUser id={selectedUser} />
+        </Box>
       </TabPanel>
     </Paper>
   </>
