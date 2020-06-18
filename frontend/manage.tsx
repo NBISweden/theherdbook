@@ -12,6 +12,7 @@ import Tab from '@material-ui/core/Tab';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
+import { useDataContext } from './data_context'
 import { useUserContext } from './user_context'
 import { get } from './communication';
 import { HerdForm } from '~herdForm';
@@ -87,9 +88,9 @@ function TabPanel(props: TabPanelProps) {
  * permissions, and managing herd animals.
  */
 export function Manage() {
+  const {genebanks} = useDataContext()
   const {user} = useUserContext();
   const [users, setUsers] = React.useState([] as any[])
-  const [genebanks, setGenebanks] = React.useState([] as any[])
   const [genebank, setGenebank] = React.useState(undefined as any)
   const [herd, setHerd] = React.useState(undefined as any)
   const [currentTab, setTab] = React.useState(0);
@@ -99,29 +100,17 @@ export function Manage() {
   const classes = useStyles();
 
   function selectGenebank(id: number) {
-    get(`/api/genebank/${id}`).then(
-      data => {
-        if (!data) {
-          return;
-        }
-        setGenebank(data);
-        setHerd(data.herds[herdTab].id);
-      },
-      error => console.error(error)
-    );
+    let data = genebanks.filter(g => g.id == id)
+    if (data.length > 0) {
+      setGenebank(data[0])
+      setHerd(data[0].herds[herdTab].id);
+    }
   }
 
   React.useEffect(() => {
-    get('/api/genebanks').then(
-      data => {
-        if (!data) {
-          return;
-        }
-        setGenebanks(data);
-        selectGenebank(data[0].id);
-      },
-      error => console.error(error)
-    );
+    if (genebanks.length) {
+      selectGenebank(genebanks[0].id);
+    }
     get('/api/manage/users').then(
       data => {
         if (!data) {

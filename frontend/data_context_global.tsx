@@ -37,6 +37,7 @@ export interface Herd {
     genebank: number
     herd: number
     herd_name: string | null
+    has_details: boolean
     is_active: boolean | null
     start_date: string | null
     name: string | null
@@ -59,16 +60,19 @@ export interface Herd {
     coordinates_privacy?: string | null
 }
 
+export interface Genebank {
+    id: number
+    name: string
+    herds: Array<Herd>
+}
 
 export interface DataContext {
-    genebanks: Array<NameID>
-    herds: Array<Herd>
+    genebanks: Array<Genebank>
     loadData(data: string | Array<string>): Promise<boolean>
 }
 
 const emptyContext: DataContext = {
   genebanks: [],
-  herds: [],
   async loadData() {return false},
 }
 

@@ -120,6 +120,17 @@ class Genebank(BaseModel):
     id = AutoField(primary_key=True, column_name="genebank_id")
     name = CharField(100, unique=True)
 
+    def short_info(self):
+        """
+        Returns the genebank data, including `id`, `name`, and a `herds` array
+        including the `Herd.short_info()` data.
+        """
+
+        return {'id': self.id,
+                'name': self.name,
+                'herds': [h.short_info() for h in self.herd_set]
+                }
+
     def get_herds(self, user):
         """
         Returns all herds that the user identified by `user_id` has access to,
@@ -173,6 +184,16 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    def short_info(self):
+        """
+        Returns the `id`, `herd`, `genebank`, and `herd_name` fields as a dict.
+        """
+        return {'id': self.id,
+                'herd': self.herd,
+                'genebank': self.genebank.id,
+                'herd_name': self.herd_name,
+                }
 
     def filtered_dict(self, user=None):
         """
@@ -748,7 +769,7 @@ def get_genebanks(user_uuid=None):
     if user is None:
         return None
 
-    return [g.as_dict() for g in user.get_genebanks()]
+    return [g.short_info() for g in user.get_genebanks()]
 
 def get_herd(herd_id, user_uuid=None):
     """

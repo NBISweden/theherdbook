@@ -2,13 +2,13 @@ import * as React from 'react'
 
 import {get} from './communication'
 
-import {DataContext, NameID, Herd} from "./data_context_global"
+import {DataContext, Genebank} from "./data_context_global"
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
  * funtions to request and modify the data.
  *
- * The data is arranged in `genebanks`, `herds`, and `individuals`.
+ * The data is arranged in `genebanks` (including `herds`), and `individuals`.
  */
 
 /**
@@ -19,8 +19,7 @@ export function useDataContext(): DataContext {
 }
 
 export function WithDataContext(props: {children: React.ReactNode}) {
-  const [genebanks, setGenebanks] = React.useState([] as Array<NameID>)
-  const [herds, setHerds] = React.useState([] as Array<Herd>)
+  const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>)
 
   /**
    * Fetches all genebank names and id's from the backend (that the currently
@@ -55,7 +54,6 @@ export function WithDataContext(props: {children: React.ReactNode}) {
     let updates: Array<Promise<boolean>> = []
     if (data == 'none') {
       setGenebanks([])
-      setHerds([])
     }
     if (data == 'all' || data.includes('genebanks')) {
       updates.push(getGenebanks())
@@ -71,7 +69,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   }, [])
 
   return (
-    <DataContext.Provider value={{genebanks, herds, loadData}}>
+    <DataContext.Provider value={{genebanks, loadData}}>
       {props.children}
     </DataContext.Provider>
   )

@@ -31,15 +31,17 @@ export interface ManagedUser {
 /**
  * Provides a form for changing user metadata and user roles.
  */
-export function ManageUser({id}: {id: string}) {
+export function ManageUser({id}: {id: number | undefined}) {
   const [user, setUser] = React.useState(undefined as ManagedUser | undefined)
   const classes = useStyles();
 
   React.useEffect(() => {
-    get(`/api/manage/user/${id}`).then(
-      data => data && setUser(data),
-      error => console.error(error)
-    );
+    if (id) {
+      get(`/api/manage/user/${id}`).then(
+        data => data && setUser(data),
+        error => console.error(error)
+      );
+    }
   }, [id])
 
   const submitForm = () => {
