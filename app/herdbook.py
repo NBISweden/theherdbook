@@ -17,6 +17,7 @@ from flask import (
 )
 
 import utils.database as db
+import utils.data_access as da
 import utils.inbreeding as ibc
 
 
@@ -49,7 +50,7 @@ def get_user():
     Returns information on the current logged in user, or an empty user object
     representing an anonymous user.
     """
-    user = db.fetch_user_info(session.get('user_id', None))
+    user = da.fetch_user_info(session.get('user_id', None))
     return jsonify(user.frontend_data() if user else None)
 
 @APP.route('/api/manage/users')
@@ -59,7 +60,7 @@ def get_users():
     for admin, all users except admin users for managers, and None for regular
     users.
     """
-    users = db.get_users(session.get('user_id', None))
+    users = da.get_users(session.get('user_id', None))
     return jsonify(users=users)
 
 @APP.route('/api/manage/user/<int:u_id>', methods=['GET', 'UPDATE'])
@@ -68,11 +69,11 @@ def manage_user(u_id):
     Returns user information and a list of all roles for the requested `u_id`.
     """
     if request.method == 'GET':
-        user = db.get_user(u_id, session.get('user_id', None))
+        user = da.get_user(u_id, session.get('user_id', None))
         return jsonify(user)
     if request.method == 'UPDATE':
         form = request.json
-        status = db.update_user(form, session.get('user_id', None))
+        status = da.update_user(form, session.get('user_id', None))
     return jsonify(status=status)
 
 @APP.route('/api/manage/role', methods=['POST'])
@@ -91,7 +92,7 @@ def manage_roles():
     message is `updated`, `unchanged` or `failed`.
     """
     form = request.json
-    status = db.update_role(form, session.get('user_id', None))
+    status = da.update_role(form, session.get('user_id', None))
     return jsonify(status=status)
 
 @APP.route('/api/manage/herd', methods=['POST', 'UPDATE'])
@@ -103,9 +104,9 @@ def manage_herd():
     form = request.json
     status = "failed"
     if request.method == 'POST':
-        status = db.add_herd(form, session.get('user_id', None))
+        status = da.add_herd(form, session.get('user_id', None))
     elif request.method == 'UPDATE':
-        status = db.update_herd(form, session.get('user_id', None))
+        status = da.update_herd(form, session.get('user_id', None))
     return jsonify(status=status)
 
 @APP.route('/api/login', methods=['POST'])
@@ -120,7 +121,7 @@ def login():
 
     form = request.json
     # Authenticate the user and return a user object
-    user = db.authenticate_user(form.get('username'), form.get('password'))
+    user = da.authenticate_user(form.get('username'), form.get('password'))
     if user:
         session['user_id'] = user.uuid
         session.modified = True
@@ -144,15 +145,15 @@ def genebank(g_id=None):
     """
     user_id = session.get('user_id', None)
     if g_id:
-        return jsonify(db.get_genebank(g_id, user_id))
-    return jsonify(db.get_genebanks(user_id))
+        return jsonify(da.get_genebank(g_id, user_id))
+    return jsonify(da.get_genebanks(user_id))
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.
     """
-    data = db.get_herd(h_id, session.get('user_id', None))
+    data = da.get_herd(h_id, session.get('user_id', None))
     return jsonify(data)
 
 @APP.route('/api/individual/<int:i_id>')
@@ -161,7 +162,7 @@ def individual(i_id):
     Returns information on the individual given by `i_id`.
     """
     user_id = session.get('user_id', None)
-    return jsonify(db.get_individual(i_id, user_id))
+    return jsonify(da.get_individual(i_id, user_id))
 
 
 @APP.route('/api/inbreeding/<int:i_id>')
