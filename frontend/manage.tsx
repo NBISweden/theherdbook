@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
+import * as Router from 'react-router-dom'
 import {
   BrowserRouter,
   Switch,
@@ -20,8 +21,8 @@ import {
 } from "react-router-dom";
 
 import { useDataContext } from './data_context'
-import { ManageHerds } from '~manage_herds'
-import { ManageUsers } from '~manage_users'
+import { ManageHerds } from './manage_herds'
+import { ManageUsers } from './manage_users'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -51,83 +52,72 @@ interface TabPanelProps {
   className?: any;
 }
 
-/**
- * Provides genebanks management forms for granting and revoking herd
- * permissions, and managing herd animals.
- */
-export function Manage({id}: {id: number | undefined}) {
+import * as ui from './ui_utils'
+
+function InnerPaper(props: {id: number}) {
+  const classes = useStyles()
   const {genebanks} = useDataContext()
   const [genebank, setGenebank] = React.useState(undefined as any)
-  const [currentTab, setTab] = React.useState(0);
-  const classes = useStyles()
-  let history = useHistory()
-  let match = useRouteMatch()
 
-  function selectGenebank(id: number | undefined) {
-    if (id == undefined && genebanks.length > 0) {
-      history.push(`manage/${genebanks[0].id}`)
-    } else {
-      let data = genebanks.filter(g => g.id == id)
-      if (data.length > 0) {
-        setGenebank(data[0])
-      }
+  const id = props.id
+
+  function selectGenebank(id: number) {
+    const data = genebanks.find(g => g.id == id)
+    if (data) {
+      setGenebank(data)
     }
   }
 
   React.useEffect(() => {
     selectGenebank(id);
-  }, [genebanks, id])
+  }, [id])
 
-  React.useEffect(() => {
-    let subPath = undefined
-    if (location.pathname.search(match.url) == 0) {
-      subPath = location.pathname.replace(match.url, '')
-      if (subPath.search('/herds') == 0) {
-        setTab(0)
-      } else if (subPath.search('/users') == 0) {
-        setTab(1)
-      }
-    }
-  }, [history])
+  const tabs: ui.RoutedTab[] = [
+    {
+      path: '/herds',
+      label: 'Besättningar',
+      component: <ManageHerds id={id}/>,
+    },
+    {
+      path: '/users',
+      label: 'Användare',
+      component: <ManageUsers/>
+    },
+  ]
 
-  const tabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setTab(newValue)
-  }
+  const {Tabs, TabbedRoutes} = ui.useRoutedTabs(tabs, {autoselect_first: true})
+
+  return (
+    <Paper className={classes.paper}>
+      <Tabs/>
+      <Switch>
+        {TabbedRoutes}
+      </Switch>
+    </Paper>
+  )
+}
+
+
+/**
+ * Provides genebanks management forms for granting and revoking herd
+ * permissions, and managing herd animals.
+ */
+export function Manage() {
+  const {genebanks} = useDataContext()
+
+  const tabs: ui.RoutedTab[] = genebanks.map(g => ({
+    path: `/${g.id}`,
+    label: g.name,
+    component: <InnerPaper id={g.id}/>,
+  }))
+
+  const {Tabs, TabbedRoutes} = ui.useRoutedTabs(tabs, {autoselect_first: true})
 
   return <>
-    <Breadcrumbs className={classes.breadcrumbs} separator="&bull;" aria-label="breadcrumb">
-      {
-        genebanks.map((g:any, i:number) => {
-          return  <Link key={i} to={`/manage/${g.id}`} className={classes.breadcrumb}>
-                    <Typography color={genebank && g.id == genebank.id ? 'primary' : 'textSecondary'}>
-                      {g.name}
-                    </Typography>
-                  </Link>
-        })
-      }
-    </Breadcrumbs>
-    <Paper className={classes.paper}>
-      <BrowserRouter>
-        <Tabs value={currentTab}
-              onChange={tabChange}
-              indicatorColor="primary"
-              textColor="primary"
-          >
-          <Link to={`${match.url}/herds`}><Tab label="Besättningar" /></Link>
-          <Link to={`${match.url}/users`}><Tab label="Användare" /></Link>
-        </Tabs>
-        <Switch>
-          <Route path={`${match.path}/herds`}>
-            <ManageHerds id={id}/>
-          </Route>
-          <Route path={`${match.path}/users`}>
-            <ManageUsers/>
-          </Route>
-          <Route path={match.path}>
-            <ManageHerds id={id}/>
-          </Route>
-        </Switch>
-      </BrowserRouter>
-    </Paper>
+    <Tabs/>
+    <Switch>
+      {TabbedRoutes}
+    </Switch>
   </>
 }
+
