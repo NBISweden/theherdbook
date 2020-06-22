@@ -3,119 +3,94 @@
  *       displays a list of all individuals that the current user has access to.
  */
 import React from 'react'
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TablePagination from '@material-ui/core/TablePagination';
-import TableRow from '@material-ui/core/TableRow';
+import { forwardRef } from 'react';
+import MaterialTable from 'material-table'
+
+import AddBox from '@material-ui/icons/AddBox';
+import ArrowDownward from '@material-ui/icons/ArrowDownward';
+import Check from '@material-ui/icons/Check';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import DeleteOutline from '@material-ui/icons/DeleteOutline';
+import Edit from '@material-ui/icons/Edit';
+import FilterList from '@material-ui/icons/FilterList';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import SaveAlt from '@material-ui/icons/SaveAlt';
+import Search from '@material-ui/icons/Search';
+import ViewColumn from '@material-ui/icons/ViewColumn';
+
 import { makeStyles } from '@material-ui/core/styles';
-
-import {useDataContext} from './data_context'
+import { useDataContext } from './data_context'
 import { Individual } from '~data_context_global';
-
-interface Column {
-  id: 'herd' | 'name' | 'certificate' | 'number' | 'sex' | 'birthDate' | 'mother'
-    | 'father' | 'color' | 'colorNote'
-  label: string
-  minWidth?: number
-  align?: 'right'
-  format?: (value: number) => string
-}
-
-const columns: Column[] = [
-  {id: 'herd', label: 'Besättning'},
-  {id: 'name', label: 'Namn'},
-  {id: 'certificate', label: 'Certifikat'},
-  {id: 'number', label: 'Nummer'},
-  {id: 'sex', label: 'Kön'},
-  {id: 'birthDate', label: 'Födelsedatum'},
-  {id: 'mother', label: 'Moder'},
-  {id: 'father', label: 'Fader'},
-  {id: 'color', label: 'Färg'},
-  {id: 'colorNote', label: 'Färganteckning'},
-]
 
 // Define styles for tab menu
 const useStyles = makeStyles({
   table: {
-    height: "calc(100% - 125px)",
+    height: "calc(100% - 75px)",
     padding: "0 20px",
     overflowY: "scroll",
   },
 });
 
+const tableIcons = {
+  Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
+  Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
+  Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Delete: forwardRef((props, ref) => <DeleteOutline {...props} ref={ref} />),
+  DetailPanel: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  Edit: forwardRef((props, ref) => <Edit {...props} ref={ref} />),
+  Export: forwardRef((props, ref) => <SaveAlt {...props} ref={ref} />),
+  Filter: forwardRef((props, ref) => <FilterList {...props} ref={ref} />),
+  FirstPage: forwardRef((props, ref) => <FirstPage {...props} ref={ref} />),
+  LastPage: forwardRef((props, ref) => <LastPage {...props} ref={ref} />),
+  NextPage: forwardRef((props, ref) => <ChevronRight {...props} ref={ref} />),
+  PreviousPage: forwardRef((props, ref) => <ChevronLeft {...props} ref={ref} />),
+  ResetSearch: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
+  Search: forwardRef((props, ref) => <Search {...props} ref={ref} />),
+  SortArrow: forwardRef((props, ref) => <ArrowDownward {...props} ref={ref} />),
+  ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref} />),
+  ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
+};
+
+const columns = [
+  {field: 'herd', title: 'Besättning'},
+  {field: 'name', title: 'Namn'},
+  {field: 'certificate', title: 'Certifikat'},
+  {field: 'number', title: 'Nummer'},
+  {field: 'sex', title: 'Kön'},
+  {field: 'birthDate', title: 'Födelsedatum'},
+  {field: 'mother', title: 'Moder'},
+  {field: 'father', title: 'Fader'},
+  {field: 'color', title: 'Färg'},
+  {field: 'colorNote', title: 'Färganteckning'},
+]
+
 /**
  * Shows a list of all genebanks, with links to the individual genebanks.
  */
-export function IndividualsTable({id}: {id: string | null}) {
+export function IndividualsTable({id}: {field: number}) {
   const [individuals, setIndividuals] = React.useState([] as Array<Individual>)
   const {genebanks} = useDataContext()
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const classes = useStyles();
 
   React.useEffect(() => {
-    if (id != null) {
-      let genebank = genebanks.filter(g => g.id == +id)
-      if (genebank) {
-        setIndividuals(genebank[0].individuals)
-      }
+    let genebank = genebanks.filter(g => g.id == id)
+    if (genebank) {
+      setIndividuals(genebank[0].individuals)
     }
   }, [genebanks])
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
-
   return <>
-    <TableContainer className={classes.table}>
-      <Table stickyHeader>
-        <TableHead>
-          <TableRow>
-            {columns.map((column) => (
-              <TableCell
-                key={column.id}
-                align={column.align}
-                style={{ minWidth: column.minWidth }}
-              >
-                {column.label}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {individuals.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-            return (
-              <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
-                {columns.map((column) => {
-                  const value = row[column.id];
-                  return (
-                    <TableCell key={column.id} align={column.align}>
-                      {column.format && typeof value === 'number' ? column.format(value) : value}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
-    <TablePagination
-      rowsPerPageOptions={[10, 25, 100]}
-      component="div"
-      count={individuals.length}
-      rowsPerPage={rowsPerPage}
-      page={page}
-      onChangePage={handleChangePage}
-      onChangeRowsPerPage={handleChangeRowsPerPage}
-    />
+    <div className={classes.table}>
+      <MaterialTable
+        icons={tableIcons}
+        columns={columns}
+        data={individuals}
+        title="Alla individer"
+      />
+    </div>
   </>
 }
