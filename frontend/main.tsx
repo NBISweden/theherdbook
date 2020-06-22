@@ -87,8 +87,11 @@ function Main() {
               <Routed path="/individual/:id">
                 {params => <Individual id={params.id}/>}
               </Routed>
+              <Routed path="/manage/:id">
+                {params => <Manage id={+params.id}/>}
+              </Routed>
               <Route path="/manage">
-                <Manage/>
+                <Manage id={undefined}/>
               </Route>
               <Route path="/">
                 Welcome!

@@ -55,11 +55,12 @@ export function TabMenu() {
 
   React.useEffect(() => {
     const with_location = (location: Location) => {
-      const index = tabs.findIndex(t => t.route == location.pathname)
+      const basePath = '/' + location.pathname.split('/')[1]
+      const index = tabs.findIndex(t => t.route == basePath)
       if (index != -1) {
         setTab(index)
       } else {
-        console.warn('Route', location.pathname, 'has no corresponding tab')
+        console.warn('Route', basePath, 'has no corresponding tab')
       }
     }
     with_location(history.location)
