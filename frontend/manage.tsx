@@ -4,21 +4,9 @@
  * for adding individuals to herds in the genebanks you manage.
  */
 import React from 'react'
-import Breadcrumbs from '@material-ui/core/Breadcrumbs';
-import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import { makeStyles } from '@material-ui/core/styles';
-import * as Router from 'react-router-dom'
-import {
-  BrowserRouter,
-  Switch,
-  Route,
-  Link,
-  useRouteMatch,
-  useHistory,
-} from "react-router-dom";
+import { Switch } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import { ManageHerds } from './manage_herds'
@@ -40,17 +28,6 @@ const useStyles = makeStyles({
     height: '39px',
   }
 });
-
-/**
- * Props for controlling a TabPanel. the `index` and `value` are compared to
- * check if the panel should be visible (`index` == `value`) or hidden.
- */
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: any;
-  value: any;
-  className?: any;
-}
 
 import * as ui from './ui_utils'
 

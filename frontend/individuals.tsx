@@ -40,7 +40,7 @@ const columns: Column[] = [
 // Define styles for tab menu
 const useStyles = makeStyles({
   table: {
-    height: "calc(100% - 50px)",
+    height: "calc(100% - 125px)",
     padding: "0 20px",
     overflowY: "scroll",
   },
@@ -49,7 +49,7 @@ const useStyles = makeStyles({
 /**
  * Shows a list of all genebanks, with links to the individual genebanks.
  */
-export function IndividualsTable({id}: {id: string}) {
+export function IndividualsTable({id}: {id: string | null}) {
   const [individuals, setIndividuals] = React.useState([] as Array<Individual>)
   const {genebanks} = useDataContext()
   const [page, setPage] = React.useState(0);
@@ -57,9 +57,11 @@ export function IndividualsTable({id}: {id: string}) {
   const classes = useStyles();
 
   React.useEffect(() => {
-    let genebank = genebanks.filter(g => g.id == +id)
-    if (genebank) {
-      setIndividuals(genebank[0].individuals)
+    if (id != null) {
+      let genebank = genebanks.filter(g => g.id == +id)
+      if (genebank) {
+        setIndividuals(genebank[0].individuals)
+      }
     }
   }, [genebanks])
 
