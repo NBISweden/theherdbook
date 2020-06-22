@@ -41,5 +41,5 @@ fi
 printf 'Insert into database                             '
 . venv/bin/activate
 cd app/
-python3 -c "from utils.database import register_user; register_user('${user}', '${pass}')"
+python3 -c "from utils.data_access import register_user; register_user('${user}', '${pass}')"
 echo DONE
