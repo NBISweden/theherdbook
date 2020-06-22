@@ -11,7 +11,7 @@ import Tab from '@material-ui/core/Tab';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { Herd } from '~herd'
-import { Individuals } from '~individuals'
+import { IndividualsTable } from '~individuals'
 
 import { useDataContext } from './data_context'
 
@@ -173,7 +173,7 @@ export function Genebanks() {
         </Box>
       </TabPanel>
       <TabPanel value={currentTab} index={1} className={classes.tabPanel}>
-        <Individuals id={genebank ? genebank.id : null} />
+        <IndividualsTable id={genebank ? genebank.id : null} />
       </TabPanel>
     </Paper>
   </>
