@@ -146,7 +146,7 @@ def genebank(g_id=None):
     user_id = session.get('user_id', None)
     if g_id:
         return jsonify(da.get_genebank(g_id, user_id))
-    return jsonify(da.get_genebanks(user_id))
+    return jsonify(genebanks=da.get_genebanks(user_id))
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):

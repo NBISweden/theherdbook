@@ -78,7 +78,13 @@ def get_genebanks(user_uuid=None):
     if user is None:
         return None
 
-    return [g.short_info() for g in user.get_genebanks()]
+    data = []
+    for genebank in user.get_genebanks():
+        genebank_data = genebank.short_info()
+        genebank_data['individuals'] = get_individuals(genebank.id, user_uuid)
+        data += [genebank_data]
+
+    return data
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -297,6 +303,24 @@ def update_role(operation, user_uuid=None):
         target_user.add_role(operation['role'], operation['genebank'])
         updated = True
     return "updated" if updated else "unchanged"
+
+def get_individuals(genebank_id, user_uuid=None):
+    """
+    Returns all individuals for a given `genebank_id` that the user identified
+    by `user_uuid` has access to.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return None # not logged in
+    try:
+        query = Individual.select() \
+                          .where(Individual.herd << Herd.select() \
+                              .where(Herd.genebank == genebank_id) \
+                              .where(Herd.is_active == True) \
+                                )
+        return [i.list_info() for i in query]
+    except DoesNotExist:
+        return []
 
 def get_all_individuals():
     """

@@ -44,7 +44,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    * `false` otherwise.
    */
   async function getGenebanks() {
-    return fetchAndSet('/api/genebanks', setGenebanks)
+    return fetchAndSet('/api/genebanks', setGenebanks, 'genebanks')
   }
 
   /**

@@ -25,7 +25,7 @@ export function Herd({id}: {id: string}) {
   return <>
     {herd &&
       <>
-        <h2>{herd.name ?? `Besättning ${herd.id}`}</h2>
+        <h2>{`G${herd.herd}`} {herd.herd_name ? `- ${herd.herd_name}` : ''}</h2>
         <ul>
           {herd.individuals.map((individual: any) => {
             return <Link key={individual.id} to={`/individual/${individual.id}`}><li>{individual.name}</li></Link>

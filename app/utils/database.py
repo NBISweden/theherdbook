@@ -122,7 +122,7 @@ class Genebank(BaseModel):
 
         return {'id': self.id,
                 'name': self.name,
-                'herds': [h.short_info() for h in self.herd_set]
+                'herds': [h.short_info() for h in self.herd_set if h.is_active]
                 }
 
     def get_herds(self, user):
@@ -340,6 +340,13 @@ class Individual(BaseModel):
         ]
 
         return data
+
+    def list_info(self):
+        """
+        Returns the information that is to be viewed in the main individuals
+        table.
+        """
+        return super().as_dict()
 
     def short_info(self):
         """

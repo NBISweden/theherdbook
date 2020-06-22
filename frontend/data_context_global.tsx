@@ -64,6 +64,7 @@ export interface Genebank {
     id: number
     name: string
     herds: Array<Herd>
+    individuals: Array<Individual>
 }
 
 export interface DataContext {
