@@ -57,7 +57,7 @@ export function ManageHerds({id}: {id: number | undefined}) {
     let currentGenebank = genebanks.filter(g => g.id == id)
     if (currentGenebank.length > 0) {
       setGenebank(currentGenebank[0])
-      if (herd == undefined) {
+      if (herd == undefined && currentGenebank[0].herds.length > 0) {
         setHerd(currentGenebank[0].herds[0].id)
       }
     }
