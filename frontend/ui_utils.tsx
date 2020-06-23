@@ -60,7 +60,7 @@ export function useRoutedTabs(routed_tabs: RoutedTab[], options?: Partial<{autos
         indicatorColor="primary"
         textColor="primary"
         {...props}
-        value={tab_index}
+        value={tab_index === -1 ? false : tab_index}
         onChange={(_, index) => set_tab(index)}
       >
         {routed_tabs.map((tab, i) =>
