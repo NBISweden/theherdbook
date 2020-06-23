@@ -123,8 +123,8 @@ class Genebank(BaseModel):
         return {'id': self.id,
                 'name': self.name,
                 'herds': [h.short_info() for h in self.herd_set
-                                               if h.is_active
-                                               or h.is_active is None]
+                          if h.is_active
+                          or h.is_active is None]
                 }
 
     def get_herds(self, user):
