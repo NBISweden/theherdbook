@@ -3,10 +3,11 @@
  * add users and set user permissions.
  */
 import React from 'react'
-import { TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
+import { MenuItem, InputLabel, Select, TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
+import { Genebank, Herd } from '~data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -34,9 +35,13 @@ export interface ManagedUser {
  * Provides a form for changing user metadata and user roles.
  */
 export function ManageUser({id}: {id: number | string | undefined}) {
+  const {genebanks, loadData} = useDataContext()
   const [user, setUser] = React.useState(undefined as ManagedUser | undefined)
   const [isNew, setNew] = React.useState(false)
-  const {loadData} = useDataContext()
+  const [level, setLevel] = React.useState("owner")
+  const [genebank, setGenebank] = React.useState(0)
+  const [herds, setHerds] = React.useState([] as Herd[])
+  const [herd, setHerd] = React.useState(0)
   const classes = useStyles();
 
   const loadUser = (id: number) => {
@@ -55,6 +60,26 @@ export function ManageUser({id}: {id: number | string | undefined}) {
       setUser({id: -1, email: '', validated: false, privileges: []})
     }
   }, [id])
+
+  React.useEffect(() => {
+    if (genebanks.length > 0) {
+      selectGenebank(genebanks[0].id)
+    }
+  }, [genebanks])
+
+  const selectGenebank = (gId: number) => {
+    setGenebank(gId);
+    let genebankData = genebanks.filter(g => g.id == gId);
+    if (genebankData.length > 0) {
+      setHerds(genebankData[0].herds)
+      if (herds.length > 0 && herds.filter(h => herd == h.id).length == 0) {
+        setHerd(herds[0].id)
+      }
+    } else {
+      setHerds([])
+      setHerd(0)
+    }
+  }
 
   const submitForm = () => {
     let postData = Object.assign({}, user);
@@ -80,7 +105,10 @@ export function ManageUser({id}: {id: number | string | undefined}) {
     post('/api/manage/role', operation).then(
       data => {
         switch (data.status) {
-          case "updated": console.debug("updated successfully"); break; // updated user
+          case "updated": loadUser(id)
+                          loadData(["users"])
+                          console.debug("updated successfully");
+                          break; // updated user
           default: console.debug("error:", data)// "failed" or other error
         }
       },
@@ -123,28 +151,70 @@ export function ManageUser({id}: {id: number | string | undefined}) {
       </Button>
     </>
     }
-    <h3>Roles</h3>
-    <ul>
-      {user && <>
-        {user.privileges.map((role: any, i: number) => {
-            return <li key={i}>
-              {role.level}
-              {role.genebank && `, Genebank: ${role.genebank}`}
-              {role.herd && `, herd: ${role.herd}`}
-              <Button variant="contained"
-                      color="primary"
-                      onClick={() => updateRole({action: 'remove',
-                                                 role: role.level,
-                                                 user: user.id,
-                                                 genebank: role?.genebank,
-                                                 herd: role?.herd}
-                              )}>
-                Ta bort
-              </Button>
-            </li>
-          })
+
+    {!isNew && <>
+      <h3>Behörigheter</h3>
+      <ul>
+        {user && <>
+          {user.privileges.map((role: any, i: number) => {
+              return <li key={i}>
+                {role.level}
+                {role.genebank && `, Genebank: ${role.genebank}`}
+                {role.herd && `, herd: ${role.herd}`}
+                <Button variant="contained"
+                        color="primary"
+                        onClick={() => updateRole({action: 'remove',
+                                                  role: role.level,
+                                                  user: user.id,
+                                                  genebank: role?.genebank,
+                                                  herd: role?.herd}
+                                )}>
+                  Ta bort
+                </Button>
+              </li>
+            })
+          }
+        </>}
+      </ul>
+
+      <h3>Lägg till behörighet</h3>
+      <form className={classes.form} noValidate autoComplete="off">
+        <InputLabel>Behörighetsnivå</InputLabel>
+        <Select value={level} onChange={(e: any) => setLevel(e.target.value)}>
+          <MenuItem value="owner">Ägare</MenuItem>
+          <MenuItem value="manager">Manager</MenuItem>
+          <MenuItem value="specialist">Genetisk Specialist</MenuItem>
+        </Select>
+
+        <InputLabel>Genbank</InputLabel>
+        <Select value={genebank} onChange={(e: any) => selectGenebank(e.target.value)}>
+          {genebanks.map((g: Genebank) =>
+            <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
+          )}
+        </Select>
+        { level == 'owner' ? <>
+          <InputLabel>Besättning</InputLabel>
+          <Select value={herd} onChange={(e: any) => setHerd(e.target.value)}>
+            {herds.map((h: Herd) =>
+              <MenuItem key={h.id} value={h.id}>G{h.herd}{h.herd_name ? ` - ${h.herd_name}` : ''}</MenuItem>
+             )
+            }
+          </Select>
+          </>
+          : ''
         }
-      </>}
-    </ul>
+        <Button variant="contained"
+                color="primary"
+                onClick={() => updateRole({action: 'add',
+                                          role: level,
+                                          user: user ? user.id : -1,
+                                          genebank: level != 'owner' ? genebank : undefined,
+                                          herd: level == 'owner' ? herd : undefined}
+                        )}>
+          Lägg till
+        </Button>
+      </form>
+    </>
+    }
   </>
 }
