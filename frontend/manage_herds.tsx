@@ -81,12 +81,12 @@ export function ManageHerds({id}: {id: number | undefined}) {
             return <Tab key={i} label={label} />
           })}
       </Tabs>
-      <Button className={classes.centerButton}
+      {/* <Button className={classes.centerButton}
               variant="contained"
               color="primary"
               onClick={() => console.debug("add herd")}>
         Lägg till Besättning
-      </Button>
+      </Button> */}
     </div>
 
     <Box className={classes.controls}>
