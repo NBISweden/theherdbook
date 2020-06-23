@@ -16,10 +16,12 @@ export function Herd({id}: {id: string}) {
   const [herd, setHerd] = React.useState(undefined as any)
 
   React.useEffect(() => {
-    get(`/api/herd/${id}`).then(
-      data => data && setHerd(data),
-      error => console.error(error)
-    )
+    if (id != undefined) {
+      get(`/api/herd/${id}`).then(
+        data => data && setHerd(data),
+        error => console.error(error)
+      )
+    }
   }, [id])
 
   return <>
