@@ -6,6 +6,7 @@ import React from 'react'
 import { TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
+import { useDataContext } from './data_context'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -26,32 +27,49 @@ export interface ManagedUser {
   email: string
   validated: boolean
   privileges: any
+  password?: string
 }
 
 /**
  * Provides a form for changing user metadata and user roles.
  */
-export function ManageUser({id}: {id: number | undefined}) {
+export function ManageUser({id}: {id: number | string | undefined}) {
   const [user, setUser] = React.useState(undefined as ManagedUser | undefined)
+  const [isNew, setNew] = React.useState(false)
+  const {loadData} = useDataContext()
   const classes = useStyles();
 
+  const loadUser = (id: number) => {
+    setNew(false)
+    get(`/api/manage/user/${id}`).then(
+      data => data && setUser(data),
+      error => console.error(error)
+    );
+  }
+
   React.useEffect(() => {
-    if (id) {
-      get(`/api/manage/user/${id}`).then(
-        data => data && setUser(data),
-        error => console.error(error)
-      );
+    if (typeof id == 'number') {
+      loadUser(id)
+    } else if (id == 'new') {
+      setNew(true)
+      setUser({id: -1, email: '', validated: false, privileges: []})
     }
   }, [id])
 
   const submitForm = () => {
     let postData = Object.assign({}, user);
     delete postData["privileges"];
-    update(`/api/manage/user/${id}`, postData).then(
+    let protocol = isNew ? post : update;
+    protocol(`/api/manage/user/${id == 'new' ? 0 : id}`, postData).then(
       data => {
         switch (data.status) {
-          case "updated": console.debug("updated successfully"); break;
-          default: console.debug("status:", data)// "failed" or other erro
+          case "updated": console.info("updated."); break; // updated user
+          case "success":
+            loadData(["users"]).then(
+              success => loadUser(data.id)
+            )
+            break; // added user
+          default: console.warn("status:", data)// "failed" or other erro
         }
       },
       error => console.error(error)
@@ -62,8 +80,8 @@ export function ManageUser({id}: {id: number | undefined}) {
     post('/api/manage/role', operation).then(
       data => {
         switch (data.status) {
-          case "updated": console.debug("updated successfully"); break;
-          default: console.debug("status:", data)// "failed" or other erro
+          case "updated": console.debug("updated successfully"); break; // updated user
+          default: console.debug("error:", data)// "failed" or other error
         }
       },
       error => console.error(error)
@@ -72,13 +90,21 @@ export function ManageUser({id}: {id: number | undefined}) {
 
   return <>
     {user && <>
-      <h2>{user.email}</h2>
+      <h2>{isNew ? 'Ny användare' : user.email}</h2>
       <form className={classes.form} noValidate autoComplete="off">
           <TextField label='E-mail'
+                     type='email'
                      className={classes.simpleField}
                      value={user.email ?? undefined}
                      onChange={e => setUser({...user, email: e.target.value})}
             />
+          {isNew ? <TextField label='Lösenord'
+                      type='password'
+                      hidden={true}
+                      className={classes.simpleField}
+                      value={user.password ?? undefined}
+                      onChange={e => setUser({...user, password: e.target.value})}
+          /> : ''}
           <FormControlLabel
             control={
               <Checkbox color="primary"

@@ -63,7 +63,7 @@ def get_users():
     users = da.get_users(session.get('user_id', None))
     return jsonify(users=users)
 
-@APP.route('/api/manage/user/<int:u_id>', methods=['GET', 'UPDATE'])
+@APP.route('/api/manage/user/<int:u_id>', methods=['GET', 'UPDATE', 'POST'])
 def manage_user(u_id):
     """
     Returns user information and a list of all roles for the requested `u_id`.
@@ -74,6 +74,9 @@ def manage_user(u_id):
     if request.method == 'UPDATE':
         form = request.json
         status = da.update_user(form, session.get('user_id', None))
+    if request.method == 'POST':
+        form = request.json
+        return jsonify(da.add_user(form, session.get('user_id', None)))
     return jsonify(status=status)
 
 @APP.route('/api/manage/role', methods=['POST'])

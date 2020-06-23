@@ -18,7 +18,35 @@ from utils.database import (
     User,
 )
 
-def register_user(email, password):
+def add_user(form, user_uuid=None):
+    """
+    if the user identified by `user_uuid` has admin or manager rights, the new
+    user described by `form` is added to the database.
+
+    the given form should be a dictionary on the form:
+    {
+        email: <string value>
+        password: <string value>
+        validated?: <boolean>
+    }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None or not (user.is_admin or user.is_manager):
+        return {'status': "forbidden"}
+
+    email = form.get('email', None)
+    password = form.get('password', None)
+    validated = form.get('validated', False)
+    if not email or not password:
+        return {'status': "missing data"}
+
+    if User.select().where(User.email == email).first():
+        return {'status': "already exists"}
+
+    user = register_user(email, password, validated)
+    return {'id': user.id, 'status': "success"}
+
+def register_user(email, password, validated=False):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
@@ -26,7 +54,7 @@ def register_user(email, password):
     user = User(email=email,
                 uuid=uuid.uuid4().hex,
                 password_hash=generate_password_hash(password),
-                validated=False,
+                validated=validated,
                 privileges=[]
                 )
     user.save()

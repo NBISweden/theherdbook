@@ -42,7 +42,7 @@ export function ManageUsers() {
   const classes = useStyles()
   const {users} = useDataContext()
   const [userTab, setUserTab] = React.useState(0);
-  const [selectedUser, selectUser] = React.useState(undefined as number | undefined)
+  const [selectedUser, selectUser] = React.useState(undefined as number | string | undefined)
 
   React.useEffect(() => {
     if (selectedUser == undefined && users.length > 0) {
@@ -69,7 +69,7 @@ export function ManageUsers() {
     <Button className={classes.centerButton}
             variant="contained"
             color="primary"
-            onClick={() => console.debug("add user")}>
+            onClick={() => selectUser('new')}>
       Lägg till användare
     </Button>
   </div>
