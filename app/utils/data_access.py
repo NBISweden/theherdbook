@@ -322,13 +322,22 @@ def update_role(operation, user_uuid=None):
         return "failed" # target user does not exist
 
     # update roles if needed
-    has_role = target_user.has_role(operation['role'], operation['genebank'])
+    if operation['role'] == 'owner':
+        has_role = target_user.has_role(operation['role'], operation['herd'])
+    else:
+        has_role = target_user.has_role(operation['role'], operation['genebank'])
     updated = False
     if has_role and operation['action'] == 'remove':
-        target_user.remove_role(operation['role'], operation['genebank'])
+        if operation['role'] == 'owner':
+            target_user.remove_role(operation['role'], operation['herd'])
+        else:
+            target_user.remove_role(operation['role'], operation['genebank'])
         updated = True
     elif not has_role and operation['action'] == 'add':
-        target_user.add_role(operation['role'], operation['genebank'])
+        if operation['role'] == 'owner':
+            target_user.add_role(operation['role'], operation['herd'])
+        else:
+            target_user.add_role(operation['role'], operation['genebank'])
         updated = True
     return "updated" if updated else "unchanged"
 
