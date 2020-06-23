@@ -353,7 +353,7 @@ def get_individuals(genebank_id, user_uuid=None):
         query = Individual.select() \
                           .where(Individual.herd << Herd.select() \
                               .where(Herd.genebank == genebank_id) \
-                              .where(Herd.is_active == True) \
+                              .where(Herd.is_active | Herd.is_active >> None) \
                                 )
         return [i.list_info() for i in query]
     except DoesNotExist:
