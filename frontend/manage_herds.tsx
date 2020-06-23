@@ -75,8 +75,8 @@ export function ManageHerds({id}: {id: number | undefined}) {
         {genebank &&
           genebank.herds.map((h:any, i:number) => {
             let label = `G${h.herd}`;
-            if (h.name) {
-              label += ` - ${h.name}`;
+            if (h.herd_name) {
+              label += ` - ${h.herd_name}`;
             }
             return <Tab key={i} label={label} />
           })}
