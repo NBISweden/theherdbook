@@ -2,15 +2,9 @@ import React from 'react'
 
 declare const process: {env: {NODE_ENV: string}}
 
-export const backend_url =
-  process.env.NODE_ENV === 'development'
-  ? 'http://localhost:4200'
-  : '';
+export const backend_url = window.location.href;
 
-const credentials_policy =
-  process.env.NODE_ENV === 'development'
-  ? 'include'
-  : 'same-origin';
+const credentials_policy = 'same-origin';
 
 /**
  * Creates a GET request to the given `url`, and returns the reply as json.
