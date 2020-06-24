@@ -88,8 +88,8 @@ export function HerdForm(props: {id: any | undefined}) {
                      defaultValue={herd['latitude'] ?? undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('latitude', e.target.value)} />
-          <TextField label='Longitud'
-                     defaultValue={herd['longitud'] ?? undefined}
+          <TextField label='Longitude'
+                     defaultValue={herd['longitude'] ?? undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('longitude', e.target.value)} />
         </form>
