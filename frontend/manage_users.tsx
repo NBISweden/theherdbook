@@ -64,7 +64,7 @@ export function ManageUsers() {
         onChange={userChange}
         className={classes.verticalTabs}
       >
-      {users.map((u:any, i:number) => <Tab key={i} label={u.email} />)}
+      {users.map((u, i) => <Tab key={i} label={u.email} />)}
     </Tabs>
     <Button className={classes.centerButton}
             variant="contained"

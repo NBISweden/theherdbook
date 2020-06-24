@@ -74,7 +74,7 @@ export function HerdForm(props: {id: any | undefined}) {
       <>
         <h1>{herd.name || `Besättning ${herd.id}`}</h1>
         <form className={classes.form} noValidate autoComplete="off">
-          {simpleFields.map((field: any, i: number) => {
+          {simpleFields.map((field, i) => {
             return <TextField
                     key={i}
                     id={field.key}

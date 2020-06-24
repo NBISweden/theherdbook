@@ -188,14 +188,14 @@ export function ManageUser({id}: {id: number | string | undefined}) {
 
         <InputLabel>Genbank</InputLabel>
         <Select value={genebank} onChange={(e: any) => selectGenebank(e.target.value)}>
-          {genebanks.map((g: Genebank) =>
+          {genebanks.map(g =>
             <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
           )}
         </Select>
         { level == 'owner' ? <>
           <InputLabel>Besättning</InputLabel>
           <Select value={herd} onChange={(e: any) => setHerd(e.target.value)}>
-            {herds.map((h: Herd) =>
+            {herds.map(h =>
               <MenuItem key={h.id} value={h.id}>G{h.herd}{h.herd_name ? ` - ${h.herd_name}` : ''}</MenuItem>
              )
             }
