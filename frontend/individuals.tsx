@@ -77,9 +77,9 @@ export function IndividualsTable({id}: {field: number}) {
   const classes = useStyles();
 
   React.useEffect(() => {
-    let genebank = genebanks.filter(g => g.id == id)
+    const genebank = genebanks.find(g => g.id == id)
     if (genebank) {
-      setIndividuals(genebank[0].individuals)
+      setIndividuals(genebank.individuals)
     }
   }, [genebanks])
 

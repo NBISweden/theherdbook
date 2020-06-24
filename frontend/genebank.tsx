@@ -16,9 +16,9 @@ export function Genebank({id}: {id: string}) {
   const [genebank, setGenebank] = React.useState(undefined as any)
 
   React.useEffect(() => {
-    let data = genebanks.filter(g => g.id == +id)
-    if (data.length > 0) {
-      setGenebank(data[0])
+    const data = genebanks.find(g => g.id == +id)
+    if (data) {
+      setGenebank(data)
     }
   }, [id])
 
