@@ -1,6 +1,15 @@
-FROM node:14.3
-WORKDIR /frontend
-COPY package.json yarn.lock ./
+FROM node:lts
+
+RUN mkdir -p /app
+COPY /frontend/ /app/
+WORKDIR /app
 RUN yarn install
+
+VOLUME /app/node_modules
+VOLUME /app/.cache
+VOLUME /app/.parcel-cache
+
 RUN yarn run parcel --version
-CMD yarn start
+RUN rm -f babel.config.js && yarn build  --no-source-maps
+
+CMD cd /app && yarn run parcel --version && yarn start

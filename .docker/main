@@ -1,28 +1,21 @@
-# React build stage
-FROM node:14.3 as build-stage
+FROM herdbook_api:latest
 
-COPY ./frontend /build/
+RUN apt-get update && apt-get -y upgrade &&\
+    apt-get install -y supervisor nginx inotify-tools rsync
 
-WORKDIR /build
+RUN pip3 install uwsgi
 
-RUN yarn install
-RUN yarn run build
+# Mountpoint for backend
+RUN mkdir -p /api_src
 
-FROM python:3.8-buster
+COPY --from=herdbook_frontend:latest --chown=www-data:www-data /app/dist/ /app/dist/
+RUN cd /app/dist && ln -s . static
 
-COPY app/requirements*.txt /
+COPY system/supervisord.conf /etc/
+COPY system/nginx.conf /etc/nginx/
+COPY system/herdbook.devel.nginx /etc/nginx/herdbook.devel
+COPY system/herdbook.standalone.nginx /etc/nginx/herdbook.standalone
 
-RUN pip3 install -r /requirements-pydigree.txt
-RUN pip3 install -r /requirements.txt
+COPY system/entrypoint.sh /
 
-COPY --from=build-stage /build/dist/index.html /static/
-COPY --from=build-stage /build/dist/*.js /static/
-
-WORKDIR /app
-
-ENV HERDBOOK_CONFIG=/tmp/herdbook_config.ini
-ENV FLASK_APP="herdbook.py"
-ENV FLASK_ENV="development"
-# CMD python3 -m flask run --host=0.0.0.0
-
-CMD python3 herdbook.py
+CMD /entrypoint.sh
