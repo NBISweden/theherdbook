@@ -74,7 +74,7 @@ export function HerdForm(props: {id: any | undefined}) {
       <>
         <h1>{herd.name || `Besättning ${herd.id}`}</h1>
         <form className={classes.form} noValidate autoComplete="off">
-          {simpleFields.map((field: any, i: number) => {
+          {simpleFields.map((field, i) => {
             return <TextField
                     key={i}
                     id={field.key}
@@ -88,8 +88,8 @@ export function HerdForm(props: {id: any | undefined}) {
                      defaultValue={herd['latitude'] ?? undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('latitude', e.target.value)} />
-          <TextField label='Longitud'
-                     defaultValue={herd['longitud'] ?? undefined}
+          <TextField label='Longitude'
+                     defaultValue={herd['longitude'] ?? undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('longitude', e.target.value)} />
         </form>

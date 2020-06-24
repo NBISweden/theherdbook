@@ -53,11 +53,11 @@ export function ExploreHerds({id}: {id: number | undefined}) {
   };
 
   React.useEffect(() => {
-    let currentGenebank = genebanks.filter(g => g.id == id)
-    if (currentGenebank.length > 0) {
-      setGenebank(currentGenebank[0])
-      if (herd == undefined && currentGenebank[0].herds.length > 0) {
-        setHerd(currentGenebank[0].herds[0].id)
+    const currentGenebank = genebanks.find(g => g.id == id)
+    if (currentGenebank) {
+      setGenebank(currentGenebank)
+      if (herd == undefined && currentGenebank.herds.length > 0) {
+        setHerd(currentGenebank.herds[0].id)
       }
     }
   }, [genebanks, id])
