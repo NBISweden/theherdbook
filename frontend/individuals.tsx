@@ -4,7 +4,7 @@
  */
 import React from 'react'
 import { forwardRef } from 'react';
-import MaterialTable from 'material-table'
+import { default as MaterialTable, Icons } from 'material-table'
 
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -35,7 +35,7 @@ const useStyles = makeStyles({
   },
 });
 
-const tableIcons = {
+const tableIcons: Icons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
   Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
   Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
