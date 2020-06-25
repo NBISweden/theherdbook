@@ -38,8 +38,6 @@ services:
             context: ./
             dockerfile: .docker/main
         container_name: herdbook-main
-        environment:
-            - HERDBOOK_CONFIG=/config/database.ini
         ports:
             - 4200:8080
             - 4443:8443

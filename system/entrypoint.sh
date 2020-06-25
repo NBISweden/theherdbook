@@ -12,6 +12,10 @@ for p in {cert,key,ca}; do
   fi
 done
 
+if [ -r /config/database.ini ]; then
+    cp /config/database.ini /tmp/database.ini
+fi
+
 if [ -r /config/dhparam.pem ]; then
     cp /config/dhparam.pem /code/
 else
