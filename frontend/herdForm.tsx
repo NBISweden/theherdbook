@@ -24,7 +24,7 @@ const useStyles = makeStyles({
 /**
  * Provides herd management forms for setting herd metadata.
  */
-export function HerdForm(props: {id: any | undefined}) {
+export function HerdForm(props: {id: string | number | undefined}) {
   const [herd, setHerd] = React.useState(undefined as any)
   const [loading, setLoading] = React.useState(true);
   const classes = useStyles();
