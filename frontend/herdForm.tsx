@@ -29,6 +29,7 @@ export function HerdForm(props: {id: any | undefined}) {
   const [loading, setLoading] = React.useState(true);
   const classes = useStyles();
   const simpleFields = [
+    {key: 'herd_name', title: "Besättningnamn"},
     {key: 'name', title: "Namn"},
     {key: 'email', title: "E-post"},
     {key: 'mobile_phone', title: "Mobiltelefon"},
@@ -77,7 +78,6 @@ export function HerdForm(props: {id: any | undefined}) {
           {simpleFields.map((field, i) => {
             return <TextField
                     key={i}
-                    id={field.key}
                     label={field.title}
                     defaultValue={herd[field.key] ?? undefined}
                     className={classes.simpleField}
