@@ -2,7 +2,7 @@ import React from 'react'
 
 declare const process: {env: {NODE_ENV: string}}
 
-export const backend_url = window.location.href;
+export const backend_url = window.location.href.slice(0, -window.location.pathname.length);
 
 const credentials_policy = 'same-origin';
 
