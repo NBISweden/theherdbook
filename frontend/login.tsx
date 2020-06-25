@@ -10,14 +10,32 @@ import {useHistory} from 'react-router-dom'
 
 import {useUserContext} from './user_context'
 
+function triple<A,B,C>(a: A, b: B, c: C): [A, B, C] {
+  return [a, b, c]
+}
+
+function useMartinState<State extends Record<string, any>>(init: State) {
+  const [state, set_state] = useState(init)
+  return triple(
+    state,
+    (field: keyof State) => ({
+      value: state[field],
+      onChange: (e: React.ChangeEvent<any>) => {
+        const value = e.target.value
+        set_state(state => ({...state, [field]: value}))
+      }
+    }),
+    set_state,
+  )
+}
+
 /**
  * Shows login and logout in a form, submits it to the user context callbacks
  */
 export function Login() {
   const [open, setOpen] = React.useState(true);
   const {login} = useUserContext()
-  const [username, set_username] = useState('')
-  const [password, set_password] = useState('')
+  const [state, bind_state] = useMartinState({username: '', password: ''})
   const history = useHistory()
 
   const close = () => {
@@ -26,7 +44,7 @@ export function Login() {
   }
 
   const submitLogin = () => {
-    login(username, password).then(
+    login(state.username, state.password).then(
       status => {
         if (status == 'logged_in') {
           history.push("/")
@@ -57,8 +75,7 @@ export function Login() {
             margin="dense"
             label="E-postadress"
             type="email"
-            value={username}
-            onChange={e => set_username(e.target.value)}
+            {...bind_state('username')}
             onSubmit={submitLogin}
             fullWidth
           />
@@ -68,8 +85,7 @@ export function Login() {
             margin="dense"
             label="Lösenord"
             type="password"
-            value={password}
-            onChange={e => set_password(e.target.value)}
+            {...bind_state('password')}
             fullWidth
           />
         </DialogContent>
