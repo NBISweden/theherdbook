@@ -2,8 +2,6 @@ import React from 'react'
 
 declare const process: {env: {NODE_ENV: string}}
 
-export const backend_url = window.location.href.slice(0, -window.location.pathname.length);
-
 const credentials_policy = 'same-origin';
 
 /**
@@ -12,7 +10,7 @@ const credentials_policy = 'same-origin';
  * @param url The target URL for the GET request
  */
 export async function get(url: string) {
-  const resp = await fetch(backend_url + url, {
+  const resp = await fetch(url, {
     method: 'GET',
     credentials: credentials_policy,
     headers: {
@@ -31,7 +29,7 @@ export async function get(url: string) {
  * @param content The content to be sent with the request
  */
 export async function post(url: string, content: any) {
-  const resp = await fetch(backend_url + url, {
+  const resp = await fetch(url, {
     body: JSON.stringify(content),
     method: 'POST',
     credentials: credentials_policy,
@@ -52,7 +50,7 @@ export async function post(url: string, content: any) {
  * @param content The content to be sent with the request
  */
 export async function update(url: string, content: any) {
-  const resp = await fetch(backend_url + url, {
+  const resp = await fetch(url, {
     body: JSON.stringify(content),
     method: 'UPDATE',
     credentials: credentials_policy,
