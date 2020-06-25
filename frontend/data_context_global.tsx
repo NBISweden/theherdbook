@@ -58,6 +58,7 @@ export interface Herd {
     latitude: string | null
     longitude: string | null
     coordinates_privacy?: string | null
+    individuals?: Individual[]
 }
 
 export interface Genebank {

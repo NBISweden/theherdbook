@@ -7,6 +7,7 @@ import { TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {Link} from "react-router-dom";
 import { get, update } from './communication';
+import { Herd, Individual } from '~data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -25,10 +26,10 @@ const useStyles = makeStyles({
  * Provides herd management forms for setting herd metadata.
  */
 export function HerdForm(props: {id: string | number | undefined}) {
-  const [herd, setHerd] = React.useState(undefined as any)
+  const [herd, setHerd] = React.useState(undefined as Herd | undefined)
   const [loading, setLoading] = React.useState(true);
   const classes = useStyles();
-  const simpleFields = [
+  const simpleFields: Array<{key: keyof Herd, title: string}> = [
     {key: 'herd_name', title: "Besättningnamn"},
     {key: 'name', title: "Namn"},
     {key: 'email', title: "E-post"},
@@ -51,9 +52,8 @@ export function HerdForm(props: {id: string | number | undefined}) {
     }
   }, [props])
 
-  const setFormField = (label: string, value: string | number) => {
-    herd[label] = value;
-    setHerd(herd);
+  const setFormField = <K extends keyof Herd>(label: K, value: Herd[K]) => {
+    herd && {...herd, label: value}
   }
 
   const submitForm = () => {
@@ -100,11 +100,14 @@ export function HerdForm(props: {id: string | number | undefined}) {
         </Button>
         <h2>Individer</h2>
         <ul>
-          {herd.individuals.map((individual: any, i:number) => {
-            return <Link key={i} to={`/individual/${individual.id}`}>
-              <li>{individual.name ?? individual.number}</li>
-            </Link>
-          })}
+          {herd.individuals
+            ? herd.individuals.map((individual: Individual, i:number) => {
+              return <Link key={i} to={`/individual/${individual.id}`}>
+                <li>{individual.name ?? individual.number}</li>
+              </Link>
+              })
+            : ''
+          }
         </ul>
       </>
     }
