@@ -6,9 +6,9 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { Tabs, Tab } from '@material-ui/core/'
-import { Box, Button } from '@material-ui/core'
+import { Box } from '@material-ui/core'
 import { HerdForm } from '~herdForm'
-import { Genebank } from 'data_context_global'
+import { Genebank, Herd } from 'data_context_global'
 
 import { useDataContext } from './data_context'
 
@@ -73,7 +73,7 @@ export function ManageHerds({id}: {id: number | undefined}) {
         className={classes.verticalTabs}
       >
         {genebank &&
-          genebank.herds.map((h:any, i:number) => {
+          genebank.herds.sort((a: Herd,b: Herd) => +a.herd - +b.herd).map((h:any, i:number) => {
             let label = `G${h.herd}`;
             if (h.herd_name) {
               label += ` - ${h.herd_name}`;

@@ -1,6 +1,6 @@
 /**
- * @file This file contains the Herd function. This function fetches herd for a
- *       given `id` (parsed from the url), as well as the individuals
+ * @file This file contains the HerdView function. This function fetches herd
+ *       for a given `id` (parsed from the url), as well as the individuals
  *       belonging to that herd.
  */
 import React from 'react'
@@ -12,7 +12,7 @@ import { get } from './communication';
  * Shows herd information, with a list of all individuals belonging to that
  * herd.
  */
-export function Herd({id}: {id: string}) {
+export function HerdView({id}: {id: string}) {
   const [herd, setHerd] = React.useState(undefined as any)
 
   React.useEffect(() => {

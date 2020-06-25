@@ -11,7 +11,7 @@ import GroupIcon from '@material-ui/icons/Group';
 import {Login} from './login'
 import {Genebanks} from './genebanks'
 import {Genebank} from './genebank'
-import {Herd} from './herd'
+import {HerdView} from './herd_view'
 import {Manage} from './manage'
 import {Individual} from './individual'
 
@@ -100,7 +100,7 @@ export function Navigation() {
           {params => <Genebank id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/herd/:id">
-          {params => <Herd id={params.id}/>}
+          {params => <HerdView id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/individual/:id">
           {params => <Individual id={params.id}/>}
