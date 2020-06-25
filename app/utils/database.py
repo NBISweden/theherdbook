@@ -348,7 +348,14 @@ class Individual(BaseModel):
         Returns the information that is to be viewed in the main individuals
         table.
         """
-        return super().as_dict()
+        data = super().as_dict()
+        # data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
+        # data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
+        #     if self.mother else None
+        # data['father'] = {'id': self.father.id, 'name': self.father.name} \
+        #     if self.father else None
+        # data['colour'] = self.colour.name if self.colour else None
+        return data
 
     def short_info(self):
         """

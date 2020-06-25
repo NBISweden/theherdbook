@@ -29,7 +29,7 @@ const useStyles = makeStyles({
     width: "250px",
   },
   controls: {
-    height: "100%",
+    height: "calc(100% - 50px)",
     width: "calc(100% - 250px)",
     padding: "0.5cm 1cm",
     overflowY: "scroll",
