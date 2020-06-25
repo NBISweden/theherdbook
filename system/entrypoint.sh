@@ -24,6 +24,8 @@ else
 fi
 
 chown www-data.www-data /code/*.pem
+chown www-data.www-data /tmp/database.ini
+chmod u+r /tmp/database.ini
 
 if getent hosts herdbook-frontend-devel >/dev/null; then
     # Development mode                                                                                                                                        
