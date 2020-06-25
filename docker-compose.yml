@@ -51,5 +51,4 @@ services:
               target: /config
         depends_on:
             - database
-
-
+            - herdbook-frontend-devel
