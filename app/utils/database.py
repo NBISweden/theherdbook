@@ -95,7 +95,12 @@ class BaseModel(Model):
         """
         Returns the objects key/value pair as a dictionary.
         """
-        return self.__dict__['__data__']
+        data = self.__dict__['__data__'].copy()
+        for key, value in data.items():
+            if value and key.endswith('_date'):
+                data[key] = value.strftime('%Y-%m-%d')
+
+        return data
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
@@ -336,7 +341,7 @@ class Individual(BaseModel):
             {
                 'herd_id':h.herd.id,
                 'herd':h.herd.herd_name,
-                'date':h.herd_tracking_date
+                'date':h.herd_tracking_date.strftime('%Y-%m-%d') if h.herd_tracking_date else None
             }
             for h in self.herdtracking_set #pylint: disable=no-member
         ]
