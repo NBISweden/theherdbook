@@ -60,11 +60,11 @@ const columns = [
   {field: 'herd', title: 'Besättning',
     render: (rowData:any) => <Link to={`/herd/${rowData.herd['id']}`}>{rowData.herd['herd']}</Link>
   },
-  {field: 'name', title: 'Namn',
-    render: (rowData:any) => <Link to={`/individual/${rowData.id}`}>{rowData.name ? rowData.name : <i>Namnlös</i>}</Link>
-  },
+  {field: 'name', title: 'Namn'},
   {field: 'certificate', title: 'Certifikat'},
-  {field: 'number', title: 'Nummer'},
+  {field: 'number', title: 'Nummer',
+    render: (rowData:any) => <Link to={`/individual/${rowData.id}`}>{rowData.number}</Link>
+  },
   {field: 'sex', title: 'Kön'},
   {field: 'birth_date', title: 'Födelsedatum'},
   {field: 'death_date', title: 'Dödsdatum'},
