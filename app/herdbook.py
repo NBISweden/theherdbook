@@ -25,9 +25,9 @@ APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    SESSION_COOKIE_SECURE=APP.config['ENV'] != 'development',
+#   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax' if APP.config['ENV'] == 'development' else 'Strict',
+    SESSION_COOKIE_SAMESITE='Strict',
 )
 
 @APP.after_request
@@ -36,11 +36,16 @@ def after_request(response):
     Callback that triggers after each request. Currently this is used to set
     CORS headers to allow a different origin when using the development server.
     """
-    if APP.config['ENV'] == 'development':
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:2345')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,UPDATE')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
+    
+    if 'Origin' in request.headers:
+        origin = request.headers['Origin']
+    else:
+        origin = '*'
+        
+    response.headers.add('Access-Control-Allow-Origin', origin)
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,UPDATE')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
 
     return response
 
