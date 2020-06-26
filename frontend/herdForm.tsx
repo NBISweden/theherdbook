@@ -53,7 +53,7 @@ export function HerdForm(props: {id: string | number | undefined}) {
   }, [props])
 
   const setFormField = <K extends keyof Herd>(label: K, value: Herd[K]) => {
-    herd && {...herd, label: value}
+    herd && setHerd({...herd, [label]: value})
   }
 
   const submitForm = () => {
