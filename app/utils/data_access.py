@@ -13,6 +13,7 @@ from werkzeug.security import (
 )
 
 from utils.database import (
+    DATABASE,
     Herd,
     Individual,
     User,
@@ -342,12 +343,40 @@ def get_individuals(genebank_id, user_uuid=None):
     if user is None:
         return None # not logged in
     try:
-        query = Individual.select() \
-                          .where(Individual.herd << Herd.select() \
-                              .where(Herd.genebank == genebank_id) \
-                              .where(Herd.is_active | Herd.is_active >> None) \
-                                )
-        return [i.list_info() for i in query]
+        # TODO: rewrite this in peewee
+        query = """
+        SELECT  i.individual_id, i.name, i.certificate, i.number, i.sex,
+                i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
+                i.colour_note,
+                f.individual_id, f.name, f.number,
+                m.individual_id, m.name, m.number,
+                c.colour_id, c.name,
+                h.herd_id, h.herd, h.herd_name
+        FROM    individual i JOIN
+                individual f ON (i.father_id = f.individual_id) JOIN
+                individual m ON (i.mother_id = m.individual_id) JOIN
+                colour c ON (i.colour_id = c.colour_id) JOIN
+                herd h ON (i.herd_id = h.herd_id)
+        WHERE   h.genebank_id = 1 AND
+                (h.is_active OR h.is_active IS NULL);"""
+        cursor = DATABASE.execute_sql(query)
+        return [{
+            'id': i[0],
+            'name': i[1],
+            'certificate': i[2],
+            'number': i[3],
+            'sex': i[4],
+            'birth_date': i[5],
+            'death_date': i[6],
+            'death_note': i[7],
+            'litter': i[8],
+            'notes': i[9],
+            'color_note': i[10],
+            'father': {'id': i[11], 'name': i[12], 'number': i[13]},
+            'mother': {'id': i[14], 'name': i[15], 'number': i[16]},
+            'color': {'id': i[17], 'name': i[18]},
+            'herd': {'id': i[19], 'herd': i[20], 'herd_name': i[21]},
+        } for i in cursor.fetchall()]
     except DoesNotExist:
         return []
 

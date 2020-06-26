@@ -5,6 +5,7 @@
 import React from 'react'
 import { forwardRef } from 'react';
 import { default as MaterialTable, Icons } from 'material-table'
+import { Link } from 'react-router-dom'
 
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -56,16 +57,26 @@ const tableIcons: Icons = {
 };
 
 const columns = [
-  {field: 'herd', title: 'Besättning'},
+  {field: 'herd', title: 'Besättning',
+    render: (rowData:any) => <Link to={`/herd/${rowData.herd['id']}`}>{rowData.herd['herd']}</Link>
+  },
   {field: 'name', title: 'Namn'},
   {field: 'certificate', title: 'Certifikat'},
   {field: 'number', title: 'Nummer'},
   {field: 'sex', title: 'Kön'},
-  {field: 'birthDate', title: 'Födelsedatum'},
-  {field: 'mother', title: 'Moder'},
-  {field: 'father', title: 'Fader'},
-  {field: 'color', title: 'Färg'},
-  {field: 'colorNote', title: 'Färganteckning'},
+  {field: 'birth_date', title: 'Födelsedatum'},
+  {field: 'death_date', title: 'Dödsdatum'},
+  {field: 'death_note', title: 'Dödsanteckning'},
+  {field: 'mother', title: 'Moder',
+    render: (rowData:any) => <Link to={`/individual/${rowData.mother['id']}`}>{rowData.mother['name']}</Link>
+  },
+  {field: 'father', title: 'Fader',
+    render: (rowData:any) => <Link to={`/individual/${rowData.father['id']}`}>{rowData.father['name']}</Link>
+  },
+  {field: 'color', title: 'Färg',
+    render: (rowData:any) => rowData.color['name']
+  },
+  {field: 'color_note', title: 'Färganteckning'},
 ]
 
 /**
