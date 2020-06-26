@@ -40,7 +40,7 @@ export function HerdView({id}: {id: string}) {
         <h2>{`G${herd.herd}`} {herd.herd_name ? `- ${herd.herd_name}` : ''}</h2>
         <dl>
           {fields.map(field => <>
-              <dt>{field.title}</dt> <dd>{herd[field.key] ? herd[field.key] : '-'}</dd>
+              <dt key={field.key}>{field.title}</dt> <dd>{herd[field.key] ? herd[field.key] : '-'}</dd>
             </>
             )
           }
