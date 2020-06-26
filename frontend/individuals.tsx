@@ -60,7 +60,9 @@ const columns = [
   {field: 'herd', title: 'Besättning',
     render: (rowData:any) => <Link to={`/herd/${rowData.herd['id']}`}>{rowData.herd['herd']}</Link>
   },
-  {field: 'name', title: 'Namn'},
+  {field: 'name', title: 'Namn',
+    render: (rowData:any) => <Link to={`/individual/${rowData.id}`}>{rowData.name ? rowData.name : <i>Namnlös</i>}</Link>
+  },
   {field: 'certificate', title: 'Certifikat'},
   {field: 'number', title: 'Nummer'},
   {field: 'sex', title: 'Kön'},
