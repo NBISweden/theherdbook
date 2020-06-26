@@ -92,7 +92,7 @@ export function IndividualsTable({id}: {field: number}) {
     if (genebank) {
       setIndividuals(genebank.individuals)
     }
-  }, [genebanks])
+  }, [genebanks, id])
 
   return <>
     <div className={classes.table}>
