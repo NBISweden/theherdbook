@@ -57,7 +57,10 @@ export function HerdForm(props: {id: string | number | undefined}) {
   }
 
   const submitForm = () => {
-    let postData = Object.assign({}, herd);
+    if (herd == undefined) {
+      return
+    }
+    const postData: Herd = {...herd};
     delete postData["individuals"];
     update('/api/manage/herd', postData).then(
       data => {
