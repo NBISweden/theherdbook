@@ -393,8 +393,8 @@ def get_all_individuals():
             data = individual.__dict__['__data__']
             ind = dict()
             ind["id"] = str(data['id'])
-            ind["father"] = str(data["father"]) if data["father"] else "0"
-            ind["mother"] = str(data["mother"]) if data["mother"] else "0"
+            ind["father"] = str(data["father"]) if (data["father"] and data["mother"]) else "0"
+            ind["mother"] = str(data["mother"]) if (data["mother"] and data["father"]) else "0"
             ind["sex"] = "M" if data["sex"] == "male" else "F"
             ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
             individuals_dict.append(ind)
