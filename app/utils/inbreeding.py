@@ -92,9 +92,8 @@ def get_pedigree_collections():
 
 def get_pedigree_graph(id, user_id, coefficients):
     G = pygraphviz.AGraph(directed=True, strict=True)
-    G.node_attr['shape']= 'box'
-    G.node_attr['color']= 'yellow'
-    G.node_attr['style'] = 'filled'
+    G.node_attr['shape'] = 'box'
+    G.node_attr['color'] = 'goldenrod2'
     add_node(id, G, user_id, coefficients)
     graph_file = "graphs/graph-%s.png" % id
     # print(ped.inbreeding(x.label))
@@ -105,7 +104,6 @@ def get_pedigree_graph(id, user_id, coefficients):
 
 def add_node(id, G, uuid, coefficients):
     x = data_access.get_individual(individual_id=id, user_uuid=uuid)
-    print(id)
     if x is None:
         return
     id = str(id)
@@ -120,7 +118,7 @@ def add_node(id, G, uuid, coefficients):
     if x['mother']:
         mother = x['mother']
         G.add_edge(mother['id'], id)
-        add_node(father['id'], G, uuid, coefficients)
+        add_node(mother['id'], G, uuid, coefficients)
 
 def main():
     """
@@ -129,7 +127,7 @@ def main():
     user = User.get(User.email == 'airen@nbis.se')
     collections = get_pedigree_collections()
     coefficients = calculate_inbreeding(collections)
-    get_pedigree_graph(1000, user.uuid, coefficients)
+    get_pedigree_graph(10000, user.uuid, coefficients)
 
 
 if __name__ == "__main__":
