@@ -15,7 +15,7 @@ from flask import (
     request,
     session,
 )
-
+from flask_caching import Cache
 import utils.database as db
 import utils.data_access as da
 import utils.inbreeding as ibc
@@ -28,7 +28,14 @@ APP.config.update(
 #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
+    DEBUG= True,          # some Flask specific configs
+    CACHE_TYPE= "simple", # Flask-Caching related configs
+    CACHE_DEFAULT_TIMEOUT= 300
 )
+
+# tell Flask to use the above defined config
+
+cache = Cache(APP)
 
 @APP.after_request
 def after_request(response):
@@ -170,22 +177,45 @@ def individual(i_id):
     Returns information on the individual given by `i_id`.
     """
     user_id = session.get('user_id', None)
-    return jsonify(da.get_individual(i_id, user_id))
+    ind = da.get_individual(i_id, user_id)
+    if ind:
+        ind['inbreeding'] = get_inbreeding(i_id)
+    return jsonify(ind)
+
 
 
 @APP.route('/api/inbreeding/<int:i_id>')
 def inbreeding(i_id):
     """
-    Returns the inbreeding coefficient of the individual given by `i_id`.
+    Returns the inbreeding coefficient of the individual given by `i_id` in json format.
     """
+    coefficient = get_inbreeding(i_id)
+    if coefficient:
+        return jsonify({i_id: coefficient})
+    else:
+        return jsonify({i_id: "Not found. You may have to login first"}), 404
+
+
+def get_inbreeding(i_id):
+    """
+    Returns  the inbreeding coefficient of the individual given by `i_id`.
+    """
+    id = str(i_id)
+    coefficients = load_inbreeding()
+    if id in coefficients:
+        return coefficients[id]
+    return None
+
+@APP.route('/api/inbreeding/')
+def all_inbreeding():
+    coefficients = load_inbreeding()
+    return jsonify({'coefficients': coefficients})
+
+@cache.cached(timeout=60000, key_prefix="inbreeding")
+def load_inbreeding():
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
-    i_id = str(i_id)
-
-    if i_id in coefficients:
-        return jsonify({i_id : coefficients[i_id]})
-
-    return jsonify({i_id: "Not found"}), 404
+    return coefficients
 
 
 @APP.route('/', defaults={'path': ''})
@@ -195,6 +225,8 @@ def main(path): #pylint: disable=unused-argument
     Serves the single-page webapp.
     """
     return APP.send_static_file('index.html')
+
+
 
 if __name__ == '__main__':
     # Connect to the database, or wait for database and then connect.

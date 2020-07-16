@@ -1,9 +1,9 @@
 FROM herdbook_api:latest
 
 RUN apt-get update && apt-get -y upgrade &&\
-    apt-get install -y supervisor nginx inotify-tools rsync
+    apt-get install -y supervisor nginx inotify-tools rsync graphviz-dev graphviz
 
-RUN pip3 install uwsgi
+RUN pip3 install uwsgi pygraphviz
 
 # Mountpoint for backend
 RUN mkdir -p /api_src

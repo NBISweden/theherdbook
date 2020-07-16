@@ -7,7 +7,10 @@ from pydigree.population import Population
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
 from pydigree.io.base import connect_individuals, sort_pedigrees
-import utils.data_access as data_access
+from . import data_access as data_access
+import pygraphviz
+from .database import User
+
 
 
 class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
@@ -87,14 +90,36 @@ def get_pedigree_collections():
 
     return sorted_ped
 
+def add_node(id, G, uuid):
+    x = data_access.get_individual(individual_id=id, user_uuid=uuid)
+
+    if x == None:
+        return
+    id = x['id']
+    print(id)
+    G.add_node(id)
+    if x['father']:
+        father = x['father']
+        G.add_edge(father['id'], id)
+        add_node(father['id'], G, uuid)
+    if x['mother']:
+        mother = x['mother']
+        G.add_edge(mother['id'], id)
+        add_node(father['id'], G, uuid)
 
 def main():
     """
     Run the main program.
     """
-    collections = get_pedigree_collections()
-    coefficients = calculate_inbreeding(collections)
-    print(coefficients)
+    user = User.get(User.email == 'airen@nbis.se')
+
+    G = pygraphviz.AGraph(directed=True, strict=True, node_attr={'color': 'lightblue2', 'style': 'filled'})
+    add_node(10000, G, user.uuid)
+    #print(ped.inbreeding(x.label))
+    G.layout()
+    G.write('graph.png')
+
+
 
 
 if __name__ == "__main__":
