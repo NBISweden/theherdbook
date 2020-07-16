@@ -105,13 +105,14 @@ def get_pedigree_graph(id, user_id, coefficients):
 
 def add_node(id, G, uuid, coefficients):
     x = data_access.get_individual(individual_id=id, user_uuid=uuid)
+    print(id)
     if x is None:
         return
     id = str(id)
-    print(id)
     coefficient = coefficients[id]
-    label = "%s"% (id)
-    G.add_node(id)
+    label = "%s\n%s"% (x['number'], coefficient)
+    print(label)
+    G.add_node(id, label=label)
     if x['father']:
         father = x['father']
         G.add_edge(father['id'], id)
@@ -128,7 +129,7 @@ def main():
     user = User.get(User.email == 'airen@nbis.se')
     collections = get_pedigree_collections()
     coefficients = calculate_inbreeding(collections)
-    get_graph(10000, user.uuid, coefficients)
+    get_pedigree_graph(1000, user.uuid, coefficients)
 
 
 if __name__ == "__main__":
