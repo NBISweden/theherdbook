@@ -90,7 +90,7 @@ def get_pedigree_collections():
 
     return sorted_ped
 
-def get_graph(id, user_id, coefficients):
+def get_pedigree_graph(id, user_id, coefficients):
     G = pygraphviz.AGraph(directed=True, strict=True)
     G.node_attr['shape']= 'box'
     G.node_attr['color']= 'yellow'

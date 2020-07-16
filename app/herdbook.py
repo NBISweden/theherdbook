@@ -186,14 +186,14 @@ def individual(i_id):
     return jsonify(ind)
 
 
-@APP.route('/api/inbreeding_graph/<int:i_id>')
+@APP.route('/api/pedigree/<int:i_id>')
 def inbreeding(i_id):
     """
     Returns the inbreeding coefficient of the individual given by `i_id` in json format.
     """
     user_id = session.get('user_id', None)
     if user_id:
-        graph = ibc.get_graph(i_id, user_id, load_inbreeding())
+        graph = ibc.get_pedigree_graph(i_id, user_id, load_inbreeding())
         return send_file(graph, mimetype='image/gif')
     else:
         return jsonify(status="You must login first")
