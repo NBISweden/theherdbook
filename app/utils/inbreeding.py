@@ -90,36 +90,45 @@ def get_pedigree_collections():
 
     return sorted_ped
 
-def add_node(id, G, uuid):
-    x = data_access.get_individual(individual_id=id, user_uuid=uuid)
+def get_graph(id, user_id, coefficients):
+    G = pygraphviz.AGraph(directed=True, strict=True)
+    G.node_attr['shape']= 'box'
+    G.node_attr['color']= 'yellow'
+    G.node_attr['style'] = 'filled'
+    add_node(id, G, user_id, coefficients)
+    graph_file = "graphs/graph-%s.png" % id
+    # print(ped.inbreeding(x.label))
+    G.layout()
+    G.write(graph_file)
+    G.draw(graph_file)
+    return graph_file
 
-    if x == None:
+def add_node(id, G, uuid, coefficients):
+    x = data_access.get_individual(individual_id=id, user_uuid=uuid)
+    if x is None:
         return
-    id = x['id']
+    id = str(id)
     print(id)
+    coefficient = coefficients[id]
+    label = "%s"% (id)
     G.add_node(id)
     if x['father']:
         father = x['father']
         G.add_edge(father['id'], id)
-        add_node(father['id'], G, uuid)
+        add_node(father['id'], G, uuid, coefficients)
     if x['mother']:
         mother = x['mother']
         G.add_edge(mother['id'], id)
-        add_node(father['id'], G, uuid)
+        add_node(father['id'], G, uuid, coefficients)
 
 def main():
     """
     Run the main program.
     """
     user = User.get(User.email == 'airen@nbis.se')
-
-    G = pygraphviz.AGraph(directed=True, strict=True, node_attr={'color': 'lightblue2', 'style': 'filled'})
-    add_node(10000, G, user.uuid)
-    #print(ped.inbreeding(x.label))
-    G.layout()
-    G.write('graph.png')
-
-
+    collections = get_pedigree_collections()
+    coefficients = calculate_inbreeding(collections)
+    get_graph(10000, user.uuid, coefficients)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ from flask_caching import Cache
 import utils.database as db
 import utils.data_access as da
 import utils.inbreeding as ibc
+from flask import send_file, render_template
+
 
 
 APP = Flask(__name__, static_folder="/static")
@@ -180,22 +182,23 @@ def individual(i_id):
     ind = da.get_individual(i_id, user_id)
     if ind:
         ind['inbreeding'] = get_inbreeding(i_id)
+
     return jsonify(ind)
 
 
-
-@APP.route('/api/inbreeding/<int:i_id>')
+@APP.route('/api/inbreeding_graph/<int:i_id>')
 def inbreeding(i_id):
     """
     Returns the inbreeding coefficient of the individual given by `i_id` in json format.
     """
-    coefficient = get_inbreeding(i_id)
-    if coefficient:
-        return jsonify({i_id: coefficient})
+    user_id = session.get('user_id', None)
+    if user_id:
+        graph = ibc.get_graph(i_id, user_id, load_inbreeding())
+        return send_file(graph, mimetype='image/gif')
     else:
-        return jsonify({i_id: "Not found. You may have to login first"}), 404
+        return jsonify(status="You must login first")
 
-
+@cache.cached(timeout=60000, key_prefix="inbreeding")
 def get_inbreeding(i_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_id`.
@@ -211,7 +214,7 @@ def all_inbreeding():
     coefficients = load_inbreeding()
     return jsonify({'coefficients': coefficients})
 
-@cache.cached(timeout=60000, key_prefix="inbreeding")
+@cache.cached(timeout=60000, key_prefix="all_inbreeding")
 def load_inbreeding():
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
