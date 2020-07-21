@@ -172,6 +172,29 @@ def individual(i_id):
     user_id = session.get('user_id', None)
     return jsonify(da.get_individual(i_id, user_id))
 
+@APP.route('/api/pedigree/<int:i_id>')
+def pedigree(i_id):
+    """
+    Returns the pedigree information for the individual `i_id`.
+    """
+    user_id = session.get('user_id', None)
+    individual = get_pedigree(i_id, user_id)
+    if individual:
+        return jsonify(individual)
+    return jsonify(status="Individual not found. You may have to login first")
+
+def get_pedigree(id, user_id):
+    """Builds the pedigree dict tree for the individual"""
+    individual = da.get_individual(id, user_id)
+    if individual:
+        father = individual['father']
+        mother = individual['mother']
+        if father:
+            individual['father'] = get_pedigree(father['id'], user_id)
+        if mother:
+            individual['mother'] = get_pedigree(mother['id'], user_id)
+        return {'individual': individual}
+    return None
 
 @APP.route('/api/inbreeding/<int:i_id>')
 def inbreeding(i_id):
