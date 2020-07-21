@@ -44,7 +44,7 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 
 ```
 
-To access the local server deployed you can go to the url https://localhost:4443. You will need to configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled. In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
+To access the local server deployed open this url https://localhost:4443 in your browser. You will need to configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled. In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
 
 To be able to login on the website and play with it you will need to create an user with admin privileges. This can be done by executing the following command from the app folder, using your email and password:
 
