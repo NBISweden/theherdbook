@@ -8,10 +8,7 @@ from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
 from pydigree.io.base import connect_individuals, sort_pedigrees
 from . import data_access as data_access
-import pygraphviz
-from .database import User
-import sys
-import os
+
 
 
 
@@ -92,49 +89,4 @@ def get_pedigree_collections():
 
     return sorted_ped
 
-def get_pedigree_graph(id, user_id, coefficients):
-    G = pygraphviz.AGraph(directed=True, strict=True)
-    G.node_attr['shape'] = 'box'
-    G.node_attr['color'] = 'goldenrod2'
-    G.graph_attr["rankdir"] = "BT"
-    add_node(id, G, user_id, coefficients)
-    graphs_dir = "graphs"
-    graph_file = os.path.join(graphs_dir, "graph-%s.png"%id)
-    G.layout()
-    if not os.path.exists(graphs_dir):
-        os.makedirs(graphs_dir)
-    G.write(graph_file)
-    G.draw(graph_file)
-    return graph_file
 
-def add_node(id, G, uuid, coefficients):
-    x = data_access.get_individual(individual_id=id, user_uuid=uuid)
-    if x is None:
-        return
-    id = str(id)
-    coefficient = coefficients[id]
-    label = "%s\n%.2f"% (x['number'], coefficient)
-    print(label)
-    G.add_node(id, label=label)
-    if x['father']:
-        father = x['father']
-        G.add_edge(father['id'], id)
-        add_node(father['id'], G, uuid, coefficients)
-    if x['mother']:
-        mother = x['mother']
-        G.add_edge(mother['id'], id)
-        add_node(mother['id'], G, uuid, coefficients)
-
-def main(id):
-    """
-    Run the main program.
-    """
-    user = User.get(User.email == 'airen@nbis.se')
-    collections = get_pedigree_collections()
-    coefficients = calculate_inbreeding(collections)
-    get_pedigree_graph(id, user.uuid, coefficients)
-
-
-if __name__ == "__main__":
-    id = int(sys.argv[1])
-    main(id)
