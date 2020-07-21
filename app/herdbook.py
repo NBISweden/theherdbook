@@ -19,7 +19,6 @@ from flask_caching import Cache
 import utils.database as db
 import utils.data_access as da
 import utils.inbreeding as ibc
-from flask import send_file, render_template
 
 
 
@@ -182,10 +181,7 @@ def individual(i_id):
     ind = da.get_individual(i_id, user_id)
     if ind:
         ind['inbreeding'] = "%.2f"%(get_inbreeding(i_id) * 100)
-
     return jsonify(ind)
-
-
 
 def get_inbreeding(i_id):
     """
@@ -208,7 +204,6 @@ def load_inbreeding():
     coefficients = ibc.calculate_inbreeding(collections)
     return coefficients
 
-
 @APP.route('/', defaults={'path': ''})
 @APP.route('/<path:path>') # catch-all to allow react routing
 def main(path): #pylint: disable=unused-argument
@@ -216,7 +211,6 @@ def main(path): #pylint: disable=unused-argument
     Serves the single-page webapp.
     """
     return APP.send_static_file('index.html')
-
 
 
 if __name__ == '__main__':

@@ -10,8 +10,6 @@ from pydigree.io.base import connect_individuals, sort_pedigrees
 from . import data_access as data_access
 
 
-
-
 class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
     """
     Class that encapsulates an individual's pedigree information.
