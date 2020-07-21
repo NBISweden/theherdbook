@@ -198,7 +198,7 @@ def all_inbreeding():
     coefficients = load_inbreeding()
     return jsonify({'coefficients': coefficients})
 
-@cache.cached(timeout=60000, key_prefix="all_inbreeding")
+@cache.cached(timeout=3600, key_prefix="all_inbreeding")
 def load_inbreeding():
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
