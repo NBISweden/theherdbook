@@ -60,7 +60,7 @@ export function Individual({id}: {id: string}) {
                   : '-'
                 }
               </dd>
-            <dt>Navelskoefficient</dt> <dd>{individual.inbreeding ?? '-'}</dd>
+            <dt>Navelskoefficient</dt> <dd>{individual.inbreeding}%</dd>
           </dl>
         </>
       }

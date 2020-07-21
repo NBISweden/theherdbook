@@ -181,7 +181,7 @@ def individual(i_id):
     user_id = session.get('user_id', None)
     ind = da.get_individual(i_id, user_id)
     if ind:
-        ind['inbreeding'] = get_inbreeding(i_id)
+        ind['inbreeding'] = "%.2f"%(get_inbreeding(i_id) * 100)
 
     return jsonify(ind)
 
