@@ -198,7 +198,6 @@ def inbreeding(i_id):
     else:
         return jsonify(status="You must login first")
 
-@cache.cached(timeout=60000, key_prefix="inbreeding")
 def get_inbreeding(i_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_id`.

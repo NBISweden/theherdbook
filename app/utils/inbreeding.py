@@ -11,6 +11,7 @@ from . import data_access as data_access
 import pygraphviz
 from .database import User
 import sys
+import os
 
 
 
@@ -97,9 +98,11 @@ def get_pedigree_graph(id, user_id, coefficients):
     G.node_attr['color'] = 'goldenrod2'
     G.graph_attr["rankdir"] = "BT"
     add_node(id, G, user_id, coefficients)
-    graph_file = "graphs/graph-%s.png" % id
-    # print(ped.inbreeding(x.label))
+    graphs_dir = "graphs"
+    graph_file = os.path.join(graphs_dir, "graph-%s.png"%id)
     G.layout()
+    if not os.path.exists(graphs_dir):
+        os.makedirs(graphs_dir)
     G.write(graph_file)
     G.draw(graph_file)
     return graph_file
