@@ -19,7 +19,6 @@ venv.bak/
 frontend/dist/
 frontend/coverage/
 frontend/node_modules/
-*.js
 *.js.map
 
 # Byte-compiled / optimized / DLL files

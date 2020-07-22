@@ -6,6 +6,10 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
+import logo from './family-tree/logo.svg';
+import './family-tree/family-tree.css';
+import FamilyTree from './family-tree/familyTree';
+import members from './family-tree/family';
 
 /**
  * Shows pedigree information for a given individual in a herd
@@ -23,10 +27,8 @@ export function Pedigree({id}: {id: string}) {
   return <>
     {pedigree
       && <>
-          <h2></h2>
-          <dl>
-            <dt>Pedigree</dt> <dd>{pedigree.individual.number}</dd>
-          </dl>
+          <h2>Pedigree</h2>
+          <FamilyTree members={members}  />
         </>
       }
   </>
