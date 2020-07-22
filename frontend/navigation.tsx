@@ -14,6 +14,7 @@ import {Genebank} from './genebank'
 import {HerdView} from './herd_view'
 import {Manage} from './manage'
 import {Individual} from './individual'
+import {Pedigree} from './pedigree'
 
 import {Switch, Route} from 'react-router-dom'
 
@@ -104,6 +105,9 @@ export function Navigation() {
         </ui.Routed>
         <ui.Routed path="/individual/:id">
           {params => <Individual id={params.id}/>}
+        </ui.Routed>
+        <ui.Routed path="/pedigree/:id">
+          {params => <Pedigree id={params.id}/>}
         </ui.Routed>
         <Route path="/">
           Welcome!
