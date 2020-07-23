@@ -16,7 +16,7 @@ const StyledAvatar = styled.div`
 `
 
 const Member = (member) => {
-    const defaultAvatar = <MdPerson style={{fontSize: 50}} />;
+
     const { number, avatar } = member;
     return (
         <StyledWrapper>
