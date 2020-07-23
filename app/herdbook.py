@@ -189,11 +189,13 @@ def get_pedigree(id, user_id):
     if individual:
         father = individual['father']
         mother = individual['mother']
+        parents = []
         if father:
-            individual['father'] = get_pedigree(father['id'], user_id)
+            parents.append(get_pedigree(father['id'], user_id))
         if mother:
-            individual['mother'] = get_pedigree(mother['id'], user_id)
-        return {'individual': individual}
+            parents.append(get_pedigree(mother['id'], user_id))
+        individual["parents"] = parents
+        return individual
     return None
 
 @APP.route('/api/inbreeding/<int:i_id>')

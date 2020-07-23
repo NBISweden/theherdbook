@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { MdPerson } from "react-icons/md";
+import icon from './rabbit-icon.png';
 
 const StyledWrapper = styled.div`
   margin: 10px;
@@ -17,11 +18,11 @@ const StyledAvatar = styled.div`
 
 const Member = (member) => {
     const defaultAvatar = <MdPerson style={{fontSize: 50}} />;
-    const { name, avatar } = member;
+    const { number, avatar } = member;
     return (
         <StyledWrapper>
-            <StyledAvatar>{ avatar ? <img src={avatar} /> : defaultAvatar}</StyledAvatar>
-            <span>{name}</span>
+            <img src={icon} /> 
+            <span>{number}</span>
         </StyledWrapper>
     );
 }

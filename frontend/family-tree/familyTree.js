@@ -10,16 +10,18 @@ const StyledWrapper = styled.div`
 
 export default class FamilyTree extends Component {
 
-    hasChildren(member) {
-        return member.children && member.children.length;
+    hasParents(member) {
+        return member.parents && member.parents.length;
     }
     render(){
         const level = this.props.level || 0;
+        if (this.props.members.length == 0)
+            return null;
         return <StyledWrapper level={level}>
             {this.props.members.map((member, i) => {
                 return <div key={`level-${level}-${i}`}>
+                    {<FamilyTree members={member.parents} level={level+1} />}
                     <Member {...member} />
-                    {this.hasChildren(member) && <FamilyTree members={member.children} level={level+1} />}
                 </div>
             })}
         </StyledWrapper>
