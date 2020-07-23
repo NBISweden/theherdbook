@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { MdPerson } from "react-icons/md";
 import icon from './rabbit-icon.png';
 
 const StyledWrapper = styled.div`
