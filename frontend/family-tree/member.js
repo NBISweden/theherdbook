@@ -17,11 +17,12 @@ const StyledAvatar = styled.div`
 
 const Member = (member) => {
 
-    const { number, avatar } = member;
+    const { number, name } = member;
     return (
         <StyledWrapper>
             <img src={icon} /> 
             <span>{number}</span>
+            <span>{name}</span>
         </StyledWrapper>
     );
 }

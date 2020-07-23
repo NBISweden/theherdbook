@@ -20,8 +20,8 @@ export default class FamilyTree extends Component {
         return <StyledWrapper level={level}>
             {this.props.members.map((member, i) => {
                 return <div key={`level-${level}-${i}`}>
-                    {<FamilyTree members={member.parents} level={level+1} />}
                     <Member {...member} />
+                    {<FamilyTree members={member.parents} level={level+1} />}
                 </div>
             })}
         </StyledWrapper>

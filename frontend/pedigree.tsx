@@ -28,7 +28,9 @@ React.useEffect(() => {
     {pedigree
       && <>
           <h2>Pedigree</h2>
+          <div style={{overflow:scroll}}>
           <FamilyTree members={members}  />
+          </div>
         </>
       }
   </>
