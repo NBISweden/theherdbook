@@ -9,8 +9,8 @@ import {Link} from "react-router-dom";
 import { get } from './communication';
 import Tree from 'react-d3-tree'
 
-export function setPedigreeD3({id}: {id: string}) {
-  const [pedigree, setPedigree] = React.useState(undefined as any)
+export function PedigreeD3({id}: {id: string}) {
+  const [pedigree, setPedigreeD3] = React.useState(undefined as any)
 
 React.useEffect(() => {
     get(`/api/pedigree/${id}`).then(
