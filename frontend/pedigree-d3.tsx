@@ -19,12 +19,42 @@ React.useEffect(() => {
     )
   }, [id])
 
+const containerStyles = {
+  width: '100%',
+  height: '100vh',
+}
 
+class CenteredTree extends React.PureComponent {
+  state = {}
+
+  componentDidMount() {
+    const dimensions = this.treeContainer.getBoundingClientRect();
+    this.setState({
+      translate: {
+        x: dimensions.width / 2,
+        y: 20
+      }
+    });
+  }
+
+  render() {
+    return (
+      <div style={containerStyles} ref={tc => (this.treeContainer = tc)}>
+        <Tree
+          data={pedigree}
+          translate={this.state.translate}
+          orientation={'vertical'}
+        />
+      </div>
+    );
+  }
+}
   return <>
     {pedigree
       && <>
           <h2>Pedigree</h2>
-          <Tree data={pedigree}  />
+           <CenteredTree data={pedigree}/>
+
         </>
       }
   </>
