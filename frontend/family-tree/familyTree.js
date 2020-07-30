@@ -21,7 +21,7 @@ export default class FamilyTree extends Component {
             {this.props.members.map((member, i) => {
                 return <div key={`level-${level}-${i}`}>
                     <Member {...member} />
-                    {<FamilyTree members={member.parents} level={level+1} />}
+                    {<FamilyTree members={member.children} level={level+1} />}
                 </div>
             })}
         </StyledWrapper>

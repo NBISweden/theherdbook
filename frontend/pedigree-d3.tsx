@@ -7,28 +7,24 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
-import logo from './family-tree/logo.svg';
-import './family-tree/family-tree.css';
-import FamilyTree from './family-tree/familyTree';
-//import members from './family-tree/family';
+import Tree from 'react-d3-tree'
 
-export function Pedigree({id}: {id: string}) {
+export function setPedigreeD3({id}: {id: string}) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
 
 React.useEffect(() => {
     get(`/api/pedigree/${id}`).then(
-      data => data && setPedigree(data),
+      data => data && setPedigreeD3(data),
       error => console.error(error)
     )
   }, [id])
 
-  var members = [pedigree]
 
   return <>
     {pedigree
       && <>
           <h2>Pedigree</h2>
-          <FamilyTree members={members}  />
+          <Tree data={pedigree}  />
         </>
       }
   </>

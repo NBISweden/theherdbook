@@ -21,6 +21,8 @@ import utils.data_access as da
 import utils.inbreeding as ibc
 
 
+
+
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
@@ -28,6 +30,7 @@ APP.config.update(
 #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
+    LOG_LEVEL='"INFO'
 )
 
 @APP.after_request
@@ -186,15 +189,19 @@ def pedigree(i_id):
 def get_pedigree(id, user_id):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
+    APP.logger.info(id)
     if individual:
         father = individual['father']
         mother = individual['mother']
         parents = []
         if father:
-            parents.append(get_pedigree(father['id'], user_id))
+            pedigree = get_pedigree(father['id'], user_id)
+            parents.append(pedigree)
         if mother:
-            parents.append(get_pedigree(mother['id'], user_id))
-        individual["parents"] = parents
+            pedigree = get_pedigree(mother['id'], user_id)
+            pedigree["nodeSvgShape"] = {"shape": "circle", "shapeProps": {"fill": "pink"}}
+            parents.append(pedigree)
+        individual["children"] = parents
         return individual
     return None
 

@@ -33,6 +33,7 @@
     "@material-ui/lab": "^4.0.0-alpha.50",
     "material-table": "^1.62.0",
     "react": "^16.13.0",
+    "react-d3-tree": "^1.16.1",
     "react-dom": "^16.13.0",
     "react-icons": "^3.10.0",
     "react-is": "^16.8.0",
