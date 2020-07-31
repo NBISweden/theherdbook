@@ -50,7 +50,7 @@ export function PedigreeD3({ id }: { id: string }) {
     render() {
 
       function onNodeClick(nodeData, evt) {
-          window.location.replace("/pedigree/" + nodeData.id2);
+        window.location.replace("/pedigree/" + nodeData.id2);
       }
       return (
         <div style={containerStyles} ref={tc => (this.treeContainer = tc)}>
@@ -62,6 +62,7 @@ export function PedigreeD3({ id }: { id: string }) {
               zoom={0.7}
               onClick={onNodeClick}
               collapsible={false}
+              separation={{siblings: 1, nonSiblings: 1}}
             />
           }
         </div>
@@ -76,7 +77,7 @@ export function PedigreeD3({ id }: { id: string }) {
       <table width="100%">
         <tbody>
           <tr>
-            <td width="5%" style={{"vertical-align":"top"}}>
+            <td width="10%" style={{ verticalAlign: "top" }}>
               <dl>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
@@ -103,22 +104,23 @@ export function PedigreeD3({ id }: { id: string }) {
                   : <dd>-</dd>
                 }
                 <dt>Kull</dt> <dd>{individual.litter ?? '-'}</dd>
-                <dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
-                <dt>Färgkommentar</dt> <dd>{individual.colour_note ?? '-'}</dd>
-                <dt>Anteckningar</dt> <dd>{individual.notes ?? '-'}</dd>
-                <dt>Vikter</dt>
-                <dd>
-                  {individual.weights.length > 1
-                    ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
-                    : '-'
-                  }
-                </dd>
+<dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
+              <dt>Färgkommentar</dt> <dd>{individual.colour_note ?? '-'}</dd>
+              <dt>Anteckningar</dt> <dd>{individual.notes ?? '-'}</dd>
+              <dt>Vikter</dt>
+              <dd>
+                {individual.weights.length > 1
+                  ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
+                  : '-'
+                }
+              </dd>
               </dl>
             </td>
-            <td width="95%">
+            <td width="90%">
               <CenteredTree data={pedigree} />
             </td>
           </tr>
+
         </tbody>
       </table>
     </>
