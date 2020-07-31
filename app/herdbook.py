@@ -21,7 +21,6 @@ import utils.data_access as da
 import utils.inbreeding as ibc
 import logging
 
-
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
@@ -180,33 +179,33 @@ def pedigree(i_id):
     Returns the pedigree information for the individual `i_id`.
     """
     user_id = session.get('user_id', None)
-    individual = get_pedigree(i_id, user_id)
-    if individual:
-        return jsonify(individual)
+    pnode = get_pedigree(i_id, user_id)
+    if pnode:
+        return jsonify(pnode)
     return jsonify(status="Individual not found. You may have to login first")
 
+mshape = {"shape": 'rect', "shapeProps": {"width": 18, "height": 18, "x": "-9", "y": "-9", "fill": 'LightBlue'}}
+fshape = {"shape": 'circle', "shapeProps": {"r": 10, "fill": 'pink'}}
+def get_pedigree(id, user_id, level=1):
 
-
-
-def get_pedigree(id, user_id):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
-    APP.logger.info(id)
+    #APP.logger.info(id)
     if individual:
-        name = individual["name"]
-        individual["name"] = individual["number"]
-        individual["attributes"] = {"name": name}
+        pnode = {"name": individual["number"]}
         father = individual['father']
         mother = individual['mother']
         parents = []
-        if father:
-            pedigree = get_pedigree(father['id'], user_id)
+
+        pnode["nodeSvgShape"] = mshape if individual["sex"] == 'male' else fshape
+        if father and level < 5:
+            pedigree = get_pedigree(father['id'], user_id, level=level+1)
             parents.append(pedigree)
-        if mother:
-            pedigree = get_pedigree(mother['id'], user_id)
+        if mother and level < 5:
+            pedigree = get_pedigree(mother['id'], user_id, level=level+1)
             parents.append(pedigree)
-        individual["children"] = parents
-        return individual
+        pnode["children"] = parents
+        return pnode
     return None
 
 @APP.route('/api/inbreeding/<int:i_id>')
