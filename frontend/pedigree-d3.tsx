@@ -76,7 +76,7 @@ export function PedigreeD3({ id }: { id: string }) {
       <table width="100%">
         <tbody>
           <tr>
-            <td width="20%" style={{"vertical-align":"top"}}>
+            <td width="5%" style={{"vertical-align":"top"}}>
               <dl>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
@@ -115,7 +115,7 @@ export function PedigreeD3({ id }: { id: string }) {
                 </dd>
               </dl>
             </td>
-            <td width="80%">
+            <td width="95%">
               <CenteredTree data={pedigree} />
             </td>
           </tr>

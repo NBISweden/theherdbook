@@ -184,24 +184,27 @@ def pedigree(i_id):
 
 mshape = {"shape": 'rect', "shapeProps": {"width": 18, "height": 18, "x": "-9", "y": "-9", "fill": 'LightBlue'}}
 fshape = {"shape": 'circle', "shapeProps": {"r": 10, "fill": 'pink'}}
-def get_pedigree(id, user_id, level=1):
+def get_pedigree(id, user_id, level=1, level_max=5):
 
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     #APP.logger.info(id)
     if individual:
-        pnode = {"name": individual["number"], "id2": individual["id"]}
+        name = individual["number"]
+        pnode = {"name": name, "id2": individual["id"]}
         father = individual['father']
         mother = individual['mother']
         parents = []
 
         pnode["nodeSvgShape"] = mshape if individual["sex"] == 'male' else fshape
-        if father and level < 5:
+        if father and level < level_max:
             pedigree = get_pedigree(father['id'], user_id, level=level+1)
             parents.append(pedigree)
-        if mother and level < 5:
+        if mother and level < level_max:
             pedigree = get_pedigree(mother['id'], user_id, level=level+1)
             parents.append(pedigree)
+        if (father or mother) and level == level_max:
+            pnode["name"] = name + "..."
         pnode["children"] = parents
         return pnode
     return None
