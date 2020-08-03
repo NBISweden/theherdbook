@@ -42,7 +42,7 @@ export function PedigreeD3({ id }: { id: string }) {
       this.setState({
         translate: {
           x: dimensions.width / 2,
-          y: 20
+          y: 30
         }
       });
     }
@@ -63,6 +63,8 @@ export function PedigreeD3({ id }: { id: string }) {
               onClick={onNodeClick}
               collapsible={false}
               separation={{siblings: 1, nonSiblings: 1}}
+              pathFunc={'elbow'}
+              textLayout={{textAnchor: "start", x: -37, y: -3 }}
             />
           }
         </div>

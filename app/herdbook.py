@@ -182,8 +182,8 @@ def pedigree(i_id):
     pnode = get_pedigree(i_id, user_id)
     return jsonify(pnode)
 
-mshape = {"shape": 'rect', "shapeProps": {"width": 18, "height": 18, "x": "-9", "y": "-9", "fill": 'LightBlue'}}
-fshape = {"shape": 'circle', "shapeProps": {"r": 10, "fill": 'pink'}}
+mshape = {"shape": 'rect', "shapeProps": {"width": 90, "height": 80, "x": "-45", "y": "-40", "fill": 'LightBlue'}}
+fshape = {"shape": 'circle', "shapeProps": {"r": 45, "fill": 'pink'}}
 def get_pedigree(id, user_id, level=1, level_max=5):
 
     """Builds the pedigree dict tree for the individual"""
