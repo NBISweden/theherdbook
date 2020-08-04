@@ -64,7 +64,7 @@ export function PedigreeD3({ id }: { id: string }) {
               collapsible={false}
               separation={{siblings: 1, nonSiblings: 1}}
               pathFunc={'elbow'}
-              textLayout={{textAnchor: "start", x: -37, y: -3 }}
+              textLayout={{textAnchor: "middle" }}
             />
           }
         </div>
