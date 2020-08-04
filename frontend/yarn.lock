@@ -2423,6 +2423,13 @@
   dependencies:
     "@parcel/types" "2.0.0-nightly.266+4210f2fb"
 
+"@parcel/plugin@^2.0.0-alpha.3":
+  version "2.0.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/@parcel/plugin/-/plugin-2.0.0-alpha.3.tgz#ff9215d0c522ff60692aca7ef6abaa95243f564a"
+  integrity sha512-2nfjd7ujL042gP7ssJ4JRyxEirp5Fuz+Vf4sk4aky3oWVuY9YmUqce0UNUMaIlh911xERo5uagy1jYOSa7gp6g==
+  dependencies:
+    "@parcel/types" "^2.0.0-alpha.3"
+
 "@parcel/reporter-bundle-analyzer@2.0.0-nightly.1888+4210f2fb":
   version "2.0.0-nightly.1888"
   resolved "https://registry.npmjs.org/@parcel/reporter-bundle-analyzer/-/reporter-bundle-analyzer-2.0.0-nightly.1888.tgz#f399955b83a2e5000038a8dc7e03d0eb8f55e53d"
@@ -2692,6 +2699,14 @@
     "@parcel/plugin" "2.0.0-nightly.266+4210f2fb"
     react-refresh "^0.6.0"
 
+"@parcel/transformer-react-refresh-babel@^2.0.0-alpha.3":
+  version "2.0.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/@parcel/transformer-react-refresh-babel/-/transformer-react-refresh-babel-2.0.0-alpha.3.tgz#86dc91fbd9bd75c5400ff1e89a2b5c60e47046da"
+  integrity sha512-lpXN+KtYyPPpTGqkKTCBv9X1kwWTpRSPDZtzD7IBVZ8+Ed75LdRg8xopTVnCVHocaL5qtlkZsXRGl/UOXSOrZA==
+  dependencies:
+    "@parcel/plugin" "^2.0.0-alpha.3"
+    react-refresh "^0.6.0"
+
 "@parcel/transformer-react-refresh-wrap@2.0.0-nightly.266+4210f2fb":
   version "2.0.0-nightly.266"
   resolved "https://registry.npmjs.org/@parcel/transformer-react-refresh-wrap/-/transformer-react-refresh-wrap-2.0.0-nightly.266.tgz#21f071242fdd7a788165347aea1df937c366b9e6"
@@ -2768,6 +2783,11 @@
   version "2.0.0-nightly.266"
   resolved "https://registry.npmjs.org/@parcel/types/-/types-2.0.0-nightly.266.tgz#9f42f083f5b7c3a631042710f7310fdb53ec7151"
   integrity sha512-R+RCNA4ZbeYxt6CAnURDOaebUqwM34f55kH3SNntUqwX4tfv4h3WyFJezJdGSGdfZ/uscICTdrTO1pXW/PeBlA==
+
+"@parcel/types@^2.0.0-alpha.3":
+  version "2.0.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/@parcel/types/-/types-2.0.0-alpha.3.tgz#b2911c0e3b7756b70cbfc79a432b464b41d214c1"
+  integrity sha512-n4c346lpwhEUFJ3Xv4DUAATLnAqdKkNfEqFW+bfnS8WFBl3bUlaJW4JqHYQ63enoEvMKoD5Rs9/WrhqZ71X8Dg==
 
 "@parcel/utils@2.0.0-nightly.266+4210f2fb":
   version "2.0.0-nightly.266"
