@@ -165,6 +165,7 @@ def herd(h_id):
     data = da.get_herd(h_id, session.get('user_id', None))
     return jsonify(data)
 
+
 @APP.route('/api/individual/<int:i_id>')
 def individual(i_id):
     """
@@ -172,6 +173,7 @@ def individual(i_id):
     """
     user_id = session.get('user_id', None)
     return jsonify(da.get_individual(i_id, user_id))
+
 
 @APP.route('/api/pedigree/<int:i_id>')
 def pedigree(i_id):
@@ -184,31 +186,31 @@ def pedigree(i_id):
 
 mshape = {"shape": 'rect', "shapeProps": {"width": 90, "height": 70, "x": "-45", "y": "-35", "fill": 'LightBlue'}}
 fshape = {"shape": 'circle', "shapeProps": {"r": 45, "fill": 'pink'}}
-def get_pedigree(id, user_id, level=1, level_max=5, nodes={}):
 
+
+def get_pedigree(id, user_id, level=1, level_max=5, nodes=None):
     """Builds the pedigree dict tree for the individual"""
+    nodes = nodes or {}
     individual = da.get_individual(id, user_id)
-    #APP.logger.info(id)
     if individual:
         name = individual["number"]
-        if name in nodes:
-            return nodes[name]
-        pnode = {"name": name, "id2": individual["id"]}
+        APP.logger.info("pedigree for %s" % name)
+        pnode = {"name": name, "id2": id}
         father = individual['father']
         mother = individual['mother']
-        parents = []
-
+        pnode["children"] = []
         pnode["nodeSvgShape"] = mshape if individual["sex"] == 'male' else fshape
-        if father and level < level_max:
+        nodes[id] = pnode
+        APP.logger.info(nodes.keys())
+        if father and level < level_max and father["id"] not in nodes:
+            APP.logger.info("father in nodes %s"% (father["id"] in nodes))
             pedigree = get_pedigree(father['id'], user_id, level=level+1, nodes=nodes)
-            parents.append(pedigree)
-        if mother and level < level_max:
+            pnode["children"].append(pedigree)
+        if mother and level < level_max and mother["id"] not in nodes:
             pedigree = get_pedigree(mother['id'], user_id, level=level+1, nodes=nodes)
-            parents.append(pedigree)
+            pnode["children"].append(pedigree)
         if (father or mother) and level == level_max:
             pnode["name"] = name + "..."
-        pnode["children"] = parents
-        nodes[name] = pnode
         return pnode
     return None
 
