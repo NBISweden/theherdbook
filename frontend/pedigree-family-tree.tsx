@@ -7,6 +7,7 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
+
 import logo from './family-tree/logo.svg';
 import './family-tree/family-tree.css';
 import FamilyTree from './family-tree/familyTree';
