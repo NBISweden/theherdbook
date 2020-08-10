@@ -3,11 +3,10 @@
  *       pedigree for a given `id` (parsed from the url).
  */
 
-import React, {Component} from 'react'
+import React, { Component, createRef } from 'react'
 import { Link } from "react-router-dom";
-
 import { get } from './communication';
-import { Network, Node, Edge } from 'react-vis-network';
+import { Network } from 'vis';
 
 
 
@@ -32,30 +31,36 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
 
 
-  class PedigreeNetwork extends React.PureComponent {
-    state = {}
+  class PedigreeNetwork extends Component {
+
+    options = {
+        layout: { hierarchical: { direction: "DU" } },
+        physics: {
+          enabled: true,
+          stabilization: false
+        }
+     };
+
+    constructor() {
+      super();
+      this.network = {};
+      this.appRef = createRef();
+    }
+
+    componentDidMount() {
+      this.network = new Network(this.appRef.current, pedigree, this.options);
+    }
 
     render() {
-
-      function onNodeClick(nodeData, evt) {
-        window.location.replace("/pedigree/" + nodeData.id2);
-      }
       return (
-        <>
-          {pedigree &&
-
-            <Network>
-                <Node id="vader" label="Darth Vader" />
-                <Node id="luke" label="Luke Skywalker" />
-                <Node id="leia" label="Leia Organa" />
-                <Edge id="1" from="vader" to="luke" />
-                <Edge id="2" from="vader" to="leia" />
-            </Network>
-
-          }
-        </>
+        <div ref={this.appRef} style={{ width:"1000px", height:"800px"}}/>
       );
     }
+
+
+
+
+
   }
 
 
@@ -92,20 +97,20 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
                   : <dd>-</dd>
                 }
                 <dt>Kull</dt> <dd>{individual.litter ?? '-'}</dd>
-<dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
-              <dt>Färgkommentar</dt> <dd>{individual.colour_note ?? '-'}</dd>
-              <dt>Anteckningar</dt> <dd>{individual.notes ?? '-'}</dd>
-              <dt>Vikter</dt>
-              <dd>
-                {individual.weights.length > 1
-                  ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
-                  : '-'
-                }
-              </dd>
+                <dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
+                <dt>Färgkommentar</dt> <dd>{individual.colour_note ?? '-'}</dd>
+                <dt>Anteckningar</dt> <dd>{individual.notes ?? '-'}</dd>
+                <dt>Vikter</dt>
+                <dd>
+                  {individual.weights.length > 1
+                    ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
+                    : '-'
+                  }
+                </dd>
               </dl>
             </td>
-            <td width="90%">
-              <CenteredTree data={pedigree} />
+            <td width="90%" >
+              <PedigreeNetwork />
             </td>
           </tr>
 

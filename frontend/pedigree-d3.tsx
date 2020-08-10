@@ -52,6 +52,7 @@ export function PedigreeD3({ id }: { id: string }) {
       function onNodeClick(nodeData, evt) {
         window.location.replace("/pedigree/" + nodeData.id2);
       }
+
       return (
         <div style={containerStyles} ref={tc => (this.treeContainer = tc)}>
           {pedigree &&
@@ -118,8 +119,8 @@ export function PedigreeD3({ id }: { id: string }) {
               </dd>
               </dl>
             </td>
-            <td width="90%">
-              <CenteredTree data={pedigree} />
+            <td width="90%"  >
+              <CenteredTree />
             </td>
           </tr>
 
