@@ -34,11 +34,9 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-        layout: { hierarchical: { direction: "DU" } },
-        physics: {
-          enabled: true,
-          stabilization: false
-        }
+        layout: { hierarchical: { direction: "DU", sortMethod : 'directed' }},
+        edges: {color: {color: "gray", inherit: false}, arrows: {to: true}}
+
      };
 
     constructor() {
