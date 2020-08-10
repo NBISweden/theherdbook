@@ -357,9 +357,9 @@ def get_individuals(genebank_id, user_uuid=None):
                 individual m ON (i.mother_id = m.individual_id) JOIN
                 colour c ON (i.colour_id = c.colour_id) JOIN
                 herd h ON (i.herd_id = h.herd_id)
-        WHERE   h.genebank_id = 1 AND
+        WHERE   h.genebank_id = %s AND
                 (h.is_active OR h.is_active IS NULL);"""
-        cursor = DATABASE.execute_sql(query)
+        cursor = DATABASE.execute_sql(query, (genebank_id,))
         return [{
             'id': i[0],
             'name': i[1],
