@@ -39,6 +39,16 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
      };
 
+     onNodeClick(params) {
+      if (params.nodes.length > 0)
+      {
+          var nodeid = params.nodes[0];
+          console.log(nodeid);
+          window.location.replace("/pedigree/" + nodeid);
+      }
+    }
+
+
     constructor() {
       super();
       this.network = {};
@@ -47,6 +57,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
     componentDidMount() {
       this.network = new Network(this.appRef.current, pedigree, this.options);
+      this.network.on("doubleClick", this.onNodeClick)
     }
 
     render() {
