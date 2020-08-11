@@ -35,7 +35,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
     options = {
         layout: { hierarchical: { direction: "DU", sortMethod : 'directed' }},
-        edges: {color: {color: "gray", inherit: false}, arrows: {to: true}}
+        edges: {color: {color: "gray", inherit: false}, arrows: {to: true}, smooth: {type: 'curvedCW', roundness: 0.2}}
 
      };
 
@@ -62,13 +62,9 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
     render() {
       return (
-        <div ref={this.appRef} style={{ width:"1000px", height:"800px"}}/>
+        <div ref={this.appRef} style={{position: "absolute", top: "40px",  width:"1000px", height:"800px"}}/>
       );
     }
-
-
-
-
 
   }
 

@@ -201,20 +201,24 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
     individual = da.get_individual(id, user_id)
     if individual:
         label = individual["number"]
-        APP.logger.info(label)
-        pnode = {"label": label, "id": id}
+        APP.logger.info("%s level %s"%(label, level))
+        pnode = {"label": label, "id": id, "level": level}
         father = individual['father']
         mother = individual['mother']
         nodes[id] = pnode
         if father and level < level_max:
+            edge_id = "%s-%s" % (id, father["id"])
+            edge = {"id": edge_id, "from": id, "to": father["id"]}
             if father["id"] not in nodes:
                 pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1, nodes=nodes, edges=edges)
-            edges.append({"id": "edge-%s" % id, "from": id, "to": father["id"]})
+            edges.append(edge)
         if mother and level < level_max:
+            edge_id = "%s-%s" % (id, mother["id"])
+            edge = {"id": edge_id, "from": id, "to": mother["id"]}
             if mother["id"] not in nodes:
                 pedigree = get_pedigree_vis_network(mother['id'], user_id, level=level+1, nodes=nodes, edges=edges)
                 pedigree["color"] = "pink"
-            edges.append({"id": id, "from": id, "to": mother["id"]})
+            edges.append(edge)
         if (father or mother) and level == level_max:
             pnode["label"] = label + "..."
         return pnode
