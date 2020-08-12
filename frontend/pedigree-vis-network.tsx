@@ -76,9 +76,9 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
     componentDidMount() {
       this.network = new Network(this.appRef.current, pedigree, this.options);
       this.network.on("doubleClick", this.onNodeClick)
-      network.on("stabilizationIterationsDone", function () {
-        network.setOptions({ physics: false });
-      });
+      //this.network.on("stabilizationIterationsDone", function () {
+      //  this.network.setOptions({ physics: false });
+      //});
     }
 
     render() {
