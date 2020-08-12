@@ -23,7 +23,7 @@
     "typescript": "^3.8.2"
   },
   "scripts": {
-    "start": "parcel serve index.html --port 2345 --hmr-port 2346 --no-source-maps --no-cache",
+    "start": "parcel serve index.html --port 2345 --hmr-port 2346 --no-source-maps",
     "build": "rm dist/*; parcel build index.html --no-source-maps",
     "test": "jest"
   },

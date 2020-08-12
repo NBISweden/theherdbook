@@ -40,7 +40,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
           direction: "DU",
           sortMethod: 'directed',
           shakeTowards: "roots",
-          blockShifting: "false"
+          blockShifting: false
         }
       },
       edges: {
