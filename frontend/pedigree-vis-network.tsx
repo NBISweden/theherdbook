@@ -34,31 +34,35 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-        layout: { hierarchical: {
-                          enabled:true,
-                          direction: "DU", 
-                          sortMethod : 'directed',
-                          shakeTowards: "roots"
-                 }},
-        edges: {color: {color: "gray", inherit: false},
-                arrows: {to: true},
-                smooth: {
-                        type: 'cubicBezier',
-                        forceDirection: 'horizontal',
-                        roundness: 0.4
-                }
-        },
-        physics: {enabled: true,
-                  hierarchicalRepulsion: {avoidOverlap: 1}
+      layout: {
+        hierarchical: {
+          enabled: true,
+          direction: "DU",
+          sortMethod: 'directed',
+          shakeTowards: "roots",
+          blockShifting: "false"
         }
+      },
+      edges: {
+        color: { color: "gray", inherit: false },
+        arrows: { to: true },
+        smooth: {
+          type: 'cubicBezier',
+          forceDirection: 'horizontal',
+          roundness: 0.4
+        }
+      },
+      physics: {
+        enabled: true,
+        hierarchicalRepulsion: { avoidOverlap: 1 }
+      }
     }
 
     onNodeClick(params) {
-      if (params.nodes.length > 0)
-      {
-          var nodeid = params.nodes[0];
-          console.log(nodeid);
-          window.location.replace("/pedigree/" + nodeid);
+      if (params.nodes.length > 0) {
+        var nodeid = params.nodes[0];
+        console.log(nodeid);
+        window.location.replace("/pedigree/" + nodeid);
       }
     }
 
@@ -72,11 +76,14 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
     componentDidMount() {
       this.network = new Network(this.appRef.current, pedigree, this.options);
       this.network.on("doubleClick", this.onNodeClick)
+      network.on("stabilizationIterationsDone", function () {
+        network.setOptions({ physics: false });
+      });
     }
 
     render() {
       return (
-        <div ref={this.appRef} style={{  width:"1000px", height:"800px"}}/>
+        <div ref={this.appRef} style={{ width: "1000px", height: "800px" }} />
       );
     }
 
