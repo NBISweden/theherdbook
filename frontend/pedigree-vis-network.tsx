@@ -6,7 +6,7 @@
 import React, { Component, createRef } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import { Network } from 'vis';
+import { Network } from 'vis-network';
 
 
 
@@ -34,12 +34,26 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-        layout: { hierarchical: { direction: "DU", sortMethod : 'directed' }},
-        edges: {color: {color: "gray", inherit: false}, arrows: {to: true}, smooth: {type: 'curvedCW', roundness: 0.2}}
+        layout: { hierarchical: {
+                          enabled:true,
+                          direction: "DU", 
+                          sortMethod : 'directed',
+                          shakeTowards: "roots"
+                 }},
+        edges: {color: {color: "gray", inherit: false},
+                arrows: {to: true},
+                smooth: {
+                        type: 'cubicBezier',
+                        forceDirection: 'horizontal',
+                        roundness: 0.4
+                }
+        },
+        physics: {enabled: true,
+                  hierarchicalRepulsion: {avoidOverlap: 1}
+        }
+    }
 
-     };
-
-     onNodeClick(params) {
+    onNodeClick(params) {
       if (params.nodes.length > 0)
       {
           var nodeid = params.nodes[0];
@@ -62,7 +76,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
     render() {
       return (
-        <div ref={this.appRef} style={{position: "absolute", top: "40px",  width:"1000px", height:"800px"}}/>
+        <div ref={this.appRef} style={{  width:"1000px", height:"800px"}}/>
       );
     }
 

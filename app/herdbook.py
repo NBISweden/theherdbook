@@ -200,9 +200,12 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     if individual:
-        label = individual["number"]
-        APP.logger.info("%s level %s"%(label, level))
-        pnode = {"label": label, "id": id, "level": level}
+        label = "%s\n%s" % (individual["name"], individual["number"])
+        pnode = {"label": label, "id": id}
+        if individual["sex"] == 'male':
+            pnode["shape"] = "box"
+        else:
+            pnode["color"] = "pink"
         father = individual['father']
         mother = individual['mother']
         nodes[id] = pnode
@@ -217,12 +220,11 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
             edge = {"id": edge_id, "from": id, "to": mother["id"]}
             if mother["id"] not in nodes:
                 pedigree = get_pedigree_vis_network(mother['id'], user_id, level=level+1, nodes=nodes, edges=edges)
-                pedigree["color"] = "pink"
             edges.append(edge)
-        if (father or mother) and level == level_max:
-            pnode["label"] = label + "..."
         return pnode
     return None
+
+
 
 
 mshape = {"shape": 'rect', "shapeProps": {"width": 90, "height": 70, "x": "-45", "y": "-35", "fill": 'LightBlue'}}
