@@ -5,21 +5,21 @@
  */
 import React from 'react'
 import {Link} from "react-router-dom";
-
-import { get } from './communication';
+import {useDataContext} from './data_context'
 
 /**
  * Shows genebank information, with a list of all herds belonging to that
  * genebank.
  */
 export function Genebank({id}: {id: string}) {
+  const {genebanks} = useDataContext()
   const [genebank, setGenebank] = React.useState(undefined as any)
 
   React.useEffect(() => {
-    get(`/api/genebank/${id}`).then(
-      data => data && setGenebank(data),
-      error => console.error(error)
-    )
+    const data = genebanks.find(g => g.id == +id)
+    if (data) {
+      setGenebank(data)
+    }
   }, [id])
 
   return <>

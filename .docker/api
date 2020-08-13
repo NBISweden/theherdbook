@@ -1,0 +1,9 @@
+FROM python:3.8-buster
+
+RUN mkdir -p code
+
+COPY app/ /code/
+WORKDIR /code
+
+RUN pip3 install -r /code/requirements-pydigree.txt && pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
+

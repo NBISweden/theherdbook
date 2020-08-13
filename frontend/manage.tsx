@@ -1,6 +1,7 @@
 /**
- * @file This file contains the Genebanks function. This function is used for
- * parsing through the herd and individuals data.
+ * @file This file contains the Manage function. This function is used for
+ * granting and revoking permissions from users, as well as approving requests
+ * for adding individuals to herds in the genebanks you manage.
  */
 import React from 'react'
 import Paper from '@material-ui/core/Paper';
@@ -8,8 +9,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Switch } from "react-router-dom";
 
 import { useDataContext } from './data_context'
-import { ExploreHerds } from './explore_herds'
-import { IndividualsTable } from '~individuals'
+import { ManageHerds } from './manage_herds'
+import { ManageUsers } from './manage_users'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -52,12 +53,12 @@ function InnerPaper(props: {id: number}) {
     {
       path: '/herds',
       label: 'Besättningar',
-      component: <ExploreHerds id={id}/>,
+      component: <ManageHerds id={id}/>,
     },
     {
-      path: '/individuals',
-      label: 'Individer',
-      component: <IndividualsTable id={genebank ? genebank.id : null} />
+      path: '/users',
+      label: 'Användare',
+      component: <ManageUsers/>
     },
   ]
 
@@ -78,7 +79,7 @@ function InnerPaper(props: {id: number}) {
  * Provides genebanks management forms for granting and revoking herd
  * permissions, and managing herd animals.
  */
-export function Genebanks() {
+export function Manage() {
   const {genebanks} = useDataContext()
 
   const tabs: ui.RoutedTab[] = genebanks.map(g => ({
@@ -96,3 +97,4 @@ export function Genebanks() {
     </Switch>
   </>
 }
+

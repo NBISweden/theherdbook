@@ -1,9 +1,10 @@
+#!/bin/sh
 #
 # This script inserts a new user into the database given a username and password
 # combination.
 #
 
-if [[ "$#" < 2 ]]
+if [ "$#" -lt 2 ]
 then
 	cat <<-'END_ERROR' >&2
 	Please provide an email and password to insert into the user database
@@ -17,29 +18,17 @@ pass="$2"
 
 cd "$( dirname "$0" )" || { echo 'cd error' >&2; exit 1; }
 
-if [ ! -e app/config.ini ]
-then
-	cat <<-'END_ERROR' >&2
-	Couldn't find config file 'app/config.ini'
-	Create this file from 'app/config.ini.default' with the credentials
-	to your database and then run this script again.
-	END_ERROR
-	exit 1
+if docker-compose ps | grep -q 'main.*\sUp\s.*'; then
+    # Alll good here
+    : 
+else
+    # Start containers and wait a little to give it time to start 
+    echo "System is not up, bringing upp before registering user"
+    echo
+    docker-compose up -d
+    sleep 10
 fi
 
-if [ ! -d venv ]
-then
-	printf 'Creating python3 virtual environment in ./venv   '
-	python3 -m venv venv >/dev/null
-	echo DONE
-	printf 'Installing app dependencies                      '
-	. venv/bin/activate
-	pip install -r app/requirements.txt >/dev/null
-	echo DONE
-fi
+docker-compose exec -T main python3 -c "from utils.data_access import register_user; register_user('${user}', '${pass}')"
 
-printf 'Insert into database                             '
-. venv/bin/activate
-cd app/
-python3 -c "from utils.database import register_user; register_user('${user}', '${pass}')"
-echo DONE
+echo Registered user

@@ -4,7 +4,6 @@ Database handler for 'the herdbook'.
 """
 
 import json
-import uuid
 import logging
 
 from peewee import (PostgresqlDatabase,
@@ -23,11 +22,6 @@ from peewee import (PostgresqlDatabase,
                     TextField,
                     UUIDField,
                     )
-
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
 
 DB_PROXY = Proxy()
 DATABASE = None
@@ -101,7 +95,12 @@ class BaseModel(Model):
         """
         Returns the objects key/value pair as a dictionary.
         """
-        return self.__dict__['__data__']
+        data = self.__dict__['__data__'].copy()
+        for key, value in data.items():
+            if value and key.endswith('_date'):
+                data[key] = value.strftime('%Y-%m-%d')
+
+        return data
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
@@ -119,6 +118,19 @@ class Genebank(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="genebank_id")
     name = CharField(100, unique=True)
+
+    def short_info(self):
+        """
+        Returns the genebank data, including `id`, `name`, and a `herds` array
+        including the `Herd.short_info()` data.
+        """
+
+        return {'id': self.id,
+                'name': self.name,
+                'herds': [h.short_info() for h in self.herd_set
+                          if h.is_active
+                          or h.is_active is None]
+                }
 
     def get_herds(self, user):
         """
@@ -173,6 +185,16 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    def short_info(self):
+        """
+        Returns the `id`, `herd`, `genebank`, and `herd_name` fields as a dict.
+        """
+        return {'id': self.id,
+                'herd': self.herd,
+                'genebank': self.genebank.id,
+                'herd_name': self.herd_name,
+                }
 
     def filtered_dict(self, user=None):
         """
@@ -305,7 +327,7 @@ class Individual(BaseModel):
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data['herd'] = {'id': self.herd.id, 'name':self.herd.name}
+        data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
         data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
             if self.mother else None
         data['father'] = {'id': self.father.id, 'name': self.father.name} \
@@ -318,12 +340,26 @@ class Individual(BaseModel):
         data['herd_tracking'] = [
             {
                 'herd_id':h.herd.id,
-                'herd':h.herd.name,
-                'date':h.herd_tracking_date
+                'herd':h.herd.herd_name,
+                'date':h.herd_tracking_date.strftime('%Y-%m-%d') if h.herd_tracking_date else None
             }
             for h in self.herdtracking_set #pylint: disable=no-member
         ]
 
+        return data
+
+    def list_info(self):
+        """
+        Returns the information that is to be viewed in the main individuals
+        table.
+        """
+        data = super().as_dict()
+        # data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
+        # data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
+        #     if self.mother else None
+        # data['father'] = {'id': self.father.id, 'name': self.father.name} \
+        #     if self.father else None
+        # data['colour'] = self.colour.name if self.colour else None
         return data
 
     def short_info(self):
@@ -334,7 +370,7 @@ class Individual(BaseModel):
             - id
             - name
         """
-        return {'id': self.id, 'name': self.name}
+        return {'id': self.id, 'name': self.name, 'number': self.number}
 
     class Meta:  #pylint: disable=too-few-public-methods
         """
@@ -454,6 +490,51 @@ class User(BaseModel):
         self.privileges = privs
         self.save()
 
+    def has_role(self, level, target_id=None):
+        """
+        Check if role `level` with target `target_id` is in the user privilege
+        list. Returns `True` or `False`.
+
+        Allowed level/target_id combinations are:
+            - level: admin, (no target)
+            - level: specialist, genebank: target_id
+            - level: manager, genebank: target_id
+            - level: owner, herd: target_id
+        """
+        for role in self.privileges:
+            if role['level'] == level:
+                if level == 'admin':
+                    return True
+                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                    return True
+                if level == 'owner' and target_id == role['herd']:
+                    return True
+        return False
+
+    def remove_role(self, level, target_id=None):
+        """
+        Check if role `level` with target `target_id` is in the user privilege
+        list, and remove it if it is present.
+
+        Allowed level/target_id combinations are:
+            - level: admin, (no target)
+            - level: specialist, genebank: target_id
+            - level: manager, genebank: target_id
+            - level: owner, herd: target_id
+        """
+        new_privs = []
+        for role in self.privileges:
+            if role['level'] == level:
+                if level == 'admin':
+                    continue
+                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                    continue
+                if level == 'owner' and target_id == role['herd']:
+                    continue
+            new_privs += [role]
+        self.privileges = new_privs
+        self.save()
+
     @property
     def is_admin(self):
         """
@@ -461,6 +542,30 @@ class User(BaseModel):
         otherwise.
         """
         return 'admin' in [p['level'] for p in self.privileges]
+
+    @property
+    def is_manager(self):
+        """
+        Returns a list of id's of the genebanks that the user is manager of, or
+        `None`.
+        """
+        genebanks = []
+        for role in self.privileges:
+            if role['level'] == 'manager':
+                genebanks += [role['genebank']]
+        return genebanks or None
+
+    @property
+    def is_owner(self):
+        """
+        Returns a list of id's of the herds that the user is owner of, or
+        `None`.
+        """
+        herds = []
+        for role in self.privileges:
+            if role['level'] == 'owner':
+                herds += [role['herd']]
+        return herds or None
 
     @property
     def accessible_genebanks(self):
@@ -484,6 +589,9 @@ class User(BaseModel):
         """
         return {'email': self.email,
                 'validated': self.validated if self.validated else False,
+                'is_admin': self.is_admin,
+                'is_manager': self.is_manager,
+                'is_owner': self.is_owner,
                 }
 
     def get_genebanks(self):
@@ -615,122 +723,3 @@ def verify(try_init=True):
         return verify(False)
 
     return all_ok
-
-def register_user(email, password):
-    """
-    Creates a new user from an e-mail and password, returning the new user
-    object.
-    """
-    user = User(email=email,
-                uuid=uuid.uuid4().hex,
-                password_hash=generate_password_hash(password),
-                validated=False,
-                privileges=[]
-                )
-    user.save()
-    return user
-
-def authenticate_user(email, password):
-    """
-    Authenticates an email/password pair against the database. Returns the
-    user info for the authenticated user on success, or None on failure.
-    """
-    try:
-        user_info = User.get(User.email == email)
-        if check_password_hash(user_info.password_hash, password):
-            logging.info("Login from %s", email)
-            return user_info
-    except DoesNotExist:
-        # Perform password check regardless of username to prevent timing
-        # attacks
-        check_password_hash("This-always-fails", password)
-    logging.info("Failed login attempt for %s", email)
-    return None
-
-def fetch_user_info(user_id):
-    """
-    Fetches user information for a given user id.
-    """
-    try:
-        return User.get(User.uuid == user_id)
-    except DoesNotExist:
-        return None
-
-def get_genebank(genebank_id, user_uuid=None):
-    """
-    Returns the information about the genebank given by `genebank_id` that is
-    accessible to the user identified by `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-
-    return user.get_genebank(genebank_id)
-
-def get_genebanks(user_uuid=None):
-    """
-    Returns all genebanks that are accessible to the user identified by
-    `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-
-    return [g.as_dict() for g in user.get_genebanks()]
-
-def get_herd(herd_id, user_uuid=None):
-    """
-    Returns information on the herd given by `herd_id`, including a list of all
-    individuals belonging to that herd. The returned data is limited to the
-    access permission of the user identified by `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-    try:
-        data = Herd.get(herd_id).filtered_dict(user)
-        if data['genebank'] not in user.accessible_genebanks:
-            return None
-        query = Individual(datbase=DATABASE).select().where(Individual.herd == herd_id)
-        data['individuals'] = [i.short_info() for i in query.execute()]
-        return data
-    except DoesNotExist:
-        return None
-
-def get_individual(individual_id, user_uuid=None):
-    """
-    Returns information on a given individual id, if it's accessible to the user
-    identified by `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-    try:
-        individual = Individual.get(individual_id)
-        if individual and individual.herd.genebank.id in user.accessible_genebanks:
-            return individual.as_dict()
-        return None
-    except DoesNotExist:
-        return None
-
-def get_all_individuals():
-    """
-    Returns the neccessary information about all individuals for computing genetic coefficients.
-
-    :return: A list of dictionaries containing genetic features of the individuals
-    :rtype: list(dict)
-    """
-    try:
-        individuals_dict = []
-        for individual in Individual.select():
-            data = individual.__dict__['__data__']
-            ind = dict()
-            ind["id"] = str(data['id'])
-            ind["father"] = str(data["father"]) if data["father"] else "0"
-            ind["mother"] = str(data["mother"]) if data["mother"] else "0"
-            ind["sex"] = "M" if data["sex"] == "male" else "F"
-            ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
-            individuals_dict.append(ind)
-        return individuals_dict
-    except DoesNotExist:
-        return []

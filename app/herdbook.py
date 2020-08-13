@@ -17,6 +17,7 @@ from flask import (
 )
 
 import utils.database as db
+import utils.data_access as da
 import utils.inbreeding as ibc
 
 
@@ -24,9 +25,9 @@ APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    SESSION_COOKIE_SECURE=APP.config['ENV'] != 'development',
+#   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax' if APP.config['ENV'] == 'development' else 'Strict',
+    SESSION_COOKIE_SAMESITE='Strict',
 )
 
 @APP.after_request
@@ -35,10 +36,16 @@ def after_request(response):
     Callback that triggers after each request. Currently this is used to set
     CORS headers to allow a different origin when using the development server.
     """
-    if APP.config['ENV'] == 'development':
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:2345')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
+    
+    if 'Origin' in request.headers:
+        origin = request.headers['Origin']
+    else:
+        origin = '*'
+        
+    response.headers.add('Access-Control-Allow-Origin', origin)
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,UPDATE')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
 
     return response
 
@@ -48,19 +55,81 @@ def get_user():
     Returns information on the current logged in user, or an empty user object
     representing an anonymous user.
     """
-    user = db.fetch_user_info(session.get('user_id', None))
+    user = da.fetch_user_info(session.get('user_id', None))
     return jsonify(user.frontend_data() if user else None)
+
+@APP.route('/api/manage/users')
+def get_users():
+    """
+    Returns all users that the logged in user has access to. This is all users
+    for admin, all users except admin users for managers, and None for regular
+    users.
+    """
+    users = da.get_users(session.get('user_id', None))
+    return jsonify(users=users)
+
+@APP.route('/api/manage/user/<int:u_id>', methods=['GET', 'UPDATE', 'POST'])
+def manage_user(u_id):
+    """
+    Returns user information and a list of all roles for the requested `u_id`.
+    """
+    if request.method == 'GET':
+        user = da.get_user(u_id, session.get('user_id', None))
+        return jsonify(user)
+    if request.method == 'UPDATE':
+        form = request.json
+        status = da.update_user(form, session.get('user_id', None))
+    if request.method == 'POST':
+        form = request.json
+        return jsonify(da.add_user(form, session.get('user_id', None)))
+    return jsonify(status=status)
+
+@APP.route('/api/manage/role', methods=['POST'])
+def manage_roles():
+    """
+    Changes or adds roles for the user identified by `u_id`, and returns a
+    status a json status message.
+    The input data should be formatted like:
+        {action: add | remove,
+         role: owner | manager | specialist,
+         user: <id>,
+         herd | genebank: <id>
+        }
+
+    The return value will be formatted like: `{status: <message>}`, where the
+    message is `updated`, `unchanged` or `failed`.
+    """
+    form = request.json
+    status = da.update_role(form, session.get('user_id', None))
+    return jsonify(status=status)
+
+@APP.route('/api/manage/herd', methods=['POST', 'UPDATE'])
+def manage_herd():
+    """
+    Used to insert and update herd information in the database.
+    Returns "created", "updated", or "failed".
+    """
+    form = request.json
+    status = "failed"
+    if request.method == 'POST':
+        status = da.add_herd(form, session.get('user_id', None))
+    elif request.method == 'UPDATE':
+        status = da.update_herd(form, session.get('user_id', None))
+    return jsonify(status=status)
 
 @APP.route('/api/login', methods=['POST'])
 def login():
     """
     Parses a login form and sets session variables when logged in.
-    If login fails the system will default to an anonymous user.
+    If login fails the system will return `None`.
+    The login form should be in json-format like:
+
+        {'username': '<user>', 'password': '<pass>'}
     """
 
     form = request.json
     # Authenticate the user and return a user object
-    user = db.authenticate_user(form.get('username'), form.get('password'))
+    user = da.authenticate_user(form.get('username'), form.get('password'))
     if user:
         session['user_id'] = user.uuid
         session.modified = True
@@ -84,15 +153,15 @@ def genebank(g_id=None):
     """
     user_id = session.get('user_id', None)
     if g_id:
-        return jsonify(db.get_genebank(g_id, user_id))
-    return jsonify(db.get_genebanks(user_id))
+        return jsonify(da.get_genebank(g_id, user_id))
+    return jsonify(genebanks=da.get_genebanks(user_id))
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.
     """
-    data = db.get_herd(h_id, session.get('user_id', None))
+    data = da.get_herd(h_id, session.get('user_id', None))
     return jsonify(data)
 
 @APP.route('/api/individual/<int:i_id>')
@@ -101,7 +170,7 @@ def individual(i_id):
     Returns information on the individual given by `i_id`.
     """
     user_id = session.get('user_id', None)
-    return jsonify(db.get_individual(i_id, user_id))
+    return jsonify(da.get_individual(i_id, user_id))
 
 
 @APP.route('/api/inbreeding/<int:i_id>')
@@ -109,7 +178,6 @@ def inbreeding(i_id):
     """
     Returns the inbreeding coefficient of the individual given by `i_id`.
     """
-    user_id = session.get('user_id', None)
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
     i_id = str(i_id)

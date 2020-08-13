@@ -7,7 +7,7 @@ from pydigree.population import Population
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
 from pydigree.io.base import connect_individuals, sort_pedigrees
-import utils.database as database
+import utils.data_access as data_access
 
 
 class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
@@ -70,7 +70,7 @@ def get_pedigree_collections():
     population_handler(ped)
 
     # Step 1: Fetch the data from the db and create the individuals
-    individuals = database.get_all_individuals()
+    individuals = data_access.get_all_individuals()
 
     for i in individuals:
         rec = IndividualPEDRecord(i)

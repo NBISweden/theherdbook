@@ -1,24 +1,30 @@
 import * as React from 'react'
 
 import {post, get} from './communication'
+import {useDataContext} from './data_context'
 
 /** The currently logged in user, if any */
 export interface User {
   email: string | null
   validated: boolean
+  is_admin: boolean
+  is_manager: Array<number> | undefined
+  is_owner: Array<number> | undefined
 }
+
+export type Result = 'logged_in' | 'logged_out' | 'error'
 
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
   user: User | undefined
-  login(username: string, password: string): void
-  logout(): void
+  login(username: string, password: string): Promise<Result>
+  logout(): Promise<Result>
 }
 
 const dummy_user_context: UserContext = {
   user: undefined,
-  login() {},
-  logout() {}
+  async login() { return 'error' },
+  async logout() { return 'error' }
 }
 
 const UserContext = React.createContext(dummy_user_context)
@@ -42,25 +48,37 @@ export function useUserContext(): UserContext {
 */
 export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined as undefined | User)
+  const {loadData} = useDataContext()
 
-  function handle_promise(promise: Promise<{user: User | null}>) {
-    promise.then(
+  async function handle_promise(promise: Promise<User | null>): Promise<Result> {
+    return await promise.then(
       data => {
         console.log(data)
-        set_state(data ?? undefined as any)
+        set_state(data ?? undefined)
+        return data ? 'logged_in' : 'logged_out'
       },
       error => {
         console.error(error)
         set_state(undefined)
+        return 'error'
       })
   }
 
-  function login(username: string, password: string) {
-    handle_promise(post('/api/login', {username, password}))
+  async function login(username: string, password: string) {
+    return await handle_promise(post('/api/login', {username, password})).then(
+      success => {
+        if (success == 'logged_in') {
+          loadData('all')
+        }
+        return success;
+      }
+    )
   }
 
   function logout() {
-    handle_promise(get('/api/logout'))
+    let status = handle_promise(get('/api/logout'))
+    loadData('none')
+    return status
   }
 
   function on_mount() {

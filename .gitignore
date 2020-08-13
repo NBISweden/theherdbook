@@ -30,3 +30,6 @@ postgres-data/
 
 # config files
 config.ini
+config/*
+^config/README.md
+^config/updates/README.md

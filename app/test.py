@@ -5,25 +5,12 @@ Unit tests for the herdbook.
 
 import os
 import unittest
-import requests
+
+import flask
 
 import utils.database as db
-
-HOST = "http://localhost:4200"
-
-class TestEndpoints(unittest.TestCase):
-    """
-    Checks that all endpoints are valid.
-    """
-
-    def test_main(self):
-        """
-        Checks that the main endpoint (/) is available.
-        """
-        self.assertEqual(
-            requests.get(HOST + '/').status_code,
-            200
-        )
+import utils.data_access as da
+from herdbook import APP
 
 class DatabaseTest(unittest.TestCase):
     """
@@ -77,10 +64,10 @@ class DatabaseTest(unittest.TestCase):
         for individual in self.individuals:
             individual.save()
 
-        self.admin = db.register_user("admin", "pass")
-        self.specialist = db.register_user("spec", "pass")
-        self.manager = db.register_user("man", "pass")
-        self.owner = db.register_user("owner", "pass")
+        self.admin = da.register_user("admin", "pass")
+        self.specialist = da.register_user("spec", "pass")
+        self.manager = da.register_user("man", "pass")
+        self.owner = da.register_user("owner", "pass")
         self.admin.add_role("admin", None)
         self.specialist.add_role("specialist", self.genebanks[0].id)
         self.manager.add_role("manager", self.genebanks[0].id)
@@ -138,19 +125,19 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.admin.uuid)]
+        genebank_ids = [g['id'] for g in da.get_genebanks(self.admin.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id in genebank_ids)
         # specialist
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.specialist.uuid)]
+        genebank_ids = [g['id'] for g in da.get_genebanks(self.specialist.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id not in genebank_ids)
         # manager
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.manager.uuid)]
+        genebank_ids = [g['id'] for g in da.get_genebanks(self.manager.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id not in genebank_ids)
         # owner
-        genebank_ids = [g['id'] for g in db.get_genebanks(self.owner.uuid)]
+        genebank_ids = [g['id'] for g in da.get_genebanks(self.owner.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id not in genebank_ids)
 
@@ -160,17 +147,17 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.admin.uuid))
-        self.assertTrue(db.get_genebank(self.genebanks[1].id, self.admin.uuid))
+        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.admin.uuid))
+        self.assertTrue(da.get_genebank(self.genebanks[1].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.specialist.uuid))
-        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.specialist.uuid))
+        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.specialist.uuid))
+        self.assertFalse(da.get_genebank(self.genebanks[1].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.manager.uuid))
-        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.manager.uuid))
+        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.manager.uuid))
+        self.assertFalse(da.get_genebank(self.genebanks[1].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_genebank(self.genebanks[0].id, self.owner.uuid))
-        self.assertFalse(db.get_genebank(self.genebanks[1].id, self.owner.uuid))
+        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.owner.uuid))
+        self.assertFalse(da.get_genebank(self.genebanks[1].id, self.owner.uuid))
 
     def test_get_herd(self):
         """
@@ -178,21 +165,21 @@ class TestPermissions(DatabaseTest):
         for all test users.
         """
         # admin
-        self.assertTrue(db.get_herd(self.herds[0].id, self.admin.uuid))
-        self.assertTrue(db.get_herd(self.herds[1].id, self.admin.uuid))
-        self.assertTrue(db.get_herd(self.herds[2].id, self.admin.uuid))
+        self.assertTrue(da.get_herd(self.herds[0].id, self.admin.uuid))
+        self.assertTrue(da.get_herd(self.herds[1].id, self.admin.uuid))
+        self.assertTrue(da.get_herd(self.herds[2].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_herd(self.herds[0].id, self.specialist.uuid))
-        self.assertTrue(db.get_herd(self.herds[1].id, self.specialist.uuid))
-        self.assertFalse(db.get_herd(self.herds[2].id, self.specialist.uuid))
+        self.assertTrue(da.get_herd(self.herds[0].id, self.specialist.uuid))
+        self.assertTrue(da.get_herd(self.herds[1].id, self.specialist.uuid))
+        self.assertFalse(da.get_herd(self.herds[2].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_herd(self.herds[0].id, self.manager.uuid))
-        self.assertTrue(db.get_herd(self.herds[1].id, self.manager.uuid))
-        self.assertFalse(db.get_herd(self.herds[2].id, self.manager.uuid))
+        self.assertTrue(da.get_herd(self.herds[0].id, self.manager.uuid))
+        self.assertTrue(da.get_herd(self.herds[1].id, self.manager.uuid))
+        self.assertFalse(da.get_herd(self.herds[2].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_herd(self.herds[0].id, self.owner.uuid))
-        self.assertTrue(db.get_herd(self.herds[1].id, self.owner.uuid))
-        self.assertFalse(db.get_herd(self.herds[2].id, self.owner.uuid))
+        self.assertTrue(da.get_herd(self.herds[0].id, self.owner.uuid))
+        self.assertTrue(da.get_herd(self.herds[1].id, self.owner.uuid))
+        self.assertFalse(da.get_herd(self.herds[2].id, self.owner.uuid))
 
     def test_get_individual(self):
         """
@@ -200,22 +187,174 @@ class TestPermissions(DatabaseTest):
         information for all test users.
         """
         # admin
-        self.assertTrue(db.get_individual(self.individuals[0].id, self.admin.uuid))
-        self.assertTrue(db.get_individual(self.individuals[1].id, self.admin.uuid))
-        self.assertTrue(db.get_individual(self.individuals[2].id, self.admin.uuid))
+        self.assertTrue(da.get_individual(self.individuals[0].id, self.admin.uuid))
+        self.assertTrue(da.get_individual(self.individuals[1].id, self.admin.uuid))
+        self.assertTrue(da.get_individual(self.individuals[2].id, self.admin.uuid))
         # specialist
-        self.assertTrue(db.get_individual(self.individuals[0].id, self.specialist.uuid))
-        self.assertTrue(db.get_individual(self.individuals[1].id, self.specialist.uuid))
-        self.assertFalse(db.get_individual(self.individuals[2].id, self.specialist.uuid))
+        self.assertTrue(da.get_individual(self.individuals[0].id, self.specialist.uuid))
+        self.assertTrue(da.get_individual(self.individuals[1].id, self.specialist.uuid))
+        self.assertFalse(da.get_individual(self.individuals[2].id, self.specialist.uuid))
         # manager
-        self.assertTrue(db.get_individual(self.individuals[0].id, self.manager.uuid))
-        self.assertTrue(db.get_individual(self.individuals[1].id, self.manager.uuid))
-        self.assertFalse(db.get_individual(self.individuals[2].id, self.manager.uuid))
+        self.assertTrue(da.get_individual(self.individuals[0].id, self.manager.uuid))
+        self.assertTrue(da.get_individual(self.individuals[1].id, self.manager.uuid))
+        self.assertFalse(da.get_individual(self.individuals[2].id, self.manager.uuid))
         # owner
-        self.assertTrue(db.get_individual(self.individuals[0].id, self.owner.uuid))
-        self.assertTrue(db.get_individual(self.individuals[1].id, self.owner.uuid))
-        self.assertFalse(db.get_individual(self.individuals[2].id, self.owner.uuid))
+        self.assertTrue(da.get_individual(self.individuals[0].id, self.owner.uuid))
+        self.assertTrue(da.get_individual(self.individuals[1].id, self.owner.uuid))
+        self.assertFalse(da.get_individual(self.individuals[2].id, self.owner.uuid))
 
+    def test_get_users(self):
+        """
+        Checks that `utils.database.get_users` return the correct information
+        for all test users.
+        """
+        # admin
+        user_ids = [u['id'] for u in da.get_users(self.admin.uuid)]
+        self.assertEqual(user_ids, [1, 2, 3, 4])
+        # specialist
+        user_ids = da.get_users(self.specialist.uuid)
+        self.assertEqual(user_ids, None)
+        # manager
+        user_ids = [u['id'] for u in da.get_users(self.manager.uuid)]
+        self.assertEqual(user_ids, [2, 3, 4])
+        # owner
+        user_ids = da.get_users(self.owner.uuid)
+        self.assertEqual(user_ids, None)
+
+    def test_has_role(self):
+        """
+        Checks that `utils.database.User.has_role`return the correct information
+        for all test users.
+        """
+        # admin
+        self.assertTrue(self.admin.has_role('admin'))
+        self.assertFalse(self.admin.has_role('manager', 1))
+        self.assertFalse(self.admin.has_role('specialist', 1))
+        self.assertFalse(self.admin.has_role('owner', 1))
+        # specialist
+        self.assertFalse(self.specialist.has_role('admin'))
+        self.assertFalse(self.specialist.has_role('manager', 1))
+        self.assertTrue(self.specialist.has_role('specialist', 1))
+        self.assertFalse(self.specialist.has_role('owner', 1))
+        # manager
+        self.assertFalse(self.manager.has_role('admin'))
+        self.assertTrue(self.manager.has_role('manager', 1))
+        self.assertFalse(self.manager.has_role('specialist', 1))
+        self.assertFalse(self.manager.has_role('owner', 1))
+        # owner
+        self.assertFalse(self.owner.has_role('admin'))
+        self.assertFalse(self.owner.has_role('manager', 1))
+        self.assertFalse(self.owner.has_role('specialist', 1))
+        self.assertTrue(self.owner.has_role('owner', 1))
+
+    def test_update_role(self):
+        """
+        Checks that `utils.database.update_role` performs correctly for all
+        operations.
+        """
+
+        # malformed data
+        self.assertEqual(da.update_role(None, self.admin.uuid), "failed")
+        operation = {'action': 'dad', 'role': 'manager', 'user': 1, 'genebank': 1}
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "failed")
+        operation = {'action': 'add', 'role': 'owner', 'user': 1, 'genebank': 1}
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "failed")
+        operation = {'action': 'add', 'role': 'manager', 'user': 1, 'herd': 1}
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "failed")
+
+        # insufficient permissions
+        operation = {'action': 'add', 'role': 'manager', 'user': 1, 'genebank': 1}
+        self.assertEqual(da.update_role(operation, self.owner.uuid), "failed")
+        self.assertEqual(da.update_role(operation, self.specialist.uuid), "failed")
+        operation['genebank'] = 2
+        self.assertEqual(da.update_role(operation, self.manager.uuid), "failed")
+
+        # unknown target user
+        operation = {'action': 'add', 'role': 'manager', 'user':-1, 'genebank': 1}
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "failed")
+
+        # successful remove
+        operation = {'action': 'remove', 'role': 'manager', 'user': self.manager.id, 'genebank': 1}
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "updated")
+
+        # unnecessary remove
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "unchanged")
+
+        # successful insert
+        operation['action'] = 'add'
+        operation['user'] = str(operation['user'])
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "updated")
+
+        # unnecessary insert
+        self.assertEqual(da.update_role(operation, self.admin.uuid), "unchanged")
+
+
+class FlaskTest(DatabaseTest):
+    """
+    Starts and stops the flask application so that endpoints can be tested.
+    """
+    def setUp(self):
+        """
+        Starts the flask APP on port `self.PORT`.
+        """
+        APP.config['TESTING'] = True
+        APP.config['DEBUG'] = False
+        APP.static_folder = "../frontend/"
+        self.app = APP.test_client()
+        super().setUp()
+
+class EndpointTest(FlaskTest):
+    """
+    Tests flask endpoints.
+    """
+
+    def test_main(self):
+        """
+        Checks that the main endpoint (/) is available.
+        """
+        self.assertEqual(self.app.get('/').status_code, 200)
+
+    def test_get_user(self):
+        """
+        Checks that `herdbook.get_user` returns the correct user.
+        """
+        for test_user in [self.admin, self.manager, self.specialist, self.owner]:
+            user_data = {'email': test_user.email,
+                         'is_admin': test_user.is_admin,
+                         'is_manager': test_user.is_manager,
+                         'is_owner': test_user.is_owner,
+                         'validated': test_user.validated,
+                        }
+            self.assertEqual(self.app.get('/api/user').get_json(), None)
+            with self.app as context:
+                context.post('/api/login', json={'username': test_user.email,
+                                                 'password': 'pass'})
+                self.assertEqual(flask.session['user_id'].hex, test_user.uuid)
+                self.assertEqual(self.app.get('/api/user').get_json(), user_data)
+                context.get('/api/logout')
+                self.assertEqual(self.app.get('/api/user').get_json(), None)
+
+    def test_get_users(self):
+        """
+        Checks that `herdbook.get_users` returns the correct user.
+        """
+        user_results = [(self.admin, [{'id': u.id, 'email': u.email} for u in \
+                                      [self.admin, self.specialist, self.manager, self.owner]]
+                        ),
+                        (self.manager, [{'id': u.id, 'email': u.email} for u in \
+                                    [self.specialist, self.manager, self.owner]]
+                        ),
+                        (self.specialist, None),
+                        (self.owner, None),]
+
+        for user, result in user_results:
+            with self.app as context:
+                context.post('/api/login',
+                             json={"username": user.email, "password": "pass"})
+                self.assertDictEqual(self.app.get('/api/manage/users').get_json(),
+                                     {'users': result})
+                context.get('/api/logout')
+                self.assertEqual(self.app.get('/api/manage/users').get_json(), {'users': None})
 
 if __name__ == '__main__':
     unittest.main()
