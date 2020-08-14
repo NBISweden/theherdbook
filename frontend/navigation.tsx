@@ -7,7 +7,6 @@ import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
-
 import {Login} from './login'
 import {Genebanks} from './genebanks'
 import {Genebank} from './genebank'

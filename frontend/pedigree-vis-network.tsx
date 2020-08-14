@@ -8,15 +8,13 @@ import { Link } from "react-router-dom";
 import { get } from './communication';
 import { Network } from 'vis-network';
 
-
-
 /**
- * Shows the information of a given individual in a herd, including the pedigree graph
+ * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
-export function PedigreeVisNetwork({ id }: { id: string }) {
+export function PedigreeVisNetwork({ id }: { id: string })
+{
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
-
 
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
@@ -28,8 +26,6 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
       error => console.error(error)
     )
   }, [id])
-
-
 
   class PedigreeNetwork extends Component {
 
@@ -44,7 +40,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
         }
       },
       edges: {
-        color: { color: "gray", inherit: false },
+        color:  { color: "gray", inherit: false },
         arrows: { to: true },
         smooth: {
           type: 'cubicBezier',
@@ -66,7 +62,6 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
       }
     }
 
-
     constructor() {
       super();
       this.network = {};
@@ -83,12 +78,10 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
 
     render() {
       return (
-        <div ref={this.appRef} style={{ width: "1000px", height: "800px" }} />
+        <div ref={this.appRef} style={{ width: "1500px", height: "1500px" }} />
       );
     }
-
   }
-
 
   return <>
     {individual && <>
@@ -139,7 +132,6 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
               <PedigreeNetwork />
             </td>
           </tr>
-
         </tbody>
       </table>
     </>

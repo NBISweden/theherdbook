@@ -5,18 +5,16 @@
 
 import React from 'react'
 import { Link } from "react-router-dom";
-
 import { get } from './communication';
 import Tree from 'react-d3-tree'
 
-
 /**
- * Shows the information of a given individual in a herd, including the pedigree graph
+ * Shows the information of a given individual in a herd, including the pedigree graph using the react-d3-tree component.
+ * It does not support crossovers, see pedigree-vis-network instead for a more complete graph. Will be removed in the future.
  */
 export function PedigreeD3({ id }: { id: string }) {
   const [pedigree, setPedigreeD3] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
-
 
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
@@ -73,7 +71,6 @@ export function PedigreeD3({ id }: { id: string }) {
     }
   }
 
-
   return <>
     {individual && <>
       <h2>{individual.name ?? 'unnamed'}</h2>
@@ -107,7 +104,7 @@ export function PedigreeD3({ id }: { id: string }) {
                   : <dd>-</dd>
                 }
                 <dt>Kull</dt> <dd>{individual.litter ?? '-'}</dd>
-<dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
+                <dt>Färg</dt> <dd>{individual.colour ?? '-'}</dd>
               <dt>Färgkommentar</dt> <dd>{individual.colour_note ?? '-'}</dd>
               <dt>Anteckningar</dt> <dd>{individual.notes ?? '-'}</dd>
               <dt>Vikter</dt>
@@ -123,7 +120,6 @@ export function PedigreeD3({ id }: { id: string }) {
               <CenteredTree />
             </td>
           </tr>
-
         </tbody>
       </table>
     </>
