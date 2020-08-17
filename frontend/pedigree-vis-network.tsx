@@ -33,25 +33,18 @@ export function PedigreeVisNetwork({ id }: { id: string })
       layout: {
         hierarchical: {
           enabled: true,
-          direction: "DU",
+          direction: "LR",
           sortMethod: 'directed',
           shakeTowards: "roots",
-          blockShifting: false
+          levelSeparation: 200
         }
       },
       edges: {
         color:  { color: "gray", inherit: false },
-        arrows: { to: true },
-        smooth: {
-          type: 'cubicBezier',
-          forceDirection: 'horizontal',
-          roundness: 0.4
-        }
+        arrows: { to: {enabled: true, scaleFactor: 0.50 }},
+        smooth: { type: "cubicBezier", roundness: 0.50}
       },
-      physics: {
-        enabled: true,
-        hierarchicalRepulsion: { avoidOverlap: 1 }
-      }
+      nodes: {fixed: false}
     }
 
     onNodeClick(params) {
@@ -78,7 +71,7 @@ export function PedigreeVisNetwork({ id }: { id: string })
 
     render() {
       return (
-        <div ref={this.appRef} style={{ width: "1500px", height: "1500px" }} />
+        <div ref={this.appRef} style={{ position:"absolute", top: "120px", width: "1280px", height: "720px" }} />
       );
     }
   }
