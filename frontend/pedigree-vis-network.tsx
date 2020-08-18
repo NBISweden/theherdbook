@@ -6,9 +6,10 @@
 import React, { Component, createRef } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import { Network, zoomExtends, draw, legend_table } from 'vis-network';
-import plus from "vis-network/dist/img/network/plus.png"
-import minus from "vis-network/dist/img/network/minus.png"
+import { Network } from 'vis-network';
+import "vis-network/styles/vis-network.css"
+
+
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
@@ -32,6 +33,8 @@ export function PedigreeVisNetwork({ id }: { id: string })
   class PedigreeNetwork extends Component {
 
     options = {
+      width: Math.round(window.innerWidth * 0.50) + 'px',
+      height: Math.round(window.innerHeight * 0.80) + 'px',
       layout: {
         hierarchical: {
           enabled: true,
@@ -74,18 +77,16 @@ export function PedigreeVisNetwork({ id }: { id: string })
       this.appRef = createRef();
     }
 
-
-
     componentDidMount() {
       this.network = new Network(this.appRef.current, pedigree, this.options);
       this.network.on("doubleClick", this.onNodeClick)
-
     }
 
     render() {
+
       return (
 
-        <div ref={this.appRef} style={{ position:"absolute", top: "120px", width: "1200px", height: "800px" }} >
+        <div ref={this.appRef}  >
         </div>
       );
     }
@@ -93,11 +94,11 @@ export function PedigreeVisNetwork({ id }: { id: string })
 
   return <>
     {individual && <>
-      <h2>{individual.name ?? 'unnamed'}</h2>
       <table width="100%">
         <tbody>
           <tr>
-            <td width="10%" style={{ verticalAlign: "top" }}>
+            <td width="20%" style={{ verticalAlign: "top" }}>
+      <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
@@ -136,7 +137,7 @@ export function PedigreeVisNetwork({ id }: { id: string })
                 </dd>
               </dl>
             </td>
-            <td width="90%" >
+            <td width="80%" >
 
               <PedigreeNetwork />
             </td>
