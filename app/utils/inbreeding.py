@@ -7,7 +7,7 @@ from pydigree.population import Population
 from pydigree.pedigree import Pedigree
 from pydigree.io.base import PEDRecord
 from pydigree.io.base import connect_individuals, sort_pedigrees
-import utils.data_access as data_access
+from . import data_access as data_access
 
 
 class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
@@ -88,14 +88,3 @@ def get_pedigree_collections():
     return sorted_ped
 
 
-def main():
-    """
-    Run the main program.
-    """
-    collections = get_pedigree_collections()
-    coefficients = calculate_inbreeding(collections)
-    print(coefficients)
-
-
-if __name__ == "__main__":
-    main()

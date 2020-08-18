@@ -47,7 +47,7 @@ def add_user(form, user_uuid=None):
     user = register_user(email, password, validated)
     return {'id': user.id, 'status': "success"}
 
-def register_user(email, password, validated=False):
+def register_user(email, password, validated=False, privileges=[]):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
@@ -56,7 +56,7 @@ def register_user(email, password, validated=False):
                 uuid=uuid.uuid4().hex,
                 password_hash=generate_password_hash(password),
                 validated=validated,
-                privileges=[]
+                privileges=privileges
                 )
     user.save()
     return user
@@ -393,8 +393,8 @@ def get_all_individuals():
             data = individual.__dict__['__data__']
             ind = dict()
             ind["id"] = str(data['id'])
-            ind["father"] = str(data["father"]) if data["father"] else "0"
-            ind["mother"] = str(data["mother"]) if data["mother"] else "0"
+            ind["father"] = str(data["father"]) if (data["father"] and data["mother"]) else "0"
+            ind["mother"] = str(data["mother"]) if (data["mother"] and data["father"]) else "0"
             ind["sex"] = "M" if data["sex"] == "male" else "F"
             ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
             individuals_dict.append(ind)
