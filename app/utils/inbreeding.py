@@ -10,14 +10,15 @@ from pydigree.io.base import connect_individuals, sort_pedigrees
 from . import data_access as data_access
 
 
-class IndividualPEDRecord(PEDRecord): #pylint: disable=too-few-public-methods
+class IndividualPEDRecord(PEDRecord):  # pylint: disable=too-few-public-methods
     """
     Class that encapsulates an individual's pedigree information.
 
     :param PEDRecord: Base class corresponding to a pydigree PEDRecord
     :type PEDRecord: class
     """
-    def __init__(self, individual): #pylint: disable=super-init-not-called
+
+    def __init__(self, individual):  # pylint: disable=super-init-not-called
         """
         Creates pedigree record from a dictionary of an individual
 
@@ -60,8 +61,7 @@ def get_pedigree_collections():
     :rtype: pydigree.pedigreecollection.PedigreeCollection
     """
 
-    affected_labels = {'1': 0, '2': 1, 'A': 1, 'U': 0,
-                       'X': None, '-9': None}
+    affected_labels = {"1": 0, "2": 1, "A": 1, "U": 0, "X": None, "-9": None}
 
     population_handler = lambda *x: None
 
@@ -76,7 +76,7 @@ def get_pedigree_collections():
         rec = IndividualPEDRecord(i)
         ind = rec.create_individual(population)
         ind.pedigree = ped
-        ind.phenotypes['affected'] = affected_labels.get(rec.aff, None)
+        ind.phenotypes["affected"] = affected_labels.get(rec.aff, None)
         ped[ind.label] = ind
 
     # Step 2: Create between-individual relationships
@@ -86,5 +86,3 @@ def get_pedigree_collections():
     sorted_ped = sort_pedigrees(ped.individuals, population_handler)
 
     return sorted_ped
-
-
