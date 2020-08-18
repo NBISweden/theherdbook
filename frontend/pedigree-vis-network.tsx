@@ -6,7 +6,9 @@
 import React, { Component, createRef } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import { Network } from 'vis-network';
+import { Network, zoomExtends, draw, legend_table } from 'vis-network';
+import plus from "vis-network/dist/img/network/plus.png"
+import minus from "vis-network/dist/img/network/minus.png"
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
@@ -33,18 +35,29 @@ export function PedigreeVisNetwork({ id }: { id: string })
       layout: {
         hierarchical: {
           enabled: true,
-          direction: "LR",
+          direction: "DU",
           sortMethod: 'directed',
           shakeTowards: "roots",
           levelSeparation: 200
         }
       },
       edges: {
-        color:  { color: "gray", inherit: false },
+        /*color:  { color: "gray", inherit: false },*/
         arrows: { to: {enabled: true, scaleFactor: 0.50 }},
-        smooth: { type: "cubicBezier", roundness: 0.50}
+        smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
       },
-      nodes: {fixed: false}
+      interaction: {
+        navigationButtons: true
+      },
+      physics: {
+        hierarchicalRepulsion: {
+          centralGravity: 0,
+          avoidOverlap: 0.5,
+        },
+
+        minVelocity: 0.75,
+        solver: "hierarchicalRepulsion"
+      }
     }
 
     onNodeClick(params) {
@@ -61,17 +74,19 @@ export function PedigreeVisNetwork({ id }: { id: string })
       this.appRef = createRef();
     }
 
+
+
     componentDidMount() {
       this.network = new Network(this.appRef.current, pedigree, this.options);
       this.network.on("doubleClick", this.onNodeClick)
-      //this.network.on("stabilizationIterationsDone", function () {
-      //  this.network.setOptions({ physics: false });
-      //});
+
     }
 
     render() {
       return (
-        <div ref={this.appRef} style={{ position:"absolute", top: "120px", width: "1280px", height: "720px" }} />
+
+        <div ref={this.appRef} style={{ position:"absolute", top: "120px", width: "1200px", height: "800px" }} >
+        </div>
       );
     }
   }
@@ -122,6 +137,7 @@ export function PedigreeVisNetwork({ id }: { id: string })
               </dl>
             </td>
             <td width="90%" >
+
               <PedigreeNetwork />
             </td>
           </tr>
