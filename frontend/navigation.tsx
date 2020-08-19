@@ -13,8 +13,6 @@ import {Genebank} from './genebank'
 import {HerdView} from './herd_view'
 import {Manage} from './manage'
 import {Individual} from './individual'
-import {Pedigree} from './pedigree-family-tree'
-import {PedigreeD3} from './pedigree-d3'
 import {PedigreeVisNetwork} from './pedigree-vis-network'
 import {Switch, Route} from 'react-router-dom'
 import {useUserContext} from './user_context'
@@ -103,12 +101,6 @@ export function Navigation() {
         </ui.Routed>
         <ui.Routed path="/individual/:id">
           {params => <Individual id={params.id}/>}
-        </ui.Routed>
-        <ui.Routed path="/pedigree-family/:id">
-          {params => <Pedigree id={params.id}/>}
-        </ui.Routed>
-        <ui.Routed path="/pedigreeD3/:id">
-          {params => <PedigreeD3 id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/pedigree/:id">
           {params => <PedigreeVisNetwork id={params.id}/>}

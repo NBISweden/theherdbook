@@ -14,8 +14,7 @@ import "vis-network/styles/vis-network.css"
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
-export function PedigreeVisNetwork({ id }: { id: string })
-{
+export function PedigreeVisNetwork({ id }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
 
@@ -46,8 +45,8 @@ export function PedigreeVisNetwork({ id }: { id: string })
       },
       edges: {
         /*color:  { color: "gray", inherit: false },*/
-        arrows: { to: {enabled: true, scaleFactor: 0.50 }},
-        smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
+        arrows: { to: { enabled: true, scaleFactor: 0.50 } },
+        smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
       },
       interaction: {
         navigationButtons: true
@@ -98,7 +97,7 @@ export function PedigreeVisNetwork({ id }: { id: string })
         <tbody>
           <tr>
             <td width="20%" style={{ verticalAlign: "top" }}>
-      <h2>{individual.name ?? 'unnamed'}</h2>
+              <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
