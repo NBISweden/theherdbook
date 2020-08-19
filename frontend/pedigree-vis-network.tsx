@@ -32,21 +32,21 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-      width: Math.round(window.innerWidth * 0.70) + 'px',
+      width: Math.round(window.innerWidth * 0.85) + 'px',
       height: Math.round(window.innerHeight * 0.85) + 'px',
       layout: {
         hierarchical: {
           enabled: true,
           direction: "DU",
           sortMethod: 'directed',
-          shakeTowards: "roots",
+          //shakeTowards: "roots",
           levelSeparation: 150
         }
       },
       edges: {
         /*color:  { color: "gray", inherit: false },*/
-        arrows: { to: { enabled: true, scaleFactor: 0.50 } },
-        smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
+        arrows: { to: { enabled: true, scaleFactor: 0.50 } }
+        //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
       },
       interaction: {
         navigationButtons: true
@@ -55,8 +55,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
         hierarchicalRepulsion: {
           centralGravity: 0,
           avoidOverlap: 1,
-          nodeDistance: 250,
-          springConstant: 0.1
+          nodeDistance: 100
         },
 
         minVelocity: 0.75,

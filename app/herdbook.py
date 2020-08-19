@@ -188,12 +188,12 @@ def pedigree(i_id):
     return jsonify(result)
 
 
-def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edges=None):
+def get_pedigree_vis_network(id, user_id, level=1, level_max=6, nodes=None, edges=None):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     if individual:
         label = "%s\n%s" % (individual["name"], individual["number"])
-        pnode = {"label": label, "id": id}
+        pnode = {"label": label, "id": id, "level": level}
         if individual["sex"] == 'male':
             pnode["shape"] = "box"
         else:
