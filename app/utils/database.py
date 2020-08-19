@@ -163,7 +163,7 @@ class Herd(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="herd_id")
     genebank = ForeignKeyField(Genebank)
-    herd = IntegerField()
+    herd = CharField(10)
     herd_name = TextField(null=True)
     is_active = BooleanField(null=True)
     start_date = DateField(null=True)
