@@ -181,20 +181,12 @@ def pedigree(i_id):
     Returns the pedigree information for the individual `i_id`.
     """
     user_id = session.get('user_id', None)
-    pnode = get_pedigree(i_id, user_id)
-    return jsonify(pnode)
-
-@APP.route('/api/pedigree-vis-network/<int:i_id>')
-def pedigree_vis_network(i_id):
-    """
-    Returns the pedigree information for the individual `i_id`.
-    """
-    user_id = session.get('user_id', None)
     nodes = {}
     edges = []
     pnode = get_pedigree_vis_network(i_id, user_id, nodes=nodes, edges=edges)
     result = {"nodes": list(nodes.values()), "edges": edges}
     return jsonify(result)
+
 
 def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edges=None):
     """Builds the pedigree dict tree for the individual"""
@@ -224,35 +216,6 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
         return pnode
     return None
 
-
-
-
-mshape = {"shape": 'rect', "shapeProps": {"width": 90, "height": 70, "x": "-45", "y": "-35", "fill": 'LightBlue'}}
-fshape = {"shape": 'circle', "shapeProps": {"r": 45, "fill": 'pink'}}
-
-def get_pedigree(id, user_id, level=1, level_max=5, nodes=None):
-    """Builds the pedigree dict tree for the individual"""
-    nodes = nodes or {}
-    individual = da.get_individual(id, user_id)
-    if individual:
-        name = individual["number"]
-        APP.logger.info("pedigree for %s" % name)
-        pnode = {"name": name, "id2": id}
-        father = individual['father']
-        mother = individual['mother']
-        pnode["children"] = []
-        pnode["nodeSvgShape"] = mshape if individual["sex"] == 'male' else fshape
-        nodes[id] = pnode
-        if father and level < level_max and father["id"] not in nodes:
-            pedigree = get_pedigree(father['id'], user_id, level=level+1, nodes=nodes)
-            pnode["children"].append(pedigree)
-        if mother and level < level_max and mother["id"] not in nodes:
-            pedigree = get_pedigree(mother['id'], user_id, level=level+1, nodes=nodes)
-            pnode["children"].append(pedigree)
-        if (father or mother) and level == level_max:
-            pnode["name"] = name + "..."
-        return pnode
-    return None
 
 @APP.route('/api/inbreeding/<int:i_id>')
 def inbreeding(i_id):

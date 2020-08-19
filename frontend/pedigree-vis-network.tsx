@@ -23,7 +23,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
       data => data && setIndividual(data),
       error => console.error(error)
     )
-    get(`/api/pedigree-vis-network/${id}`).then(
+    get(`/api/pedigree/${id}`).then(
       data => data && setPedigree(data),
       error => console.error(error)
     )
@@ -54,7 +54,9 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
       physics: {
         hierarchicalRepulsion: {
           centralGravity: 0,
-          avoidOverlap: 0.5,
+          avoidOverlap: 1,
+          nodeDistance: 250,
+          springConstant: 0.1
         },
 
         minVelocity: 0.75,
@@ -137,7 +139,6 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
               </dl>
             </td>
             <td width="80%" >
-
               <PedigreeNetwork />
             </td>
           </tr>
