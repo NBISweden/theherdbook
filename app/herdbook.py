@@ -188,12 +188,12 @@ def pedigree(i_id):
     return jsonify(result)
 
 
-def get_pedigree_vis_network(id, user_id, level=1, level_max=6, nodes=None, edges=None):
+def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edges=None):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     if individual:
         label = "%s\n%s" % (individual["name"], individual["number"])
-        pnode = {"label": label, "id": id, "level": level}
+        pnode = {"label": label, "id": id, "level": level, "x": len(edges)}
         if individual["sex"] == 'male':
             pnode["shape"] = "box"
         else:
@@ -201,18 +201,24 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=6, nodes=None, edge
         father = individual['father']
         mother = individual['mother']
         nodes[id] = pnode
-        if father and level < level_max:
+        if father:
             edge_id = "%s-%s" % (id, father["id"])
             edge = {"id": edge_id, "from": id, "to": father["id"]}
             if father["id"] not in nodes:
-                pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1, nodes=nodes, edges=edges)
-            edges.append(edge)
-        if mother and level < level_max:
+                if level <= level_max:
+                    pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1,  nodes=nodes, edges=edges)
+                    edges.append(edge)
+            else:
+                edges.append(edge)
+        if mother:
             edge_id = "%s-%s" % (id, mother["id"])
             edge = {"id": edge_id, "from": id, "to": mother["id"]}
             if mother["id"] not in nodes:
-                pedigree = get_pedigree_vis_network(mother['id'], user_id, level=level+1, nodes=nodes, edges=edges)
-            edges.append(edge)
+                if level <= level_max:
+                    pedigree = get_pedigree_vis_network(mother['id'], user_id, level=level+1, nodes=nodes, edges=edges)
+                    edges.append(edge)
+            else:
+                edges.append(edge)
         return pnode
     return None
 
