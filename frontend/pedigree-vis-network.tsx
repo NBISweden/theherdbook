@@ -32,15 +32,15 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-      width: Math.round(window.innerWidth * 0.50) + 'px',
-      height: Math.round(window.innerHeight * 0.80) + 'px',
+      width: Math.round(window.innerWidth * 0.70) + 'px',
+      height: Math.round(window.innerHeight * 0.85) + 'px',
       layout: {
         hierarchical: {
           enabled: true,
           direction: "DU",
           sortMethod: 'directed',
           shakeTowards: "roots",
-          levelSeparation: 200
+          levelSeparation: 150
         }
       },
       edges: {
