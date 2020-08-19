@@ -55,7 +55,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
         hierarchicalRepulsion: {
           centralGravity: 0,
           avoidOverlap: 1,
-          nodeDistance: 100
+          nodeDistance: 120
         },
 
         minVelocity: 0.75,
