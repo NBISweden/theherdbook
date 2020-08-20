@@ -174,21 +174,21 @@ def individual(i_id):
     user_id = session.get('user_id', None)
     return jsonify(da.get_individual(i_id, user_id))
 
-
-@APP.route('/api/pedigree/<int:i_id>')
-def pedigree(i_id):
+@APP.route('/api/pedigree/<int:i_id>', defaults={"generations": 5})
+@APP.route('/api/pedigree/<int:i_id>/<int:generations>')
+def pedigree(i_id, generations):
     """
     Returns the pedigree information for the individual `i_id`.
     """
     user_id = session.get('user_id', None)
     nodes = {}
     edges = []
-    pnode = get_pedigree_vis_network(i_id, user_id, nodes=nodes, edges=edges)
+    pnode = get_pedigree_vis_network(i_id, user_id, generations=generations, nodes=nodes, edges=edges)
     result = {"nodes": list(nodes.values()), "edges": edges}
     return jsonify(result)
 
 
-def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edges=None):
+def get_pedigree_vis_network(id, user_id, level=1, generations=5, nodes=None, edges=None):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     if individual:
@@ -202,24 +202,20 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
         mother = individual['mother']
         nodes[id] = pnode
 
+        def add_parent(parent_id):
+            edge_id = "%s-%s" % (id, parent_id)
+            edge = {"id": edge_id, "from": id, "to": parent_id}
+            if parent_id not in nodes:
+                if level <= generations:
+                    pedigree = get_pedigree_vis_network(parent_id, user_id, level=level + 1, generations=generations, nodes=nodes, edges=edges)
+                    edges.append(edge)
+            else:
+                edges.append(edge)
+
         if mother:
-            edge_id = "%s-%s" % (id, mother["id"])
-            edge = {"id": edge_id, "from": id, "to": mother["id"]}
-            if mother["id"] not in nodes:
-                if level <= level_max:
-                    pedigree = get_pedigree_vis_network(mother['id'], user_id, level=level+1, nodes=nodes, edges=edges)
-                    edges.append(edge)
-            else:
-                edges.append(edge)
+            add_parent(mother["id"])
         if father:
-            edge_id = "%s-%s" % (id, father["id"])
-            edge = {"id": edge_id, "from": id, "to": father["id"]}
-            if father["id"] not in nodes:
-                if level <= level_max:
-                    pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1,  nodes=nodes, edges=edges)
-                    edges.append(edge)
-            else:
-                edges.append(edge)
+            add_parent(father["id"])
 
         return pnode
     return None

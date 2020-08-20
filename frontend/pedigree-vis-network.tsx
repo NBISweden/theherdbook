@@ -14,20 +14,21 @@ import "vis-network/styles/vis-network.css"
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
-export function PedigreeVisNetwork({ id }: { id: string }) {
+export function PedigreeVisNetwork({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
+  const [generations_input, setGenerations] = React.useState(generations)
 
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
       data => data && setIndividual(data),
       error => console.error(error)
     )
-    get(`/api/pedigree/${id}`).then(
+    get(`/api/pedigree/${id}/${generations_input}`).then(
       data => data && setPedigree(data),
       error => console.error(error)
     )
-  }, [id])
+  }, [id, generations_input])
 
   class PedigreeNetwork extends Component {
 
@@ -49,25 +50,18 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
         //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
       },
       interaction: {
-        navigationButtons: true
+        navigationButtons: true,
+        keyboard: true
       },
       physics: {
         hierarchicalRepulsion: {
           centralGravity: 0,
           avoidOverlap: 1,
-          nodeDistance: 120
+          nodeDistance: 150
         },
 
         minVelocity: 0.75,
         solver: "hierarchicalRepulsion"
-      }
-    }
-
-    onNodeClick(params) {
-      if (params.nodes.length > 0) {
-        var nodeid = params.nodes[0];
-        console.log(nodeid);
-        window.location.replace("/pedigree/" + nodeid);
       }
     }
 
@@ -82,10 +76,16 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
       this.network.on("doubleClick", this.onNodeClick)
     }
 
+    onNodeClick(params) {
+      if (params.nodes.length > 0) {
+        var nodeid = params.nodes[0];
+        window.location.replace("/pedigree/" + nodeid + "/" + generations_input);
+      }
+    }
+
     render() {
 
       return (
-
         <div ref={this.appRef}  >
         </div>
       );
@@ -135,6 +135,7 @@ export function PedigreeVisNetwork({ id }: { id: string }) {
                     : '-'
                   }
                 </dd>
+                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
               </dl>
             </td>
             <td width="80%" >

@@ -102,8 +102,8 @@ export function Navigation() {
         <ui.Routed path="/individual/:id">
           {params => <Individual id={params.id}/>}
         </ui.Routed>
-        <ui.Routed path="/pedigree/:id">
-          {params => <PedigreeVisNetwork id={params.id}/>}
+        <ui.Routed path="/pedigree/:id/:generations?">
+          {params => <PedigreeVisNetwork id={params.id} generations={params.generations? params.generations: 5}/>}
         </ui.Routed>
         <Route path="/">
           Welcome!
