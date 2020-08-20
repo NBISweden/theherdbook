@@ -1,13 +1,13 @@
 /**
- * @file This file contains the ManageUser function. This function is used for
- * add users and set user permissions.
+ * @file This file contains the UserForm function. This function is used to
+ * change user information and permissions.
  */
 import React from 'react'
 import { MenuItem, InputLabel, Select, TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Genebank, Herd } from '~data_context_global';
+import { Herd } from '~data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -34,7 +34,7 @@ export interface ManagedUser {
 /**
  * Provides a form for changing user metadata and user roles.
  */
-export function ManageUser({id}: {id: number | string | undefined}) {
+export function UserForm({id}: {id: number | 'new' | undefined}) {
   const {genebanks, loadData} = useDataContext()
   const [user, setUser] = React.useState(undefined as ManagedUser | undefined)
   const [isNew, setNew] = React.useState(false)
@@ -55,7 +55,7 @@ export function ManageUser({id}: {id: number | string | undefined}) {
   React.useEffect(() => {
     if (typeof id == 'number') {
       loadUser(id)
-    } else if (id == 'new') {
+    } else if (id == 'new' || !id) {
       setNew(true)
       setUser({id: -1, email: '', validated: false, privileges: []})
     }

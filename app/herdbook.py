@@ -172,8 +172,7 @@ def genebank(g_id=None):
         return jsonify(da.get_genebank(g_id, user_id))
     return jsonify(genebanks=da.get_genebanks(user_id))
 
-
-@APP.route("/api/herd/<int:h_id>")
+@APP.route("/api/herd/<h_id>")
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.

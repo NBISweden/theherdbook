@@ -18,11 +18,9 @@ const CSS = sc.createGlobalStyle`
   }
   body {
     font-family: 'Roboto';
-    height: calc(100% - 60px);
     padding: 0;
     margin: 1cm;
     margin-bottom: 0.1cm;
-    overflow-y: hidden;
   }
 `
 
