@@ -183,12 +183,12 @@ def pedigree(i_id, generations):
     user_id = session.get('user_id', None)
     nodes = {}
     edges = []
-    pnode = get_pedigree_vis_network(i_id, user_id, generations=generations, nodes=nodes, edges=edges)
+    build_pedigree(i_id, user_id, 1, generations, nodes, edges)
     result = {"nodes": list(nodes.values()), "edges": edges}
     return jsonify(result)
 
 
-def get_pedigree_vis_network(id, user_id, level=1, generations=5, nodes=None, edges=None):
+def build_pedigree(id, user_id, level, generations, nodes, edges):
     """Builds the pedigree dict tree for the individual"""
     individual = da.get_individual(id, user_id)
     if individual:
@@ -207,7 +207,7 @@ def get_pedigree_vis_network(id, user_id, level=1, generations=5, nodes=None, ed
             edge = {"id": edge_id, "from": id, "to": parent_id}
             if parent_id not in nodes:
                 if level <= generations:
-                    pedigree = get_pedigree_vis_network(parent_id, user_id, level=level + 1, generations=generations, nodes=nodes, edges=edges)
+                    build_pedigree(parent_id, user_id, level + 1, generations, nodes, edges)
                     edges.append(edge)
             else:
                 edges.append(edge)
@@ -216,9 +216,6 @@ def get_pedigree_vis_network(id, user_id, level=1, generations=5, nodes=None, ed
             add_parent(mother["id"])
         if father:
             add_parent(father["id"])
-
-        return pnode
-    return None
 
 
 @APP.route('/api/inbreeding/<int:i_id>')
