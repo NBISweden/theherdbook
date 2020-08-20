@@ -201,15 +201,7 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
         father = individual['father']
         mother = individual['mother']
         nodes[id] = pnode
-        if father:
-            edge_id = "%s-%s" % (id, father["id"])
-            edge = {"id": edge_id, "from": id, "to": father["id"]}
-            if father["id"] not in nodes:
-                if level <= level_max:
-                    pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1,  nodes=nodes, edges=edges)
-                    edges.append(edge)
-            else:
-                edges.append(edge)
+
         if mother:
             edge_id = "%s-%s" % (id, mother["id"])
             edge = {"id": edge_id, "from": id, "to": mother["id"]}
@@ -219,6 +211,16 @@ def get_pedigree_vis_network(id, user_id, level=1, level_max=5, nodes=None, edge
                     edges.append(edge)
             else:
                 edges.append(edge)
+        if father:
+            edge_id = "%s-%s" % (id, father["id"])
+            edge = {"id": edge_id, "from": id, "to": father["id"]}
+            if father["id"] not in nodes:
+                if level <= level_max:
+                    pedigree = get_pedigree_vis_network(father['id'], user_id, level=level+1,  nodes=nodes, edges=edges)
+                    edges.append(edge)
+            else:
+                edges.append(edge)
+
         return pnode
     return None
 
