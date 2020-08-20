@@ -36,12 +36,12 @@ def after_request(response):
     Callback that triggers after each request. Currently this is used to set
     CORS headers to allow a different origin when using the development server.
     """
-    
+
     if 'Origin' in request.headers:
         origin = request.headers['Origin']
     else:
         origin = '*'
-        
+
     response.headers.add('Access-Control-Allow-Origin', origin)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,UPDATE')
@@ -156,7 +156,7 @@ def genebank(g_id=None):
         return jsonify(da.get_genebank(g_id, user_id))
     return jsonify(genebanks=da.get_genebanks(user_id))
 
-@APP.route('/api/herd/<int:h_id>')
+@APP.route('/api/herd/<h_id>')
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.

@@ -125,10 +125,12 @@ def get_herd(herd_id, user_uuid=None):
     if user is None:
         return None
     try:
-        data = Herd.get(herd_id).filtered_dict(user)
+        # herd_id is formatted as 'G<num>', and we only compare the number
+        herd = Herd.select().where(Herd.herd == herd_id[1:]).get()
+        data = herd.filtered_dict(user)
         if data['genebank'] not in user.accessible_genebanks:
             return None
-        query = Individual().select().where(Individual.herd == herd_id)
+        query = Individual().select().where(Individual.herd == herd)
         data['individuals'] = [i.short_info() for i in query.execute()]
         return data
     except DoesNotExist:

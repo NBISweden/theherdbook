@@ -25,7 +25,7 @@ const useStyles = makeStyles({
 /**
  * Provides herd management forms for setting herd metadata.
  */
-export function HerdForm(props: {id: string | number | undefined}) {
+export function HerdForm(props: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as Herd | undefined)
   const [loading, setLoading] = React.useState(true);
   const classes = useStyles();
@@ -74,25 +74,25 @@ export function HerdForm(props: {id: string | number | undefined}) {
   }
 
   return <>
-    {loading && <h2>Loading...</h2> ||  herd &&
+    {loading && <h2>Loading...</h2> || 
       <>
-        <h1>{herd.name || `Besättning ${herd.id}`}</h1>
+        <h1>{herd?.name || `Besättning ${herd?.id}`}</h1>
         <form className={classes.form} noValidate autoComplete="off">
           {simpleFields.map((field, i) => {
             return <TextField
                     key={i}
                     label={field.title}
-                    defaultValue={herd[field.key] ?? undefined}
+                    defaultValue={herd ? herd[field.key] : undefined}
                     className={classes.simpleField}
                     onChange={e => setFormField(field.key, e.target.value)} />
             })
           }
           <TextField label='Latitude'
-                     defaultValue={herd['latitude'] ?? undefined}
+                     defaultValue={herd ? herd['latitude'] : undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('latitude', e.target.value)} />
           <TextField label='Longitude'
-                     defaultValue={herd['longitude'] ?? undefined}
+                     defaultValue={herd ? herd['longitude'] : undefined}
                      className={classes.simpleField}
                      onChange={e => setFormField('longitude', e.target.value)} />
         </form>
@@ -103,7 +103,7 @@ export function HerdForm(props: {id: string | number | undefined}) {
         </Button>
         <h2>Individer</h2>
         <ul>
-          {herd.individuals
+          {herd?.individuals
             ? herd.individuals.map((individual: Individual, i:number) => {
               return <Link key={i} to={`/individual/${individual.id}`}>
                 <li>{individual.name ?? individual.number}</li>
