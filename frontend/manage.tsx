@@ -78,7 +78,7 @@ export function Manage() {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
       setOptions(dataset.herds.map((h: Herd) => {
-        return {value: `G${h.herd}`, label: `G${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
+        return {value: h.herd, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
       }))
     }
   }
@@ -106,13 +106,13 @@ export function Manage() {
       if (targetUser) {
         targetOption = {value: targetUser.id, label: targetUser.email}
       }
-    } else if (path[0] == 'G') {
+    } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
       if (dataset) {
-        const targetHerd = dataset.herds.find((h: Herd) => `G${h.herd}` == path)
+        const targetHerd = dataset.herds.find((h: Herd) => h.herd == path)
         if (targetHerd) {
-          const label = `G${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
-          targetOption = {value: `G${targetHerd.herd}`, label: label}
+          const label = `${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
+          targetOption = {value: targetHerd.herd, label: label}
         }
       }
     }

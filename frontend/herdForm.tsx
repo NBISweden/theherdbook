@@ -42,7 +42,7 @@ const useStyles = makeStyles({
 const defaultValues: Herd = {
   id: -1,
   genebank: -1,
-  herd: -1,
+  herd: '',
   herd_name: '',
   has_details: false,
   is_active: false,
@@ -129,7 +129,7 @@ export function HerdForm({id}: {id: string | undefined}) {
         if (status == 'updated') {
           const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
           if (genebank) {
-            let toUpdate = genebank.herds.find((h: Herd) => `G${h.herd}` == id)
+            let toUpdate = genebank.herds.find((h: Herd) => h.herd == id)
             if (toUpdate) {
               toUpdate.herd_name = postData.herd_name
               setGenebanks(Object.assign([], genebanks))
@@ -143,7 +143,7 @@ export function HerdForm({id}: {id: string | undefined}) {
   return <>
     {loading && <h2>Loading...</h2> ||
       <>
-        <h1>{herd ? `Besättning G${herd.herd}` : `Ny Besättning`}</h1>
+        <h1>{herd ? `Besättning ${herd.herd}` : `Ny Besättning`}</h1>
 
         <form className={classes.form}>
           <div className={classes.formCard}>
