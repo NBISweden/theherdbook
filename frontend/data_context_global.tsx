@@ -36,7 +36,7 @@ export interface Individual {
 export interface Herd {
     id: number
     genebank: number
-    herd: number
+    herd: string
     herd_name: string | null
     has_details: boolean
     is_active: boolean | null

@@ -105,7 +105,9 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     post('/api/manage/role', operation).then(
       data => {
         switch (data.status) {
-          case "updated": loadUser(id)
+          case "updated": if (id) {
+                            loadUser(+id)
+                          }
                           loadData(["users"])
                           console.debug("updated successfully");
                           break; // updated user

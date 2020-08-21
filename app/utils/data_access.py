@@ -140,7 +140,7 @@ def get_herd(herd_id, user_uuid=None):
     try:
         with DATABASE.atomic():
             # herd_id is formatted as 'G<num>', and we only compare the number
-            herd = Herd.select().where(Herd.herd == herd_id[1:]).get()
+            herd = Herd.select().where(Herd.herd == herd_id).get()
             data = herd.filtered_dict(user)
             if data["genebank"] not in user.accessible_genebanks:
                 return None
