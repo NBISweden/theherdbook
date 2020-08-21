@@ -72,12 +72,14 @@ export interface Genebank {
 export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
+    setGenebanks(data: Genebank[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
 }
 
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
+  setGenebanks() {},
   async loadData() {return false},
 }
 
