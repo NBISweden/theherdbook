@@ -60,6 +60,7 @@ export function Individual({id}: {id: string}) {
                   : '-'
                 }
               </dd>
+            <dt>Inavelskoefficient</dt> <dd>{individual.inbreeding}%</dd>
           </dl>
         </>
       }
