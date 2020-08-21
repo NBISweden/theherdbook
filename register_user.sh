@@ -29,6 +29,6 @@ else
     sleep 10
 fi
 
-docker-compose exec -T main python3 -c "from utils.data_access import register_user; register_user('${user}', '${pass}')"
+docker-compose exec -T main python3 -c "from utils.data_access import register_user; register_user('${user}', '${pass}', privileges=[{'level': 'admin'}])"
 
 echo Registered user
