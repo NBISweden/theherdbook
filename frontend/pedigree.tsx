@@ -14,7 +14,7 @@ import "vis-network/styles/vis-network.css"
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
-export function PedigreeVisNetwork({ id, generations }: { id: string }) {
+export function Pedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
@@ -33,15 +33,19 @@ export function PedigreeVisNetwork({ id, generations }: { id: string }) {
   class PedigreeNetwork extends Component {
 
     options = {
-      width: Math.round(window.innerWidth * 0.85) + 'px',
-      height: Math.round(window.innerHeight * 0.85) + 'px',
+      width: Math.round(window.innerWidth * 0.90) + 'px',
+      height: Math.round(window.innerHeight * 0.80) + 'px',
       layout: {
         hierarchical: {
           enabled: true,
           direction: "DU",
           sortMethod: 'directed',
           //shakeTowards: "roots",
-          levelSeparation: 150
+          levelSeparation: 150,
+          parentCentralization:true,
+          edgeMinimization: true,
+          blockShifting: true,
+          nodeSpacing: 100
         }
       },
       edges: {
@@ -53,7 +57,8 @@ export function PedigreeVisNetwork({ id, generations }: { id: string }) {
         navigationButtons: true,
         keyboard: true
       },
-      physics: {
+      physics: false,
+      /* physics: {
         hierarchicalRepulsion: {
           centralGravity: 0,
           avoidOverlap: 1,
@@ -62,7 +67,7 @@ export function PedigreeVisNetwork({ id, generations }: { id: string }) {
 
         minVelocity: 0.75,
         solver: "hierarchicalRepulsion"
-      }
+      } */
     }
 
     constructor() {
@@ -93,11 +98,11 @@ export function PedigreeVisNetwork({ id, generations }: { id: string }) {
   }
 
   return <>
-    {individual && <>
+    {individual && pedigree && <>
       <table width="100%">
         <tbody>
           <tr>
-            <td width="20%" style={{ verticalAlign: "top" }}>
+            <td width="10%" style={{ verticalAlign: "top" }}>
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
@@ -138,7 +143,7 @@ export function PedigreeVisNetwork({ id, generations }: { id: string }) {
                 <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
               </dl>
             </td>
-            <td width="80%" >
+            <td width="90%" >
               <PedigreeNetwork />
             </td>
           </tr>

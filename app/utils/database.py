@@ -5,6 +5,7 @@ Database handler for 'the herdbook'.
 
 import json
 import logging
+from flask_login import UserMixin
 
 from peewee import (PostgresqlDatabase,
                     SqliteDatabase,
@@ -422,7 +423,7 @@ class HerdTracking(BaseModel):
         table_name = "herd_tracking"
 
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     """
     Table keeping track of system users.
     """
@@ -591,7 +592,7 @@ class User(BaseModel):
                 'validated': self.validated if self.validated else False,
                 'is_admin': self.is_admin,
                 'is_manager': self.is_manager,
-                'is_owner': self.is_owner,
+                'is_owner': self.is_owner
                 }
 
     def get_genebanks(self):

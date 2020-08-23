@@ -9,17 +9,23 @@ database.
 import sys
 import uuid
 import time
+import json
 from flask import (
     Flask,
     jsonify,
     request,
     session,
+    redirect,
+    url_for
 )
-
+from werkzeug.urls import url_parse
 import utils.database as db
 import utils.data_access as da
 import utils.inbreeding as ibc
 import logging
+from flask_caching import Cache
+from flask_login import login_required, login_user, logout_user, current_user, LoginManager
+
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -27,9 +33,18 @@ APP.secret_key = uuid.uuid4().hex
 APP.config.update(
 #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Strict'
+    SESSION_COOKIE_SAMESITE='Strict',
+    CACHE_TYPE = "simple",  # Flask-Caching related configs
+    CACHE_DEFAULT_TIMEOUT = 300
 )
+
 APP.logger.setLevel(logging.INFO)
+
+cache = Cache(APP)
+login = LoginManager(APP)
+login.login_view = 'login'
+
+
 
 @APP.after_request
 def after_request(response):
@@ -50,6 +65,12 @@ def after_request(response):
 
     return response
 
+
+@login.user_loader
+def load_user(id):
+    user = da.fetch_user_info(session.get('user_id', None))
+    return user
+
 @APP.route('/api/user')
 def get_user():
     """
@@ -58,6 +79,7 @@ def get_user():
     """
     user = da.fetch_user_info(session.get('user_id', None))
     return jsonify(user.frontend_data() if user else None)
+
 
 @APP.route('/api/manage/users')
 def get_users():
@@ -68,6 +90,7 @@ def get_users():
     """
     users = da.get_users(session.get('user_id', None))
     return jsonify(users=users)
+
 
 @APP.route('/api/manage/user/<int:u_id>', methods=['GET', 'UPDATE', 'POST'])
 def manage_user(u_id):
@@ -84,6 +107,7 @@ def manage_user(u_id):
         form = request.json
         return jsonify(da.add_user(form, session.get('user_id', None)))
     return jsonify(status=status)
+
 
 @APP.route('/api/manage/role', methods=['POST'])
 def manage_roles():
@@ -104,6 +128,7 @@ def manage_roles():
     status = da.update_role(form, session.get('user_id', None))
     return jsonify(status=status)
 
+
 @APP.route('/api/manage/herd', methods=['POST', 'UPDATE'])
 def manage_herd():
     """
@@ -118,6 +143,7 @@ def manage_herd():
         status = da.update_herd(form, session.get('user_id', None))
     return jsonify(status=status)
 
+
 @APP.route('/api/login', methods=['POST'])
 def login():
     """
@@ -127,15 +153,17 @@ def login():
 
         {'username': '<user>', 'password': '<pass>'}
     """
-
+    if current_user.is_authenticated:
+        return get_user()
     form = request.json
     # Authenticate the user and return a user object
     user = da.authenticate_user(form.get('username'), form.get('password'))
     if user:
         session['user_id'] = user.uuid
         session.modified = True
-
+        login_user(user)
     return get_user()
+
 
 @APP.route('/api/logout')
 def logout():
@@ -143,7 +171,9 @@ def logout():
     Logs out the current user from the system and redirects back to main.
     """
     session.pop('user_id', None)
+    logout_user()
     return get_user()
+
 
 @APP.route('/api/genebanks')
 @APP.route('/api/genebank/<int:g_id>')
@@ -156,6 +186,7 @@ def genebank(g_id=None):
     if g_id:
         return jsonify(da.get_genebank(g_id, user_id))
     return jsonify(genebanks=da.get_genebanks(user_id))
+
 
 @APP.route('/api/herd/<int:h_id>')
 def herd(h_id):
@@ -174,6 +205,43 @@ def individual(i_id):
     user_id = session.get('user_id', None)
     return jsonify(da.get_individual(i_id, user_id))
 
+@login_required
+@cache.cached(timeout=36000)
+@APP.route('/api/genebank_pedigree/<int:id>')
+def genebank_pedigree(id):
+    """
+    Returns the pedigree information for the genebank_id provided.
+    """
+    APP.logger.info("getting genebank pedigree...")
+    build_genebank_pedigree(id)
+    pedigree = get_genebank_pedigree(id)
+    return jsonify(pedigree)
+
+
+
+def build_genebank_pedigree(id):
+
+    user_id = session.get('user_id')
+    leafs = da.get_leafs(id, user_id)
+    APP.logger.info(len(leafs))
+    nodes = {}
+    edges = []
+    if leafs:
+        for ind in leafs:
+            build_pedigree(ind, user_id, 1, 5, nodes, edges)
+            pedigree = {"nodes": list(nodes.values()), "edges": edges}
+        with open('pedigree-%s.json'%id, 'w') as outfile:
+            json.dump(pedigree, outfile)
+
+
+def get_genebank_pedigree(id):
+    with open('pedigree-%s.json'%id) as json_file:
+        pedigree = json.load(json_file)
+        return pedigree
+
+
+@login_required
+@cache.cached(timeout=36000)
 @APP.route('/api/pedigree/<int:i_id>', defaults={"generations": 5})
 @APP.route('/api/pedigree/<int:i_id>/<int:generations>')
 def pedigree(i_id, generations):
@@ -183,39 +251,46 @@ def pedigree(i_id, generations):
     user_id = session.get('user_id', None)
     nodes = {}
     edges = []
-    build_pedigree(i_id, user_id, 1, generations, nodes, edges)
-    result = {"nodes": list(nodes.values()), "edges": edges}
+    result = None
+    ind = da.get_individual(i_id, user_id)
+    if ind:
+        build_pedigree(ind, user_id, 1, generations, nodes, edges)
+        result = {"nodes": list(nodes.values()), "edges": edges}
+        APP.logger.info(result)
     return jsonify(result)
 
 
-def build_pedigree(id, user_id, level, generations, nodes, edges):
+def build_pedigree(ind, user_id, level, generations, nodes, edges):
     """Builds the pedigree dict tree for the individual"""
-    individual = da.get_individual(id, user_id)
-    if individual:
-        label = "%s\n%s" % (individual["name"], individual["number"])
-        pnode = {"label": label, "id": id, "level": level, "x": len(edges)}
-        if individual["sex"] == 'male':
-            pnode["shape"] = "box"
-        else:
-            pnode["color"] = "pink"
-        father = individual['father']
-        mother = individual['mother']
-        nodes[id] = pnode
+    id = ind["id"]
+    pnode = {"id": id, "level": level, "x": len(edges)}
+    label = "%s\n%s" % (ind["name"], ind["number"])
+    pnode["label"] = label
+    if ind["sex"] == 'male':
+        pnode["shape"] = "box"
+    elif ind["sex"] == 'female':
+        pnode["color"] = "pink"
+    else:
+        pnode["color"] = "LightGray"
+    father = ind['father']
+    mother = ind['mother']
+    nodes[id] = pnode
 
-        def add_parent(parent_id):
-            edge_id = "%s-%s" % (id, parent_id)
-            edge = {"id": edge_id, "from": id, "to": parent_id}
-            if parent_id not in nodes:
-                if level <= generations:
-                    build_pedigree(parent_id, user_id, level + 1, generations, nodes, edges)
-                    edges.append(edge)
-            else:
+    def add_parent(parent_id):
+        edge_id = "%s-%s" % (id, parent_id)
+        edge = {"id": edge_id, "from": id, "to": parent_id}
+        if parent_id not in nodes:
+            if level <= generations:
+                ind = da.get_individual(parent_id, user_id)
+                build_pedigree(ind, user_id, level + 1, generations, nodes, edges)
                 edges.append(edge)
+        else:
+            edges.append(edge)
 
-        if mother:
-            add_parent(mother["id"])
-        if father:
-            add_parent(father["id"])
+    if mother:
+        add_parent(mother["id"])
+    if father:
+        add_parent(father["id"])
 
 
 @APP.route('/api/inbreeding/<int:i_id>')
