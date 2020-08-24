@@ -7,57 +7,63 @@ import json
 import logging
 from flask_login import UserMixin
 
-from peewee import (PostgresqlDatabase,
-                    SqliteDatabase,
-                    Proxy,
-                    Model,
-                    DoesNotExist,
-                    AutoField,
-                    BooleanField,
-                    CharField,
-                    DateField,
-                    ForeignKeyField,
-                    FloatField,
-                    IntegerField,
-                    OperationalError,
-                    TextField,
-                    UUIDField,
-                    )
+from peewee import (
+    PostgresqlDatabase,
+    SqliteDatabase,
+    Proxy,
+    Model,
+    DoesNotExist,
+    AutoField,
+    BooleanField,
+    CharField,
+    DateField,
+    ForeignKeyField,
+    FloatField,
+    IntegerField,
+    OperationalError,
+    TextField,
+    UUIDField,
+)
 
 DB_PROXY = Proxy()
 DATABASE = None
+
 
 def set_test_database(name):
     """
     This function sets the database to a named sqlite3 database for testing.
     """
-    global DATABASE #pylint: disable=global-statement
+    global DATABASE  # pylint: disable=global-statement
     DATABASE = SqliteDatabase(name)
 
     DB_PROXY.initialize(DATABASE)
+
 
 def set_database(name, host=None, port=None, user=None, password=None):
     """
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
-    global DATABASE #pylint: disable=global-statement
-    DATABASE = PostgresqlDatabase(name,
-                                  host=host,
-                                  port=port,
-                                  user=user,
-                                  password=password)
+    global DATABASE  # pylint: disable=global-statement
+    DATABASE = PostgresqlDatabase(
+        name, host=host, port=port, user=user, password=password
+    )
     DB_PROXY.initialize(DATABASE)
+
 
 try:
     import utils.settings as settings
-    set_database(settings.postgres.name,
-                 settings.postgres.host,
-                 settings.postgres.port,
-                 settings.postgres.user,
-                 settings.postgres.password)
+
+    set_database(
+        settings.postgres.name,
+        settings.postgres.host,
+        settings.postgres.port,
+        settings.postgres.user,
+        settings.postgres.password,
+    )
 except ModuleNotFoundError:
     logging.warning("No settings file found. Database must be set manually")
+
 
 def connect():
     """
@@ -69,12 +75,14 @@ def connect():
         except OperationalError as exception:
             logging.error(exception)
 
+
 def disconnect():
     """
     Disconnects from the database if it isn't already disconnected,
     """
     if not DATABASE.is_closed():
         DATABASE.close()
+
 
 def is_connected():
     """
@@ -96,10 +104,10 @@ class BaseModel(Model):
         """
         Returns the objects key/value pair as a dictionary.
         """
-        data = self.__dict__['__data__'].copy()
+        data = self.__dict__["__data__"].copy()
         for key, value in data.items():
-            if value and key.endswith('_date'):
-                data[key] = value.strftime('%Y-%m-%d')
+            if value and key.endswith("_date"):
+                data[key] = value.strftime("%Y-%m-%d")
 
         return data
 
@@ -107,6 +115,7 @@ class BaseModel(Model):
         """
         The Meta class is read automatically for Model information.
         """
+
         database = DB_PROXY
 
 
@@ -117,6 +126,7 @@ class Genebank(BaseModel):
     This table keep tracks of the names of genebanks.
     A genebank is comprised of several herds of animals.
     """
+
     id = AutoField(primary_key=True, column_name="genebank_id")
     name = CharField(100, unique=True)
 
@@ -126,12 +136,15 @@ class Genebank(BaseModel):
         including the `Herd.short_info()` data.
         """
 
-        return {'id': self.id,
-                'name': self.name,
-                'herds': [h.short_info() for h in self.herd_set
-                          if h.is_active
-                          or h.is_active is None]
-                }
+        return {
+            "id": self.id,
+            "name": self.name,
+            "herds": [
+                h.short_info()
+                for h in self.herd_set
+                if h.is_active or h.is_active is None
+            ],
+        }
 
     def get_herds(self, user):
         """
@@ -162,9 +175,10 @@ class Herd(BaseModel):
     *_privacy fields are enums with the values 'private', 'authenticated', and
     'public'.
     """
+
     id = AutoField(primary_key=True, column_name="herd_id")
     genebank = ForeignKeyField(Genebank)
-    herd = IntegerField()
+    herd = CharField(10)
     herd_name = TextField(null=True)
     is_active = BooleanField(null=True)
     start_date = DateField(null=True)
@@ -191,45 +205,45 @@ class Herd(BaseModel):
         """
         Returns the `id`, `herd`, `genebank`, and `herd_name` fields as a dict.
         """
-        return {'id': self.id,
-                'herd': self.herd,
-                'genebank': self.genebank.id,
-                'herd_name': self.herd_name,
-                }
+        return {
+            "id": self.id,
+            "herd": self.herd,
+            "genebank": self.genebank.id,
+            "herd_name": self.herd_name,
+        }
 
     def filtered_dict(self, user=None):
         """
         Returns the model data filtered by the access level of the given `user`.
         """
 
-        access_level = 'public'
+        access_level = "public"
         if user and user.is_admin:
-            access_level = 'private'
+            access_level = "private"
         elif user:
             for role in user.privileges:
-                if role['level'] in ['specialist', 'manager']:
-                    if role['genebank'] == self.genebank.id:
-                        access_level = 'private'
+                if role["level"] in ["specialist", "manager"]:
+                    if role["genebank"] == self.genebank.id:
+                        access_level = "private"
                         break
-                elif role['level'] == 'owner':
-                    if role['herd'] == self.id:
-                        access_level = 'private'
+                elif role["level"] == "owner":
+                    if role["herd"] == self.id:
+                        access_level = "private"
                         break
-                    access_level = 'authenticated'
+                    access_level = "authenticated"
 
         data = self.as_dict()
 
-        del data['email_verified']
+        del data["email_verified"]
 
         return remove_fields_by_privacy(data, access_level)
 
-    class Meta:  #pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods
         """
         Add a unique index to herd+genebank
         """
-        indexes = (
-            (('herd', 'genebank'), True),
-        )
+
+        indexes = ((("herd", "genebank"), True),)
 
 
 def remove_fields_by_privacy(data, access_level):
@@ -269,21 +283,21 @@ def remove_fields_by_privacy(data, access_level):
 
     data = {**data}
 
-    levels = ['public', 'authenticated', 'private']
+    levels = ["public", "authenticated", "private"]
     # prune data according to access level
-    for field in [f for f in data.keys() if f.endswith('_privacy')]:
+    for field in [f for f in data.keys() if f.endswith("_privacy")]:
         # remove values if access_level is less than required
-        field_level = data[field] or 'private'
+        field_level = data[field] or "private"
         if levels.index(access_level) < levels.index(field_level):
-            if field == 'coordinates_privacy':
-                del data['latitude']
-                del data['longitude']
+            if field == "coordinates_privacy":
+                del data["latitude"]
+                del data["longitude"]
             else:
-                target_field = field[:-len('_privacy')]
+                target_field = field[: -len("_privacy")]
                 del data[target_field]
         # remove the access level value if the user doesn't have private
         # access
-        if access_level != 'private':
+        if access_level != "private":
             del data[field]
 
     return data
@@ -295,6 +309,7 @@ class Colour(BaseModel):
 
     This table keep tracks of the available color types of animals.
     """
+
     id = AutoField(primary_key=True, column_name="colour_id")
     name = CharField(50)
     comment = CharField(50, null=True)
@@ -306,6 +321,7 @@ class Individual(BaseModel):
 
     The sex is an enum with the values 'male', 'female', and 'eunuch'.
     """
+
     id = AutoField(primary_key=True, column_name="individual_id")
     herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
@@ -313,8 +329,8 @@ class Individual(BaseModel):
     number = CharField(20)
     sex = CharField(15, null=True)
     birth_date = DateField(null=True)
-    mother = ForeignKeyField('self', null=True)
-    father = ForeignKeyField('self', null=True)
+    mother = ForeignKeyField("self", null=True)
+    father = ForeignKeyField("self", null=True)
     colour = ForeignKeyField(Colour, null=True)
     colour_note = CharField(100, null=True)
     death_date = DateField(null=True)
@@ -328,23 +344,29 @@ class Individual(BaseModel):
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
-        data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
-            if self.mother else None
-        data['father'] = {'id': self.father.id, 'name': self.father.name} \
-            if self.father else None
-        data['colour'] = self.colour.name if self.colour else None
-        data['weights'] = [{'weight':w.weight, 'date':w.weight_date}
-                           for w in self.weight_set] #pylint: disable=no-member
-        data['bodyfat'] = [{'bodyfat':b.bodyfat, 'date':b.bodyfat_date}
-                           for b in self.bodyfat_set] #pylint: disable=no-member
-        data['herd_tracking'] = [
+        data["herd"] = {"id": self.herd.id, "name": self.herd.herd_name}
+        data["mother"] = (
+            {"id": self.mother.id, "name": self.mother.name} if self.mother else None
+        )
+        data["father"] = (
+            {"id": self.father.id, "name": self.father.name} if self.father else None
+        )
+        data["colour"] = self.colour.name if self.colour else None
+        data["weights"] = [
+            {"weight": w.weight, "date": w.weight_date} for w in self.weight_set
+        ]  # pylint: disable=no-member
+        data["bodyfat"] = [
+            {"bodyfat": b.bodyfat, "date": b.bodyfat_date} for b in self.bodyfat_set
+        ]  # pylint: disable=no-member
+        data["herd_tracking"] = [
             {
-                'herd_id':h.herd.id,
-                'herd':h.herd.herd_name,
-                'date':h.herd_tracking_date.strftime('%Y-%m-%d') if h.herd_tracking_date else None
+                "herd_id": h.herd.id,
+                "herd": h.herd.herd_name,
+                "date": h.herd_tracking_date.strftime("%Y-%m-%d")
+                if h.herd_tracking_date
+                else None,
             }
-            for h in self.herdtracking_set #pylint: disable=no-member
+            for h in self.herdtracking_set  # pylint: disable=no-member
         ]
 
         return data
@@ -371,21 +393,21 @@ class Individual(BaseModel):
             - id
             - name
         """
-        return {'id': self.id, 'name': self.name, 'number': self.number}
+        return {"id": self.id, "name": self.name, "number": self.number}
 
-    class Meta:  #pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods
         """
         Add a unique index to number+genebank
         """
-        indexes = (
-            (('number', 'herd'), True),
-        )
+
+        indexes = ((("number", "herd"), True),)
 
 
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
     """
+
     id = AutoField(primary_key=True, column_name="weight_id")
     individual = ForeignKeyField(Individual)
     weight = FloatField()
@@ -397,6 +419,7 @@ class Bodyfat(BaseModel):
     Table for keeping track of animal body fat types.
     The available types are: 'low', 'normal', and 'high'
     """
+
     id = AutoField(primary_key=True, column_name="bodyfat_id")
     individual = ForeignKeyField(Individual)
     bodyfat = CharField(6, null=True)
@@ -409,17 +432,19 @@ class HerdTracking(BaseModel):
     individual belonging to a particular herd.  It connects the two
     tables individual and herd in a N:M fashion.
     """
+
     id = AutoField(primary_key=True, column_name="herd_tracking_id")
     herd = ForeignKeyField(Herd)
     individual = ForeignKeyField(Individual)
     herd_tracking_date = DateField()
 
-    class Meta: # pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
         here to set the table name, as the table name is in snake case, which
         didn't fit the camel case class names.
         """
+
         table_name = "herd_tracking"
 
 
@@ -427,12 +452,13 @@ class User(BaseModel, UserMixin):
     """
     Table keeping track of system users.
     """
+
     id = AutoField(primary_key=True, column_name="user_id")
     email = TextField()
     uuid = UUIDField()
     password_hash = CharField(128)
     validated = BooleanField(default=False)
-    _privileges = TextField(column_name="privileges", default='[]')
+    _privileges = TextField(column_name="privileges", default="[]")
 
     @property
     def privileges(self):
@@ -479,14 +505,14 @@ class User(BaseModel, UserMixin):
         """
 
         privs = self.privileges
-        if level not in ['admin', 'specialist', 'manager', 'owner']:
-            logging.error('Unknown role level %s', level)
+        if level not in ["admin", "specialist", "manager", "owner"]:
+            logging.error("Unknown role level %s", level)
             return
-        role = {'level': level}
-        if level in ['specialist', 'manager']:
-            role['genebank'] = target_id
-        elif level == 'owner':
-            role['herd'] = target_id
+        role = {"level": level}
+        if level in ["specialist", "manager"]:
+            role["genebank"] = target_id
+        elif level == "owner":
+            role["herd"] = target_id
         privs += [role]
         self.privileges = privs
         self.save()
@@ -503,12 +529,12 @@ class User(BaseModel, UserMixin):
             - level: owner, herd: target_id
         """
         for role in self.privileges:
-            if role['level'] == level:
-                if level == 'admin':
+            if role["level"] == level:
+                if level == "admin":
                     return True
-                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                if level in ["specialist", "manager"] and target_id == role["genebank"]:
                     return True
-                if level == 'owner' and target_id == role['herd']:
+                if level == "owner" and target_id == role["herd"]:
                     return True
         return False
 
@@ -525,12 +551,12 @@ class User(BaseModel, UserMixin):
         """
         new_privs = []
         for role in self.privileges:
-            if role['level'] == level:
-                if level == 'admin':
+            if role["level"] == level:
+                if level == "admin":
                     continue
-                if level in ['specialist', 'manager'] and target_id == role['genebank']:
+                if level in ["specialist", "manager"] and target_id == role["genebank"]:
                     continue
-                if level == 'owner' and target_id == role['herd']:
+                if level == "owner" and target_id == role["herd"]:
                     continue
             new_privs += [role]
         self.privileges = new_privs
@@ -542,7 +568,7 @@ class User(BaseModel, UserMixin):
         Returns `True` if the admin permission is in the user privileges, false
         otherwise.
         """
-        return 'admin' in [p['level'] for p in self.privileges]
+        return "admin" in [p["level"] for p in self.privileges]
 
     @property
     def is_manager(self):
@@ -552,8 +578,8 @@ class User(BaseModel, UserMixin):
         """
         genebanks = []
         for role in self.privileges:
-            if role['level'] == 'manager':
-                genebanks += [role['genebank']]
+            if role["level"] == "manager":
+                genebanks += [role["genebank"]]
         return genebanks or None
 
     @property
@@ -564,8 +590,8 @@ class User(BaseModel, UserMixin):
         """
         herds = []
         for role in self.privileges:
-            if role['level'] == 'owner':
-                herds += [role['herd']]
+            if role["level"] == "owner":
+                herds += [role["herd"]]
         return herds or None
 
     @property
@@ -577,10 +603,10 @@ class User(BaseModel, UserMixin):
             return [g.id for g in Genebank(database=DATABASE).select()]
         has_access = []
         for role in self.privileges:
-            if role['level'] in ['specialist', 'manager']:
-                has_access += [role['genebank']]
-            elif role['level'] == 'owner':
-                herd = Herd.get(role['herd'])
+            if role["level"] in ["specialist", "manager"]:
+                has_access += [role["genebank"]]
+            elif role["level"] == "owner":
+                herd = Herd.get(role["herd"])
                 has_access += [herd.genebank.id]
         return has_access
 
@@ -588,12 +614,15 @@ class User(BaseModel, UserMixin):
         """
         Returns the information that is needed in the frontend.
         """
-        return {'email': self.email,
-                'validated': self.validated if self.validated else False,
-                'is_admin': self.is_admin,
-                'is_manager': self.is_manager,
-                'is_owner': self.is_owner
-                }
+
+        return {
+            "email": self.email,
+            "validated": self.validated if self.validated else False,
+            "is_admin": self.is_admin,
+            "is_manager": self.is_manager,
+            "is_owner": self.is_owner
+        }
+
 
     def get_genebanks(self):
         """
@@ -605,7 +634,7 @@ class User(BaseModel, UserMixin):
             query = query.where(Genebank.id.in_(self.accessible_genebanks))
 
         # Using a list comprehension here will turn the iterator into a list
-        return [g for g in query.execute()] #pylint: disable=unnecessary-comprehension
+        return [g for g in query.execute()]  # pylint: disable=unnecessary-comprehension
 
     def get_genebank(self, genebank_id):
         """
@@ -624,15 +653,16 @@ class User(BaseModel, UserMixin):
         # you can view all the herds.
         herds = genebank.get_herds(user=self)
         genebank = genebank.as_dict()
-        genebank['herds'] = herds
+        genebank["herds"] = herds
         return genebank
 
-    class Meta: # pylint: disable=too-few-public-methods
+    class Meta:  # pylint: disable=too-few-public-methods
         """
         The Meta class is read automatically for Model information, and is used
         here to set the table name, as 'User' is a clearer system user name than
         the table name 'hbuser.
         """
+
         table_name = "hbuser"
 
 
@@ -640,16 +670,27 @@ class Authenticators(BaseModel):
     """
     Authentication information for a user.
     """
+
     id = AutoField(primary_key=True, column_name="auth_id")
     user = ForeignKeyField(User)
     auth = CharField(9)
     auth_data = TextField(null=True)
 
 
-MODELS = [Genebank, Herd, Colour, Individual, Weight, Bodyfat, HerdTracking,
-          User, Authenticators]
+MODELS = [
+    Genebank,
+    Herd,
+    Colour,
+    Individual,
+    Weight,
+    Bodyfat,
+    HerdTracking,
+    User,
+    Authenticators,
+]
 
-def insert_data(filename='default_data.json'):
+
+def insert_data(filename="default_data.json"):
     """
     Takes a json file, `filename`, and inserts the data into the database. If
     the data contains id values, the data will be updated if already in the
@@ -677,11 +718,7 @@ def insert_data(filename='default_data.json'):
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
-            logging.error(
-                "Unknown data table '%s' in file '%s'",
-                table,
-                filename
-            )
+            logging.error("Unknown data table '%s' in file '%s'", table, filename)
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
         logging.info("Inserting %s data from %s", model.__name__, filename)
@@ -690,20 +727,19 @@ def insert_data(filename='default_data.json'):
             model(DATABASE).get_or_create(**value)
     DATABASE.commit()
 
+
 def init():
     """
     Initializes all tables in the database, if they're not already available.
     """
     for model in MODELS:
         if not model.table_exists():
-            logging.info(
-                "Creating database table %s",
-                model.__name__
-            )
+            logging.info("Creating database table %s", model.__name__)
             model.create_table()
 
     logging.info("Inserting default data")
-    insert_data('default_data.json')
+    insert_data("default_data.json")
+
 
 def verify(try_init=True):
     """

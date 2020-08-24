@@ -19,6 +19,7 @@ from utils.database import (
     User,
 )
 
+
 def add_user(form, user_uuid=None):
     """
     if the user identified by `user_uuid` has admin or manager rights, the new
@@ -33,33 +34,36 @@ def add_user(form, user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user is None or not (user.is_admin or user.is_manager):
-        return {'status': "forbidden"}
+        return {"status": "forbidden"}
 
-    email = form.get('email', None)
-    password = form.get('password', None)
-    validated = form.get('validated', False)
+    email = form.get("email", None)
+    password = form.get("password", None)
+    validated = form.get("validated", False)
     if not email or not password:
-        return {'status': "missing data"}
+        return {"status": "missing data"}
 
     if User.select().where(User.email == email).first():
-        return {'status': "already exists"}
+        return {"status": "already exists"}
 
     user = register_user(email, password, validated)
-    return {'id': user.id, 'status': "success"}
+    return {"id": user.id, "status": "success"}
 
-def register_user(email, password, validated=False):
+
+def register_user(email, password, validated=False, privileges=[]):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
     """
-    user = User(email=email,
-                uuid=uuid.uuid4().hex,
-                password_hash=generate_password_hash(password),
-                validated=validated,
-                privileges=[]
-                )
+    user = User(
+        email=email,
+        uuid=uuid.uuid4().hex,
+        password_hash=generate_password_hash(password),
+        validated=validated,
+        privileges=privileges,
+    )
     user.save()
     return user
+
 
 def authenticate_user(email, password):
     """
@@ -78,6 +82,7 @@ def authenticate_user(email, password):
     logging.info("Failed login attempt for %s", email)
     return None
 
+
 def fetch_user_info(user_id):
     """
     Fetches user information for a given user id.
@@ -86,6 +91,7 @@ def fetch_user_info(user_id):
         return User.get(User.uuid == user_id)
     except DoesNotExist:
         return None
+
 
 def get_genebank(genebank_id, user_uuid=None):
     """
@@ -97,6 +103,7 @@ def get_genebank(genebank_id, user_uuid=None):
         return None
 
     return user.get_genebank(genebank_id)
+
 
 def get_genebanks(user_uuid=None):
     """
@@ -110,10 +117,11 @@ def get_genebanks(user_uuid=None):
     data = []
     for genebank in user.get_genebanks():
         genebank_data = genebank.short_info()
-        genebank_data['individuals'] = get_individuals(genebank.id, user_uuid)
+        genebank_data["individuals"] = get_individuals(genebank.id, user_uuid)
         data += [genebank_data]
 
     return data
+
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -126,13 +134,14 @@ def get_herd(herd_id, user_uuid=None):
         return None
     try:
         data = Herd.get(herd_id).filtered_dict(user)
-        if data['genebank'] not in user.accessible_genebanks:
+        if data["genebank"] not in user.accessible_genebanks:
             return None
         query = Individual().select().where(Individual.herd == herd_id)
-        data['individuals'] = [i.short_info() for i in query.execute()]
+        data["individuals"] = [i.short_info() for i in query.execute()]
         return data
     except DoesNotExist:
         return None
+
 
 def add_herd(form, user_uuid):
     """
@@ -141,6 +150,7 @@ def add_herd(form, user_uuid):
     """
     logging.warning("add_herd is not yet implemented")
     return "failed"
+
 
 def update_herd(form, user_uuid):
     """
@@ -151,13 +161,15 @@ def update_herd(form, user_uuid):
     if user is None:
         return None
     try:
-        herd = Herd.get(form['id'])
+        herd = Herd.get(form["id"])
         # check permission to update herd
-        permission = user.is_admin \
-                     or user.has_role('owner', herd.id) \
-                     or (user.is_manager and herd.genebank in user.is_manager)
+        permission = (
+            user.is_admin
+            or user.has_role("owner", herd.id)
+            or (user.is_manager and herd.genebank in user.is_manager)
+        )
         if not permission:
-            return "failed" # no permission to change
+            return "failed"  # no permission to change
 
         for key, value in form.items():
             if hasattr(herd, key):
@@ -165,7 +177,8 @@ def update_herd(form, user_uuid):
         herd.save()
         return "updated"
     except DoesNotExist:
-        return "failed" # unknown herd
+        return "failed"  # unknown herd
+
 
 def get_individual(individual_id, user_uuid=None):
     """
@@ -183,6 +196,7 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
+
 def get_users(user_uuid=None):
     """
     Returns all users that the logged in user has access to. This is all users
@@ -199,9 +213,10 @@ def get_users(user_uuid=None):
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
-        return [{'email': u.email, 'id': u.id} for u in users]
+        return [{"email": u.email, "id": u.id} for u in users]
     except DoesNotExist:
         return None
+
 
 def get_user(user_id, user_uuid=None):
     """
@@ -219,10 +234,13 @@ def get_user(user_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-    return {'id': target.id,
-            'email': target.email,
-            'validated': target.validated,
-            'privileges': target.privileges}
+    return {
+        "id": target.id,
+        "email": target.email,
+        "validated": target.validated,
+        "privileges": target.privileges,
+    }
+
 
 def update_user(form, user_uuid=None):
     """
@@ -236,14 +254,16 @@ def update_user(form, user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user is None:
-        return "failed" # not logged in
+        return "failed"  # not logged in
 
     logging.warning("a")
     # Check data
-    if not isinstance(form, dict) \
-       or not form.get('id', None) \
-       or not form.get('email', None) \
-       or form.get('validated') not in [True, False]:
+    if (
+        not isinstance(form, dict)
+        or not form.get("id", None)
+        or not form.get("email", None)
+        or form.get("validated") not in [True, False]
+    ):
         return "failed"
 
     # Check permissions
@@ -252,13 +272,13 @@ def update_user(form, user_uuid=None):
 
     # check target user
     try:
-        target_user = User.get(form['id'])
+        target_user = User.get(form["id"])
     except DoesNotExist:
-        return "failed" # target user does not exist
+        return "failed"  # target user does not exist
 
     # update target user data if needed
     updated = False
-    for field in ['email', 'validated']:
+    for field in ["email", "validated"]:
         if getattr(target_user, field) != form[field]:
             setattr(target_user, field, form[field])
             updated = True
@@ -268,6 +288,7 @@ def update_user(form, user_uuid=None):
         return "updated"
 
     return "unchanged"
+
 
 def update_role(operation, user_uuid=None):
     """
@@ -284,55 +305,65 @@ def update_role(operation, user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user is None:
-        return "failed" # not logged in
+        return "failed"  # not logged in
 
     # Check data
     valid = True
-    if not isinstance(operation, dict) \
-       or operation.get('action', {}) not in ['add', 'remove'] \
-       or (not isinstance(operation.get('user', ""), int) \
-           and not operation.get('user', "").isdigit()):
+    if (
+        not isinstance(operation, dict)
+        or operation.get("action", {}) not in ["add", "remove"]
+        or (
+            not isinstance(operation.get("user", ""), int)
+            and not operation.get("user", "").isdigit()
+        )
+    ):
         valid = False
-    elif operation.get('role', {}) not in ['owner', 'manager', 'specialist'] \
-       or (operation['role'] in ['manager', 'specialist'] and not operation.get('genebank')) \
-       or (operation['role'] in ['owner'] and not operation.get('herd')):
+    elif (
+        operation.get("role", {}) not in ["owner", "manager", "specialist"]
+        or (
+            operation["role"] in ["manager", "specialist"]
+            and not operation.get("genebank")
+        )
+        or (operation["role"] in ["owner"] and not operation.get("herd"))
+    ):
         valid = False
 
     # Check permissions
     permitted = True
     if user.is_manager:
-        genebank = operation.get('genebank', None)
+        genebank = operation.get("genebank", None)
         if genebank is None:
             try:
-                herd = Herd.get(operation['herd'])
-                genebank = herd.as_dict()['genebank']
+                herd = Herd.get(operation["herd"])
+                genebank = herd.as_dict()["genebank"]
             except DoesNotExist:
-                permitted = False # unknown herd
+                permitted = False  # unknown herd
         if genebank not in user.is_manager:
             permitted = False
     elif not user.is_admin:
         permitted = False
 
     if not valid or not permitted:
-        return "failed" # lacking permissions
+        return "failed"  # lacking permissions
 
     # check target user
     try:
-        target_user = User.get(int(operation['user']))
+        target_user = User.get(int(operation["user"]))
     except DoesNotExist:
-        return "failed" # target user does not exist
+        return "failed"  # target user does not exist
 
     # update roles if needed
-    target = 'herd' if operation['role'] == 'owner' else 'genebank'
-    has_role = target_user.has_role(operation['role'], operation[target])
+    target = "herd" if operation["role"] == "owner" else "genebank"
+    has_role = target_user.has_role(operation["role"], operation[target])
     updated = False
-    if has_role and operation['action'] == 'remove':
-        target_user.remove_role(operation['role'], operation[target])
+    if has_role and operation["action"] == "remove":
+        target_user.remove_role(operation["role"], operation[target])
         updated = True
-    elif not has_role and operation['action'] == 'add':
-        target_user.add_role(operation['role'], operation[target])
+    elif not has_role and operation["action"] == "add":
+        target_user.add_role(operation["role"], operation[target])
         updated = True
     return "updated" if updated else "unchanged"
+
 
 def get_individuals(genebank_id, user_uuid=None):
     """
@@ -341,7 +372,7 @@ def get_individuals(genebank_id, user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user is None:
-        return None # not logged in
+        return None  # not logged in
     try:
         # TODO: rewrite this in peewee
         query = """
@@ -360,25 +391,29 @@ def get_individuals(genebank_id, user_uuid=None):
         WHERE   h.genebank_id = %s AND
                 (h.is_active OR h.is_active IS NULL);"""
         cursor = DATABASE.execute_sql(query, (genebank_id,))
-        return [{
-            'id': i[0],
-            'name': i[1],
-            'certificate': i[2],
-            'number': i[3],
-            'sex': i[4],
-            'birth_date': i[5].strftime('%Y-%m-%d') if i[5] else None,
-            'death_date': i[6].strftime('%Y-%m-%d') if i[6] else None,
-            'death_note': i[7],
-            'litter': i[8],
-            'notes': i[9],
-            'color_note': i[10],
-            'father': {'id': i[11], 'name': i[12], 'number': i[13]},
-            'mother': {'id': i[14], 'name': i[15], 'number': i[16]},
-            'color': {'id': i[17], 'name': i[18]},
-            'herd': {'id': i[19], 'herd': i[20], 'herd_name': i[21]},
-        } for i in cursor.fetchall()]
+        return [
+            {
+                "id": i[0],
+                "name": i[1],
+                "certificate": i[2],
+                "number": i[3],
+                "sex": i[4],
+                "birth_date": i[5].strftime("%Y-%m-%d") if i[5] else None,
+                "death_date": i[6].strftime("%Y-%m-%d") if i[6] else None,
+                "death_note": i[7],
+                "litter": i[8],
+                "notes": i[9],
+                "color_note": i[10],
+                "father": {"id": i[11], "name": i[12], "number": i[13]},
+                "mother": {"id": i[14], "name": i[15], "number": i[16]},
+                "color": {"id": i[17], "name": i[18]},
+                "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
+            }
+            for i in cursor.fetchall()
+        ]
     except DoesNotExist:
         return []
+
 
 
 def get_leafs(genebank_id, user_uuid=None):
@@ -440,11 +475,15 @@ def get_all_individuals():
     try:
         individuals_dict = []
         for individual in Individual.select():
-            data = individual.__dict__['__data__']
+            data = individual.__dict__["__data__"]
             ind = dict()
-            ind["id"] = str(data['id'])
-            ind["father"] = str(data["father"]) if data["father"] else "0"
-            ind["mother"] = str(data["mother"]) if data["mother"] else "0"
+            ind["id"] = str(data["id"])
+            ind["father"] = (
+                str(data["father"]) if (data["father"] and data["mother"]) else "0"
+            )
+            ind["mother"] = (
+                str(data["mother"]) if (data["mother"] and data["father"]) else "0"
+            )
             ind["sex"] = "M" if data["sex"] == "male" else "F"
             ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
             individuals_dict.append(ind)
