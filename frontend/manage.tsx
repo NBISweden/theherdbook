@@ -63,9 +63,9 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const herdOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: u.email}});
-    herdOptions.push({value: 'new', label: 'New User'})
-    setOptions(herdOptions);
+    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: u.email}});
+    userOptions.push({value: 'new', label: 'New User'})
+    setOptions(userOptions);
   }
 
   /**
@@ -77,9 +77,11 @@ export function Manage() {
   const setHerdOptions = (name: string) => {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
-      setOptions(dataset.herds.map((h: Herd) => {
+      const herdOptions: any[] = dataset.herds.map((h: Herd) => {
         return {value: h.herd, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
-      }))
+      })
+      herdOptions.push({value: 'new', label: 'New Herd'})
+      setOptions(herdOptions)
     }
   }
 
@@ -140,6 +142,11 @@ export function Manage() {
       } else {
         setHerdOptions(path[2]);
       }
+    } else {
+      const defaultTopic = genebanks[0].name
+      setTopic(defaultTopic)
+      setGenebank(defaultTopic)
+      setHerdOptions(defaultTopic)
     }
     if (path[3]) {
       setTarget(path[3])

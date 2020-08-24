@@ -3,13 +3,14 @@
  * changing herd attributes in the database.
  */
 import React from 'react'
+import { useHistory } from "react-router-dom";
 import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Select from 'react-select';
 import { useDataContext } from './data_context'
 import { Herd, Individual, Genebank } from '~data_context_global';
 
-import { get, updateHerd } from './communication';
+import { get, updateHerd, createHerd } from './communication';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -78,6 +79,7 @@ export function HerdForm({id}: {id: string | undefined}) {
   const [postalcode, setPostalcode] = React.useState('000 00')
   const [postalcity, setPostalcity] = React.useState('')
   const [isNew, setNew] = React.useState(false)
+  const history = useHistory()
   const classes = useStyles();
 
   React.useEffect(() => {
@@ -101,7 +103,6 @@ export function HerdForm({id}: {id: string | undefined}) {
               setPostalcode(addressParts[1])
               setPostalcity(addressParts[2])
             }
-            console.debug("data", data)
             setHerd(data)
             setNew(false)
           }
@@ -116,6 +117,14 @@ export function HerdForm({id}: {id: string | undefined}) {
     herd && setHerd({...herd, [label]: value})
   }
 
+  const genebankOption = (genebankId: number) => {
+    const genebank = genebanks.find((g: Genebank) => g.id == herd.genebank)
+    if (genebank) {
+      return {value: genebank.id, label: genebank.name}
+    }
+    return null
+  }
+
   const submitForm = () => {
     if (herd == undefined) {
       return
@@ -124,20 +133,37 @@ export function HerdForm({id}: {id: string | undefined}) {
     delete postData["individuals"];
     postData["physical_address"] = `${postData["physical_address"]}|${postalcode}|${postalcity}`
 
-    updateHerd(postData).then(
-      status => {
-        if (status == 'updated') {
-          const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
-          if (genebank) {
-            let toUpdate = genebank.herds.find((h: Herd) => h.herd == id)
-            if (toUpdate) {
-              toUpdate.herd_name = postData.herd_name
+    if (isNew) {
+      createHerd(postData).then(
+        status => {
+          if (status == 'success') {
+            const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
+            if (genebank) {
+              genebank.herds.push(postData)
               setGenebanks(Object.assign([], genebanks))
+
+              // navigate to new herd to allow continued editing
+              history.push(`/manage/${genebank?.name}/${postData.herd}`)
             }
           }
         }
-      }
-    );
+      )
+    } else {
+      updateHerd(postData).then(
+        status => {
+          if (status == 'updated') {
+            const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
+            if (genebank) {
+              let toUpdate = genebank.herds.find((h: Herd) => h.herd == id)
+              if (toUpdate) {
+                toUpdate.herd_name = postData.herd_name
+                setGenebanks(Object.assign([], genebanks))
+              }
+            }
+          }
+        }
+      );
+    }
   }
 
   return <>
@@ -194,7 +220,7 @@ export function HerdForm({id}: {id: string | undefined}) {
               value={herd.herd_name}
               onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
               />
-            <FormControlLabel label="Aktiv" labelPlacement="start"
+            <FormControlLabel label="Aktiv" labelPlacement="end"
               control={<Checkbox color="primary" checked={herd.is_active == null ? false : !!herd.is_active} />}
               value={herd.is_active}
               onChange={(e: any) => {setFormField('is_active', e.target.checked)}}
@@ -204,10 +230,24 @@ export function HerdForm({id}: {id: string | undefined}) {
               onChange={(e: any) => {setFormField('start_date', e.target.value)}}
               />
 
+            <TextField label='Besättnings-ID' className={classes.simpleField}
+              disabled={!isNew}
+              value={herd.herd}
+              onChange={(e: any) => {setFormField('herd', e.target.value)}}
+              />
+
+            <Typography className={classes.subheading} color="textSecondary">
+              Genbank
+            </Typography>
+            <Select label='Genbank' isDisabled={!isNew}
+              value={genebankOption(herd.genebank)}
+              options={genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}})}
+              onChange={(e: any) => setFormField('genebank', e.value)}
+              />
+
             <Typography className={classes.subheading} color="textSecondary">
               Individer  {herd?.individuals ? `(${herd.individuals.length} st)` : ''}
             </Typography>
-
             <Select
                 options={herd?.individuals ? herd.individuals.map((i: Individual) =>
                           {return {value: i.number, label: `${i.number}${i.name ? `, ${i.name}` : ''}`}})
@@ -220,7 +260,7 @@ export function HerdForm({id}: {id: string | undefined}) {
         <Button variant="contained"
                 color="primary"
                 onClick={() => submitForm()}>
-          Spara
+          {isNew ? "Skapa" : "Spara"}
         </Button>
       </>
     }
