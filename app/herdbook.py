@@ -42,7 +42,7 @@ APP.logger.setLevel(logging.INFO)
 
 cache = Cache(APP)
 login = LoginManager(APP)
-login.login_view = 'login'
+login.login_view = '/login'
 
 
 
@@ -205,14 +205,14 @@ def individual(i_id):
     user_id = session.get('user_id', None)
     return jsonify(da.get_individual(i_id, user_id))
 
+@APP.route('/api/genebank_pedigree/<int:id>')
 @login_required
 @cache.cached(timeout=36000)
-@APP.route('/api/genebank_pedigree/<int:id>')
 def genebank_pedigree(id):
     """
     Returns the pedigree information for the genebank_id provided.
     """
-    APP.logger.info("getting genebank pedigree...")
+    APP.logger.info("getting genebank pedigree, user %s authenticated %s" % (current_user, current_user.is_authenticated))
     build_genebank_pedigree(id)
     pedigree = get_genebank_pedigree(id)
     return jsonify(pedigree)
@@ -220,6 +220,8 @@ def genebank_pedigree(id):
 
 
 def build_genebank_pedigree(id):
+    from datetime import datetime
+    init_time = datetime.now()
 
     user_id = session.get('user_id')
     leafs = da.get_leafs(id, user_id)
@@ -228,10 +230,13 @@ def build_genebank_pedigree(id):
     edges = []
     if leafs:
         for ind in leafs:
-            build_pedigree(ind, user_id, 1, 5, nodes, edges)
+            build_pedigree(ind, user_id, 1, 100, nodes, edges)
             pedigree = {"nodes": list(nodes.values()), "edges": edges}
         with open('pedigree-%s.json'%id, 'w') as outfile:
             json.dump(pedigree, outfile)
+    later_time = datetime.now()
+    difference = later_time - init_time
+    APP.logger.info("built genebank in %d seconds" % difference.total_seconds())
 
 
 def get_genebank_pedigree(id):
@@ -240,10 +245,10 @@ def get_genebank_pedigree(id):
         return pedigree
 
 
-@login_required
-@cache.cached(timeout=36000)
 @APP.route('/api/pedigree/<int:i_id>', defaults={"generations": 5})
 @APP.route('/api/pedigree/<int:i_id>/<int:generations>')
+@login_required
+@cache.cached(timeout=36000)
 def pedigree(i_id, generations):
     """
     Returns the pedigree information for the individual `i_id`.
