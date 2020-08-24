@@ -65,10 +65,37 @@ export async function update(url: string, content: any) {
 }
 
 
+/**
+ * Sends a request to update herd information with the information given in
+ * `herd`. The herd to update will be given by `herd.id`. Returns 'updated' on
+ * success.
+ *
+ * @param herd Herd information.
+ */
 export async function updateHerd(herd: Herd) {
   // replace empty strings with null values
   Object.keys(herd).forEach((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
   return await update('/api/manage/herd', herd).then(
+    data => {
+      return data.status;
+    },
+    error => {
+      console.error(error);
+      return "error"
+    }
+  )
+}
+
+/**
+ * Sends a request to create a new herd using the information in `herd`.
+ * Returns 'success' on success.
+ *
+ * @param herd Herd information.
+ */
+export async function createHerd(herd: Herd) {
+  // replace empty strings with null values
+  Object.keys(herd).forEach((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
+  return await post('/api/manage/herd', herd).then(
     data => {
       return data.status;
     },

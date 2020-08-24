@@ -139,7 +139,6 @@ def get_herd(herd_id, user_uuid=None):
         return None
     try:
         with DATABASE.atomic():
-            # herd_id is formatted as 'G<num>', and we only compare the number
             herd = Herd.select().where(Herd.herd == herd_id).get()
             data = herd.filtered_dict(user)
             if data["genebank"] not in user.accessible_genebanks:
@@ -156,8 +155,22 @@ def add_herd(form, user_uuid):
     Adds a new herd, defined by `form`, into the database, if the given `user`
     has sufficient permissions to insert herds.
     """
-    logging.warning("add_herd is not yet implemented")
-    return "failed"
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return "not logged in"
+    if not (user.is_admin or (user.is_manager and form['genebank'] in user.is_manager)):
+        return "forbidden"
+
+    with DATABASE.atomic():
+        try:
+            Herd.select().where(Herd.herd == form['herd']).get()
+            return "herd ID already exists"
+        except DoesNotExist:
+            pass
+        del form['id']
+        herd = Herd(**form)
+        herd.save()
+        return "success"
 
 
 def update_herd(form, user_uuid):
