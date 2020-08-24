@@ -105,6 +105,7 @@ export function Pedigree({ id, generations }: { id: string }) {
             <td width="10%" style={{ verticalAlign: "top" }}>
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
+                <dt>Inavelskoefficient</dt> <dd>{individual.inbreeding}%</dd>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
                 <dt>Kön</dt> <dd>{individual.sex ?? 'unknown'}</dd>
