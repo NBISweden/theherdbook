@@ -106,6 +106,7 @@ export function Pedigree({ id, generations }: { id: string }) {
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Inavelskoefficient</dt> <dd>{individual.inbreeding}%</dd>
+                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
                 <dt>Kön</dt> <dd>{individual.sex ?? 'unknown'}</dd>
@@ -141,7 +142,7 @@ export function Pedigree({ id, generations }: { id: string }) {
                     : '-'
                   }
                 </dd>
-                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
+
               </dl>
             </td>
             <td width="90%" >
