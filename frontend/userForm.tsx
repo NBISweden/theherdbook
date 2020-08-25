@@ -48,12 +48,15 @@ const defaultValues: ManagedUser = {
   password: ""
 }
 
+/** These are the permission levels that can be added using the user form */
 const PermissionLevels = [{value: 'owner', label: 'Owner'},
                           {value: 'manager', label: 'Manager'},
                           {value: 'specialist', label: 'Genetic Specialist'},
                           ];
 /**
- * Provides a form for changing user metadata and user roles.
+ * Provides a form for changing user metadata and user roles. The form will
+ * load data for the user id `id` if it's a number, or for a new user if `id` is
+ * `undefined` or `'new'`.
  */
 export function UserForm({id}: {id: number | 'new' | undefined}) {
   const {genebanks, loadData} = useDataContext()
@@ -66,15 +69,23 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   const classes = useStyles();
 
   const loadUser = (id: number) => {
-    setNew(false)
     get(`/api/manage/user/${id}`).then(
-      data => data && setUser(data),
+      data => {
+        if (data) {
+          setUser(data)
+          setNew(false)
+        } else {
+          setNew(true)
+        }
+      },
       error => console.error(error)
     );
   }
 
+  /**
+   * Loads the user information for `id`, or sets the form to accept a new user.
+   */
   React.useEffect(() => {
-    console.debug(genebanks)
     setUser({...defaultValues})
     if (typeof id == 'number') {
       loadUser(id)
@@ -84,6 +95,11 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     }
   }, [id])
 
+  /**
+   * If `isNew` is set, this function creates a POST request to create a new
+   * user in the backend, and then navigates to edit the new user. Otherwise
+   * the current form is sent as an UPDATE request to update the user `id`.
+   */
   const submitForm = () => {
     let postData = {...user};
     delete postData["privileges"];
@@ -92,7 +108,10 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
       data => {
         switch (data.status) {
           case "updated": console.info("updated."); break; // updated user
-          case "success": history.push(`/manage/user/${data.id}`); setNew(false); break; // added user
+          case "success":
+            history.push(`/manage/user/${data.id}`);
+            setNew(false);
+            break; // added user
           default: console.warn("status:", data)// "failed" or other erro
         }
       },
@@ -100,6 +119,12 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     )
   }
 
+  /**
+   * Returns a list of all herds of the genebank identified by `genebankId`,
+   * formatted as react-select options, i.e. `{value: <id>, label: <name>}`.
+   *
+   * @param genebankId Id of the genebank to get herds from.
+   */
   const genebankHerds = (genebankId: number | undefined) => {
     if (genebankId === undefined || genebank === null) {
       return []
@@ -109,33 +134,48 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     if (currentGenebank === undefined) {
       return []
     }
-    return currentGenebank.herds.map((h: Herd) => {return {value: h.id, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}})
+    return currentGenebank.herds.map((h: Herd) => {
+      return {value: h.id, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
+    })
   }
 
+  /**
+   * Converts a herd database id to a human readable label formatted as:
+   * '<herd-id>' or '<herd-id> - <herd-name>' depending on if the herd has a
+   * herd name or not.
+   *
+   * @param herdId database id of the herd to convert.
+   */
   const herdIdToLabel = (herdId: number) => {
     let allHerds: Herd[] = [];
     allHerds = allHerds.concat.apply(allHerds, genebanks.map((g: Genebank) => g.herds));
-    console.debug("id", herdId)
-    console.debug("all", allHerds)
     const targetHerd = allHerds.find((h: Herd) => h.id == herdId)
-    console.debug("target", targetHerd)
     if (!targetHerd) {
       return 'Unknown'
     }
     return `${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
   }
 
+  /**
+   * Sends an UPDATE request to update a user role in the database. Reloads the
+   * user data on success.
+   * @param operation an object describing an update operation, formatted like:
+   *     {action: 'remove' | 'add',
+          role: 'owner' | 'manager' | 'specialist',
+          user: userId,
+          genebank: genebankId, if role is 'manager' or 'specialist'
+          herd: herdId, if role is 'owner'
+   */
   const updateRole = (operation: any) => {
-    post('/api/manage/role', operation).then(
+    update('/api/manage/role', operation).then(
       data => {
         switch (data.status) {
           case "updated": if (id) {
                             loadUser(+id)
                           }
                           loadData(["users"])
-                          console.debug("updated successfully");
                           break; // updated user
-          default: console.debug("error:", data)// "failed" or other error
+          default: console.error("error:", data)// "failed" or other error
         }
       },
       error => console.error(error)
