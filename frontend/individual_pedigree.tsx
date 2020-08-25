@@ -14,7 +14,7 @@ import "vis-network/styles/vis-network.css"
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
-export function Pedigree({ id, generations }: { id: string }) {
+export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
@@ -102,10 +102,10 @@ export function Pedigree({ id, generations }: { id: string }) {
       <table width="100%">
         <tbody>
           <tr>
-            <td width="10%" style={{ verticalAlign: "top" }}>
+            <td width="15%" style={{ verticalAlign: "top" }}>
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
-                <dt>Inavelskoefficient</dt> <dd>{individual.inbreeding}%</dd>
+                <dt>Inavelskoefficient</dt> <dd><b>{individual.inbreeding}%</b></dd>
                 <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
@@ -138,14 +138,14 @@ export function Pedigree({ id, generations }: { id: string }) {
                 <dt>Vikter</dt>
                 <dd>
                   {individual.weights.length > 1
-                    ? individual.weights.map((w: any) => `${w.date}: ${w.weight}`).join(", ")
+                    ? individual.weights.map((w: any) => `${w.date.substring(0, 16)}: ${w.weight}`).join(", ")
                     : '-'
                   }
                 </dd>
 
               </dl>
             </td>
-            <td width="90%" >
+            <td width="85%" >
               <PedigreeNetwork />
             </td>
           </tr>
