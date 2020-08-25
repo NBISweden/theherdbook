@@ -86,7 +86,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   }, [])
 
   return (
-    <DataContext.Provider value={{genebanks, users, setGenebanks, loadData}}>
+    <DataContext.Provider value={{genebanks, users, setGenebanks, setUsers, loadData}}>
       {props.children}
     </DataContext.Provider>
   )
