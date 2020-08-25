@@ -12,7 +12,7 @@ import { Herd, Individual, Genebank } from '~data_context_global';
 
 import { get, updateHerd, createHerd } from './communication';
 
-// Define styles for tab menu
+// Define styles for the form
 const useStyles = makeStyles({
   form: {
     display: "flex",
@@ -70,7 +70,9 @@ const defaultValues: Herd = {
 }
 
 /**
- * Provides herd management forms for setting herd metadata.
+ * Provides herd management forms for setting herd metadata. The form will
+ * load herd data for the id `id` if it's a number, or for a new herd if `id` is
+ * `undefined` or `'new'`.
  */
 export function HerdForm({id}: {id: string | undefined}) {
   const {genebanks, setGenebanks} = useDataContext()
@@ -82,6 +84,12 @@ export function HerdForm({id}: {id: string | undefined}) {
   const history = useHistory()
   const classes = useStyles();
 
+  /**
+   * Loads herd data for herd `id`. If data is returned, the form is set to use
+   * that data for making updates to the herd information. if no data is
+   * returned, or if `id` is set to `'new'` or `undefined`, the form will be
+   * emptied for creating new herds.
+   */
   React.useEffect(() => {
     setLoading(true);
     setHerd({...defaultValues});
@@ -113,10 +121,18 @@ export function HerdForm({id}: {id: string | undefined}) {
     setLoading(false);
   }, [id])
 
+  /**
+   * Sets a single key `label` in the `herd` form to `value` (if herd isn't
+   * undefined).
+   */
   const setFormField = <K extends keyof Herd>(label: K, value: Herd[K]) => {
     herd && setHerd({...herd, [label]: value})
   }
 
+  /**
+   * Returns a genebank, identified by `genebankId`, as a React-Select option.
+   * @param genebankId
+   */
   const genebankOption = (genebankId: number) => {
     const genebank = genebanks.find((g: Genebank) => g.id == herd.genebank)
     if (genebank) {
@@ -125,6 +141,13 @@ export function HerdForm({id}: {id: string | undefined}) {
     return null
   }
 
+  /**
+   * sends a POST request to create a new herd in the database if the `isNew` is
+   * `true`, otherwise sends am UPDATE request to update a current database
+   * entry. This function will also update the `genebanks` context with the
+   * new information. If a new entry is created, the page will reroute to edit
+   * that entry.
+   */
   const submitForm = () => {
     if (herd == undefined) {
       return
