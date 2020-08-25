@@ -218,7 +218,6 @@ def genebank_pedigree(id):
     """
     Returns the pedigree information for the genebank_id provided.
     """
-    APP.logger.info("getting genebank pedigree, user %s authenticated %s" % (current_user, current_user.is_authenticated))
     result = build_genebank_pedigree(id)
     return json.dumps(result)
 
@@ -229,7 +228,6 @@ def build_genebank_pedigree(id):
 
     user_id = session.get('user_id')
     leafs = da.get_leafs(id, user_id)
-    APP.logger.info(len(leafs))
     nodes = {}
     edges = []
     if leafs:
@@ -258,7 +256,6 @@ def pedigree(i_id, generations):
     if ind:
         build_pedigree(ind, user_id, 1, generations, nodes, edges)
         result = {"nodes": list(nodes.values()), "edges": edges}
-        APP.logger.info(result)
     return jsonify(result)
 
 
