@@ -73,6 +73,7 @@ export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
     setGenebanks(data: Genebank[]): void,
+    setUsers(data: NameID[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
 }
 
@@ -80,6 +81,7 @@ const emptyContext: DataContext = {
   genebanks: [],
   users: [],
   setGenebanks() {},
+  setUsers() {},
   async loadData() {return false},
 }
 

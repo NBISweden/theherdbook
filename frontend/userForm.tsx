@@ -3,11 +3,14 @@
  * change user information and permissions.
  */
 import React from 'react'
-import { MenuItem, InputLabel, Select, TextField, Checkbox, FormControlLabel, Button } from '@material-ui/core';
+import { TextField, Checkbox, FormControlLabel,
+         Button, TableContainer, Paper, Table, TableBody, TableRow, TableCell, TableHead } from '@material-ui/core';
+import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd } from '~data_context_global';
+import { Herd, Genebank } from '~data_context_global';
+import { useHistory } from 'react-router-dom';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -20,28 +23,46 @@ const useStyles = makeStyles({
   simpleField: {
     width: "400px",
   },
+  permissionTable: {
+  },
+  permissionTitle: {
+    fontWeight: "bold",
+    textTransform: "capitalize",
+  }
 });
 
 /** description of a user to manage */
 export interface ManagedUser {
-  id: number
+  id: number | 'new'
   email: string
   validated: boolean
   privileges: any
   password?: string
 }
 
+const defaultValues: ManagedUser = {
+  id: -1,
+  email: "",
+  validated: false,
+  privileges: [],
+  password: ""
+}
+
+const PermissionLevels = [{value: 'owner', label: 'Owner'},
+                          {value: 'manager', label: 'Manager'},
+                          {value: 'specialist', label: 'Genetic Specialist'},
+                          ];
 /**
  * Provides a form for changing user metadata and user roles.
  */
 export function UserForm({id}: {id: number | 'new' | undefined}) {
   const {genebanks, loadData} = useDataContext()
-  const [user, setUser] = React.useState(undefined as ManagedUser | undefined)
+  const [user, setUser] = React.useState({...defaultValues} as ManagedUser)
   const [isNew, setNew] = React.useState(false)
-  const [level, setLevel] = React.useState("owner")
-  const [genebank, setGenebank] = React.useState(0)
-  const [herds, setHerds] = React.useState([] as Herd[])
-  const [herd, setHerd] = React.useState(0)
+  const [level, setLevel] = React.useState(PermissionLevels[0])
+  const [genebank, setGenebank] = React.useState(genebanks.length > 0 ? {value: genebanks[0].id, label: genebanks[0].name} : null)
+  const [herd, setHerd] = React.useState(null as any)
+  const history = useHistory()
   const classes = useStyles();
 
   const loadUser = (id: number) => {
@@ -53,52 +74,55 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   }
 
   React.useEffect(() => {
+    console.debug(genebanks)
+    setUser({...defaultValues})
     if (typeof id == 'number') {
       loadUser(id)
+      setNew(false)
     } else if (id == 'new' || !id) {
       setNew(true)
-      setUser({id: -1, email: '', validated: false, privileges: []})
     }
   }, [id])
 
-  React.useEffect(() => {
-    if (genebanks.length > 0) {
-      selectGenebank(genebanks[0].id)
-    }
-  }, [genebanks])
-
-  const selectGenebank = (gId: number) => {
-    setGenebank(gId);
-    const genebankData = genebanks.find(g => g.id == gId);
-    if (genebankData) {
-      setHerds(genebankData.herds)
-      if (herds.length > 0 && herds.filter(h => herd == h.id).length == 0) {
-        setHerd(herds[0].id)
-      }
-    } else {
-      setHerds([])
-      setHerd(0)
-    }
-  }
-
   const submitForm = () => {
-    let postData = Object.assign({}, user);
+    let postData = {...user};
     delete postData["privileges"];
     let protocol = isNew ? post : update;
     protocol(`/api/manage/user/${id == 'new' ? 0 : id}`, postData).then(
       data => {
         switch (data.status) {
           case "updated": console.info("updated."); break; // updated user
-          case "success":
-            loadData(["users"]).then(
-              success => loadUser(data.id)
-            )
-            break; // added user
+          case "success": history.push(`/manage/user/${data.id}`); setNew(false); break; // added user
           default: console.warn("status:", data)// "failed" or other erro
         }
       },
       error => console.error(error)
     )
+  }
+
+  const genebankHerds = (genebankId: number | undefined) => {
+    if (genebankId === undefined || genebank === null) {
+      return []
+    }
+
+    const currentGenebank = genebanks.find((g: Genebank) => g.id == genebank.value);
+    if (currentGenebank === undefined) {
+      return []
+    }
+    return currentGenebank.herds.map((h: Herd) => {return {value: h.id, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}})
+  }
+
+  const herdIdToLabel = (herdId: number) => {
+    let allHerds: Herd[] = [];
+    allHerds = allHerds.concat.apply(allHerds, genebanks.map((g: Genebank) => g.herds));
+    console.debug("id", herdId)
+    console.debug("all", allHerds)
+    const targetHerd = allHerds.find((h: Herd) => h.id == herdId)
+    console.debug("target", targetHerd)
+    if (!targetHerd) {
+      return 'Unknown'
+    }
+    return `${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
   }
 
   const updateRole = (operation: any) => {
@@ -149,73 +173,93 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
       <Button variant="contained"
               color="primary"
               onClick={() => submitForm()}>
-        Spara
+        {isNew ? "Skapa" : "Spara" }
       </Button>
     </>
     }
 
     {!isNew && <>
       <h3>Behörigheter</h3>
-      <ul>
-        {user && <>
-          {user.privileges.map((role: any, i: number) => {
-              return <li key={i}>
-                {role.level}
-                {role.genebank && `, Genebank: ${role.genebank}`}
-                {role.herd && `, herd: ${role.herd}`}
-                <Button variant="contained"
-                        color="primary"
-                        onClick={() => updateRole({action: 'remove',
-                                                  role: role.level,
-                                                  user: user.id,
-                                                  genebank: role?.genebank,
-                                                  herd: role?.herd}
-                                )}>
-                  Ta bort
-                </Button>
-              </li>
-            })
-          }
-        </>}
-      </ul>
+      <TableContainer component={Paper}>
+        <Table className={classes.permissionTable}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Behörighet</TableCell>
+              <TableCell align="right"></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {user && user.privileges.map((role: any, i: number) => {
+              return <TableRow key={i}>
+                <TableCell component="th" scope="row">
+                  <span className={classes.permissionTitle}>{role.level}</span>
+                  {role.genebank && `, ${genebanks.find((g:Genebank) => g.id == role.genebank)?.name}`}
+                  {role.herd && `, ${herdIdToLabel(role.herd)}`}
+                </TableCell>
+                <TableCell align="right">
+                  <Button variant="contained"
+                          color="primary"
+                          onClick={() => updateRole({action: 'remove',
+                                                    role: role.level,
+                                                    user: user.id,
+                                                    genebank: role?.genebank,
+                                                    herd: role?.herd}
+                                  )}>
+                          Ta bort
+                  </Button>
+                </TableCell>
+              </TableRow>
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <h3>Lägg till behörighet</h3>
-      <form className={classes.form} noValidate autoComplete="off">
-        <InputLabel>Behörighetsnivå</InputLabel>
-        <Select value={level} onChange={(e: any) => setLevel(e.target.value)}>
-          <MenuItem value="owner">Ägare</MenuItem>
-          <MenuItem value="manager">Manager</MenuItem>
-          <MenuItem value="specialist">Genetisk Specialist</MenuItem>
-        </Select>
 
-        <InputLabel>Genbank</InputLabel>
-        <Select value={genebank} onChange={(e: any) => selectGenebank(e.target.value)}>
-          {genebanks.map(g =>
-            <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
-          )}
-        </Select>
-        { level == 'owner' ? <>
-          <InputLabel>Besättning</InputLabel>
-          <Select value={herd} onChange={(e: any) => setHerd(e.target.value)}>
-            {herds.map(h =>
-              <MenuItem key={h.id} value={h.id}>G{h.herd}{h.herd_name ? ` - ${h.herd_name}` : ''}</MenuItem>
-             )
-            }
-          </Select>
-          </>
-          : ''
-        }
+        <Table className={classes.permissionTable}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Behörighet</TableCell>
+              <TableCell>Genbank</TableCell>
+              <TableCell>Besättning</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <Select options={PermissionLevels}
+                        onChange={setLevel}
+                        value={level}
+                        />
+              </TableCell>
+              <TableCell>
+                <Select options={genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}})}
+                        onChange={(current: any) => {setGenebank(current); setHerd(null)}}
+                        value={genebank}
+                        />
+              </TableCell>
+              <TableCell>
+                <Select options={genebankHerds(genebank?.value)}
+                        onChange={setHerd}
+                        isDisabled={level.value != 'owner'}
+                        value={herd}
+                        />
+
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
         <Button variant="contained"
                 color="primary"
                 onClick={() => updateRole({action: 'add',
-                                          role: level,
+                                          role: level.value,
                                           user: user ? user.id : -1,
-                                          genebank: level != 'owner' ? genebank : undefined,
-                                          herd: level == 'owner' ? herd : undefined}
+                                          genebank: level.value != 'owner' ? genebank?.value : undefined,
+                                          herd: level.value == 'owner' ? herd?.value : undefined}
                         )}>
           Lägg till
         </Button>
-      </form>
     </>
     }
   </>
