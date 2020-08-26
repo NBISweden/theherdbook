@@ -4,7 +4,7 @@
  */
 
 import React, { Component, createRef } from 'react'
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { get } from './communication';
 import { Network } from 'vis-network';
 import "vis-network/styles/vis-network.css"
@@ -18,6 +18,8 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
+  const history = useHistory()
+
 
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
@@ -30,7 +32,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
     )
   }, [id, generations_input])
 
-  class PedigreeNetwork extends Component {
+  class PedigreeNetwork extends Component{
 
     options = {
       width: Math.round(window.innerWidth * 0.90) + 'px',
@@ -49,25 +51,13 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
         }
       },
       edges: {
-        /*color:  { color: "gray", inherit: false },*/
         arrows: { to: { enabled: true, scaleFactor: 0.50 } }
-        //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
       },
       interaction: {
         navigationButtons: true,
         keyboard: true
       },
-      physics: false,
-      /* physics: {
-        hierarchicalRepulsion: {
-          centralGravity: 0,
-          avoidOverlap: 1,
-          nodeDistance: 150
-        },
-
-        minVelocity: 0.75,
-        solver: "hierarchicalRepulsion"
-      } */
+      physics: false
     }
 
     constructor() {
@@ -83,8 +73,8 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
 
     onNodeClick(params) {
       if (params.nodes.length > 0) {
-        var nodeid = params.nodes[0];
-        window.location.replace("/pedigree/" + nodeid + "/" + generations_input);
+        const nodeid = params.nodes[0];
+        history.push("/pedigree/" + nodeid + "/" + generations_input);
       }
     }
 

@@ -416,7 +416,7 @@ def get_individuals(genebank_id, user_uuid=None):
 
 
 
-def get_leafs(genebank_id, user_uuid=None):
+def get_leaves(genebank_id, user_uuid=None):
     """
     Returns all leaf individuals for a given `genebank_id` that the user identified
     by `user_uuid` has access to.

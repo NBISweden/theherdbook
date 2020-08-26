@@ -227,11 +227,11 @@ def build_genebank_pedigree(id):
     init_time = datetime.now()
 
     user_id = session.get('user_id')
-    leafs = da.get_leafs(id, user_id)
+    leaves = da.get_leaves(id, user_id)
     nodes = {}
     edges = []
-    if leafs:
-        for ind in leafs:
+    if leaves:
+        for ind in leaves:
             build_pedigree(ind, user_id, 1, 100, nodes, edges)
     result = {"nodes": list(nodes.values()), "edges": edges}
     later_time = datetime.now()

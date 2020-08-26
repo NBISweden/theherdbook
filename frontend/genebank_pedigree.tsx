@@ -4,7 +4,7 @@
  */
 
 import React, { Component, createRef } from 'react'
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { get } from './communication';
 import { Network } from 'vis-network';
 import "vis-network/styles/vis-network.css"
@@ -14,6 +14,7 @@ import "vis-network/styles/vis-network.css"
  */
 export function GenebankPedigree({ id }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
+  const history = useHistory()
 
   React.useEffect(() => {
 
@@ -42,26 +43,14 @@ export function GenebankPedigree({ id }: { id: string }) {
         }
       },
       edges: {
-        /*color:  { color: "gray", inherit: false },*/
         arrows: { to: { enabled: true, scaleFactor: 0.50 } }
-        //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1 }
       },
       interaction: {
         navigationButtons: true,
         keyboard: true
       },
       physics: false
-      /* physics: {
-        hierarchicalRepulsion: {
-          centralGravity: 0,
-          avoidOverlap: 1,
-          nodeDistance: 150
-        },
-
-        minVelocity: 0.75,
-        solver: "hierarchicalRepulsion"
-      } */
-    }
+   }
 
     constructor() {
       super();
@@ -76,8 +65,8 @@ export function GenebankPedigree({ id }: { id: string }) {
 
     onNodeClick(params) {
       if (params.nodes.length > 0) {
-        var nodeid = params.nodes[0];
-        window.location.replace("/pedigree/" + nodeid);
+        const nodeid = params.nodes[0];
+        history.push("/pedigree/" + nodeid);
       }
     }
 
