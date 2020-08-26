@@ -84,7 +84,7 @@ def manage_user(u_id):
         return jsonify(da.add_user(form, session.get('user_id', None)))
     return jsonify(status=status)
 
-@APP.route('/api/manage/role', methods=['POST'])
+@APP.route('/api/manage/role', methods=['POST', 'UPDATE'])
 def manage_roles():
     """
     Changes or adds roles for the user identified by `u_id`, and returns a
