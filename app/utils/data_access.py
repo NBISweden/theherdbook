@@ -173,7 +173,6 @@ def add_herd(form, user_uuid):
         herd.save()
         return "success"
 
-
 def update_herd(form, user_uuid):
     """
     Updates a herd, identified by `form.id`, by the values in `form`, if the
