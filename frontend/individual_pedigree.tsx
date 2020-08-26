@@ -3,11 +3,10 @@
  *       pedigree for a given `id` (parsed from the url).
  */
 
-import React, { Component, createRef } from 'react'
-import { Link, useHistory } from "react-router-dom";
+import React, { Component, useEffect } from 'react'
+import { Link } from "react-router-dom";
 import { get } from './communication';
-import { Network } from 'vis-network';
-import "vis-network/styles/vis-network.css"
+import PedigreeNetwork from "./pedigree"
 
 
 
@@ -18,7 +17,6 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
-  const history = useHistory()
 
 
   React.useEffect(() => {
@@ -31,61 +29,6 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
       error => console.error(error)
     )
   }, [id, generations_input])
-
-  class PedigreeNetwork extends Component{
-
-    options = {
-      width: Math.round(window.innerWidth * 0.90) + 'px',
-      height: Math.round(window.innerHeight * 0.80) + 'px',
-      layout: {
-        hierarchical: {
-          enabled: true,
-          direction: "DU",
-          sortMethod: 'directed',
-          //shakeTowards: "roots",
-          levelSeparation: 150,
-          parentCentralization:true,
-          edgeMinimization: true,
-          blockShifting: true,
-          nodeSpacing: 100
-        }
-      },
-      edges: {
-        arrows: { to: { enabled: true, scaleFactor: 0.50 } }
-      },
-      interaction: {
-        navigationButtons: true,
-        keyboard: true
-      },
-      physics: false
-    }
-
-    constructor() {
-      super();
-      this.network = {};
-      this.appRef = createRef();
-    }
-
-    componentDidMount() {
-      this.network = new Network(this.appRef.current, pedigree, this.options);
-      this.network.on("doubleClick", this.onNodeClick)
-    }
-
-    onNodeClick(params) {
-      if (params.nodes.length > 0) {
-        const nodeid = params.nodes[0];
-        history.push("/pedigree/" + nodeid + "/" + generations_input);
-      }
-    }
-
-    render() {
-
-      return (
-        <div ref={this.appRef}  >
-        </div>
-      );
-    }
-  }
 
   return <>
     {individual && pedigree && <>
@@ -136,7 +79,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
               </dl>
             </td>
             <td width="85%" >
-              <PedigreeNetwork />
+              <PedigreeNetwork pedigree={pedigree}/>
             </td>
           </tr>
         </tbody>
