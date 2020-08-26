@@ -95,6 +95,7 @@ def get_users():
 
 
 @APP.route("/api/manage/user/<int:u_id>", methods=["GET", "UPDATE", "POST"])
+@login_required
 def manage_user(u_id):
     """
     Returns user information and a list of all roles for the requested `u_id`.
@@ -112,6 +113,7 @@ def manage_user(u_id):
 
 
 @APP.route("/api/manage/role", methods=["POST"])
+@login_required
 def manage_roles():
     """
     Changes or adds roles for the user identified by `u_id`, and returns a
@@ -132,6 +134,7 @@ def manage_roles():
 
 
 @APP.route("/api/manage/herd", methods=["POST", "UPDATE"])
+@login_required
 def manage_herd():
     """
     Used to insert and update herd information in the database.
@@ -179,6 +182,7 @@ def logout():
 
 @APP.route("/api/genebanks")
 @APP.route("/api/genebank/<int:g_id>")
+@login_required
 def genebank(g_id=None):
     """
     Returns information on the genebank given by `g_id`, or a list of all
@@ -191,6 +195,7 @@ def genebank(g_id=None):
 
 
 @APP.route("/api/herd/<int:h_id>")
+@login_required
 def herd(h_id):
     """
     Returns information on the herd given by `h_id`.
@@ -200,6 +205,7 @@ def herd(h_id):
 
 
 @APP.route("/api/individual/<int:i_id>")
+@login_required
 def individual(i_id):
     """
     Returns information on the individual given by `i_id`.

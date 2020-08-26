@@ -43,7 +43,7 @@ const PedigreeNetwork = ({pedigree}) => {
       network.current.on("doubleClick", (params) => {
           if (params.nodes.length > 0) {
             const nodeid = params.nodes[0];
-            history.push("/pedigree/" + nodeid);
+            history.push("/individual/" + nodeid);
           }
       });
     },

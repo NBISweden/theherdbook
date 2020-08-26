@@ -7,6 +7,11 @@ import React, { Component, useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
 import PedigreeNetwork from "./pedigree"
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+
 
 
 
@@ -32,10 +37,10 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
 
   return <>
     {individual && pedigree && <>
-      <table width="100%">
-        <tbody>
-          <tr>
-            <td width="15%" style={{ verticalAlign: "top" }}>
+      <Table width="100%">
+        <TableBody>
+          <TableRow>
+            <TableCell width="15%" style={{ verticalAlign: "top" }}>
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Inavelskoefficient</dt> <dd><b>{individual.inbreeding}%</b></dd>
@@ -77,13 +82,13 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
                 </dd>
 
               </dl>
-            </td>
-            <td width="85%" >
+            </TableCell>
+            <TableCell width="85%" >
               <PedigreeNetwork pedigree={pedigree}/>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </>
     }
   </>
