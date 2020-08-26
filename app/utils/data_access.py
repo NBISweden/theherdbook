@@ -13,7 +13,7 @@ from werkzeug.security import (
 )
 
 from utils.database import (
-    DATABASE,
+    DB_PROXY as DATABASE,
     Herd,
     Individual,
     User,
@@ -167,7 +167,8 @@ def add_herd(form, user_uuid):
             return "herd ID already exists"
         except DoesNotExist:
             pass
-        del form['id']
+        if 'id' in form:
+            del form['id']
         herd = Herd(**form)
         herd.save()
         return "success"
@@ -390,7 +391,7 @@ def update_role(operation, user_uuid=None):
             updated = True
         elif not has_role and operation["action"] == "add":
             target_user.add_role(operation["role"], operation[target])
-        updated = True
+            updated = True
     return "updated" if updated else "unchanged"
 
 
@@ -404,7 +405,7 @@ def get_individuals(genebank_id, user_uuid=None):
         return None  # not logged in
     try:
         # TODO: rewrite this in peewee
-        query = """
+        query = f"""
         SELECT  i.individual_id, i.name, i.certificate, i.number, i.sex,
                 i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
                 i.colour_note,
@@ -417,7 +418,7 @@ def get_individuals(genebank_id, user_uuid=None):
                 individual m ON (i.mother_id = m.individual_id) JOIN
                 colour c ON (i.colour_id = c.colour_id) JOIN
                 herd h ON (i.herd_id = h.herd_id)
-        WHERE   h.genebank_id = %s AND
+        WHERE   h.genebank_id = {genebank_id} AND
                 (h.is_active OR h.is_active IS NULL);"""
         with DATABASE.atomic():
             cursor = DATABASE.execute_sql(query, (genebank_id,))
