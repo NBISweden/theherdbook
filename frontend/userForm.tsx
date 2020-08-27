@@ -150,8 +150,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
    * @param herdId database id of the herd to convert.
    */
   const herdIdToLabel = (herdId: number) => {
-    let allHerds: Herd[] = [];
-    allHerds = allHerds.concat.apply(allHerds, genebanks.map((g: Genebank) => g.herds));
+    let allHerds: Herd[] = genebanks.flatMap((g: Genebank) => g.herds);
     const targetHerd = allHerds.find((h: Herd) => h.id == herdId)
     if (!targetHerd) {
       return 'Unknown'
