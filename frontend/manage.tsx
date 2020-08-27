@@ -142,7 +142,7 @@ export function Manage() {
       } else {
         setHerdOptions(path[2]);
       }
-    } else {
+    } else if (genebanks.length > 0) {
       const defaultTopic = genebanks[0].name
       setTopic(defaultTopic)
       setGenebank(defaultTopic)

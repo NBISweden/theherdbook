@@ -134,6 +134,9 @@ export function HerdForm({id}: {id: string | undefined}) {
    * @param genebankId
    */
   const genebankOption = (genebankId: number) => {
+    if (!genebanks) {
+      return null;
+    }
     const genebank = genebanks.find((g: Genebank) => g.id == herd.genebank)
     if (genebank) {
       return {value: genebank.id, label: genebank.name}
@@ -264,7 +267,7 @@ export function HerdForm({id}: {id: string | undefined}) {
             </Typography>
             <Select label='Genbank' isDisabled={!isNew}
               value={genebankOption(herd.genebank)}
-              options={genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}})}
+              options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
               onChange={(e: any) => setFormField('genebank', e.value)}
               />
 
