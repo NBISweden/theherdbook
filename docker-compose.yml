@@ -28,9 +28,9 @@ services:
             - type: bind
               source: ./frontend
               target: /app
-            - /frontend/node_modules
-            - /frontend/.parcel-cache
-            - /frontend/.cache
+            - /app/node_modules
+            - /app/.parcel-cache
+            - /app/.cache
         working_dir: /app
     main:
         image: herdbook_main

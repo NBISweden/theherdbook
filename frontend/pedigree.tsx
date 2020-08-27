@@ -4,7 +4,12 @@ import "vis-network/styles/vis-network.css"
 import { useHistory } from "react-router-dom";
 
 
-const PedigreeNetwork = ({pedigree}) => {
+/**
+ * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a genebank,
+ *
+ */
+
+const PedigreeNetwork = ({pedigree}: {pedigree: string}) => {
 
     const options = {
       width: Math.round(window.innerWidth * 0.85) + 'px',
@@ -14,7 +19,6 @@ const PedigreeNetwork = ({pedigree}) => {
           enabled: true,
           direction: "DU",
           sortMethod: 'directed',
-          //shakeTowards: "roots",
           levelSeparation: 120,
           parentCentralization: true,
           edgeMinimization: true,
@@ -47,7 +51,7 @@ const PedigreeNetwork = ({pedigree}) => {
           }
       });
     },
-    [domNode, network, pedigree, options]);
+    [domNode, network, pedigree]);
 
     return (
         <div ref={domNode}  >
