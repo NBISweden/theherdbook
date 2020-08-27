@@ -161,14 +161,15 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   /**
    * Sends an UPDATE request to update a user role in the database. Reloads the
    * user data on success.
-   * @param operation an object describing an update operation, formatted like:
-   *     {action: 'remove' | 'add',
-          role: 'owner' | 'manager' | 'specialist',
-          user: userId,
-          genebank: genebankId, if role is 'manager' or 'specialist'
-          herd: herdId, if role is 'owner'
+   * @param operation an object describing an update operation.
    */
-  const updateRole = (operation: any) => {
+  type Operation = {action: 'remove' | 'add',
+                    user: number}
+  type HerdOperation = Operation & {role: 'owner',
+                                    herd: number}
+  type GenebankOperation = Operation & {role: 'manager' | 'specialist',
+                                       genebank: number}
+  const updateRole = (operation: HerdOperation | GenebankOperation) => {
     update('/api/manage/role', operation).then(
       data => {
         switch (data.status) {
