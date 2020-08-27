@@ -3,6 +3,7 @@
  * change user information and permissions.
  */
 import React from 'react'
+import { unstable_batchedUpdates } from 'react-dom'
 import { TextField, Checkbox, FormControlLabel,
          Button, TableContainer, Paper, Table, TableBody, TableRow, TableCell, TableHead } from '@material-ui/core';
 import Select from 'react-select';
@@ -72,8 +73,10 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     get(`/api/manage/user/${id}`).then(
       data => {
         if (data) {
-          setUser(data)
-          setNew(false)
+          unstable_batchedUpdates(() => {
+            setUser(data)
+            setNew(false)
+          })
         } else {
           setNew(true)
         }
