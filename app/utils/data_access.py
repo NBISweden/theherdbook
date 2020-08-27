@@ -364,7 +364,7 @@ def update_role(operation, user_uuid=None):
                 genebank = herd.as_dict()["genebank"]
             except DoesNotExist:
                 permitted = False  # unknown herd
-        if genebank not in user.is_manager:
+        if not (user.is_admin or genebank in user.is_manager):
             permitted = False
     elif not user.is_admin:
         permitted = False
