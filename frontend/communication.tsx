@@ -94,7 +94,8 @@ export async function updateHerd(herd: Herd) {
  */
 export async function createHerd(herd: Herd) {
   // replace empty strings with null values
-  const postData = Object.keys(herd).map((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
+  const postData = {...herd};
+  Object.keys(postData).forEach((k: string) => {postData[k] = postData[k] == '' ? null : postData[k]})
   return await post('/api/manage/herd', postData).then(
     data => {
       return data.status;
