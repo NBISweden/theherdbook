@@ -39,8 +39,8 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
     {individual && pedigree && <>
       <Table width="100%">
         <TableBody>
-          <TableRow>
-            <TableCell width="15%" style={{ verticalAlign: "top" }}>
+          <TableRow style={{ verticalAlign: "top" }}>
+            <TableCell width="15%">
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Inavelskoefficient</dt> <dd><b>{individual.inbreeding}%</b></dd>

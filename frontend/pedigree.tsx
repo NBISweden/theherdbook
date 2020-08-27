@@ -7,7 +7,7 @@ import { useHistory } from "react-router-dom";
 const PedigreeNetwork = ({pedigree}) => {
 
     const options = {
-      width: Math.round(window.innerWidth * 0.90) + 'px',
+      width: Math.round(window.innerWidth * 0.85) + 'px',
       height: Math.round(window.innerHeight * 0.80) + 'px',
       layout: {
         hierarchical: {
@@ -15,8 +15,8 @@ const PedigreeNetwork = ({pedigree}) => {
           direction: "DU",
           sortMethod: 'directed',
           //shakeTowards: "roots",
-          levelSeparation: 150,
-          parentCentralization:true,
+          levelSeparation: 120,
+          parentCentralization: true,
           edgeMinimization: true,
           blockShifting: true,
           nodeSpacing: 100

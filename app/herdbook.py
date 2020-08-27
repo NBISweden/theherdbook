@@ -35,9 +35,10 @@ APP.config.update(
     #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
-    DEBUG = True,  # some Flask specific configs
-    CACHE_TYPE = "simple",  # Flask-Caching related configs
-    CACHE_DEFAULT_TIMEOUT = 300
+    DEBUG=True,  # some Flask specific configs
+    CACHE_TYPE='filesystem',
+    CACHE_DIR='/tmp',
+    CACHE_DEFAULT_TIMEOUT=300
 )
 
 APP.logger.setLevel(logging.INFO)
@@ -262,6 +263,7 @@ def pedigree(i_id, generations):
     if ind:
         build_pedigree(ind, user_id, 1, generations, nodes, edges)
         result = {"nodes": list(nodes.values()), "edges": edges}
+    APP.logger.info("built pedigree for %d" % i_id)
     return jsonify(result)
 
 
