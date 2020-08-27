@@ -15,7 +15,7 @@ import { useDataContext } from './data_context'
 const useStyles = makeStyles({
   sidebar: {
     float: "left",
-    height: "calc(100% - 50px)",
+    height: "500px",
     width: "250px",
     margin: "0",
     borderRight: `1px solid rgba(0,0,0,0.2)`,
@@ -48,7 +48,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
   const herdChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setHerdTab(newValue);
     if (genebank) {
-      setHerd(genebank.herds[newValue].id);
+      setHerd(genebank.herds[newValue].herd);
     }
   };
 
@@ -57,7 +57,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
     if (currentGenebank) {
       setGenebank(currentGenebank)
       if (herd == undefined && currentGenebank.herds.length > 0) {
-        setHerd(currentGenebank.herds[0].id)
+        setHerd(currentGenebank.herds[0].herd)
       }
     }
   }, [genebanks, id])
@@ -73,7 +73,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
       >
         {genebank &&
             genebank.herds.sort((a: Herd,b: Herd) => +a.herd - +b.herd).map((h:any, i:number) => {
-            let label = `G${h.herd}`;
+            let label = `${h.herd}`;
             if (h.herd_name) {
                 label += ` - ${h.herd_name}`;
             }
