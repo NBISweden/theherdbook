@@ -272,14 +272,8 @@ export function HerdForm({id}: {id: string | undefined}) {
               />
 
             <Typography className={classes.subheading} color="textSecondary">
-              Individer  {herd?.individuals ? `(${herd.individuals.length} st)` : ''}
+              Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer
             </Typography>
-            <Select
-                options={herd?.individuals ? herd.individuals.map((i: Individual) =>
-                          {return {value: i.number, label: `${i.number}${i.name ? `, ${i.name}` : ''}`}})
-                          : []
-                        }
-                />
           </div>
 
         </form>
