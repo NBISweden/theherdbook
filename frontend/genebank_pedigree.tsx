@@ -2,7 +2,7 @@
 
 import React, { Component, useEffect } from 'react'
 import { get } from './communication';
-import {PedigreeNetwork} from "./pedigree"
+import { PedigreeNetwork } from "./pedigree"
 
 /**
  * Shows the genebank pedigree graph built using the vis-network component
@@ -17,13 +17,13 @@ export function GenebankPedigree({ id }: { id: string }) {
       error => console.error(error)
     )
     return () => { // Runs when component will unmount
-            mounted = false;
+      mounted = false;
     }
-  }, [])
+  }, [id])
 
 
   return <>
-    {pedigree && <PedigreeNetwork pedigree={pedigree}/>}
+    {pedigree && <PedigreeNetwork pedigree={pedigree} />}
   </>
 }
 

@@ -39,7 +39,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
 
     return () => { mounted = false }
 
-  }, [generations_input])
+  }, [id, generations_input])
 
   return <>
     {individual && pedigree && <>
