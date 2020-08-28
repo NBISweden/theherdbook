@@ -11,11 +11,17 @@ export function GenebankPedigree({ id }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
 
   React.useEffect(() => {
+    console.log("use effect");
+    let mounted = true; // Indicate the mount state
 
     get(`/api/genebank_pedigree/${id}`).then(
-      data => data && setPedigree(data),
-      error => console.error(error)
+      data => mounted && data && setPedigree(data),
+      error => mounted && console.error(error)
     )
+
+    return () => { // Runs when component will unmount
+            mounted = false;
+    }
   }, [id])
 
 

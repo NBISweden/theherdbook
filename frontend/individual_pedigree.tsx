@@ -13,8 +13,6 @@ import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 
 
-
-
 /**
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
@@ -25,14 +23,20 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
 
 
   React.useEffect(() => {
+    console.log("using effect");
+    let mounted = true; // Indicate the mount state
     get(`/api/individual/${id}`).then(
-      data => data && setIndividual(data),
-      error => console.error(error)
+      data =>  mounted && data && setIndividual(data),
+      error => mounted && console.error(error)
     )
     get(`/api/pedigree/${id}/${generations_input}`).then(
-      data => data && setPedigree(data),
-      error => console.error(error)
+      data => mounted && data && setPedigree(data),
+      error => mounted && console.error(error)
     )
+    return () => { // Runs when component will unmount
+            mounted = false;
+    }
+
   }, [id, generations_input])
 
   return <>
