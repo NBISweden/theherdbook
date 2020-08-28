@@ -17,27 +17,28 @@ import TableRow from '@material-ui/core/TableRow';
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
 export function IndividualPedigree({ id, generations }: { id: string }) {
-  const [pedigree, setPedigree] = React.useState(undefined as any)
-  const [individual, setIndividual] = React.useState(undefined as any)
-  const [generations_input, setGenerations] = React.useState(generations)
+    const [pedigree, setPedigree] = React.useState(undefined as any)
+    const [individual, setIndividual] = React.useState(undefined as any)
+    const [generations_input, setGenerations] = React.useState(generations)
 
 
   React.useEffect(() => {
-    console.log("using effect");
-    let mounted = true; // Indicate the mount state
+
+    let mounted = true
     get(`/api/individual/${id}`).then(
-      data =>  mounted && data && setIndividual(data),
-      error => mounted && console.error(error)
+      data =>  {
+      mounted && data && setIndividual(data)
+      },
+      error => console.error(error)
     )
     get(`/api/pedigree/${id}/${generations_input}`).then(
       data => mounted && data && setPedigree(data),
-      error => mounted && console.error(error)
+      error => console.error(error)
     )
-    return () => { // Runs when component will unmount
-            mounted = false;
-    }
 
-  }, [id, generations_input])
+    return () => { mounted = false }
+
+  }, [generations_input])
 
   return <>
     {individual && pedigree && <>

@@ -76,7 +76,7 @@ export function Navigation() {
       visible: is_logged_in,
       on_click: logout,
       icon: <VpnKeyIcon />
-    },
+    }
   ]
 
   const {Tabs, TabbedRoutes} = ui.useRoutedTabs(tabs)
@@ -107,7 +107,7 @@ export function Navigation() {
           {params => <GenebankPedigree id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/individual2/:id">
-          {params => <Individual id={params.id}/>}
+          {params => <Individual id={params.id} />}
         </ui.Routed>
         <Route path="/">
           Welcome!
