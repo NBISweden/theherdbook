@@ -6,7 +6,7 @@
 import React, { Component, useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import {PedigreeNetwork} from "./pedigree"
+import { PedigreeNetwork } from "./pedigree"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -17,17 +17,18 @@ import TableRow from '@material-ui/core/TableRow';
  * Shows the information of a given individual and the pedigree graph built using the vis-network component
  */
 export function IndividualPedigree({ id, generations }: { id: string }) {
-    const [pedigree, setPedigree] = React.useState(undefined as any)
-    const [individual, setIndividual] = React.useState(undefined as any)
-    const [generations_input, setGenerations] = React.useState(generations)
+  const [pedigree, setPedigree] = React.useState(undefined as any)
+  const [individual, setIndividual] = React.useState(undefined as any)
+  const [generations_input, setGenerations] = React.useState(generations)
 
 
   React.useEffect(() => {
 
     let mounted = true
-    get(`/api/individual/${id}`).then(
-      data =>  {
-      mounted && data && setIndividual(data)
+    const url = `/api/individual/${id}`
+    get(url).then(
+      data => {
+        mounted && data && setIndividual(data)
       },
       error => console.error(error)
     )
@@ -49,7 +50,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Inavelskoefficient</dt> <dd><b>{individual.inbreeding}%</b></dd>
-                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50"/></dd>
+                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50" /></dd>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
                 <dt>Kön</dt> <dd>{individual.sex ?? 'unknown'}</dd>
@@ -89,7 +90,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
               </dl>
             </TableCell>
             <TableCell width="85%" >
-              <PedigreeNetwork pedigree={pedigree}/>
+              <PedigreeNetwork pedigree={pedigree} />
             </TableCell>
           </TableRow>
         </TableBody>
