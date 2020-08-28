@@ -106,10 +106,10 @@ export function HerdForm({id}: {id: string | undefined}) {
 
             // split physical address into address, postcode, postcity
             if (data?.physical_address && data.physical_address.includes('|')) {
-              const addressParts = data.physical_address.split('|')
-              data.physical_address = addressParts[0]
-              setPostalcode(addressParts[1])
-              setPostalcity(addressParts[2])
+              const [address, postcode, postcity] = data.physical_address.split('|')
+              data.physical_address = address
+              setPostalcode(postcode)
+              setPostalcity(postcity)
             }
             setHerd(data)
             setNew(false)
