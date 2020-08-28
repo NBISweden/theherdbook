@@ -124,7 +124,7 @@ class TestPermissions(DatabaseTest):
 
     def test_get_genebanks(self):
         """
-        Checks that `utils.database.get_genebanks` returns the correct
+        Checks that `utils.data_access.get_genebanks` returns the correct
         information for all test users.
         """
         # admin
@@ -146,7 +146,7 @@ class TestPermissions(DatabaseTest):
 
     def test_get_genebank(self):
         """
-        Checks that `utils.database.get_genebank` returns the correct
+        Checks that `utils.data_access.get_genebank` returns the correct
         information for all test users.
         """
         # admin
@@ -164,7 +164,7 @@ class TestPermissions(DatabaseTest):
 
     def test_get_herd(self):
         """
-        Checks that `utils.database.get_herd` returns the correct information
+        Checks that `utils.data_access.get_herd` returns the correct information
         for all test users.
         """
         # admin
@@ -184,9 +184,27 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(da.get_herd(self.herds[1].id, self.owner.uuid))
         self.assertFalse(da.get_herd(self.herds[2].id, self.owner.uuid))
 
+    def test_add_herd(self):
+        """
+        Checks that `utils.data_access._herd` returns the correct information
+        for all test users.
+        """
+        # admin
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test1'}, self.admin.uuid), "success")
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test2'}, self.admin.uuid), "success")
+        # specialist
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test3'}, self.specialist.uuid), "success")
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test4'}, self.specialist.uuid), "success")
+        # manager
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test5'}, self.manager.uuid), "success")
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test6'}, self.manager.uuid), "success")
+        # owner
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test7'}, self.owner.uuid), "success")
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test8'}, self.owner.uuid), "success")
+
     def test_get_individual(self):
         """
-        Checks that `utils.database.get_individual` return the correct
+        Checks that `utils.data_access.get_individual` return the correct
         information for all test users.
         """
         # admin
@@ -210,7 +228,7 @@ class TestPermissions(DatabaseTest):
 
     def test_get_users(self):
         """
-        Checks that `utils.database.get_users` return the correct information
+        Checks that `utils.data_access.get_users` return the correct information
         for all test users.
         """
         # admin
@@ -228,7 +246,7 @@ class TestPermissions(DatabaseTest):
 
     def test_has_role(self):
         """
-        Checks that `utils.database.User.has_role`return the correct information
+        Checks that `utils.data_access.User.has_role`return the correct information
         for all test users.
         """
         # admin
@@ -254,7 +272,7 @@ class TestPermissions(DatabaseTest):
 
     def test_update_role(self):
         """
-        Checks that `utils.database.update_role` performs correctly for all
+        Checks that `utils.data_access.update_role` performs correctly for all
         operations.
         """
 

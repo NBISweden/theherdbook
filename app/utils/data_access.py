@@ -13,7 +13,7 @@ from werkzeug.security import (
 )
 
 from utils.database import (
-    DATABASE,
+    DB_PROXY as DATABASE,
     Herd,
     Individual,
     User,
@@ -42,8 +42,9 @@ def add_user(form, user_uuid=None):
     if not email or not password:
         return {"status": "missing data"}
 
-    if User.select().where(User.email == email).first():
-        return {"status": "already exists"}
+    with DATABASE.atomic():
+        if User.select().where(User.email == email).first():
+            return {"status": "already exists"}
 
     user = register_user(email, password, validated)
     return {"id": user.id, "status": "success"}
@@ -61,7 +62,8 @@ def register_user(email, password, validated=False, privileges=[]):
         validated=validated,
         privileges=privileges,
     )
-    user.save()
+    with DATABASE.atomic():
+        user.save()
     return user
 
 
@@ -71,7 +73,8 @@ def authenticate_user(email, password):
     user info for the authenticated user on success, or None on failure.
     """
     try:
-        user_info = User.get(User.email == email)
+        with DATABASE.atomic():
+            user_info = User.get(User.email == email)
         if check_password_hash(user_info.password_hash, password):
             logging.info("Login from %s", email)
             return user_info
@@ -88,7 +91,8 @@ def fetch_user_info(user_id):
     Fetches user information for a given user id.
     """
     try:
-        return User.get(User.uuid == user_id)
+        with DATABASE.atomic():
+            return User.get(User.uuid == user_id)
     except DoesNotExist:
         return None
 
@@ -115,10 +119,11 @@ def get_genebanks(user_uuid=None):
         return None
 
     data = []
-    for genebank in user.get_genebanks():
-        genebank_data = genebank.short_info()
-        genebank_data["individuals"] = get_individuals(genebank.id, user_uuid)
-        data += [genebank_data]
+    with DATABASE.atomic():
+        for genebank in user.get_genebanks():
+            genebank_data = genebank.short_info()
+            genebank_data["individuals"] = get_individuals(genebank.id, user_uuid)
+            data += [genebank_data]
 
     return data
 
@@ -133,12 +138,14 @@ def get_herd(herd_id, user_uuid=None):
     if user is None:
         return None
     try:
-        data = Herd.get(herd_id).filtered_dict(user)
-        if data["genebank"] not in user.accessible_genebanks:
-            return None
-        query = Individual().select().where(Individual.herd == herd_id)
-        data["individuals"] = [i.short_info() for i in query.execute()]
-        return data
+        with DATABASE.atomic():
+            herd = Herd.select().where(Herd.herd == herd_id).get()
+            data = herd.filtered_dict(user)
+            if data["genebank"] not in user.accessible_genebanks:
+                return None
+            query = Individual().select().where(Individual.herd == herd)
+            data["individuals"] = [i.short_info() for i in query.execute()]
+            return data
     except DoesNotExist:
         return None
 
@@ -148,9 +155,23 @@ def add_herd(form, user_uuid):
     Adds a new herd, defined by `form`, into the database, if the given `user`
     has sufficient permissions to insert herds.
     """
-    logging.warning("add_herd is not yet implemented")
-    return "failed"
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return "not logged in"
+    if not (user.is_admin or (user.is_manager and form['genebank'] in user.is_manager)):
+        return "forbidden"
 
+    with DATABASE.atomic():
+        try:
+            Herd.select().where(Herd.herd == form['herd']).get()
+            return "herd ID already exists"
+        except DoesNotExist:
+            pass
+        if 'id' in form:
+            del form['id']
+        herd = Herd(**form)
+        herd.save()
+        return "success"
 
 def update_herd(form, user_uuid):
     """
@@ -161,20 +182,19 @@ def update_herd(form, user_uuid):
     if user is None:
         return None
     try:
-        herd = Herd.get(form["id"])
-        # check permission to update herd
-        permission = (
-            user.is_admin
-            or user.has_role("owner", herd.id)
-            or (user.is_manager and herd.genebank in user.is_manager)
-        )
-        if not permission:
-            return "failed"  # no permission to change
+        with DATABASE.atomic():
+            herd = Herd.get(form["id"])
+            # check permission to update herd
+            permission = user.is_admin \
+                        or user.has_role("owner", herd.id) \
+                        or (user.is_manager and herd.genebank in user.is_manager)
+            if not permission:
+                return "failed" # no permission to change
 
-        for key, value in form.items():
-            if hasattr(herd, key):
-                setattr(herd, key, value)
-        herd.save()
+            for key, value in form.items():
+                if hasattr(herd, key):
+                    setattr(herd, key, value)
+            herd.save()
         return "updated"
     except DoesNotExist:
         return "failed"  # unknown herd
@@ -189,7 +209,8 @@ def get_individual(individual_id, user_uuid=None):
     if user is None:
         return None
     try:
-        individual = Individual.get(individual_id)
+        with DATABASE.atomic():
+            individual = Individual.get(individual_id)
         if individual and individual.herd.genebank.id in user.accessible_genebanks:
             return individual.as_dict()
         return None
@@ -209,7 +230,8 @@ def get_users(user_uuid=None):
     try:
         if not user.is_admin and not user.is_manager:
             return None
-        users = list(User.select())
+        with DATABASE.atomic():
+            users = list(User.select())
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
@@ -230,7 +252,8 @@ def get_user(user_id, user_uuid=None):
     if not (user.is_admin or user.is_manager):
         return None
     try:
-        target = User.get(int(user_id))
+        with DATABASE.atomic():
+            target = User.get(int(user_id))
     except DoesNotExist:
         return None
 
@@ -272,7 +295,8 @@ def update_user(form, user_uuid=None):
 
     # check target user
     try:
-        target_user = User.get(form["id"])
+        with DATABASE.atomic():
+            target_user = User.get(form["id"])
     except DoesNotExist:
         return "failed"  # target user does not exist
 
@@ -284,7 +308,8 @@ def update_user(form, user_uuid=None):
             updated = True
 
     if updated:
-        target_user.save()
+        with DATABASE.atomic():
+            target_user.save()
         return "updated"
 
     return "unchanged"
@@ -334,11 +359,12 @@ def update_role(operation, user_uuid=None):
         genebank = operation.get("genebank", None)
         if genebank is None:
             try:
-                herd = Herd.get(operation["herd"])
+                with DATABASE.atomic():
+                    herd = Herd.get(operation["herd"])
                 genebank = herd.as_dict()["genebank"]
             except DoesNotExist:
                 permitted = False  # unknown herd
-        if genebank not in user.is_manager:
+        if not (user.is_admin or genebank in user.is_manager):
             permitted = False
     elif not user.is_admin:
         permitted = False
@@ -348,7 +374,8 @@ def update_role(operation, user_uuid=None):
 
     # check target user
     try:
-        target_user = User.get(int(operation["user"]))
+        with DATABASE.atomic():
+            target_user = User.get(int(operation["user"]))
     except DoesNotExist:
         return "failed"  # target user does not exist
 
@@ -356,12 +383,14 @@ def update_role(operation, user_uuid=None):
     target = "herd" if operation["role"] == "owner" else "genebank"
     has_role = target_user.has_role(operation["role"], operation[target])
     updated = False
-    if has_role and operation["action"] == "remove":
-        target_user.remove_role(operation["role"], operation[target])
-        updated = True
-    elif not has_role and operation["action"] == "add":
-        target_user.add_role(operation["role"], operation[target])
-        updated = True
+
+    with DATABASE.atomic():
+        if has_role and operation["action"] == "remove":
+            target_user.remove_role(operation["role"], operation[target])
+            updated = True
+        elif not has_role and operation["action"] == "add":
+            target_user.add_role(operation["role"], operation[target])
+            updated = True
     return "updated" if updated else "unchanged"
 
 
@@ -375,7 +404,7 @@ def get_individuals(genebank_id, user_uuid=None):
         return None  # not logged in
     try:
         # TODO: rewrite this in peewee
-        query = """
+        query = f"""
         SELECT  i.individual_id, i.name, i.certificate, i.number, i.sex,
                 i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
                 i.colour_note,
@@ -388,9 +417,10 @@ def get_individuals(genebank_id, user_uuid=None):
                 individual m ON (i.mother_id = m.individual_id) JOIN
                 colour c ON (i.colour_id = c.colour_id) JOIN
                 herd h ON (i.herd_id = h.herd_id)
-        WHERE   h.genebank_id = %s AND
+        WHERE   h.genebank_id = {genebank_id} AND
                 (h.is_active OR h.is_active IS NULL);"""
-        cursor = DATABASE.execute_sql(query, (genebank_id,))
+        with DATABASE.atomic():
+            cursor = DATABASE.execute_sql(query, (genebank_id,))
         return [
             {
                 "id": i[0],
@@ -424,19 +454,20 @@ def get_all_individuals():
     """
     try:
         individuals_dict = []
-        for individual in Individual.select():
-            data = individual.__dict__["__data__"]
-            ind = dict()
-            ind["id"] = str(data["id"])
-            ind["father"] = (
-                str(data["father"]) if (data["father"] and data["mother"]) else "0"
-            )
-            ind["mother"] = (
-                str(data["mother"]) if (data["mother"] and data["father"]) else "0"
-            )
-            ind["sex"] = "M" if data["sex"] == "male" else "F"
-            ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
-            individuals_dict.append(ind)
-        return individuals_dict
+        with DATABASE.atomic():
+            for individual in Individual.select():
+                data = individual.__dict__["__data__"]
+                ind = dict()
+                ind["id"] = str(data["id"])
+                ind["father"] = (
+                    str(data["father"]) if (data["father"] and data["mother"]) else "0"
+                )
+                ind["mother"] = (
+                    str(data["mother"]) if (data["mother"] and data["father"]) else "0"
+                )
+                ind["sex"] = "M" if data["sex"] == "male" else "F"
+                ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
+                individuals_dict.append(ind)
+            return individuals_dict
     except DoesNotExist:
         return []

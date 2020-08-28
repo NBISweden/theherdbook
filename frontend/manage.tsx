@@ -1,100 +1,210 @@
 /**
- * @file This file contains the Manage function. This function is used for
- * granting and revoking permissions from users, as well as approving requests
- * for adding individuals to herds in the genebanks you manage.
+ * @file This file contains the Manage function. This page is used for managing
+ * users and herds.
  */
-import React from 'react'
+import React, { useState } from 'react'
+import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper';
-import { makeStyles } from '@material-ui/core/styles';
-import { Switch } from "react-router-dom";
+import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
-import { ManageHerds } from './manage_herds'
-import { ManageUsers } from './manage_users'
+import Select from 'react-select';
+import { Genebank, NameID, Herd, herdLabel } from '~data_context_global';
+import { Button } from '@material-ui/core';
+import { HerdForm } from '~herdForm';
+import { UserForm } from '~userForm';
 
-// Define styles for tab menu
 const useStyles = makeStyles({
-  breadcrumbs: {
-    padding: "15px",
-    paddingBottom: 0,
+  main: {
+    width: '100%',
+    height: '100%',
+    margin: '0',
+    padding: '10px',
   },
-  paper: {
-    height: "calc(100% - 39px)", // remove breadcrumb height
+  controls: {
+    padding: '15px',
   },
-  breadcrumb: {
-    textDecoration: "none",
+  leftControls: {
+    maxWidth: '40%',
+    minHeight: '50px',
   },
-  spacer: {
-    height: '39px',
+  rightControls: {
+    float: 'right',
+    width: '40%',
+  },
+  hidden: {
+    display: 'none',
+  },
+  inputForm: {
+    width: '100%',
+    padding: '10px',
+    margin: '10px 0',
+    minHeight: '200px',
   }
 });
 
-import * as ui from './ui_utils'
+/**
+ * Provides management forms for users and herds.
+ */
+export function Manage() {
+  const styles = useStyles()
+  const {genebanks, users} = useDataContext()
 
-function InnerPaper(props: {id: number}) {
-  const classes = useStyles()
-  const {genebanks} = useDataContext()
-  const [genebank, setGenebank] = React.useState(undefined as any)
+  const history = useHistory()
+  const location = useLocation()
 
-  const id = props.id
+  const [topic, setTopic] = useState(undefined as string | undefined)
+  const [genebank, setGenebank] = useState(undefined as string | undefined)
+  const [target, setTarget] = useState(undefined as string | undefined)
+  const [options, setOptions] = useState([] as any[])
+  const [selected, setSelected] = useState(undefined as any)
 
-  function selectGenebank(id: number) {
-    const data = genebanks.find(g => g.id == id)
-    if (data) {
-      setGenebank(data)
+  /**
+   * Set the options of the main select box to the list of current users.
+   */
+  const setUserOptions = () => {
+    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: u.email}});
+    userOptions.push({value: 'new', label: 'New User'})
+    setOptions(userOptions);
+  }
+
+  /**
+   * Set the options to the main select box to the herds of the genebank
+   * identified by `name`.
+   *
+   * @param name the name of the genebank to set options from
+   */
+  const setHerdOptions = (name: string) => {
+    const dataset = genebanks.find((g: Genebank) => g.name == name)
+    if (dataset) {
+      const herdOptions: any[] = dataset.herds.map((h: Herd) => {
+        return {value: h.herd, label: herdLabel(h)}
+      })
+      herdOptions.push({value: 'new', label: 'New Herd'})
+      setOptions(herdOptions)
     }
   }
 
+  /**
+   * tries to set the current selected item in the main select box from the
+   * category and path (2nd and 3rd block) of the current url.
+   *
+   * @param category the 2nd block of the current url, should be 'user' or the
+   *     name of a genebank.
+   * @param path the 3rd block of the current url, should be the identifier of
+   *     an item in `category`.
+   */
+  const parseTarget = (category: string, path: string) => {
+    if (!path) {
+      setSelected(undefined)
+      return
+    }
+
+    let targetOption: any = null;
+    if (category == 'user' && path == 'new') {
+      targetOption = {value: 'new', label: 'New User'}
+    } else if (category == 'user' && +path != NaN) {
+      const targetUser = users.find((u: NameID) => u.id == +path);
+      if (targetUser) {
+        targetOption = {value: targetUser.id, label: targetUser.email}
+      }
+    } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
+      const dataset = genebanks.find((g: Genebank) => g.name == category)
+      if (dataset) {
+        const targetHerd = dataset.herds.find((h: Herd) => h.herd == path)
+        if (targetHerd) {
+          targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
+        }
+      }
+    }
+    setSelected(targetOption)
+  }
+
+  /**
+   * Parses the current url to set the current options, users and (if possible)
+   * selected item.
+   */
   React.useEffect(() => {
-    selectGenebank(id);
-  }, [id])
+    const path = location.pathname.split('/')
+    if (path[1] != 'manage' || !genebanks) {
+      return;
+    }
+    if (path[2]) {
+      setTopic(path[2])
+      if (path[2] != 'user') {
+        setGenebank(path[2]);
+      } else if (!genebank && genebanks.length > 0) {
+        setGenebank(genebanks[0].name)
+      }
+      if (path[2] == 'user') {
+        setUserOptions();
+      } else {
+        setHerdOptions(path[2]);
+      }
+    } else if (genebanks.length > 0) {
+      const defaultTopic = genebanks[0].name
+      setTopic(defaultTopic)
+      setGenebank(defaultTopic)
+      setHerdOptions(defaultTopic)
+    }
+    if (path[3]) {
+      setTarget(path[3])
+      parseTarget(path[2], path[3])
+    }
 
-  const tabs: ui.RoutedTab[] = [
-    {
-      path: '/herds',
-      label: 'Besättningar',
-      component: <ManageHerds id={id}/>,
-    },
-    {
-      path: '/users',
-      label: 'Användare',
-      component: <ManageUsers/>
-    },
-  ]
+  }, [genebanks, users, location])
 
-  const {Tabs, TabbedRoutes} = ui.useRoutedTabs(tabs, {autoselect_first: true})
-
-  return (
-    <Paper className={classes.paper}>
-      <Tabs/>
-      <Switch>
-        {TabbedRoutes}
-      </Switch>
-    </Paper>
-  )
-}
-
-
-/**
- * Provides genebanks management forms for granting and revoking herd
- * permissions, and managing herd animals.
- */
-export function Manage() {
-  const {genebanks} = useDataContext()
-
-  const tabs: ui.RoutedTab[] = genebanks.map(g => ({
-    path: `/${g.id}`,
-    label: g.name,
-    component: <InnerPaper id={g.id}/>,
-  }))
-
-  const {Tabs, TabbedRoutes} = ui.useRoutedTabs(tabs, {autoselect_first: true})
 
   return <>
-    <Tabs/>
-    <Switch>
-      {TabbedRoutes}
-    </Switch>
+    <Paper className={styles.main}>
+      <Paper className={styles.controls}>
+        <div>
+          <div className={styles.rightControls}>
+            <div className={topic == 'user' ? styles.hidden : undefined}>
+              <Select
+                options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.name, label: g.name}}) : []}
+                onChange={(current: any) => history.push(`/manage/${current.value}/${target ? target : ''}`)}
+                value={{value: topic == 'user' ? '' : topic, label: topic == 'user' ? '' : topic}}
+                />
+            </div>
+          </div>
+          <div className={styles.leftControls}>
+            <Button
+              variant='contained'
+              color={topic != 'user' ? 'primary' : 'default'}
+              onClick={() => history.push(`/manage/${genebank}/${target ? target : ''}`)}>
+                Herds
+            </Button>
+            <Button
+              variant='contained'
+              color={topic == 'user' ? 'primary' : 'default'}
+              onClick={() => history.push(`/manage/user/${target ? target : ''}`)}>
+                Users
+            </Button>
+          </div>
+        </div>
+
+        <Select
+          options={options}
+          onChange={(current: any) => history.push(`/manage/${topic}/${current.value}`)}
+          value={selected}
+          />
+      </Paper>
+
+      {/* Only show the input form for the currently selected type */}
+      <Switch>
+        <Route path="/manage/user">
+          <Paper className={styles.inputForm}>
+            <UserForm id={selected?.value}/>
+          </Paper>
+        </Route>
+        <Route path="/manage/">
+          <Paper className={styles.inputForm}>
+            <HerdForm id={selected?.value}/>
+          </Paper>
+        </Route>
+      </Switch>
+    </Paper>
   </>
 }
 

@@ -2,6 +2,7 @@ import * as React from 'react'
 
 export interface NameID {
     name: string
+    email?: string
     id: number
 }
 
@@ -35,7 +36,7 @@ export interface Individual {
 export interface Herd {
     id: number
     genebank: number
-    herd: number
+    herd: string
     herd_name: string | null
     has_details: boolean
     is_active: boolean | null
@@ -61,6 +62,14 @@ export interface Herd {
     individuals?: Individual[]
 }
 
+export function herdLabel(herd: Herd): string {
+    let label = `${herd.herd}`
+    if (herd.herd_name) {
+        label += ` - ${herd.herd_name}`
+    }
+    return label
+}
+
 export interface Genebank {
     id: number
     name: string
@@ -71,12 +80,16 @@ export interface Genebank {
 export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
+    setGenebanks(data: Genebank[]): void,
+    setUsers(data: NameID[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
 }
 
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
+  setGenebanks() {},
+  setUsers() {},
   async loadData() {return false},
 }
 
