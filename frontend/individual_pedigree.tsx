@@ -6,7 +6,7 @@
 import React, { Component, useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import PedigreeNetwork from "./pedigree"
+import {PedigreeNetwork} from "./pedigree"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';

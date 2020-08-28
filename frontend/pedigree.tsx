@@ -9,7 +9,7 @@ import { useHistory } from "react-router-dom";
  *
  */
 
-const PedigreeNetwork = ({pedigree}: {pedigree: string}) => {
+export function PedigreeNetwork({pedigree}: {pedigree: string}){
 
     const options = {
       width: Math.round(window.innerWidth * 0.85) + 'px',
@@ -51,7 +51,7 @@ const PedigreeNetwork = ({pedigree}: {pedigree: string}) => {
           }
       });
     },
-    [domNode, network, pedigree]);
+    [pedigree]);
 
     return (
         <div ref={domNode}  >
@@ -59,4 +59,4 @@ const PedigreeNetwork = ({pedigree}: {pedigree: string}) => {
     );
 };
 
-export default PedigreeNetwork;
+

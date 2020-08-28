@@ -2,7 +2,7 @@
 
 import React, { Component, useEffect } from 'react'
 import { get } from './communication';
-import PedigreeNetwork from "./pedigree"
+import {PedigreeNetwork} from "./pedigree"
 
 /**
  * Shows the genebank pedigree graph built using the vis-network component
