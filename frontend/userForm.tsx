@@ -29,6 +29,9 @@ const useStyles = makeStyles({
   permissionTitle: {
     fontWeight: "bold",
     textTransform: "capitalize",
+  },
+  hidden: {
+    visibility: "hidden",
   }
 });
 
@@ -284,6 +287,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
               <TableCell>
                 <Select options={genebankHerds(genebank?.value)}
                         onChange={setHerd}
+                        className={level.value != 'owner' ? classes.hidden : null}
                         isDisabled={level.value != 'owner'}
                         value={herd}
                         />
