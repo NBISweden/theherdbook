@@ -7,7 +7,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import { Tabs, Tab } from '@material-ui/core/'
 import { Box } from '@material-ui/core'
 import { HerdView } from '~herd_view'
-import { Genebank, Herd } from 'data_context_global'
+import { Genebank, Herd, herdLabel } from '~data_context_global'
 
 import { useDataContext } from './data_context'
 
@@ -73,11 +73,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
       >
         {genebank &&
             genebank.herds.sort((a: Herd,b: Herd) => +a.herd - +b.herd).map((h:any, i:number) => {
-            let label = `${h.herd}`;
-            if (h.herd_name) {
-                label += ` - ${h.herd_name}`;
-            }
-            return <Tab key={i} label={label} />
+              return <Tab key={i} label={herdLabel(h)} />
             })}
       </Tabs>
     </div>

@@ -10,7 +10,7 @@ import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd, Genebank } from '~data_context_global';
+import { Herd, Genebank, herdLabel } from '~data_context_global';
 import { useHistory } from 'react-router-dom';
 
 // Define styles for tab menu
@@ -138,7 +138,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
       return []
     }
     return currentGenebank.herds.map((h: Herd) => {
-      return {value: h.id, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
+      return {value: h.id, label: herdLabel(h)}
     })
   }
 
@@ -155,7 +155,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     if (!targetHerd) {
       return 'Unknown'
     }
-    return `${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
+    return herdLabel(targetHerd)
   }
 
   /**

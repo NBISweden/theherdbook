@@ -7,6 +7,7 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
+import { herdLabel } from '~data_context_global';
 
 /**
  * Shows herd information, with a list of all individuals belonging to that
@@ -37,7 +38,7 @@ export function HerdView({id}: {id: string}) {
   return <>
     {herd &&
       <>
-        <h2>{`${herd.herd}`} {herd.herd_name ? `- ${herd.herd_name}` : ''}</h2>
+        <h2>{herdLabel(herd)}</h2>
         <dl>
           {fields.map(field => <div key={field.key}>
               <dt>{field.title}</dt> <dd>{herd[field.key] ? herd[field.key] : '-'}</dd>

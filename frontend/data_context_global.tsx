@@ -62,6 +62,14 @@ export interface Herd {
     individuals?: Individual[]
 }
 
+export function herdLabel(herd: Herd): string {
+    let label = `${herd.herd}`
+    if (herd.herd_name) {
+        label += ` - ${herd.herd_name}`
+    }
+    return label
+}
+
 export interface Genebank {
     id: number
     name: string

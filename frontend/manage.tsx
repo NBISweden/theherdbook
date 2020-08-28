@@ -9,7 +9,7 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd } from '~data_context_global';
+import { Genebank, NameID, Herd, herdLabel } from '~data_context_global';
 import { Button } from '@material-ui/core';
 import { HerdForm } from '~herdForm';
 import { UserForm } from '~userForm';
@@ -78,7 +78,7 @@ export function Manage() {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
       const herdOptions: any[] = dataset.herds.map((h: Herd) => {
-        return {value: h.herd, label: `${h.herd}${h.herd_name ? ` - ${h.herd_name}` : ''}`}
+        return {value: h.herd, label: herdLabel(h)}
       })
       herdOptions.push({value: 'new', label: 'New Herd'})
       setOptions(herdOptions)
@@ -113,8 +113,7 @@ export function Manage() {
       if (dataset) {
         const targetHerd = dataset.herds.find((h: Herd) => h.herd == path)
         if (targetHerd) {
-          const label = `${targetHerd.herd}${targetHerd.herd_name ? ` - ${targetHerd.herd_name}` : ''}`
-          targetOption = {value: targetHerd.herd, label: label}
+          targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
         }
       }
     }
