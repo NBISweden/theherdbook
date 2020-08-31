@@ -7,12 +7,12 @@ import { PedigreeNetwork } from "./pedigree"
 /**
  * Shows the genebank pedigree graph built using the vis-network component
  */
-export function GenebankPedigree({ id }: { id: string }) {
+export function HerdPedigree({ id }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
 
   React.useEffect(() => {
     let mounted = true; // Indicate the mount state
-    get(`/api/genebank_pedigree/${id}`).then(
+    get(`/api/herd_pedigree/${id}`).then(
       data => mounted && data && setPedigree(data),
       error => console.error(error)
     )

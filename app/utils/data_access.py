@@ -415,56 +415,6 @@ def get_individuals(genebank_id, user_uuid=None):
         return []
 
 
-
-def get_leaves(genebank_id, user_uuid=None):
-    """
-    Returns all leaf individuals for a given `genebank_id` that the user identified
-    by `user_uuid` has access to.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None # not logged in
-    try:
-        # TODO: rewrite this in peewee
-        query = """
-        SELECT  i.individual_id, i.name, i.certificate, i.number, i.sex,
-                i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
-                i.colour_note,
-                f.individual_id, f.name, f.number,
-                m.individual_id, m.name, m.number,
-                c.colour_id, c.name,
-                h.herd_id, h.herd, h.herd_name
-        FROM    individual i JOIN
-                individual f ON (i.father_id = f.individual_id) JOIN
-                individual m ON (i.mother_id = m.individual_id) JOIN
-                colour c ON (i.colour_id = c.colour_id) JOIN
-                herd h ON (i.herd_id = h.herd_id)
-        WHERE   h.genebank_id = %s AND
-                (h.is_active OR h.is_active IS NULL) and 
-                i.individual_id not in (select father_id from individual WHERE father_id IS NOT NULL) and
-                i.individual_id not in (select mother_id from individual WHERE mother_id IS NOT NULL);"""
-        cursor = DATABASE.execute_sql(query, (genebank_id,))
-        return [{
-            'id': i[0],
-            'name': i[1],
-            'certificate': i[2],
-            'number': i[3],
-            'sex': i[4],
-            'birth_date': i[5].strftime('%Y-%m-%d') if i[5] else None,
-            'death_date': i[6].strftime('%Y-%m-%d') if i[6] else None,
-            'death_note': i[7],
-            'litter': i[8],
-            'notes': i[9],
-            'color_note': i[10],
-            'father': {'id': i[11], 'name': i[12], 'number': i[13]},
-            'mother': {'id': i[14], 'name': i[15], 'number': i[16]},
-            'color': {'id': i[17], 'name': i[18]},
-            'herd': {'id': i[19], 'herd': i[20], 'herd_name': i[21]},
-        } for i in cursor.fetchall()]
-    except DoesNotExist:
-        return []
-
-
 def get_all_individuals():
     """
     Returns the neccessary information about all individuals for computing genetic coefficients.

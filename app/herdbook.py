@@ -218,32 +218,33 @@ def individual(i_id):
     return jsonify(ind)
 
 
-@APP.route('/api/genebank_pedigree/<int:id>')
+@APP.route('/api/herd_pedigree/<int:id>')
 @login_required
 @cache.cached(timeout=36000)
-def genebank_pedigree(id):
+def herd_pedigree(id):
     """
     Returns the pedigree information for the genebank_id provided.
     """
-    result = build_genebank_pedigree(id)
+    result = build_herd_pedigree(id)
     return json.dumps(result)
 
 
-def build_genebank_pedigree(id):
+def build_herd_pedigree(id):
     from datetime import datetime
     init_time = datetime.now()
 
     user_id = session.get('user_id')
-    leaves = da.get_leaves(id, user_id)
+    leaves = da.get_herd(id, user_id)["individuals"]
     nodes = {}
     edges = []
     if leaves:
-        for ind in leaves:
-            build_pedigree(ind, user_id, 1, 100, nodes, edges, False)
+        for leave in leaves:
+            ind = da.get_individual(leave["id"], user_id)
+            build_pedigree(ind, user_id, 1, 100, nodes, edges, True)
     result = {"nodes": list(nodes.values()), "edges": edges}
     later_time = datetime.now()
     difference = later_time - init_time
-    APP.logger.info("built genebank in %d seconds" % difference.total_seconds())
+    APP.logger.info("built herd in %d seconds" % difference.total_seconds())
     return result
 
 
@@ -270,7 +271,6 @@ def pedigree(i_id, generations):
 def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
     """Builds the pedigree dict tree for the individual"""
     id = ind["id"]
-    APP.logger.info("build pedigree %s" % id)
     pnode = {"id": id, "level": level, "x": len(edges)}
     if show_label:
         label = "%s\n%s" % (ind["name"], ind["number"])

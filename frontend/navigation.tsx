@@ -14,7 +14,7 @@ import {HerdView} from './herd_view'
 import {Manage} from './manage'
 import {Individual} from './individual'
 import {IndividualPedigree} from './individual_pedigree'
-import {GenebankPedigree} from './genebank_pedigree'
+import {HerdPedigree} from './herd_pedigree'
 import {Switch, Route} from 'react-router-dom'
 import {useUserContext} from './user_context'
 import * as ui from './ui_utils'
@@ -103,8 +103,8 @@ export function Navigation() {
         <ui.Routed path="/individual/:id/:generations?">
           {params => <IndividualPedigree id={params.id} generations={params.generations? params.generations: 5}/>}
         </ui.Routed>
-        <ui.Routed path="/genebank_pedigree/:id">
-          {params => <GenebankPedigree id={params.id}/>}
+        <ui.Routed path="/herd_pedigree/:id">
+          {params => <HerdPedigree id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/individual2/:id">
           {params => <Individual id={params.id} />}
