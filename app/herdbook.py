@@ -239,7 +239,7 @@ def build_genebank_pedigree(id):
     edges = []
     if leaves:
         for ind in leaves:
-            build_pedigree(ind, user_id, 1, 100, nodes, edges)
+            build_pedigree(ind, user_id, 1, 100, nodes, edges, False)
     result = {"nodes": list(nodes.values()), "edges": edges}
     later_time = datetime.now()
     difference = later_time - init_time
@@ -261,18 +261,20 @@ def pedigree(i_id, generations):
     result = None
     ind = da.get_individual(i_id, user_id)
     if ind:
-        build_pedigree(ind, user_id, 1, generations, nodes, edges)
+        build_pedigree(ind, user_id, 1, generations, nodes, edges, True)
         result = {"nodes": list(nodes.values()), "edges": edges}
     APP.logger.info("built pedigree for %d" % i_id)
     return jsonify(result)
 
 
-def build_pedigree(ind, user_id, level, generations, nodes, edges):
+def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
     """Builds the pedigree dict tree for the individual"""
     id = ind["id"]
+    APP.logger.info("build pedigree %s" % id)
     pnode = {"id": id, "level": level, "x": len(edges)}
-    label = "%s\n%s" % (ind["name"], ind["number"])
-    pnode["label"] = label
+    if show_label:
+        label = "%s\n%s" % (ind["name"], ind["number"])
+        pnode["label"] = label
     if ind["sex"] == 'male':
         pnode["shape"] = "box"
     elif ind["sex"] == 'female':
@@ -289,7 +291,7 @@ def build_pedigree(ind, user_id, level, generations, nodes, edges):
         if parent_id not in nodes:
             if level <= generations:
                 ind = da.get_individual(parent_id, user_id)
-                build_pedigree(ind, user_id, level + 1, generations, nodes, edges)
+                build_pedigree(ind, user_id, level + 1, generations, nodes, edges, show_label)
                 edges.append(edge)
         else:
             edges.append(edge)
