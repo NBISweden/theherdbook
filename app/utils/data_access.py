@@ -15,6 +15,7 @@ from werkzeug.security import (
 from utils.database import (
     DB_PROXY as DATABASE,
     Herd,
+    HerdTracking,
     Individual,
     User,
 )
@@ -143,7 +144,22 @@ def get_herd(herd_id, user_uuid=None):
             data = herd.filtered_dict(user)
             if data["genebank"] not in user.accessible_genebanks:
                 return None
-            query = Individual().select().where(Individual.herd == herd)
+
+            # This turned out to be really hard to write in peewee
+            query = Individual.raw("""
+                SELECT  i.*
+                FROM    individual i
+                JOIN    herd_tracking ht ON (i.individual_id = ht.individual_id)
+                JOIN    herd h ON (ht.herd_id = h.herd_id)
+                WHERE   h.herd = %s
+                AND     i.death_date IS NULL
+                AND     ht.herd_tracking_date = (
+                        SELECT  MAX(herd_tracking_date)
+                        FROM    herd_tracking
+                        WHERE   individual_id = ht.individual_id
+                )
+            """, herd_id)
+
             data["individuals"] = [i.short_info() for i in query.execute()]
             return data
     except DoesNotExist:
@@ -211,7 +227,7 @@ def get_individual(individual_id, user_uuid=None):
     try:
         with DATABASE.atomic():
             individual = Individual.get(individual_id)
-        if individual and individual.herd.genebank.id in user.accessible_genebanks:
+        if individual and individual.current_herd.genebank.id in user.accessible_genebanks:
             return individual.as_dict()
         return None
     except DoesNotExist:
@@ -404,21 +420,37 @@ def get_individuals(genebank_id, user_uuid=None):
         return None  # not logged in
     try:
         # TODO: rewrite this in peewee
+        # We currently don't have a real good way of defining when an individual
+        # is "genetically dead" (either dead, or no longer part of breeding) so
+        # we check a combination of death_date, death_note and that the latest
+        # herd_tracking value can't be more than a year old.
         query = f"""
-        SELECT  i.individual_id, i.name, i.certificate, i.number, i.sex,
-                i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
-                i.colour_note,
-                f.individual_id, f.name, f.number,
-                m.individual_id, m.name, m.number,
-                c.colour_id, c.name,
-                h.herd_id, h.herd, h.herd_name
-        FROM    individual i JOIN
-                individual f ON (i.father_id = f.individual_id) JOIN
-                individual m ON (i.mother_id = m.individual_id) JOIN
-                colour c ON (i.colour_id = c.colour_id) JOIN
-                herd h ON (i.herd_id = h.herd_id)
-        WHERE   h.genebank_id = {genebank_id} AND
-                (h.is_active OR h.is_active IS NULL);"""
+        SELECT      i.individual_id, i.name, i.certificate, i.number, i.sex,
+                    i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
+                    i.colour_note,
+                    f.individual_id, f.name, f.number,
+                    m.individual_id, m.name, m.number,
+                    c.colour_id, c.name,
+                    h.herd_id, h.herd, h.herd_name
+        FROM        individual i
+        LEFT JOIN   individual f ON (i.father_id = f.individual_id)
+        LEFT JOIN   individual m ON (i.mother_id = m.individual_id)
+        JOIN        colour c ON (i.colour_id = c.colour_id)
+        JOIN        (
+                        SELECT DISTINCT ON (individual_id)
+                                 individual_id,
+                                 herd_id,
+                                 herd_tracking_date
+                        FROM     herd_tracking
+                        ORDER BY individual_id, herd_tracking_date DESC
+                    ) AS ih ON (ih.individual_id = i.individual_id)
+        JOIN        herd h ON (ih.herd_id = h.herd_id)
+        WHERE       h.genebank_id = %s
+        AND         (h.is_active OR h.is_active IS NULL)
+        AND         i.death_date IS NULL
+        AND         (i.death_note = '' OR i.death_note IS NULL)
+        AND         ih.herd_tracking_date > current_date - interval '1 year'
+        ;"""
         with DATABASE.atomic():
             cursor = DATABASE.execute_sql(query, (genebank_id,))
         return [

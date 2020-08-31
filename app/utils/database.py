@@ -322,7 +322,7 @@ class Individual(BaseModel):
     """
 
     id = AutoField(primary_key=True, column_name="individual_id")
-    herd = ForeignKeyField(Herd)
+    origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
     number = CharField(20)
@@ -337,13 +337,27 @@ class Individual(BaseModel):
     litter = IntegerField(null=True)
     notes = CharField(100, null=True)
 
+    @property
+    def current_herd(self):
+        """
+        Returns the current herd of the individual by querying the HerdTracking
+        table.
+        """
+        if not self.herdtracking_set:
+            return self.origin_herd
+        return self.herdtracking_set \
+                   .order_by(HerdTracking.herd_tracking_date.desc()) \
+                   .first() \
+                   .herd
+
     def as_dict(self):
         """
         Returns the objects key/value pair as a dictionary, including data from
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data["herd"] = {"id": self.herd.id, "name": self.herd.herd_name}
+        data["origin_herd"] = {"id": self.origin_herd.id, "name": self.origin_herd.herd_name}
+        data["herd"] = self.current_herd
         data["mother"] = (
             {"id": self.mother.id, "name": self.mother.name} if self.mother else None
         )
@@ -399,7 +413,7 @@ class Individual(BaseModel):
         Add a unique index to number+genebank
         """
 
-        indexes = ((("number", "herd"), True),)
+        indexes = ((("number", "origin_herd"), True),)
 
 
 class Weight(BaseModel):
