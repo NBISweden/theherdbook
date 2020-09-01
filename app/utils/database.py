@@ -392,8 +392,14 @@ class Individual(BaseModel):
         Included fields.
             - id
             - name
+            - number
+            - sex
+            - father
+            - mother
         """
-        return {"id": self.id, "name": self.name, "number": self.number}
+        father = {"id": self.father.id} if self.father else None
+        mother = {"id": self.mother.id} if self.mother else None
+        return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
 
     class Meta:  # pylint: disable=too-few-public-methods
         """

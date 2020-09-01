@@ -239,8 +239,7 @@ def build_herd_pedigree(id):
     edges = []
     if leaves:
         for leave in leaves:
-            ind = da.get_individual(leave["id"], user_id)
-            build_pedigree(ind, user_id, 1, 100, nodes, edges, True)
+            build_pedigree(leave, user_id, 1, 100, nodes, edges, True)
     result = {"nodes": list(nodes.values()), "edges": edges}
     later_time = datetime.now()
     difference = later_time - init_time

@@ -6,7 +6,7 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { Tabs, Tab } from '@material-ui/core/'
 import { Box } from '@material-ui/core'
-import { HerdView } from '~herd_view'
+import { HerdPedigree } from '~herd_pedigree'
 import { Genebank, Herd } from 'data_context_global'
 
 import { useDataContext } from './data_context'
@@ -83,7 +83,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
     </div>
 
     <Box className={classes.controls}>
-      <HerdView id={herd} />
+      <HerdPedigree id={herd} />
     </Box>
   </>
 }

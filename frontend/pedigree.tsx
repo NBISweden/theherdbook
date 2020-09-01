@@ -11,8 +11,13 @@ import { useHistory } from "react-router-dom";
 
 export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
 
+  // A reference to the div rendered by this component
+  const domNode = useRef(null);
+  const network = useRef(null);
+  const history = useHistory();
+
   const options = {
-    width: Math.round(window.innerWidth * 0.85) + 'px',
+    width: Math.round(domNode.offsetWidth * 0.85) + 'px',
     height: Math.round(window.innerHeight * 0.80) + 'px',
     layout: {
       hierarchical: {
@@ -36,10 +41,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
     physics: false
   }
 
-  // A reference to the div rendered by this component
-  const domNode = useRef(null);
-  const network = useRef(null);
-  const history = useHistory();
+
 
   useEffect(
     () => {
