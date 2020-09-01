@@ -95,7 +95,7 @@ def get_users():
     return jsonify(users=users)
 
 
-@APP.route("/api/manage/user/<int:u_id>", methods=["GET", "UPDATE", "POST"])
+@APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "POST"])
 @login_required
 def manage_user(u_id):
     """
@@ -113,7 +113,7 @@ def manage_user(u_id):
     return jsonify(status=status)
 
 
-@APP.route("/api/manage/role", methods=["POST"])
+@APP.route("/api/manage/role", methods=["POST", "UPDATE"])
 @login_required
 def manage_roles():
     """
@@ -195,7 +195,7 @@ def genebank(g_id=None):
     return jsonify(genebanks=da.get_genebanks(user_id))
 
 
-@APP.route("/api/herd/<int:h_id>")
+@APP.route("/api/herd/<h_id>")
 @login_required
 def herd(h_id):
     """

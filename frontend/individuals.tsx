@@ -58,7 +58,7 @@ const tableIcons: Icons = {
 
 const columns = [
   {field: 'herd', title: 'Besättning',
-    render: (rowData:any) => <Link to={`/herd/${rowData.herd['id']}`}>{rowData.herd['herd']}</Link>
+    render: (rowData:any) => <Link to={`/herd/${rowData.herd['herd']}`}>{rowData.herd['herd']}</Link>
   },
   {field: 'name', title: 'Namn'},
   {field: 'certificate', title: 'Certifikat'},
