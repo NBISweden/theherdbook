@@ -32,7 +32,10 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
       }
     },
     edges: {
-      arrows: { to: { enabled: true, scaleFactor: 0.50 } }
+      color:  { color: "LightGray", inherit: false },
+      arrows: { to: { enabled: true, scaleFactor: 0.50 } },
+      smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
+
     },
     interaction: {
       navigationButtons: true,
