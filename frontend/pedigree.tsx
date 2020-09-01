@@ -18,7 +18,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
 
   const options = {
     width: Math.round(domNode.offsetWidth * 0.85) + 'px',
-    height: Math.round(window.innerHeight * 0.80) + 'px',
+    height: Math.round(window.innerHeight * 0.75) + 'px',
     layout: {
       hierarchical: {
         enabled: true,
