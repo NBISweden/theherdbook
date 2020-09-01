@@ -293,7 +293,7 @@ def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
                 ind = da.get_individual(parent_id, user_id)
                 build_pedigree(ind, user_id, level + 1, generations, nodes, edges, show_label)
                 edges.append(edge)
-        else:
+        elif edge not in edges:
             edges.append(edge)
 
     if mother:
