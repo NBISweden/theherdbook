@@ -218,7 +218,7 @@ def individual(i_id):
     return jsonify(ind)
 
 
-@APP.route('/api/herd_pedigree/<int:id>')
+@APP.route('/api/herd_pedigree/<id>')
 @login_required
 @cache.cached(timeout=36000)
 def herd_pedigree(id):
@@ -234,7 +234,8 @@ def build_herd_pedigree(id):
     init_time = datetime.now()
 
     user_id = session.get('user_id')
-    leaves = da.get_herd(id, user_id)["individuals"]
+    herd = da.get_herd(id, user_id)
+    leaves = herd["individuals"] if herd else None
     nodes = {}
     edges = []
     if leaves:
