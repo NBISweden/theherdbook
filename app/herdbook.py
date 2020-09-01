@@ -218,14 +218,14 @@ def individual(i_id):
     return jsonify(ind)
 
 
-@APP.route('/api/herd_pedigree/<id>')
+@APP.route('/api/herd_pedigree/<herd_id>')
 @login_required
 @cache.cached(timeout=36000)
-def herd_pedigree(id):
+def herd_pedigree(herd_id):
     """
     Returns the pedigree information for the genebank_id provided.
     """
-    result = build_herd_pedigree(id)
+    result = build_herd_pedigree(herd_id)
     return json.dumps(result)
 
 
