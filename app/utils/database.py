@@ -356,8 +356,8 @@ class Individual(BaseModel):
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data["origin_herd"] = {"id": self.origin_herd.id, "name": self.origin_herd.herd_name}
-        data["herd"] = {"id": self.current_herd.id, "name": self.current_herd.herd_name}
+        data["origin_herd"] = {"id": self.origin_herd.id, "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
+        data["herd"] = {"id": self.current_herd.id, "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
         data["mother"] = (
             {"id": self.mother.id, "name": self.mother.name} if self.mother else None
         )
