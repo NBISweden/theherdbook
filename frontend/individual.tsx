@@ -6,6 +6,7 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
+import { herdLabel } from '~data_context_global';
 
 /**
  * Shows information for a given individual in a herd
@@ -32,8 +33,8 @@ export function Individual({id}: {id: string}) {
             <dt>Dödsdatum</dt> <dd>{individual.death_date ?? '-'}</dd>
             <dt>Dödsanteckning</dt> <dd>{individual.death_note ?? '-'}</dd>
             <dt>Besättning</dt>
-            <Link to={`/herd/${individual.herd.id}`}>
-              <dd>{individual.herd.name ?? individual.herd.id}</dd>
+            <Link to={`/herd/${individual.herd.herd}`}>
+              <dd>{herdLabel(individual.herd)}</dd>
             </Link>
             <dt>Mor</dt>
             {individual.mother
