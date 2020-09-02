@@ -11,6 +11,7 @@ import { useDataContext } from './data_context'
 import { Herd, Individual, Genebank } from '~data_context_global';
 
 import { get, updateHerd, createHerd } from './communication';
+import { useMessageContext } from '~message_context';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -76,6 +77,7 @@ const defaultValues: Herd = {
  */
 export function HerdForm({id}: {id: string | undefined}) {
   const {genebanks, setGenebanks} = useDataContext()
+  const {userMessage} = useMessageContext()
   const [herd, setHerd] = React.useState({...defaultValues} as Herd)
   const [loading, setLoading] = React.useState(true);
   const [postalcode, setPostalcode] = React.useState('000 00')
@@ -167,10 +169,13 @@ export function HerdForm({id}: {id: string | undefined}) {
             if (genebank) {
               genebank.herds.push(postData)
               setGenebanks(Object.assign([], genebanks))
+              userMessage('Herd saved', 'success')
 
               // navigate to new herd to allow continued editing
               history.push(`/manage/${genebank?.name}/${postData.herd}`)
             }
+          } else {
+            userMessage('Error:' + status, 'error');
           }
         }
       )
@@ -184,6 +189,7 @@ export function HerdForm({id}: {id: string | undefined}) {
               if (toUpdate) {
                 toUpdate.herd_name = postData.herd_name
                 setGenebanks(Object.assign([], genebanks))
+                userMessage('Changes saved', 'success')
               }
             }
           }
