@@ -12,6 +12,7 @@ import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
 import { Herd, Genebank, herdLabel } from '~data_context_global';
 import { useHistory } from 'react-router-dom';
+import { useMessageContext } from '~message_context';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -64,6 +65,7 @@ const PermissionLevels = [{value: 'owner', label: 'Owner'},
  */
 export function UserForm({id}: {id: number | 'new' | undefined}) {
   const {genebanks, loadData} = useDataContext()
+  const {userMessage} = useMessageContext()
   const [user, setUser] = React.useState({...defaultValues} as ManagedUser)
   const [isNew, setNew] = React.useState(false)
   const [level, setLevel] = React.useState(PermissionLevels[0])
@@ -113,12 +115,17 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     protocol(`/api/manage/user/${id == 'new' ? 0 : id}`, postData).then(
       data => {
         switch (data.status) {
-          case "updated": console.info("updated."); break; // updated user
+          case "updated":
+            userMessage('Changes saved', 'success')
+            break; // updated user
           case "success":
-            history.push(`/manage/user/${data.id}`);
+            history.push(`/manage/user/${data.id}`)
             setNew(false);
+            userMessage('User saved', 'success')
             break; // added user
-          default: console.warn("status:", data)// "failed" or other erro
+          default:
+            userMessage('Error: ' + data?.status ?? data, 'error')
+            console.warn("status:", data)// "failed" or other error
         }
       },
       error => console.error(error)
