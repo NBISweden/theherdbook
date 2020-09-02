@@ -357,7 +357,7 @@ class Individual(BaseModel):
         """
         data = super().as_dict()
         data["origin_herd"] = {"id": self.origin_herd.id, "name": self.origin_herd.herd_name}
-        data["herd"] = self.current_herd
+        data["herd"] = {"id": self.current_herd.id, "name": self.current_herd.herd_name}
         data["mother"] = (
             {"id": self.mother.id, "name": self.mother.name} if self.mother else None
         )
