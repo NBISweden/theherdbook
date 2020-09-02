@@ -6,9 +6,8 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { Tabs, Tab } from '@material-ui/core/'
 import { Box } from '@material-ui/core'
-import { HerdPedigree } from '~herd_pedigree'
+import { HerdView } from '~herd_view'
 import { Genebank, Herd, herdLabel } from '~data_context_global'
-
 import { useDataContext } from './data_context'
 
 // Define styles for tab menu
@@ -79,7 +78,7 @@ export function ExploreHerds({id}: {id: number | undefined}) {
     </div>
 
     <Box className={classes.controls}>
-      <HerdPedigree id={herd} />
+      <HerdView id={herd} />
     </Box>
   </>
 }

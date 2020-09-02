@@ -5,7 +5,7 @@ import { useHistory } from "react-router-dom";
 
 
 /**
- * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a genebank,
+ * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd
  *
  */
 
@@ -26,16 +26,16 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
         sortMethod: 'directed',
         levelSeparation: 120,
         parentCentralization: true,
+        //shakeTowards: "roots",
         edgeMinimization: true,
         blockShifting: true,
         nodeSpacing: 100
       }
     },
     edges: {
-      color:  { color: "LightGray", inherit: false },
-      arrows: { to: { enabled: true, scaleFactor: 0.50 } },
-      smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
-
+      //color:  { color: "LightGray", inherit: false },
+      arrows: { to: { enabled: true, scaleFactor: 0.50 } }
+      //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
     },
     interaction: {
       navigationButtons: true,
@@ -43,7 +43,6 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
     },
     physics: false
   }
-
 
 
   useEffect(
@@ -57,6 +56,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
       });
     },
     [pedigree]);
+
 
   return (
     <div ref={domNode}  >

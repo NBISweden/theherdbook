@@ -6,3 +6,8 @@ personal
 
 # database files
 postgres-data/
+
+# frontend files
+node_modules
+.cache
+.parcel-cache
