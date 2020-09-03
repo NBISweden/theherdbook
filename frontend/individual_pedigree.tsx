@@ -1,7 +1,3 @@
-/**
- * @file This file contains the Pedigree function. This function fetches
- *       pedigree for a given `id` (parsed from the url).
- */
 
 import React, { Component, useEffect } from 'react'
 import { Link } from "react-router-dom";
@@ -14,7 +10,7 @@ import TableRow from '@material-ui/core/TableRow';
 
 
 /**
- * Shows the information of a given individual and the pedigree graph built using the vis-network component
+ * Shows the information of a given individual and the pedigree graph built using the pedigree component
  */
 export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)

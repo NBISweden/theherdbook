@@ -10,9 +10,11 @@ import { Link } from "react-router-dom";
 
 
 /**
- * Shows the herd pedigree graph built using the vis-network component.
+ * @file shows the herd pedigree graph built using the pedigree component with the herd data added.
  */
+
 export function HerdPedigree({ id }: { id: string }) {
+
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [herd, setHerd] = React.useState(undefined as any)
 
@@ -28,7 +30,7 @@ export function HerdPedigree({ id }: { id: string }) {
 
   React.useEffect(() => {
     let mounted = true; // Indicate the mount state
-    
+
     get(`/api/herd_pedigree/${id}`).then(
       data => mounted && data && setPedigree(data),
       error => console.error(error)

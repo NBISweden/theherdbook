@@ -5,8 +5,8 @@ import { useHistory } from "react-router-dom";
 
 
 /**
- * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd
- *
+ * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd.
+ * The network data is built from the python api
  */
 
 export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
@@ -26,7 +26,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
         sortMethod: 'directed',
         levelSeparation: 120,
         parentCentralization: true,
-        //shakeTowards: "roots",
+        //shakeTowards: "roots",//it moves the parents up in the pedigree
         edgeMinimization: true,
         blockShifting: true,
         nodeSpacing: 100
