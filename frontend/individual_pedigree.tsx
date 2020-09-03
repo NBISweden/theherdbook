@@ -38,7 +38,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
   }, [id, generations_input])//dependent on these values
 
   return <>
-    {individual && pedigree && <>//the component will be rendered if the individual and pedigree were retrieved
+    {individual && pedigree && <>
       <Table width="100%">
         <TableBody>
           <TableRow style={{ verticalAlign: "top" }}>
