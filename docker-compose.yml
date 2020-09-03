@@ -25,9 +25,7 @@ services:
             context: ./
             dockerfile: .docker/frontend
         volumes:
-            - type: bind
-              source: ./frontend
-              target: /app
+            - ./frontend:/app
             - /app/node_modules
             - /app/.parcel-cache
             - /app/.cache

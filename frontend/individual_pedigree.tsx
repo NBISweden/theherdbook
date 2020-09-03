@@ -10,7 +10,7 @@ import TableRow from '@material-ui/core/TableRow';
 
 
 /**
- * Shows the information of a given individual and the pedigree graph built using the pedigree component
+ * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component
  */
 export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
@@ -33,12 +33,12 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
       error => console.error(error)
     )
 
-    return () => { mounted = false }
+    return () => { mounted = false }//allows to validate the mount state of the component
 
-  }, [id, generations_input])
+  }, [id, generations_input])//dependent on these values
 
   return <>
-    {individual && pedigree && <>
+    {individual && pedigree && <>//the component will be rendered if the individual and pedigree were retrieved
       <Table width="100%">
         <TableBody>
           <TableRow style={{ verticalAlign: "top" }}>

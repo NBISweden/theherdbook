@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 
 
 /**
- * @file shows the herd pedigree graph built using the pedigree component with the herd data added.
+ * @file shows the herd data and the pedigree graph of the individuals using the pedigree component.
  */
 
 export function HerdPedigree({ id }: { id: string }) {

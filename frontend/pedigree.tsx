@@ -5,8 +5,8 @@ import { useHistory } from "react-router-dom";
 
 
 /**
- * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd.
- * The network data is built from the python api
+ * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd,
+ * depending on the input data. The network data is built from the python api.
  */
 
 export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
@@ -17,31 +17,31 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
   const history = useHistory();
 
   const options = {
-    width: Math.round(domNode.offsetWidth * 0.85) + 'px',
-    height: Math.round(window.innerHeight * 0.75) + 'px',
+    width: Math.round(domNode.offsetWidth * 0.85) + 'px',//width is calculated considering the parent component width
+    height: Math.round(window.innerHeight * 0.75) + 'px',//height uses the window height as reference, the domNode did not worked
     layout: {
       hierarchical: {
         enabled: true,
-        direction: "DU",
+        direction: "DU",//Down up orientation
         sortMethod: 'directed',
-        levelSeparation: 120,
+        levelSeparation: 120,//vertical space between the nodes
         parentCentralization: true,
         //shakeTowards: "roots",//it moves the parents up in the pedigree
         edgeMinimization: true,
         blockShifting: true,
-        nodeSpacing: 100
+        nodeSpacing: 120
       }
     },
     edges: {
-      //color:  { color: "LightGray", inherit: false },
-      arrows: { to: { enabled: true, scaleFactor: 0.50 } }
-      //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}
+      //color:  { color: "LightGray", inherit: false },//avoids the arrows to inherit node color
+      arrows: { to: { enabled: true, scaleFactor: 0.50 } }//makes smaller arrows
+      //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}//makes elbow arrows
     },
     interaction: {
       navigationButtons: true,
       keyboard: true
     },
-    physics: false
+    physics: false//it makes the rendering faster, recommended in hierarchical layout
   }
 
 
