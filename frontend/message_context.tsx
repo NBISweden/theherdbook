@@ -14,7 +14,7 @@ export interface MessageContext {
 }
 const emptyContext: MessageContext = {
     userMessage() {},
-  }
+}
 
 export const MessageContext = React.createContext(emptyContext)
 
