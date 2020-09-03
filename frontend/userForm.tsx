@@ -120,8 +120,10 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             break; // updated user
           case "success":
             history.push(`/manage/user/${data.id}`)
-            setNew(false);
-            userMessage('User saved', 'success')
+            unstable_batchedUpdates(() => {
+              setNew(false);
+              userMessage('User saved', 'success')
+            })
             break; // added user
           default:
             userMessage('Error: ' + data?.status ?? data, 'error')
