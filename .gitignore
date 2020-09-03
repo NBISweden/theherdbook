@@ -19,6 +19,7 @@ venv.bak/
 frontend/dist/
 frontend/coverage/
 frontend/node_modules/
+*.js.map
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

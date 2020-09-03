@@ -5,6 +5,7 @@ Database handler for 'the herdbook'.
 
 import json
 import logging
+from flask_login import UserMixin
 
 from peewee import (
     PostgresqlDatabase,
@@ -405,8 +406,14 @@ class Individual(BaseModel):
         Included fields.
             - id
             - name
+            - number
+            - sex
+            - father
+            - mother
         """
-        return {"id": self.id, "name": self.name, "number": self.number}
+        father = {"id": self.father.id} if self.father else None
+        mother = {"id": self.mother.id} if self.mother else None
+        return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
@@ -461,7 +468,7 @@ class HerdTracking(BaseModel):
         table_name = "herd_tracking"
 
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     """
     Table keeping track of system users.
     """
@@ -627,13 +634,15 @@ class User(BaseModel):
         """
         Returns the information that is needed in the frontend.
         """
+
         return {
             "email": self.email,
             "validated": self.validated if self.validated else False,
             "is_admin": self.is_admin,
             "is_manager": self.is_manager,
-            "is_owner": self.is_owner,
+            "is_owner": self.is_owner
         }
+
 
     def get_genebanks(self):
         """

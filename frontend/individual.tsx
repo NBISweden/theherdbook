@@ -4,7 +4,6 @@
  */
 import React from 'react'
 import {Link} from "react-router-dom";
-
 import { get } from './communication';
 import { herdLabel } from '~data_context_global';
 
@@ -15,15 +14,19 @@ export function Individual({id}: {id: string}) {
   const [individual, setIndividual] = React.useState(undefined as any)
 
   React.useEffect(() => {
+    let mounted = true; // Indicate the mount state
     get(`/api/individual/${id}`).then(
-      data => data && setIndividual(data),
+      data => mounted && data && setIndividual(data),
       error => console.error(error)
     )
-  }, [id])
+     return () => { // Runs when component will unmount
+            mounted = false;
+    }
+  }, [])
 
   return <>
     {individual
-      && <>
+       && <>
           <h2>{individual.name ?? 'unnamed'}</h2>
           <dl>
             <dt>Nummer</dt> <dd>{individual.number}</dd>

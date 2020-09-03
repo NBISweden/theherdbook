@@ -25,13 +25,10 @@ services:
             context: ./
             dockerfile: .docker/frontend
         volumes:
-            - type: bind
-              source: ./frontend
-              target: /frontend
-            - /frontend/node_modules
-            - /frontend/.parcel-cache
-            - /frontend/.cache
-        working_dir: /frontend
+            - ./frontend:/app
+            - /app/node_modules
+            - /app/.parcel-cache
+            - /app/.cache
     main:
         image: herdbook_main
         build:
