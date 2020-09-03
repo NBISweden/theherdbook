@@ -8,6 +8,6 @@ personal
 postgres-data/
 
 # frontend files
-node_modules
-.cache
-.parcel-cache
+frontend/node_modules
+frontend/.cache
+frontend/.parcel-cache

@@ -31,7 +31,6 @@ services:
             - /app/node_modules
             - /app/.parcel-cache
             - /app/.cache
-        working_dir: /app
     main:
         image: herdbook_main
         build:

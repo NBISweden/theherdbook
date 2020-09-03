@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "parcel serve index.html --port 2345 --hmr-port 2346",
-    "build": "rm dist/*; parcel build index.html",
+    "build": "rm -rf dist/*; parcel build index.html",
     "test": "jest"
   },
   "dependencies": {
@@ -38,11 +38,11 @@
     "react-icons": "^3.10.0",
     "react-is": "^16.8.0",
     "react-router-dom": "^5.2.0",
+    "react-select": "^3.1.0",
     "styled-components": "^5.1.0",
     "vis-data": "^7.0.0",
     "vis-network": "^8.1.0",
-    "vis-util": "^4.3.4",
-    "react-select": "^3.1.0"
+    "vis-util": "^4.3.4"
   },
   "targets": {
     "browser": {
