@@ -126,13 +126,14 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             break; // updated user
           case "success":
           case "created":
+            const newUserId = data.data;
             unstable_batchedUpdates(() => {
               setNew(false);
-              users.push({email: user.email, id: data.data, name: user.email})
-              setUsers(Object.assign([], users))
+              const new_user = {email: user.email, id: data.data, name: user.email}
+              setUsers([...users, new_user])
               userMessage('User saved', 'success')
             })
-            history.push(`/manage/user/${data?.data}`)
+            history.push(`/manage/user/${newUserId}`)
             break; // added user
           default:
             userMessage('Error: ' + data?.message, 'error')
