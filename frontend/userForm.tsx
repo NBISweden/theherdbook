@@ -129,7 +129,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             const newUserId = data.data;
             unstable_batchedUpdates(() => {
               setNew(false);
-              const new_user = {email: user.email, id: data.data, name: user.email}
+              const new_user = {email: user.email, id: newUserId, name: user.email}
               setUsers([...users, new_user])
               userMessage('User saved', 'success')
             })
