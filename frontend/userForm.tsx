@@ -64,7 +64,7 @@ const PermissionLevels = [{value: 'owner', label: 'Owner'},
  * `undefined` or `'new'`.
  */
 export function UserForm({id}: {id: number | 'new' | undefined}) {
-  const {genebanks, loadData} = useDataContext()
+  const {genebanks, users, loadData, setUsers} = useDataContext()
   const {userMessage} = useMessageContext()
   const [user, setUser] = React.useState({...defaultValues} as ManagedUser)
   const [isNew, setNew] = React.useState(false)
@@ -126,11 +126,13 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             break; // updated user
           case "success":
           case "created":
-            history.push(`/manage/user/${data?.data}`)
             unstable_batchedUpdates(() => {
               setNew(false);
+              users.push({email: user.email, id: data.data, name: user.email})
+              setUsers(Object.assign([], users))
               userMessage('User saved', 'success')
             })
+            history.push(`/manage/user/${data?.data}`)
             break; // added user
           default:
             userMessage('Error: ' + data?.message, 'error')
