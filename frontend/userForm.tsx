@@ -10,7 +10,7 @@ import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd, Genebank, herdLabel } from '~data_context_global';
+import { Herd, Genebank, herdLabel, ServerMessage } from '~data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '~message_context';
 
@@ -76,14 +76,19 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
 
   const loadUser = (id: number) => {
     get(`/api/manage/user/${id}`).then(
-      data => {
-        if (data) {
+      (data: ServerMessage) => {
+        if (data.status == 'success') {
           unstable_batchedUpdates(() => {
-            setUser(data)
+            setUser(data?.data)
             setNew(false)
           })
         } else {
-          setNew(true)
+          unstable_batchedUpdates(() => {
+            if (data.message) {
+              userMessage(data?.message, 'error')
+            }
+            setNew(true)
+          })
         }
       },
       error => console.error(error)
@@ -113,21 +118,23 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
     delete postData["privileges"];
     let protocol = isNew ? post : update;
     protocol(`/api/manage/user/${id == 'new' ? 0 : id}`, postData).then(
-      data => {
+      (data: ServerMessage) => {
         switch (data.status) {
           case "updated":
+          case "unchanged":
             userMessage('Changes saved', 'success')
             break; // updated user
           case "success":
-            history.push(`/manage/user/${data.id}`)
+          case "created":
+            history.push(`/manage/user/${data?.data}`)
             unstable_batchedUpdates(() => {
               setNew(false);
               userMessage('User saved', 'success')
             })
             break; // added user
           default:
-            userMessage('Error: ' + data?.status ?? data, 'error')
-            console.warn("status:", data)// "failed" or other error
+            userMessage('Error: ' + data?.message, 'error')
+            console.warn("status:", data)// something went wrong
         }
       },
       error => console.error(error)
@@ -183,14 +190,24 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
                                        genebank: number}
   const updateRole = (operation: HerdOperation | GenebankOperation) => {
     update('/api/manage/role', operation).then(
-      data => {
+      (data: ServerMessage) => {
         switch (data.status) {
-          case "updated": if (id) {
-                            loadUser(+id)
-                          }
-                          loadData(["users"])
-                          break; // updated user
-          default: console.error("error:", data)// "failed" or other error
+          case "updated":
+            if (id) {
+              loadUser(+id)
+            }
+            loadData(["users"])
+            userMessage("permissions updated", 'success')
+            break; // updated user
+          case "unchanged":
+            userMessage("User already has permission", 'info')
+            break;
+          default: {
+            if (data.message) {
+              userMessage(data.message, 'error')
+            }
+            console.error("error:", data)// "failed" or other error
+          }
         }
       },
       error => console.error(error)

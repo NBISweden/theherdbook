@@ -8,10 +8,11 @@ import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@mate
 import { makeStyles } from '@material-ui/core/styles';
 import Select from 'react-select';
 import { useDataContext } from './data_context'
-import { Herd, Individual, Genebank } from '~data_context_global';
+import { Herd, Genebank, ServerMessage } from '~data_context_global';
 
 import { get, updateHerd, createHerd } from './communication';
 import { useMessageContext } from '~message_context';
+import { unstable_batchedUpdates } from 'react-dom';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -106,15 +107,17 @@ export function HerdForm({id}: {id: string | undefined}) {
             // verify the data doesn't have nulls
             Object.keys(data).forEach((k: string) => {data[k] = data[k] ?? ''})
 
-            // split physical address into address, postcode, postcity
-            if (data?.physical_address && data.physical_address.includes('|')) {
-              const [address, postcode, postcity] = data.physical_address.split('|')
-              data.physical_address = address
-              setPostalcode(postcode)
-              setPostalcity(postcity)
-            }
-            setHerd(data)
-            setNew(false)
+            unstable_batchedUpdates(() => {
+              // split physical address into address, postcode, postcity
+              if (data?.physical_address && data.physical_address.includes('|')) {
+                const [address, postcode, postcity] = data.physical_address.split('|')
+                data.physical_address = address
+                setPostalcode(postcode)
+                setPostalcity(postcity)
+              }
+              setHerd(data)
+              setNew(false)
+            })
           }
         },
         error => console.error(error)
@@ -163,35 +166,48 @@ export function HerdForm({id}: {id: string | undefined}) {
 
     if (isNew) {
       createHerd(postData).then(
-        status => {
-          if (status == 'success') {
-            const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
-            if (genebank) {
-              genebank.herds.push(postData)
-              setGenebanks(Object.assign([], genebanks))
-              userMessage('Herd saved', 'success')
+        (data: ServerMessage) => {
+          switch (data.status) {
+            case 'success':
+            case 'created':
+              const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
+              if (genebank) {
+                genebank.herds.push(postData)
+                unstable_batchedUpdates(() => {
+                  setGenebanks(Object.assign([], genebanks))
+                  userMessage('Herd saved', 'success')
+                })
 
-              // navigate to new herd to allow continued editing
-              history.push(`/manage/${genebank?.name}/${postData.herd}`)
-            }
-          } else {
-            userMessage('Error:' + status, 'error');
+                // navigate to new herd to allow continued editing
+                history.push(`/manage/${genebank?.name}/${postData.herd}`)
+              }
+              break;
+            default:
+              userMessage('Error:' + (data.message ?? 'something went wrong'), 'error');
           }
         }
       )
     } else {
       updateHerd(postData).then(
-        status => {
-          if (status == 'updated') {
-            const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
-            if (genebank) {
-              let toUpdate = genebank.herds.find((h: Herd) => h.herd == id)
-              if (toUpdate) {
-                toUpdate.herd_name = postData.herd_name
-                setGenebanks(Object.assign([], genebanks))
-                userMessage('Changes saved', 'success')
+        (data: ServerMessage) => {
+          console.debug(data)
+          switch (data.status) {
+            case 'success':
+            case 'updated':
+              const genebank = genebanks.find((g: Genebank) => g.id == postData.genebank)
+              if (genebank) {
+                let toUpdate = genebank.herds.find((h: Herd) => h.herd == id)
+                if (toUpdate) {
+                  toUpdate.herd_name = postData.herd_name
+                  unstable_batchedUpdates(() => {
+                    setGenebanks(Object.assign([], genebanks))
+                    userMessage('Changes saved', 'success')
+                  })
+                }
               }
-            }
+              break;
+            default:
+              userMessage('Error:' + (data.message ?? 'something went wrong'), 'error');
           }
         }
       );

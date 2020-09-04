@@ -85,6 +85,12 @@ export interface DataContext {
     loadData(data: string | Array<string>): Promise<boolean>
 }
 
+export type ServerMessage = {
+    status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+    message?: string,
+    data?: any
+}
+
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
