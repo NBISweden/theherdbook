@@ -77,11 +77,11 @@ export async function updateHerd(herd: Herd) {
   Object.keys(herd).forEach((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
   return await update('/api/manage/herd', herd).then(
     data => {
-      return data.status;
+      return data;
     },
     error => {
       console.error(error);
-      return "error"
+      return error
     }
   )
 }
@@ -98,11 +98,11 @@ export async function createHerd(herd: Herd) {
   Object.keys(postData).forEach((k: string) => {postData[k] = postData[k] == '' ? null : postData[k]})
   return await post('/api/manage/herd', postData).then(
     data => {
-      return data.status;
+      return data;
     },
     error => {
       console.error(error);
-      return "error"
+      return error
     }
   )
 }

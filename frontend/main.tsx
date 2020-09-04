@@ -7,6 +7,7 @@ import {BrowserRouter} from 'react-router-dom'
 
 import {WithUserContext} from './user_context'
 import {WithDataContext} from './data_context'
+import {WithMessageContext} from './message_context'
 import {Navigation} from './navigation'
 
 const CSS = sc.createGlobalStyle`
@@ -29,9 +30,11 @@ const Main =
     <CssBaseline />
     <WithDataContext>
       <WithUserContext>
-        <BrowserRouter>
-          <Navigation/>
-        </BrowserRouter>
+        <WithMessageContext>
+          <BrowserRouter>
+            <Navigation/>
+          </BrowserRouter>
+        </WithMessageContext>
       </WithUserContext>
     </WithDataContext>
     <CSS/>

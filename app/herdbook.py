@@ -83,7 +83,6 @@ def get_user():
     user = da.fetch_user_info(session.get("user_id", None))
     return jsonify(user.frontend_data() if user else None)
 
-
 @APP.route("/api/manage/users")
 def get_users():
     """
@@ -100,17 +99,23 @@ def get_users():
 def manage_user(u_id):
     """
     Returns user information and a list of all roles for the requested `u_id`.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+            message?: string,
+            data?: any
+        }
     """
     if request.method == "GET":
-        user = da.get_user(u_id, session.get("user_id", None))
-        return jsonify(user)
+        retval = da.get_user(u_id, session.get("user_id", None))
     if request.method == "UPDATE":
         form = request.json
-        status = da.update_user(form, session.get("user_id", None))
+        retval = da.update_user(form, session.get("user_id", None))
     if request.method == "POST":
         form = request.json
-        return jsonify(da.add_user(form, session.get("user_id", None)))
-    return jsonify(status=status)
+        retval = da.add_user(form, session.get("user_id", None))
+    return jsonify(retval)
 
 
 @APP.route("/api/manage/role", methods=["POST", "UPDATE"])
@@ -126,29 +131,36 @@ def manage_roles():
          herd | genebank: <id>
         }
 
-    The return value will be formatted like: `{status: <message>}`, where the
-    message is `updated`, `unchanged` or `failed`.
+    The return value will be formatted like:
+        JSON: {
+            status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+            message?: string,
+            data?: any
+        }
     """
     form = request.json
     status = da.update_role(form, session.get("user_id", None))
-    return jsonify(status=status)
-
+    return jsonify(status)
 
 @APP.route("/api/manage/herd", methods=["POST", "UPDATE"])
 @login_required
 def manage_herd():
     """
     Used to insert and update herd information in the database.
-    Returns "created", "updated", or "failed".
+    Returns a message formatted like:
+        JSON: {
+            status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+            message?: string,
+            data?: any
+        }
     """
     form = request.json
-    status = "failed"
+    status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.add_herd(form, session.get("user_id", None))
     elif request.method == "UPDATE":
         status = da.update_herd(form, session.get("user_id", None))
-    return jsonify(status=status)
-
+    return jsonify(status)
 
 @APP.route("/api/login", methods=["POST"])
 def login():
@@ -170,7 +182,6 @@ def login():
         login_user(user)
     return get_user()
 
-
 @APP.route("/api/logout")
 def logout():
     """
@@ -179,7 +190,6 @@ def logout():
     session.pop("user_id", None)
     logout_user()
     return get_user()
-
 
 @APP.route("/api/genebanks")
 @APP.route("/api/genebank/<int:g_id>")
@@ -203,7 +213,6 @@ def herd(h_id):
     """
     data = da.get_herd(h_id, session.get("user_id", None))
     return jsonify(data)
-
 
 @APP.route("/api/individual/<int:i_id>")
 @login_required
@@ -312,12 +321,10 @@ def get_inbreeding(i_id):
         return coefficients[id]
     return None
 
-
 @APP.route("/api/inbreeding/")
 def all_inbreeding():
     coefficients = load_inbreeding()
     return jsonify({"coefficients": coefficients})
-
 
 @APP.before_first_request
 @cache.cached(timeout=3600, key_prefix="all_inbreeding")
@@ -325,7 +332,6 @@ def load_inbreeding():
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
     return coefficients
-
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
