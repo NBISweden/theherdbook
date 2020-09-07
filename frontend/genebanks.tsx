@@ -43,17 +43,17 @@ const columns = [
   {field: 'name', title: 'Namn'},
   {field: 'certificate', title: 'Certifikat'},
   {field: 'number', title: 'Nummer',
-    render: (rowData:any) => <Link to={`/individual/${rowData.id}`}>{rowData.number}</Link>
+    render: (rowData:any) => <Link to={`/individual/${rowData.number}`}>{rowData.number}</Link>
   },
   {field: 'sex', title: 'Kön'},
   {field: 'birth_date', title: 'Födelsedatum'},
   {field: 'death_date', title: 'Dödsdatum'},
   {field: 'death_note', title: 'Dödsanteckning'},
   {field: 'mother', title: 'Moder',
-    render: (rowData:any) => <Link to={`/individual/${rowData.mother['id']}`}>{rowData.mother['name']}</Link>
+    render: (rowData:any) => <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['name']}</Link>
   },
   {field: 'father', title: 'Fader',
-    render: (rowData:any) => <Link to={`/individual/${rowData.father['id']}`}>{rowData.father['name']}</Link>
+    render: (rowData:any) => <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['name']}</Link>
   },
   {field: 'color', title: 'Färg',
     render: (rowData:any) => rowData.color['name']

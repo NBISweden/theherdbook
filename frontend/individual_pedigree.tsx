@@ -54,19 +54,19 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
                 <dt>Dödsdatum</dt> <dd>{individual.death_date ?? '-'}</dd>
                 <dt>Dödsanteckning</dt> <dd>{individual.death_note ?? '-'}</dd>
                 <dt>Besättning</dt>
-                <Link to={`/herd/${individual.herd.id}`}>
-                  <dd>{individual.herd.name ?? individual.herd.id}</dd>
+                <Link to={`/herd/${individual.herd.herd}`}>
+                  <dd>{individual.herd.name ?? individual.herd.herd}</dd>
                 </Link>
                 <dt>Mor</dt>
                 {individual.mother
-                  ? <Link to={`/individual/${individual.mother.id}`}>
+                  ? <Link to={`/individual/${individual.mother.number}`}>
                     <dd>{individual.mother.name}</dd>
                   </Link>
                   : <dd>-</dd>
                 }
                 <dt>Far</dt>
                 {individual.father
-                  ? <Link to={`/individual/${individual.father.id}`}>
+                  ? <Link to={`/individual/${individual.father.number}`}>
                     <dd>{individual.father.name}</dd>
                   </Link>
                   : <dd>-</dd>

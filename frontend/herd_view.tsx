@@ -49,7 +49,7 @@ export function HerdView({id}: {id: string}) {
         <h3>Individer</h3>
         <ul>
           {herd.individuals.map((individual: any) => {
-            return <Link key={individual.id} to={`/individual/${individual.id}`}><li>{individual.name}</li></Link>
+            return <Link key={individual.id} to={`/individual/${individual.number}`}><li>{individual.name}</li></Link>
           })}
         </ul>
       </>

@@ -360,10 +360,10 @@ class Individual(BaseModel):
         data["origin_herd"] = {"id": self.origin_herd.id, "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id, "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
         data["mother"] = (
-            {"id": self.mother.id, "name": self.mother.name} if self.mother else None
+            {"id": self.mother.id, "name": self.mother.name, "number": self.mother.number} if self.mother else None
         )
         data["father"] = (
-            {"id": self.father.id, "name": self.father.name} if self.father else None
+            {"id": self.father.id, "name": self.father.name, "number": self.father.number} if self.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
