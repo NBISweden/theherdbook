@@ -18,7 +18,11 @@
         ssl_certificate /code/cert.pem;
         ssl_certificate_key /code/key.pem;
         ssl_dhparam /code/dhparam.pem;
-        root /app/dist/browser/;
+        root /app/dist/;
+
+	location @frontend {
+                proxy_pass http://herdbook-frontend-devel:2345;
+	}
 
         location /api/ {
                 # There were issues using the wsgi transport for uwsgi, 
@@ -27,6 +31,6 @@
         }
 
         location / {
-                proxy_pass http://herdbook-frontend-devel:2345;
+		 try_files $uri $uri/ @frontend;
         }
     }
