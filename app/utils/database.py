@@ -411,8 +411,8 @@ class Individual(BaseModel):
             - father
             - mother
         """
-        father = {"id": self.father.id} if self.father else None
-        mother = {"id": self.mother.id} if self.mother else None
+        father = {"id": self.father.id, "number": self.father.number} if self.father else None
+        mother = {"id": self.mother.id, "number": self.mother.number} if self.mother else None
         return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
 
     class Meta:  # pylint: disable=too-few-public-methods
