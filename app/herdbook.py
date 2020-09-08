@@ -214,7 +214,7 @@ def herd(h_id):
     data = da.get_herd(h_id, session.get("user_id", None))
     return jsonify(data)
 
-@APP.route("/api/individual/<int:i_id>")
+@APP.route("/api/individual/<i_id>")
 @login_required
 def individual(i_id):
     """
@@ -223,7 +223,7 @@ def individual(i_id):
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_id, user_id)
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_inbreeding(i_id) * 100)
+        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id']) * 100)
     return jsonify(ind)
 
 
@@ -257,10 +257,9 @@ def build_herd_pedigree(id):
     return result
 
 
-@APP.route('/api/pedigree/<int:i_id>', defaults={"generations": 5})
-@APP.route('/api/pedigree/<int:i_id>/<int:generations>')
+@APP.route('/api/pedigree/<i_id>', defaults={"generations": 5})
+@APP.route('/api/pedigree/<i_id>/<int:generations>')
 @login_required
-@cache.cached(timeout=36000)
 def pedigree(i_id, generations):
     """
     Returns the pedigree information for the individual `i_id`.
@@ -273,13 +272,13 @@ def pedigree(i_id, generations):
     if ind:
         build_pedigree(ind, user_id, 1, generations, nodes, edges, True)
         result = {"nodes": list(nodes.values()), "edges": edges}
-    APP.logger.info("built pedigree for %d" % i_id)
+    APP.logger.info("built pedigree for %s" % i_id)
     return jsonify(result)
 
 
 def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
     """Builds the pedigree dict tree for the individual"""
-    id = ind["id"]
+    id = ind["number"]
     pnode = {"id": id, "level": level, "x": len(edges)}
     if show_label:
         label = "%s\n%s" % (ind["name"], ind["number"])
@@ -299,16 +298,16 @@ def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
         edge = {"id": edge_id, "from": id, "to": parent_id}
         if parent_id not in nodes:
             if level <= generations:
-                ind = da.get_individual(parent_id, user_id)
-                build_pedigree(ind, user_id, level + 1, generations, nodes, edges, show_label)
+                parent = da.get_individual(parent_id, user_id)
+                build_pedigree(parent, user_id, level + 1, generations, nodes, edges, show_label)
                 edges.append(edge)
         elif edge not in edges:
             edges.append(edge)
 
     if mother:
-        add_parent(mother["id"])
+        add_parent(mother["number"])
     if father:
-        add_parent(father["id"])
+        add_parent(father["number"])
 
 
 def get_inbreeding(i_id):

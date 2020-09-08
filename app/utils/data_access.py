@@ -232,7 +232,7 @@ def get_individual(individual_id, user_uuid=None):
         return None
     try:
         with DATABASE.atomic():
-            individual = Individual.get(individual_id)
+            individual = Individual.select().where(Individual.number == individual_id).get()
         if individual and individual.current_herd.genebank.id in user.accessible_genebanks:
             return individual.as_dict()
         return None

@@ -12,7 +12,6 @@ import {Genebanks} from './genebanks'
 import {Genebank} from './genebank'
 import {HerdView} from './herd_view'
 import {Manage} from './manage'
-import {Individual} from './individual'
 import {IndividualPedigree} from './individual_pedigree'
 import {HerdPedigree} from './herd_pedigree'
 import {Switch, Route} from 'react-router-dom'
@@ -104,9 +103,6 @@ export function Navigation() {
         </ui.Routed>
         <ui.Routed path="/herd-pedigree/:id">
           {params => <HerdPedigree id={params.id}/>}
-        </ui.Routed>
-        <ui.Routed path="/individual2/:id">
-          {params => <Individual id={params.id} />}
         </ui.Routed>
         <Route path="/">
           Welcome!
