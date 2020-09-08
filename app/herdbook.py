@@ -260,7 +260,6 @@ def build_herd_pedigree(id):
 @APP.route('/api/pedigree/<i_id>', defaults={"generations": 5})
 @APP.route('/api/pedigree/<i_id>/<int:generations>')
 @login_required
-@cache.cached(timeout=36000)
 def pedigree(i_id, generations):
     """
     Returns the pedigree information for the individual `i_id`.
@@ -279,7 +278,7 @@ def pedigree(i_id, generations):
 
 def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
     """Builds the pedigree dict tree for the individual"""
-    id = ind["id"]
+    id = ind["number"]
     pnode = {"id": id, "level": level, "x": len(edges)}
     if show_label:
         label = "%s\n%s" % (ind["name"], ind["number"])
@@ -299,16 +298,16 @@ def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
         edge = {"id": edge_id, "from": id, "to": parent_id}
         if parent_id not in nodes:
             if level <= generations:
-                parent = da.get_individual_by_db_id(parent_id, user_id)
+                parent = da.get_individual(parent_id, user_id)
                 build_pedigree(parent, user_id, level + 1, generations, nodes, edges, show_label)
                 edges.append(edge)
         elif edge not in edges:
             edges.append(edge)
 
     if mother:
-        add_parent(mother["id"])
+        add_parent(mother["number"])
     if father:
-        add_parent(father["id"])
+        add_parent(father["number"])
 
 
 def get_inbreeding(i_id):

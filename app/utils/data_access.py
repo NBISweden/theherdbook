@@ -239,25 +239,6 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-
-def get_individual_by_db_id(db_id, user_uuid=None):
-    """
-    Returns information on a given individual database id, if it's accessible to the user
-    identified by `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-    try:
-        with DATABASE.atomic():
-            individual = Individual.get(db_id)
-        if individual and individual.current_herd.genebank.id in user.accessible_genebanks:
-            return individual.as_dict()
-        return None
-    except DoesNotExist:
-        return None
-
-
 def get_users(user_uuid=None):
     """
     Returns all users that the logged in user has access to. This is all users
