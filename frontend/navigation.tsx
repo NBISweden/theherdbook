@@ -9,7 +9,6 @@ import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
 import {Login} from './login'
 import {Genebanks} from './genebanks'
-import {Genebank} from './genebank'
 import {HerdView} from './herd_view'
 import {Manage} from './manage'
 import {IndividualPedigree} from './individual_pedigree'
@@ -47,7 +46,7 @@ export function Navigation() {
     },
     {
       label: "Genbanker",
-      path: "/genebanks",
+      path: "/genebank",
       component: <Genebanks/>,
       visible: is_logged_in,
       icon: <AccountBalanceIcon />
@@ -92,9 +91,6 @@ export function Navigation() {
     <div className={classes.main}>
       <Switch>
         {TabbedRoutes}
-        <ui.Routed path="/genebank/:id">
-          {params => <Genebank id={params.id}/>}
-        </ui.Routed>
         <ui.Routed path="/herd/:id">
           {params => <HerdView id={params.id}/>}
         </ui.Routed>
