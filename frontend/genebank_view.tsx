@@ -12,7 +12,7 @@ import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
 import { Genebank, Individual } from '~data_context_global';
-import { makeStyles } from '@material-ui/core';
+import { CircularProgress, makeStyles } from '@material-ui/core';
 
 const tableIcons: Icons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -80,6 +80,12 @@ const useStyles = makeStyles({
   },
   columnSelect: {
     zIndex: 15,
+  },
+  loading: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
   }
 });
 
@@ -132,7 +138,12 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
             data={individuals}
             title="Alla individer"
           />
-        : <h3>Loading</h3>
+        : <>
+          <div className={styles.loading}>
+            <h2>Loading Individuals</h2>
+            <CircularProgress />
+          </div>
+        </>
       }
     </div>
   </>
