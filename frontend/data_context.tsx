@@ -43,29 +43,30 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    * response data using the `set` function.
    *
    * @param url URL to fetch data from
-   * @param data the base data to modify
    * @param field the field to set in the base data
    * @param set the setter function to update the data
    * @param index if index is set - the base data is assumed to be an array, and
    *     that the target field should be set as `data[0].field = <update>`
    */
-  async function lazyLoad(url: string, base: any, field: string, set: Function, index: number | null = null) {
+  async function lazyLoad(url: string, field: string, set: Function, index: number | null = null) {
     return await get(url).then(
       data => {
         if (!data) {
           return false;
         }
-        let update;
-
-        if (index == null) { // object update
-          update = {...base}
-          update[field] = Object.keys(data).includes(field) ? data[field] : data
-        } else { // array update
-          update = [...base]
-          update[index][field] = Object.keys(data).includes(field) ? data[field] : data
-        }
-        set(update)
-        return true;
+        set((base: any) => {
+          let update;
+          if (index == null) { // object update
+            update = {...base}
+            update[field] = Object.keys(data).includes(field) ? data[field] : data
+          } else { // array update
+            update = [...base]
+            update[index] = {...update[index]}
+            update[index][field] = Object.keys(data).includes(field) ? data[field] : data
+          }
+          return update
+        })
+        return true
       },
       error => {
         console.error(error);
@@ -93,7 +94,6 @@ export function WithDataContext(props: {children: React.ReactNode}) {
         setGenebanks(genebankData)
         genebankData.forEach((g: Genebank, i: number) => {
           lazyLoad(`/api/genebank/${g.id}/individuals`,
-                   genebankData,
                    'individuals',
                    setGenebanks,
                    i)
