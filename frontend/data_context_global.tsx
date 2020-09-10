@@ -74,7 +74,7 @@ export interface Genebank {
     id: number
     name: string
     herds: Array<Herd>
-    individuals: Array<Individual>
+    individuals: Array<Individual> | null
 }
 
 export interface DataContext {
@@ -98,7 +98,5 @@ const emptyContext: DataContext = {
   setUsers() {},
   async loadData() {return false},
 }
-
-console.debug('Reloading data_context_global')
 
 export const DataContext = React.createContext(emptyContext)

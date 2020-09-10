@@ -29,6 +29,7 @@ export function Genebanks() {
   const {genebanks} = useDataContext()
   const [subpath, setSubpath] = React.useState('' as String)
   const [genebank, setGenebank] = useState(undefined as Genebank | undefined)
+  const [redraw, setRedraw] = useState(0);
 
   React.useEffect(() => {
     setSubpath(location.pathname.replace(url, '').trim().replace(/\//, ''))
@@ -40,7 +41,8 @@ export function Genebanks() {
     } else if (genebanks.length > 0) {
       const targetGenebank = genebanks.find((g: Genebank) => g.name.toLowerCase() == subpath.toLowerCase())
       if (targetGenebank) {
-        setGenebank(targetGenebank);
+        setRedraw(redraw+1);
+        setGenebank(targetGenebank)
       }
     }
   }, [subpath, genebanks]);
@@ -60,7 +62,7 @@ export function Genebanks() {
           })
         }
       </div>
-      { genebank && <GenebankView genebank={genebank} /> }
+      { genebank && <GenebankView key={redraw} genebank={genebank} /> }
     </Paper>
   </>
 }

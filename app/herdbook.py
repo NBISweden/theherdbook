@@ -204,6 +204,15 @@ def genebank(g_id=None):
         return jsonify(da.get_genebank(g_id, user_id))
     return jsonify(genebanks=da.get_genebanks(user_id))
 
+@APP.route("/api/genebank/<int:g_id>/individuals")
+@login_required
+def genebank_individuals(g_id):
+    """
+    Returns individuals for the genebank given by `g_id`, if allowed for the
+    currently logged in user.
+    """
+    user_id = session.get("user_id", None)
+    return jsonify(individuals=da.get_individuals(g_id, user_id))
 
 @APP.route("/api/herd/<h_id>")
 @login_required

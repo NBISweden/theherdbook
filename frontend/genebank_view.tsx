@@ -89,7 +89,7 @@ const useStyles = makeStyles({
  */
 export function GenebankView({genebank}: {genebank: Genebank}) {
   const styles = useStyles();
-  const [individuals, setIndividuals] = React.useState([] as Array<Individual>)
+  const [individuals, setIndividuals] = React.useState(null as Array<Individual> | null)
   const [columns, setColumns] = React.useState(defaultColumns)
 
   React.useEffect(() => {
@@ -123,12 +123,15 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
         />
     </div>
     <div className={styles.table}>
-      <MaterialTable
-        icons={tableIcons}
-        columns={columns}
-        data={individuals}
-        title="Alla individer"
-      />
+      { individuals
+        ? <MaterialTable
+            icons={tableIcons}
+            columns={columns}
+            data={individuals}
+            title="Alla individer"
+          />
+        : <h3>Loading</h3>
+      }
     </div>
   </>
 }
