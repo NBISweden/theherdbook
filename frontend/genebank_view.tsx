@@ -78,6 +78,9 @@ const useStyles = makeStyles({
     padding: "5px",
     overflowY: "scroll",
   },
+  columnLabel: {
+    paddingRight: "30px",
+  },
   columnSelect: {
     zIndex: 15,
   },
@@ -125,13 +128,20 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
 
   return <>
     <div>
-      Kolumner:
-      <Select className={styles.columnSelect}
-        isMulti
-        options={columns.map((v: any) => {return {value: v.field, label: v.title}})}
-        value={columns.filter((v: any) => !v.hidden).map((v: any) => {return {value: v.field, label: v.title}})}
-        onChange={updateColumns}
-        />
+
+      <FormControlLabel
+        className={styles.columnLabel}
+        label="Kolumner:"
+        labelPlacement="start"
+        control={
+          <Select className={styles.columnSelect}
+            isMulti
+            options={columns.map((v: any) => {return {value: v.field, label: v.title}})}
+            value={columns.filter((v: any) => !v.hidden).map((v: any) => {return {value: v.field, label: v.title}})}
+            onChange={updateColumns}
+            />
+        }
+      />
     </div>
     <div className={styles.table}>
       { individuals
