@@ -48,10 +48,10 @@ const defaultColumns = [
   {field: 'death_date', title: 'Dödsdatum', hidden: false},
   {field: 'death_note', title: 'Dödsanteckning', hidden: false},
   {field: 'mother', title: 'Moder', hidden: false,
-    render: (rowData:any) => <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['name']}</Link>
+    render: (rowData:any) => <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['number']}</Link>
   },
   {field: 'father', title: 'Fader', hidden: false,
-    render: (rowData:any) => <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['name']}</Link>
+    render: (rowData:any) => <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['number']}</Link>
   },
   {field: 'color', title: 'Färg', hidden: false,
     render: (rowData:any) => rowData.color['name']
