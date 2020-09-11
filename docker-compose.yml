@@ -27,8 +27,8 @@ services:
         volumes:
             - ./frontend:/app
             - /app/node_modules
-            - /app/.parcel-cache
-            - /app/.cache
+        ports:
+            - 4242:4242
     main:
         image: herdbook_main
         build:
@@ -36,9 +36,8 @@ services:
             dockerfile: .docker/main
         container_name: herdbook-main
         ports:
-            - 4200:8080
-            - 4443:8443
-            - 2346:2346
+            - 8080:8080
+            - 8443:8443
         volumes:
             - type: bind
               source: ./app

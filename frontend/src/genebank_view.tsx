@@ -11,7 +11,7 @@ import Select from 'react-select'
 import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
-import { Genebank, Individual } from '~data_context_global';
+import { Genebank, Individual } from '@app/data_context_global';
 import { CircularProgress, Checkbox, makeStyles, FormControlLabel } from '@material-ui/core';
 
 const tableIcons: Icons = {

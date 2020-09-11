@@ -266,7 +266,8 @@ def build_herd_pedigree(id):
     return result
 
 
-@APP.route('/api/pedigree/<i_id>', defaults={"generations": 5})
+# Had to remove the default value of generations because it causes some kind of redirect
+# (308 moved permanently?) messing up the snowpack proxy.
 @APP.route('/api/pedigree/<i_id>/<int:generations>')
 @login_required
 def pedigree(i_id, generations):

@@ -6,8 +6,8 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { Tabs, Tab } from '@material-ui/core/'
 import { Box } from '@material-ui/core'
-import { HerdView } from '~herd_view'
-import { Genebank, Herd, herdLabel } from '~data_context_global'
+import { HerdView } from '@app/herd_view'
+import { Genebank, Herd, herdLabel } from '@app/data_context_global'
 import { useDataContext } from './data_context'
 
 // Define styles for tab menu

@@ -10,9 +10,9 @@ import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd, Genebank, herdLabel, ServerMessage } from '~data_context_global';
+import { Herd, Genebank, herdLabel, ServerMessage } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
-import { useMessageContext } from '~message_context';
+import { useMessageContext } from '@app/message_context';
 
 // Define styles for tab menu
 const useStyles = makeStyles({

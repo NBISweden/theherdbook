@@ -23,8 +23,8 @@
     "noFallthroughCasesInSwitch": true,
 
     "moduleResolution": "node",
-    "baseUrl": "./",
-    "paths": {"~*": ["./*"]},
+    "baseUrl": ".",
+    "paths": {"@app/*": ["src/*"]},
     "esModuleInterop": true
   },
   "exclude": [

@@ -13,7 +13,6 @@ RUN cd /app/dist && ln -s . static
 
 COPY system/supervisord.conf /etc/
 COPY system/nginx.conf /etc/nginx/
-COPY system/herdbook.devel.nginx /etc/nginx/herdbook.devel
 COPY system/herdbook.standalone.nginx /etc/nginx/herdbook.standalone
 
 COPY system/entrypoint.sh /

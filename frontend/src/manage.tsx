@@ -9,10 +9,10 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel } from '~data_context_global';
+import { Genebank, NameID, Herd, herdLabel } from '@app/data_context_global';
 import { Button } from '@material-ui/core';
-import { HerdForm } from '~herdForm';
-import { UserForm } from '~userForm';
+import { HerdForm } from '@app/herdForm';
+import { UserForm } from '@app/userForm';
 
 const useStyles = makeStyles({
   main: {

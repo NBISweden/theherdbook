@@ -17,6 +17,7 @@ venv.bak/
 
 # frontend files that shouldn't be committed
 frontend/dist/
+frontend/build/
 frontend/coverage/
 frontend/node_modules/
 *.js.map
