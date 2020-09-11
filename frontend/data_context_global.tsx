@@ -31,6 +31,9 @@ export interface Individual {
     weights: Array<DateValue> | null
     bodyfat: Array<DateValue> | null
     herdTracking: Array<DateValue> | null
+    herd_active: boolean
+    active: boolean
+    alive: boolean
 }
 
 export interface Herd {

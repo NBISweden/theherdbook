@@ -452,7 +452,8 @@ def get_individuals(genebank_id, user_uuid=None):
                     f.individual_id, f.name, f.number,
                     m.individual_id, m.name, m.number,
                     c.colour_id, c.name,
-                    h.herd_id, h.herd, h.herd_name, h.is_active AS herd_active,
+                    h.herd_id, h.herd, h.herd_name,
+                    (h.is_active OR h.is_active IS NULL) AS herd_active,
                     ( (ih.herd_tracking_date > current_date - interval '1 year')
                       AND (h.is_active OR h.is_active IS NULL)
                       AND i.death_date IS NULL

@@ -12,7 +12,7 @@ import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
 import { Genebank, Individual } from '~data_context_global';
-import { CircularProgress, makeStyles } from '@material-ui/core';
+import { CircularProgress, Checkbox, makeStyles, FormControlLabel } from '@material-ui/core';
 
 const tableIcons: Icons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -97,6 +97,9 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
   const styles = useStyles();
   const [individuals, setIndividuals] = React.useState(null as Array<Individual> | null)
   const [columns, setColumns] = React.useState(defaultColumns)
+  const [filterAlive, setFilterAlive] = React.useState(true)
+  const [filterHerdActive, setFilterHerdActive] = React.useState(true)
+  const [filterActive, setFilterActive] = React.useState(true)
 
   React.useEffect(() => {
     if (genebank) {
@@ -132,12 +135,55 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
     </div>
     <div className={styles.table}>
       { individuals
-        ? <MaterialTable
-            icons={tableIcons}
-            columns={columns}
-            data={individuals}
-            title="Alla individer"
-          />
+        ? <>
+            <FormControlLabel
+              control={<Checkbox
+                        name="alive"
+                        checked={filterAlive}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setFilterAlive(e.target.checked)
+                        }}
+                        />}
+              label="Dölj döda"
+            />
+            <FormControlLabel
+              control={<Checkbox
+                        name="alive"
+                        checked={filterHerdActive}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setFilterHerdActive(e.target.checked)
+                        }}
+                        />}
+              label="Dölj inaktiva besättningar"
+            />
+            <FormControlLabel
+              control={<Checkbox
+                        name="alive"
+                        checked={filterActive}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setFilterActive(e.target.checked)
+                        }}
+                        />}
+              label="Dölj inaktiva djur"
+            />
+            <MaterialTable
+              icons={tableIcons}
+              columns={columns}
+              data={individuals.filter((i: Individual) => {
+                if (filterAlive && !i.alive) {
+                  return false
+                }
+                if (filterHerdActive && !i.herd_active) {
+                  return false
+                }
+                if (filterActive && !i.active) {
+                  return false
+                }
+                return true
+              })}
+              title="Alla individer"
+            />
+          </>
         : <>
           <div className={styles.loading}>
             <h2>Loading Individuals</h2>
