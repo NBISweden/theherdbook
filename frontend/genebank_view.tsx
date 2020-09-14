@@ -126,6 +126,24 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
     setColumns(newColumns)
   }
 
+  const filteredIndividuals = () => {
+    if (!individuals) {
+      return []
+    }
+    return individuals.filter((i: Individual) => {
+      if (filterAlive && !i.alive) {
+        return false
+      }
+      if (filterHerdActive && !i.herd_active) {
+        return false
+      }
+      if (filterActive && !i.active) {
+        return false
+      }
+      return true
+    })
+  }
+
   return <>
     <div>
 
@@ -179,19 +197,11 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
             <MaterialTable
               icons={tableIcons}
               columns={columns}
-              data={individuals.filter((i: Individual) => {
-                if (filterAlive && !i.alive) {
-                  return false
-                }
-                if (filterHerdActive && !i.herd_active) {
-                  return false
-                }
-                if (filterActive && !i.active) {
-                  return false
-                }
-                return true
-              })}
-              title="Alla individer"
+              data={filteredIndividuals()}
+              title={`Individer i ${genebank.name}`}
+              options={{
+                tableLayout: 'fixed'
+              }}
             />
           </>
         : <>
