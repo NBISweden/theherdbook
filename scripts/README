@@ -19,6 +19,12 @@ Prerequisites:
 	available and that PostgreSQL database drivers (psycopg2 via
 	pip) have been installed.
 
+	The scripts will read the two Excel files named on the command
+	line (the first one should be the Gotlandskanin file), and
+	load-gotland.sh will additionally read extra herd-related data
+	from the file herd-registry-gotland.xlsx which needs to be
+	present in the current directory.
+
 
 Mode of operation:
 
@@ -36,7 +42,8 @@ Mode of operation:
 
 	In the case of the Gotlandskanin data, a separate auxiliary data
 	set containing herd data is loaded separately into the table
-	"data2" and incorporated from there.
+	"data2" (from herd-registry-gotland.xlsx) and incorporated from
+	there.
 
 	The "data" and "data2" tables containing the Excel data are
 	never dropped.
