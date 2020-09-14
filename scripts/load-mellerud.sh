@@ -54,17 +54,11 @@ psql <<-'END_SQL'
 	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
 
 	-- Stub herd data
-	INSERT INTO herd (genebank_id, herd, herd_name)
-	SELECT	DISTINCT gb.genebank_id, d."Genb", d."Besättning"
+	INSERT INTO herd (genebank_id, herd)
+	SELECT	DISTINCT gb.genebank_id, d."Genb"
 	FROM	genebank gb
 	JOIN	data d ON (TRUE)
 	WHERE	gb.name = 'Mellerudskanin'
-	AND	d."Besättning" = (
-		SELECT MAX("Besättning")
-		FROM	data
-		WHERE	"Genb" = d."Genb"
-		LIMIT 1
-	)
 	ORDER BY d."Genb";
 
 	-- Stub individual data
@@ -142,3 +136,16 @@ while [ "$year" -le 2020 ]; do
 
 	year=$(( year + 1 ))
 done | psql
+
+psql <<-'END_SQL'
+	UPDATE herd h
+	SET herd_name = (
+		SELECT MAX("Besättning")
+		FROM	data
+		WHERE	"Genb" = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin';
+END_SQL
