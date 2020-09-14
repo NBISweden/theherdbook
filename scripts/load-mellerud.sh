@@ -106,7 +106,7 @@ psql <<-'END_SQL'
 	ORDER BY i.individual_id;
 END_SQL
 
-# Load tracking data for years 2000 trough to 2020
+# Load tracking data for years 2000 through to 2020
 year=2000
 while [ "$year" -le 2020 ]; do
 	cat <<-END_SQL
