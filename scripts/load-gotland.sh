@@ -139,6 +139,7 @@ csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--insert herd-registry-gotland.csv
 
 psql <<-'END_SQL'
+	-- Fixup data somewhat
 	ALTER TABLE data2 ALTER "Nr" TYPE VARCHAR(10);
 	UPDATE data2 SET "Nr" = CONCAT('G', "Nr")
 	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';

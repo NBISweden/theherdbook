@@ -132,6 +132,7 @@ while [ "$year" -le 2020 ]; do
 	year=$(( year + 1 ))
 done | psql
 
+# Update the herd table with the herd names
 psql <<-'END_SQL'
 	UPDATE herd h
 	SET herd_name = (
