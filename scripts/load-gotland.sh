@@ -155,7 +155,10 @@ psql <<-'END_SQL'
 		FROM	data2
 		WHERE	"Nr" = h.herd
 		LIMIT 1
-	);
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin';
 
 	-- Add herd active status
 	UPDATE herd h
@@ -164,5 +167,8 @@ psql <<-'END_SQL'
 		FROM	data2
 		WHERE	"Nr" = h.herd
 		LIMIT 1
-	);
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin';
 END_SQL
