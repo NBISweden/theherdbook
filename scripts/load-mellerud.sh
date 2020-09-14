@@ -63,6 +63,7 @@ psql <<-'END_SQL'
 		SELECT MAX("Besättning")
 		FROM	data
 		WHERE	"Genb" = d."Genb"
+		LIMIT 1
 	)
 	ORDER BY d."Genb";
 
