@@ -15,9 +15,13 @@ The scripts are:
 
 Prerequisites:
 
-	The script assumes that csvsql (csvkit via pip) is available and
-	that PostgreSQL database drivers (psycopg2 via pip) have been
-	installed.
+	The original Microsoft Excel data sheets must first be converted
+	to CSV.  I'm doing this manually by importing the original data
+	into Google Sheets and then downloading it as CSV from there.
+
+	The scripts assumes that csvsql (csvkit via pip) is available
+	and that PostgreSQL database drivers (psycopg2 via pip) have
+	been installed.
 
 
 Mode of operation:
@@ -45,3 +49,8 @@ Mode of operation:
 	and it creates a database dump to a file named after the current
 	date.  Only the tables that were populated by the scripts are
 	dumped.
+
+
+Typical invocation:
+
+	./load.sh kanindata-gotland-v11.csv kanindata-mellerud-v5.csv
