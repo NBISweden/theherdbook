@@ -2,10 +2,11 @@
 
 # Needs to be called by load.sh
 
+in2csv "$1" |
 csvsql  --db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--tables data \
 	--overwrite \
-	--insert "$1"
+	--insert
 
 psql <<-'END_SQL'
 	------------------------------------------------------------

@@ -1,12 +1,12 @@
 #!/bin/sh
 
 # Usage example:
-#	./load.sh kanindata-gotland-v9.csv kanindata-mellerud-v4.csv
+#	./load.sh kanindata-gotland-v9.xlsx kanindata-mellerud-v4.xlsx
 
 if [ "$#" -ne 2 ]; then
 	cat <<-USAGE_END
 	Usage:
-	    $0 kanindata-gotland.csv kanindata-mellerud.csv
+	    $0 kanindata-gotland.xlsx kanindata-mellerud.xlsx
 	USAGE_END
 	exit 1
 elif [ ! -e ../app/config.ini ]; then

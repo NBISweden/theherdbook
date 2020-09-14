@@ -2,10 +2,11 @@
 
 # Needs to be called by load.sh
 
+in2csv "$1" |
 csvsql  --db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--tables data \
 	--overwrite \
-	--insert "$1"
+	--insert
 
 psql <<-'END_SQL'
 	------------------------------------------------------------
@@ -129,14 +130,14 @@ while [ "$year" -le 2020 ]; do
 	year=$(( year + 1 ))
 done | psql
 
-# The Gotland data set has herd names etc. in a separate CSV file.
+# The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately (using static filename here for now).
 
+in2csv --skip-lines 5 herd-registry-gotland.xlsx |
 csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--tables data2 \
 	--overwrite \
-	--skip-lines 5 \
-	--insert herd-registry-gotland.csv
+	--insert
 
 psql <<-'END_SQL'
 	-- Fixup data somewhat
