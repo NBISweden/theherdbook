@@ -15,6 +15,7 @@ psql <<-'END_SQL'
 	UPDATE data SET "Namn" = TRIM("Namn");
 	UPDATE data SET "Mor" = TRIM("Mor");
 	UPDATE data SET "Far" = TRIM("Far");
+	UPDATE data SET "Besättning" = TRIM("Besättning");
 
 	ALTER TABLE data ALTER "Genb" TYPE VARCHAR(10);
 	UPDATE data SET "Genb" = CONCAT('M', "Genb")
@@ -53,11 +54,16 @@ psql <<-'END_SQL'
 	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
 
 	-- Stub herd data
-	INSERT INTO herd (genebank_id, herd)
-	SELECT	DISTINCT gb.genebank_id, d."Genb"
+	INSERT INTO herd (genebank_id, herd, herd_name)
+	SELECT	DISTINCT gb.genebank_id, d."Genb", d."Besättning"
 	FROM	genebank gb
 	JOIN	data d ON (TRUE)
 	WHERE	gb.name = 'Mellerudskanin'
+	AND	d."Besättning" = (
+		SELECT MAX("Besättning")
+		FROM	data
+		WHERE	"Genb" = d."Genb"
+	)
 	ORDER BY d."Genb";
 
 	-- Stub individual data
