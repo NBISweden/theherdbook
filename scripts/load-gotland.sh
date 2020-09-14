@@ -7,15 +7,6 @@ csvsql  --db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--overwrite \
 	--insert "$1"
 
-# The Gotland data set has herd names etc. in a separate CSV file.
-# Load that file separately (using static filename here for now).
-
-csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
-	--tables data2 \
-	--overwrite \
-	--skip-lines 5 \
-	--insert herd-registry-gotland.csv
-
 psql <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
@@ -31,11 +22,6 @@ psql <<-'END_SQL'
 	UPDATE data SET "Genb" = CONCAT('G', "Genb")
 	WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'G%';
 
-	ALTER TABLE data2 ALTER "Nr" TYPE VARCHAR(10);
-	UPDATE data2 SET "Nr" = CONCAT('G', "Nr")
-	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
-
-	ALTER TABLE data ALTER "Nummer" TYPE VARCHAR(20);
 	UPDATE data SET "Nummer" = CONCAT('G', "Nummer")
 	WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'G%';
 
@@ -73,24 +59,6 @@ psql <<-'END_SQL'
 	JOIN	data d ON (TRUE)
 	WHERE	gb.name = 'Gotlandskanin'
 	ORDER BY d."Genb";
-
-	-- Add herd names
-	UPDATE herd h
-	SET herd_name = (
-		SELECT MAX("Gårdsnamn")
-		FROM	data2
-		WHERE	"Nr" = h.herd
-		LIMIT 1
-	);
-
-	-- Add herd active status
-	UPDATE herd h
-	SET is_active = (
-		SELECT "Status" = 'A'
-		FROM	data2
-		WHERE	"Nr" = h.herd
-		LIMIT 1
-	);
 
 	-- Stub individual data
 	INSERT INTO individual (origin_herd_id,
@@ -165,3 +133,36 @@ while [ "$year" -le 2020 ]; do
 
 	year=$(( year + 1 ))
 done | psql
+
+# The Gotland data set has herd names etc. in a separate CSV file.
+# Load that file separately (using static filename here for now).
+
+csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
+	--tables data2 \
+	--overwrite \
+	--skip-lines 5 \
+	--insert herd-registry-gotland.csv
+
+psql <<-'END_SQL'
+	ALTER TABLE data2 ALTER "Nr" TYPE VARCHAR(10);
+	UPDATE data2 SET "Nr" = CONCAT('G', "Nr")
+	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
+
+	-- Add herd names
+	UPDATE herd h
+	SET herd_name = (
+		SELECT MAX("Gårdsnamn")
+		FROM	data2
+		WHERE	"Nr" = h.herd
+		LIMIT 1
+	);
+
+	-- Add herd active status
+	UPDATE herd h
+	SET is_active = (
+		SELECT "Status" = 'A'
+		FROM	data2
+		WHERE	"Nr" = h.herd
+		LIMIT 1
+	);
+END_SQL
