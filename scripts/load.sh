@@ -36,7 +36,6 @@ pg_dump --clean \
 	--if-exists \
 	--no-privileges \
 	-t genebank \
-	-t colour \
 	-t individual \
 	-t weight \
 	-t bodyfat \
