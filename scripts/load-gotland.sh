@@ -67,19 +67,30 @@ psql <<-'END_SQL'
 	INSERT INTO genebank (name) VALUES ('Gotlandskanin');
 
 	-- Stub herd data
-	INSERT INTO herd (genebank_id, herd, herd_name, is_active)
-	SELECT	DISTINCT gb.genebank_id, d."Genb", d2."Gårdsnamn", d2."Status" = 'A'
+	INSERT INTO herd (genebank_id, herd)
+	SELECT	DISTINCT gb.genebank_id, d."Genb"
 	FROM	genebank gb
 	JOIN	data d ON (TRUE)
-	LEFT JOIN	data2 d2 ON (d2."Nr" = d."Genb")
 	WHERE	gb.name = 'Gotlandskanin'
-	AND	d2."Gårdsnamn" = (
+	ORDER BY d."Genb";
+
+	-- Add herd names
+	UPDATE herd h
+	SET herd_name = (
 		SELECT MAX("Gårdsnamn")
 		FROM	data2
-		WHERE	"Nr" = d2."Nr"
+		WHERE	"Nr" = h.herd
 		LIMIT 1
-	)
-	ORDER BY d."Genb";
+	);
+
+	-- Add herd active status
+	UPDATE herd h
+	SET is_active = (
+		SELECT "Status" = 'A'
+		FROM	data2
+		WHERE	"Nr" = h.herd
+		LIMIT 1
+	);
 
 	-- Stub individual data
 	INSERT INTO individual (origin_herd_id,
