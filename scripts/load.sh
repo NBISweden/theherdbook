@@ -24,6 +24,13 @@ createdb "$PGDATABASE"
 ./load-gotland.sh "$1"
 ./load-mellerud.sh "$2"
 
+# Find next free dump number for today
+prefix=$(date +'%Y%m%d'.dump)
+d=1
+while [ -f "$prefix-$d.dump" ]; do
+	d=$(( d + 1 ))
+done
+
 # Only dump the specific tables we're loading, nothing else
 pg_dump --clean \
 	--if-exists \
@@ -35,4 +42,4 @@ pg_dump --clean \
 	-t bodyfat \
 	-t herd \
 	-t herd_tracking \
-	"$PGDATABASE" >"$PGDATABASE-$(date +'%Y%m%d'.dump)"
+	"$PGDATABASE" >"$prefix-$d.dump"
