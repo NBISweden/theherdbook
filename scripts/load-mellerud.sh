@@ -45,11 +45,6 @@ psql <<-'END_SQL'
 	-- Insert
 	------------------------------------------------------------
 
-	-- TRUNCATE herd_tracking RESTART IDENTITY CASCADE;
-	-- TRUNCATE individual RESTART IDENTITY CASCADE;
-	-- TRUNCATE herd RESTART IDENTITY CASCADE;
-	-- TRUNCATE genebank RESTART IDENTITY CASCADE;
-
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
 
