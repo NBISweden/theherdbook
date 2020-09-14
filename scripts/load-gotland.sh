@@ -7,6 +7,15 @@ csvsql  --db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
 	--overwrite \
 	--insert "$1"
 
+# The Gotland data set has herd names etc. in a separate CSV file.
+# Load that file separately (using static filename here for now).
+
+csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
+	--tables data2 \
+	--overwrite \
+	--skip-lines 5 \
+	--insert herd-registry-gotland.csv
+
 psql <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
@@ -21,6 +30,10 @@ psql <<-'END_SQL'
 	ALTER TABLE data ALTER "Genb" TYPE VARCHAR(10);
 	UPDATE data SET "Genb" = CONCAT('G', "Genb")
 	WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'G%';
+
+	ALTER TABLE data2 ALTER "Nr" TYPE VARCHAR(10);
+	UPDATE data2 SET "Nr" = CONCAT('G', "Nr")
+	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
 
 	ALTER TABLE data ALTER "Nummer" TYPE VARCHAR(20);
 	UPDATE data SET "Nummer" = CONCAT('G', "Nummer")
@@ -54,15 +67,21 @@ psql <<-'END_SQL'
 	INSERT INTO genebank (name) VALUES ('Gotlandskanin');
 
 	-- Stub herd data
-	INSERT INTO herd (genebank_id, herd)
-	SELECT	DISTINCT gb.genebank_id, d."Genb"
+	INSERT INTO herd (genebank_id, herd, herd_name, is_active)
+	SELECT	DISTINCT gb.genebank_id, d."Genb", d2."Gårdsnamn", d2."Status" = 'A'
 	FROM	genebank gb
 	JOIN	data d ON (TRUE)
+	LEFT JOIN	data2 d2 ON (d2."Nr" = d."Genb")
 	WHERE	gb.name = 'Gotlandskanin'
+	AND	d2."Gårdsnamn" = (
+		SELECT MAX("Gårdsnamn")
+		FROM	data2
+		WHERE	"Nr" = d2."Nr"
+		LIMIT 1
+	)
 	ORDER BY d."Genb";
 
 	-- Stub individual data
-	-- Assumes that herd.herd is unique
 	INSERT INTO individual (origin_herd_id,
 		name, certificate, number, sex, birth_date,
 		colour_id, colour_note, death_note, litter, notes)
