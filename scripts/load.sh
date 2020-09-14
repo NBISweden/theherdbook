@@ -25,7 +25,7 @@ createdb "$PGDATABASE"
 ./load-mellerud.sh "$2"
 
 # Find next free dump number for today
-prefix=$(date +'%Y%m%d'.dump)
+prefix=$(date +'%Y%m%d')
 d=1
 while [ -f "$prefix-$d.dump" ]; do
 	d=$(( d + 1 ))
