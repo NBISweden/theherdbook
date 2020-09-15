@@ -14,6 +14,15 @@ elif [ ! -e ../app/config.ini ]; then
 	exit 1
 fi >&2
 
+for name do
+	case $name in
+		*.xlsx) ;;
+		*)
+			printf 'Expecting *.xlsx files, got "%s"\n' "$name"
+			exit 1
+	esac
+done >&2
+
 export PGDATABASE="$( 	sed -n 's/^name=//p' ../app/config.ini )"
 export PGUSER="$(	sed -n 's/^user=//p' ../app/config.ini )"
 
