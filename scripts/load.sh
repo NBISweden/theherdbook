@@ -60,8 +60,10 @@ createdb "$PGDATABASE"
 # Find next free dump number for today
 prefix=$(date +'%Y%m%d')
 d=1
-while [ -f "$prefix-$d.dump" ]; do
+dumpfile=$( printf '%s-%.2d.dump' "$prefix" "$d" )
+while [ -f "$dumpfile" ]; do
 	d=$(( d + 1 ))
+	dumpfile=$( printf '%s-%.2d.dump' "$prefix" "$d" )
 done
 
 # Only dump the specific tables we're loading, nothing else
@@ -74,4 +76,4 @@ pg_dump --clean \
 	-t bodyfat \
 	-t herd \
 	-t herd_tracking \
-	"$PGDATABASE" >"$prefix-$d.dump"
+	"$PGDATABASE" >"$dumpfile"
