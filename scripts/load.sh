@@ -39,13 +39,23 @@ done >&2
 
 export PGDATABASE="$( 	sed -n 's/^name=//p' ../app/config.ini )"
 export PGUSER="$(	sed -n 's/^user=//p' ../app/config.ini )"
+export PGPORT="$(	sed -n 's/^port=//p' ../app/config.ini )"
+export PGHOST="$(	sed -n 's/^host=//p' ../app/config.ini )"
+password="$(		sed -n 's/^password=//p' ../app/config.ini )"
+
+# Assume that we're connecting through a socket if $PGHOST is localhost
+# (use 127.0.0.1 if this is not the case).
+if [ "$PGHOST" = localhost ]; then
+	unset PGHOST PGPORT
+fi
+connstr="postgresql+psycopg2://$PGUSER:$password@${PGPORT:+$PGHOST:$PGPORT}/$PGDATABASE"
 
 dropdb "$PGDATABASE"
 createdb "$PGDATABASE"
 ../init_db.sh
 
-./load-gotland.sh "$1"
-./load-mellerud.sh "$2"
+./load-gotland.sh "$connstr" "$1"
+./load-mellerud.sh "$connstr" "$2"
 
 # Find next free dump number for today
 prefix=$(date +'%Y%m%d')

@@ -2,10 +2,10 @@
 
 # Needs to be called by load.sh
 
-csvsql  --db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
+csvsql  --db "$1" \
 	--tables data \
 	--overwrite \
-	--insert "$1"
+	--insert "$2"
 
 psql <<-'END_SQL'
 	------------------------------------------------------------
@@ -133,7 +133,7 @@ done | psql
 # Load that file separately (using static filename here for now).
 
 in2csv --skip-lines 5 herd-registry-gotland.xlsx |
-csvsql	--db "postgresql://$PGUSER:dummy@/$PGDATABASE" \
+csvsql	--db "$1" \
 	--tables data2 \
 	--overwrite \
 	--insert
