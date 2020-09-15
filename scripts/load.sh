@@ -15,10 +15,23 @@ elif [ ! -e ../app/config.ini ]; then
 fi >&2
 
 for name do
+	shift
 	case $name in
-		*.xlsx) ;;
+		*.xlsx)
+			csvname=${name%.xlsx}.csv
+			if [ ! -e "$csvname" ] || [ "$csvname" -ot "$name" ]
+			then
+				# Convert to CSV
+				printf 'Converting "%s" to "%s"\n' "$name" "$csvname"
+				in2csv "$name" >"$csvname"
+			fi
+			set -- "$@" "$csvname"
+			;;
+		*.csv)
+			set -- "$@" "$name"
+			;;
 		*)
-			printf 'Expecting *.xlsx files, got "%s"\n' "$name"
+			printf 'Expecting *.xlsx or *.csv files, got "%s"\n' "$name"
 			exit 1
 	esac
 done >&2
