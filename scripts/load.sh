@@ -19,9 +19,10 @@ for name do
 	case $name in
 		*.xlsx)
 			csvname=${name%.xlsx}.csv
+
+			# Convert to CSV if CSV is missing or old
 			if [ ! -e "$csvname" ] || [ "$csvname" -ot "$name" ]
 			then
-				# Convert to CSV
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname"
 				in2csv "$name" >"$csvname"
 			fi
