@@ -27,6 +27,7 @@ then
 	echo DONE
 	. venv/bin/activate
 	printf 'Installing app dependencies                      '
+	pip3 install -r app/requirements-pydigree.txt >/dev/null
 	pip3 install -r app/requirements.txt >/dev/null
 	echo DONE
 fi
