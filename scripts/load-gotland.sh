@@ -97,30 +97,32 @@ END_SQL
 # Load tracking data for years 2000 through to 2020
 year=2000
 while [ "$year" -le 2020 ]; do
+	column=$year
+
 	cat <<-END_SQL
 		-- Fix column type etc.
-		ALTER TABLE data ALTER "$year" TYPE VARCHAR(10);
-		UPDATE data SET "$year" = CONCAT('G', "$year")
-		WHERE "$year" IS NOT NULL AND "$year" NOT LIKE 'G%';
+		ALTER TABLE data ALTER "$column" TYPE VARCHAR(10);
+		UPDATE data SET "$column" = CONCAT('G', "$column")
+		WHERE "$column" IS NOT NULL AND "$column" NOT LIKE 'G%';
 
 		-- Add missing herds
 		INSERT INTO herd (genebank_id, herd)
-		SELECT	DISTINCT gb.genebank_id, d."$year"
+		SELECT	DISTINCT gb.genebank_id, d."$column"
 		FROM	genebank gb
 		JOIN	data d ON (TRUE)
 		WHERE	gb.name = 'Gotlandskanin'
-		AND	d."$year" NOT IN (
+		AND	d."$column" NOT IN (
 			SELECT herd
 			FROM	herd
 		)
-		ORDER BY d."$year";
+		ORDER BY d."$column";
 
-		-- Load $year data
+		-- Load $column data
 		INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 		SELECT	h.herd_id, i.individual_id, '$year-12-31'
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-		JOIN	data d ON (d."$year" = h.herd)
+		JOIN	data d ON (d."$column" = h.herd)
 		JOIN	individual i ON (i.number = d."Nummer")
 		WHERE	gb.name = 'Gotlandskanin'
 		ORDER BY i.individual_id;
