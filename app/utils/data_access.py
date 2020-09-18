@@ -77,6 +77,8 @@ def authenticate_user(name, password):
     Returns the user info for the authenticated user on success, or None on
     failure.
     """
+    if not name or not password:
+        return None
     try:
         with DATABASE.atomic():
             user_info = User.select().where((User.email == name) | (User.username == name)).get()
