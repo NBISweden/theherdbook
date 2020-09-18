@@ -163,7 +163,7 @@ def manage_herd():
     return jsonify(status)
 
 @APP.route("/api/login", methods=["POST"])
-def login():
+def loginHandler():
     """
     Parses a login form and sets session variables when logged in.
     If login fails the system will return `None`.
