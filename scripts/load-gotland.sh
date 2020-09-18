@@ -159,6 +159,27 @@ while [ "$year" -le 2019 ]; do
 	year=$(( year + 1 ))
 done | psql
 
+# Load body fat data for years 2012 through to 2018
+year=2012
+while [ "$year" -le 2018 ]; do
+	column="hull $year"
+
+	cat <<-END_SQL
+		-- Load $column data
+		INSERT INTO bodyfat (bodyfat, individual_id, bodyfat_date)
+		SELECT	d."$column", i.individual_id, '$year-12-31'
+		FROM	genebank gb
+		JOIN	herd h ON (h.genebank_id = h.genebank_id)
+		JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+		JOIN	data d ON (d."Nummer" = i.number)
+		WHERE	gb.name = 'Gotlandskanin'
+		AND	d."$column" IS NOT NULL
+		ORDER BY i.individual_id;
+	END_SQL
+
+	year=$(( year + 1 ))
+done | psql
+
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately (using static filename here for now).
 
