@@ -19,31 +19,31 @@ Prerequisites:
 	available and that PostgreSQL database drivers (psycopg2 via
 	pip) have been installed.
 
-	The scripts will read the two Excel files named on the command
-	line (the first one should be the Gotlandskanin file), and
-	load-gotland.sh will additionally read extra herd-related data
-	from the file herd-registry-gotland.xlsx which needs to be
-	present in the current directory.
-
 
 Mode of operation:
 
 	The main load.sh script takes the names of the Gotland and
-	Mellerud Excel files on its command line.  It initializes the
-	database (empties it completely by dropping it and re-creating
-	it), calls the two genebank-specific scripts, and then dumps the
-	resulting database to a date-stamped file.
+	Mellerud Excel or CSV files on its command line, as arguments
+	to the -g and -m command line options, respectively.  It
+	initializes the database (empties it completely by dropping it
+	and re-creating it), calls the two genebank-specific scripts,
+	and then dumps the resulting database to a date-stamped file.
 
-	The two genebank-specific scripts calls in2csv and csvsql to
-	load the Excel data into the table called "data" (it drops this
-	table if it exists).  Data is then moved from this table into
-	the various tables of the main database through a series of
-	INSERT and UPDATE statements.
+	The given input files, if they are Excel files, are converted to
+	CSV if the corresponding CSV files are missing or if they are
+	outdated.
+
+	The two genebank-specific scripts call csvsql to load the CSV
+	data into the table called "data" (it drops this table if it
+	exists).  Data is then moved from this table into the various
+	tables of the main database through a series of INSERT and
+	UPDATE statements.
 
 	In the case of the Gotlandskanin data, a separate auxiliary data
 	set containing herd data is loaded separately into the table
-	"data2" (from herd-registry-gotland.xlsx) and incorporated from
-	there.
+	"data2" and incorporated from there.  This file must be named as
+	the argument to the -G command line option when running the main
+	load.sh script.
 
 	The "data" and "data2" tables containing the Excel data are
 	never dropped.
@@ -56,4 +56,9 @@ Mode of operation:
 
 Typical invocation:
 
-	./load.sh kanindata-gotland-v11.csv kanindata-mellerud-v5.csv
+	./load.sh \
+	    -g kanindata-gotland-v11.xlxs herd-registry-gotland.xlsx \
+	    -m kanindata-mellerud-v5.xlxs
+
+
+See also: ./load.sh -h
