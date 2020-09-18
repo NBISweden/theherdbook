@@ -13,6 +13,7 @@ import { useDataContext } from './data_context'
 import { Herd, Genebank, herdLabel, ServerMessage } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';
+import { NameID } from 'data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -124,6 +125,9 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
         switch (data.status) {
           case "updated":
           case "unchanged":
+            const newUsers: NameID[] = users.filter((u: NameID) => u.id != postData.id)
+            newUsers.push({email: postData.email, id: +postData.id, name: postData.username})
+            setUsers(newUsers)
             userMessage('Changes saved', 'success')
             break; // updated user
           case "success":

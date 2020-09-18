@@ -63,7 +63,7 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
+    const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
@@ -106,7 +106,7 @@ export function Manage() {
     } else if (category == 'user' && +path != NaN) {
       const targetUser = users.find((u: NameID) => u.id == +path);
       if (targetUser) {
-        targetOption = {value: targetUser.id, label: targetUser.email}
+        targetOption = {value: targetUser.id, label: userLabel(targetUser)}
       }
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
