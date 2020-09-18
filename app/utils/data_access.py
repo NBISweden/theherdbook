@@ -258,7 +258,7 @@ def get_users(user_uuid=None):
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
-        return [{"email": u.email, "username": u.username, "id": u.id} for u in users]
+        return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
     except DoesNotExist:
         return None
 
@@ -289,6 +289,7 @@ def get_user(user_id, user_uuid=None):
             "data": {
                 "id": target.id,
                 "email": target.email,
+                "username": target.username,
                 "validated": target.validated,
                 "privileges": target.privileges,
                 }
@@ -335,7 +336,7 @@ def update_user(form, user_uuid=None):
 
     # update target user data if needed
     updated = False
-    for field in ["email", "validated"]:
+    for field in ["email", "username", "validated"]:
         if getattr(target_user, field) != form[field]:
             setattr(target_user, field, form[field])
             updated = True

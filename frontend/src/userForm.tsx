@@ -40,6 +40,7 @@ const useStyles = makeStyles({
 export interface ManagedUser {
   id: number | 'new'
   email: string
+  username: string
   validated: boolean
   privileges: any
   password?: string
@@ -48,6 +49,7 @@ export interface ManagedUser {
 const defaultValues: ManagedUser = {
   id: -1,
   email: "",
+  username: "",
   validated: false,
   privileges: [],
   password: ""
@@ -129,7 +131,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             const newUserId = data.data;
             unstable_batchedUpdates(() => {
               setNew(false);
-              const new_user = {email: user.email, id: newUserId, name: user.email}
+              const new_user = {email: user.email, id: newUserId, name: user.username}
               setUsers([...users, new_user])
               userMessage('User saved', 'success')
             })
@@ -227,6 +229,12 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
                      value={user.email ?? undefined}
                      onChange={e => setUser({...user, email: e.target.value})}
             />
+            <TextField label='Användarnamn'
+                       type='username'
+                       className={classes.simpleField}
+                       value={user.username ?? undefined}
+                       onChange={e => setUser({...user, username: e.target.value})}
+              />
           {isNew ? <TextField label='Lösenord'
                       type='password'
                       hidden={true}

@@ -48,14 +48,14 @@ export function Login() {
       <form onSubmit={submitLogin} onKeyDown={keydown}>
         <DialogContent>
           <DialogContentText>
-            Logga in med din e-postadress och ditt lösenord.
+            Logga in med ditt användarnamn eller e-postadress och ditt lösenord.
           </DialogContentText>
           <TextField
             id="username"
             variant="outlined"
             autoFocus
             margin="dense"
-            label="E-postadress"
+            label="Användarnamn eller E-postadress"
             type="email"
             value={username}
             onChange={e => set_username(e.target.value)}

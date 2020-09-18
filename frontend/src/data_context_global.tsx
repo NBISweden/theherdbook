@@ -73,6 +73,14 @@ export function herdLabel(herd: Herd): string {
     return label
 }
 
+export function userLabel(user: NameID): string {
+    let label: string = `${user.email}`
+    if (user.name) {
+        label = `${user.name} - ${user.email}`
+    }
+    return label;
+}
+
 export interface Genebank {
     id: number
     name: string

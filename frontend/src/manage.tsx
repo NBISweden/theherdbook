@@ -9,7 +9,7 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel } from '@app/data_context_global';
+import { Genebank, NameID, Herd, herdLabel, userLabel } from '@app/data_context_global';
 import { Button } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
 import { UserForm } from '@app/userForm';
@@ -63,7 +63,7 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: u.email}});
+    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
