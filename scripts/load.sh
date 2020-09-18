@@ -1,21 +1,66 @@
 #!/bin/sh
 
 # Usage example:
-#	./load.sh kanindata-gotland-v9.xlsx kanindata-mellerud-v4.xlsx
+#	./load.sh -g kanindata-gotland-v9.xlsx \
+#	          -G herd-registry-gotland.xlsx \
+#	          -m kanindata-mellerud-v4.xlsx
 
-if [ "$#" -ne 2 ]; then
+usage () {
 	cat <<-USAGE_END
 	Usage:
-	    $0 kanindata-gotland.xlsx kanindata-mellerud.xlsx
+	    $0	\\
+	    	-g kanindata-gotland.xlsx -G herd-registry-gotland.xlsx \\
+	    	-m kanindata-mellerud.xlsx
+
+	Options:
+
+	    -g file	Load Gotland rabbit data from "file"
+	    -G file	Load Gotland herd data from "file"
+	    -m file	Load Mellerud rabbit data from "file"
+
+	    -h		Show this help text
 	USAGE_END
-	exit 1
-elif [ ! -e ../app/config.ini ]; then
+}
+
+if [ ! -e ../app/config.ini ]; then
 	echo 'Expected to find ../app/config.ini'
 	exit 1
 fi >&2
 
-for name do
-	shift
+while getopts 'g:G:hm:' opt; do
+	case $opt in
+		g)	gfile=$OPTARG ;;
+		G)	Gfile=$OPTARG ;;
+		h)	usage; exit ;;
+		m)	mfile=$OPTARG ;;
+		*)
+			echo 'Error in command line parsing' >&2
+			usage
+			exit 1
+	esac
+done
+shift "$(( OPTIND - 1 ))"
+
+{
+	if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
+		echo 'Missing or unusable Gotland data file (-g file)'
+		err=1
+	fi
+	if [ -z "$Gfile" ] || [ ! -f "$Gfile" ]; then
+		echo 'Missing or unusable Gotland herd registry file (-G file)'
+		err=1
+	fi
+	if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
+		echo 'Missing or unusable Mellerud data file (-m file)'
+		err=1
+	fi
+	if [ "$err" -eq 1 ]; then
+		usage
+		exit 1
+	fi
+} >&2
+
+for name in "$gfile" "$Gfile" "$mfile"; do
 	case $name in
 		*.xlsx)
 			csvname=${name%.xlsx}.csv
@@ -26,16 +71,18 @@ for name do
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname"
 				in2csv "$name" >"$csvname"
 			fi
-			set -- "$@" "$csvname"
 			;;
-		*.csv)
-			set -- "$@" "$name"
+		*.csv)	# all good
 			;;
 		*)
 			printf 'Expecting *.xlsx or *.csv files, got "%s"\n' "$name"
 			exit 1
 	esac
 done >&2
+
+gfile=${gfile%.*}.csv
+Gfile=${Gfile%.*}.csv
+mfile=${mfile%.*}.csv
 
 export PGDATABASE="$( 	sed -n 's/^name=//p' ../app/config.ini )"
 export PGUSER="$(	sed -n 's/^user=//p' ../app/config.ini )"
@@ -54,8 +101,8 @@ dropdb "$PGDATABASE"
 createdb "$PGDATABASE"
 ../init_db.sh
 
-./load-gotland.sh "$connstr" "$1"
-./load-mellerud.sh "$connstr" "$2"
+./load-gotland.sh "$connstr" "$gfile" "$Gfile"
+./load-mellerud.sh "$connstr" "$mfile"
 
 # Find next free dump number for today
 prefix=$(date +'%Y%m%d')
