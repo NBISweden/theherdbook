@@ -60,7 +60,7 @@ export function Genebanks() {
           })
         }
       </div>
-      { genebank && <GenebankView genebank={genebank} /> }
+      { React.useMemo(() => genebank && <GenebankView genebank={genebank} />, [genebank]) }
     </Paper>
   </>
 }
