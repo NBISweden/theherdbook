@@ -23,9 +23,9 @@ usage () {
 }
 
 if [ ! -e ../app/config.ini ]; then
-	echo 'Expected to find ../app/config.ini'
+	echo 'Expected to find ../app/config.ini' >&2
 	exit 1
-fi >&2
+fi
 
 while getopts 'g:G:hm:' opt; do
 	case $opt in
@@ -35,30 +35,28 @@ while getopts 'g:G:hm:' opt; do
 		m)	mfile=$OPTARG ;;
 		*)
 			echo 'Error in command line parsing' >&2
-			usage
+			usage >&2
 			exit 1
 	esac
 done
 shift "$(( OPTIND - 1 ))"
 
-{
-	if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
-		echo 'Missing or unusable Gotland data file (-g file)'
-		err=1
-	fi
-	if [ -z "$Gfile" ] || [ ! -f "$Gfile" ]; then
-		echo 'Missing or unusable Gotland herd registry file (-G file)'
-		err=1
-	fi
-	if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
-		echo 'Missing or unusable Mellerud data file (-m file)'
-		err=1
-	fi
-	if [ "$err" -eq 1 ]; then
-		usage
-		exit 1
-	fi
-} >&2
+if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
+	echo 'Missing or unusable Gotland data file (-g file)' >&2
+	err=1
+fi
+if [ -z "$Gfile" ] || [ ! -f "$Gfile" ]; then
+	echo 'Missing or unusable Gotland herd registry file (-G file)' >&2
+	err=1
+fi
+if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
+	echo 'Missing or unusable Mellerud data file (-m file)' >&2
+	err=1
+fi
+if [ "$err" -eq 1 ]; then
+	usage >&2
+	exit 1
+fi
 
 for name in "$gfile" "$Gfile" "$mfile"; do
 	case $name in
@@ -68,17 +66,17 @@ for name in "$gfile" "$Gfile" "$mfile"; do
 			# Convert to CSV if CSV is missing or old
 			if [ ! -e "$csvname" ] || [ "$csvname" -ot "$name" ]
 			then
-				printf 'Converting "%s" to "%s"\n' "$name" "$csvname"
+				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2
 				in2csv "$name" >"$csvname"
 			fi
 			;;
 		*.csv)	# all good
 			;;
 		*)
-			printf 'Expecting *.xlsx or *.csv files, got "%s"\n' "$name"
+			printf 'Expecting *.xlsx or *.csv files, got "%s"\n' "$name" >&2
 			exit 1
 	esac
-done >&2
+done
 
 gfile=${gfile%.*}.csv
 Gfile=${Gfile%.*}.csv
