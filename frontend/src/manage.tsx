@@ -63,7 +63,11 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
+<<<<<<< HEAD:frontend/src/manage.tsx
     const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
+=======
+    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
+>>>>>>> Add usernames to frontend:frontend/manage.tsx
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
