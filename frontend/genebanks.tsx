@@ -27,23 +27,20 @@ export function Genebanks() {
   const {url} = useRouteMatch()
   const history = useHistory()
   const {genebanks} = useDataContext()
-  const [subpath, setSubpath] = React.useState('' as String)
   const [genebank, setGenebank] = useState(undefined as Genebank | undefined)
 
-  React.useEffect(() => {
-    setSubpath(location.pathname.replace(url, '').trim().replace(/\//, ''))
-  })
+  const subpath = location.pathname.replace(url, '').trim().replace(/\//, '')
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!subpath && genebanks.length > 0) {
       history.push(`${url}/${genebanks[0].name}`)
     } else if (genebanks.length > 0) {
       const targetGenebank = genebanks.find((g: Genebank) => g.name.toLowerCase() == subpath.toLowerCase())
-      if (targetGenebank) {
+      if (targetGenebank && targetGenebank !== genebank) {
         setGenebank(targetGenebank)
       }
     }
-  }, [subpath, genebanks]);
+  }, [subpath, genebank, genebanks]);
 
   return <>
     <Paper>
