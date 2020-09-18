@@ -71,22 +71,23 @@ def register_user(email, password, validated=False, privileges=[]):
         user.save()
     return user
 
-def authenticate_user(email, password):
+def authenticate_user(name, password):
     """
-    Authenticates an email/password pair against the database. Returns the
-    user info for the authenticated user on success, or None on failure.
+    Authenticates an email or username and password against the database.
+    Returns the user info for the authenticated user on success, or None on
+    failure.
     """
     try:
         with DATABASE.atomic():
-            user_info = User.get(User.email == email)
+            user_info = User.select().where((User.email == name) | (User.username == name)).get()
         if check_password_hash(user_info.password_hash, password):
-            logging.info("Login from %s", email)
+            logging.info("Login from %s", name)
             return user_info
     except DoesNotExist:
         # Perform password check regardless of username to prevent timing
         # attacks
         check_password_hash("This-always-fails", password)
-    logging.info("Failed login attempt for %s", email)
+    logging.info("Failed login attempt for %s", name)
     return None
 
 def fetch_user_info(user_id):
@@ -255,7 +256,7 @@ def get_users(user_uuid=None):
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
-        return [{"email": u.email, "id": u.id} for u in users]
+        return [{"email": u.email, "username": u.username, "id": u.id} for u in users]
     except DoesNotExist:
         return None
 
