@@ -476,6 +476,7 @@ class User(BaseModel, UserMixin):
     """
 
     id = AutoField(primary_key=True, column_name="user_id")
+    username = TextField(unique=True, null=True)
     email = TextField()
     uuid = UUIDField()
     password_hash = CharField(128)
