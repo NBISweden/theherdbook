@@ -190,7 +190,6 @@ export function HerdForm({id}: {id: string | undefined}) {
     } else {
       updateHerd(postData).then(
         (data: ServerMessage) => {
-          console.debug(data)
           switch (data.status) {
             case 'success':
             case 'updated':

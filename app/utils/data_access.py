@@ -123,7 +123,6 @@ def get_genebanks(user_uuid=None):
     with DATABASE.atomic():
         for genebank in user.get_genebanks():
             genebank_data = genebank.short_info()
-            genebank_data["individuals"] = get_individuals(genebank.id, user_uuid)
             data += [genebank_data]
 
     return data
@@ -453,7 +452,16 @@ def get_individuals(genebank_id, user_uuid=None):
                     f.individual_id, f.name, f.number,
                     m.individual_id, m.name, m.number,
                     c.colour_id, c.name,
-                    h.herd_id, h.herd, h.herd_name
+                    h.herd_id, h.herd, h.herd_name,
+                    (h.is_active OR h.is_active IS NULL) AS herd_active,
+                    ( (ih.herd_tracking_date > current_date - interval '1 year')
+                      AND (h.is_active OR h.is_active IS NULL)
+                      AND i.death_date IS NULL
+                      AND (i.death_note = '' OR i.death_note IS NULL)
+                    ) AS active,
+                    ( i.death_date IS NULL
+                      AND (i.death_note = '' OR i.death_note IS NULL)
+                    ) AS alive
         FROM        individual i
         LEFT JOIN   individual f ON (i.father_id = f.individual_id)
         LEFT JOIN   individual m ON (i.mother_id = m.individual_id)
@@ -467,11 +475,7 @@ def get_individuals(genebank_id, user_uuid=None):
                         ORDER BY individual_id, herd_tracking_date DESC
                     ) AS ih ON (ih.individual_id = i.individual_id)
         JOIN        herd h ON (ih.herd_id = h.herd_id)
-        WHERE       h.genebank_id = %s
-        AND         (h.is_active OR h.is_active IS NULL)
-        AND         i.death_date IS NULL
-        AND         (i.death_note = '' OR i.death_note IS NULL)
-        AND         ih.herd_tracking_date > current_date - interval '1 year'
+        WHERE       h.genebank_id = %s;
         ;"""
         with DATABASE.atomic():
             cursor = DATABASE.execute_sql(query, (genebank_id,))
@@ -492,6 +496,7 @@ def get_individuals(genebank_id, user_uuid=None):
                 "mother": {"id": i[14], "name": i[15], "number": i[16]},
                 "color": {"id": i[17], "name": i[18]},
                 "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
+                "herd_active": i[22], "active": i[23], "alive": i[24],
             }
             for i in cursor.fetchall()
         ]

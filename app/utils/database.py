@@ -141,8 +141,10 @@ class Genebank(BaseModel):
             "name": self.name,
             "herds": [
                 h.short_info()
-                for h in self.herd_set
-                if h.is_active or h.is_active is None
+                for h in Herd.select()
+                             .where(Herd.is_active
+                                    or Herd.is_active is None
+                                    and Herd.genebank == self.id)
             ],
         }
 
@@ -208,7 +210,7 @@ class Herd(BaseModel):
         return {
             "id": self.id,
             "herd": self.herd,
-            "genebank": self.genebank.id,
+            "genebank": self.__dict__['__data__']['genebank'],
             "herd_name": self.herd_name,
         }
 

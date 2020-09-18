@@ -39,12 +39,72 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   }
 
   /**
+   * Asynchronously loads data from `url`, and sets `field` in data to the
+   * response data using the `set` function.
+   *
+   * @param url URL to fetch data from
+   * @param field the field to set in the base data
+   * @param set the setter function to update the data
+   * @param index if index is set - the base data is assumed to be an array, and
+   *     that the target field should be set as `data[0].field = <update>`
+   */
+  async function lazyLoad(url: string, field: string, set: Function, index: number | null = null) {
+    return await get(url).then(
+      data => {
+        if (!data) {
+          return false;
+        }
+        set((base: any) => {
+          let update;
+          if (index == null) { // object update
+            update = {...base}
+            update[field] = Object.keys(data).includes(field) ? data[field] : data
+          } else { // array update
+            update = [...base]
+            update[index] = {...update[index]}
+            update[index][field] = Object.keys(data).includes(field) ? data[field] : data
+          }
+          return update
+        })
+        return true
+      },
+      error => {
+        console.error(error);
+        return false;
+      }
+    )
+  }
+
+  /**
    * Fetches all genebank names, id's and herd lists from the backend (that the
    * currently logged in user has access to). Returns `true` on success and
    * `false` otherwise.
    */
   async function getGenebanks() {
-    return fetchAndSet('/api/genebanks', setGenebanks, 'genebanks')
+    return await get('/api/genebanks').then(
+      data => {
+        if (!data) {
+          return false;
+        }
+        // note that individuals aren't loaded, and send a request to load them
+        const genebankData = data['genebanks'].map((g: Genebank) => {
+          g.individuals = null
+          return g
+        })
+        setGenebanks(genebankData)
+        genebankData.forEach((g: Genebank, i: number) => {
+          lazyLoad(`/api/genebank/${g.id}/individuals`,
+                   'individuals',
+                   setGenebanks,
+                   i)
+        });
+        return true;
+      },
+      error => {
+        console.error(error);
+        return false;
+      }
+    )
   }
 
   /**
