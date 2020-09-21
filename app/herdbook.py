@@ -270,7 +270,7 @@ def build_herd_pedigree(id):
 # (308 moved permanently?) messing up the snowpack proxy.
 @APP.route('/api/pedigree/<i_id>/<int:generations>')
 @login_required
-def pedigree(i_id, generations):
+def pedigree(i_id, generations=5):
     """
     Returns the pedigree information for the individual `i_id`.
     """
