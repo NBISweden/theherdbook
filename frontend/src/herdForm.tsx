@@ -8,10 +8,10 @@ import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@mate
 import { makeStyles } from '@material-ui/core/styles';
 import Select from 'react-select';
 import { useDataContext } from './data_context'
-import { Herd, Genebank, ServerMessage } from '~data_context_global';
+import { Herd, Genebank, ServerMessage } from '@app/data_context_global';
 
 import { get, updateHerd, createHerd } from './communication';
-import { useMessageContext } from '~message_context';
+import { useMessageContext } from '@app/message_context';
 import { unstable_batchedUpdates } from 'react-dom';
 
 // Define styles for the form

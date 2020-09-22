@@ -1,12 +1,10 @@
 FROM node:lts
 
-RUN mkdir -p /app /.parcel-cache
+RUN mkdir -p /app
 COPY /frontend/ /app/
 WORKDIR /app
-RUN yarn install
+RUN yarn
 
+RUN yarn build
 
-RUN yarn run parcel --version
-RUN rm -f babel.config.js  && yarn build --no-source-maps --cache-dir /.parcel-cache
-
-CMD yarn install && yarn run parcel --version && yarn start --cache-dir /.parcel-cache
+CMD yarn && yarn start

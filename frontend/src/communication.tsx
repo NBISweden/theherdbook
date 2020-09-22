@@ -1,5 +1,5 @@
 import React from 'react'
-import { Herd } from '~data_context_global';
+import { Herd } from '@app/data_context_global';
 
 declare const process: {env: {NODE_ENV: string}}
 

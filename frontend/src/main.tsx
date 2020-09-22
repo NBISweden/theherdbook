@@ -42,5 +42,8 @@ const Main =
 
 ReactDOM.render(Main, document.querySelector('#root'))
 
-declare const module: {hot?: {accept: Function}}
-module.hot && module.hot.accept()
+// https://www.snowpack.dev/#hot-module-replacement
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
+

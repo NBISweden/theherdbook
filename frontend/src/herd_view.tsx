@@ -7,7 +7,7 @@ import React from 'react'
 import {Link} from "react-router-dom";
 
 import { get } from './communication';
-import { herdLabel } from '~data_context_global';
+import { herdLabel } from '@app/data_context_global';
 
 /**
  * Shows herd information, with a list of all individuals belonging to that
