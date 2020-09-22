@@ -13,7 +13,7 @@ import { useDataContext } from './data_context'
 import { Herd, Genebank, herdLabel, ServerMessage } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';
-import { NameID } from 'data_context_global';
+import { NameID } from '@app/data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
