@@ -87,8 +87,12 @@ export function WithUserContext(props: {children: React.ReactNode}) {
 
   React.useEffect(on_mount, [])
 
+  const value = React.useMemo(() => {
+    return {user, login, logout}
+  }, [user, loadData])
+
   return (
-    <UserContext.Provider value={{user, login, logout}}>
+    <UserContext.Provider value={value}>
       {props.children}
     </UserContext.Provider>
   )

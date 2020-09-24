@@ -124,7 +124,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    *     `individuals`, the string `all` to load all data, or the string `none`
    *     to unload all data.
    */
-  async function loadData(data: string | Array<string>) {
+  const loadData = React.useMemo(() => async function loadData(data: string | Array<string>) {
     let updates: Array<Promise<boolean>> = []
     if (data == 'none') {
       setGenebanks([])
@@ -139,7 +139,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
     return await Promise.all(updates).then(statuses => {
       return statuses.reduce((a,b) => a && b, true)
     })
-  }
+  }, [])
 
   React.useEffect(() => {
     loadData('all')
