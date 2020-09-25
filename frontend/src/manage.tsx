@@ -63,11 +63,7 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-<<<<<<< HEAD:frontend/src/manage.tsx
     const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
-=======
-    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
->>>>>>> Add usernames to frontend:frontend/manage.tsx
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
@@ -129,21 +125,21 @@ export function Manage() {
    * selected item.
    */
   React.useEffect(() => {
-    const path = location.pathname.split('/')
-    if (path[1] != 'manage' || !genebanks) {
+    const [_, pagepath, topicpath, selectpath] = location.pathname.split('/')
+    if (pagepath != 'manage' || !genebanks) {
       return;
     }
-    if (path[2]) {
-      setTopic(path[2])
-      if (path[2] != 'user') {
-        setGenebank(path[2]);
+    if (topicpath) {
+      setTopic(topicpath)
+      if (topicpath != 'user') {
+        setGenebank(topicpath);
       } else if (!genebank && genebanks.length > 0) {
         setGenebank(genebanks[0].name)
       }
-      if (path[2] == 'user') {
+      if (topicpath == 'user') {
         setUserOptions();
       } else {
-        setHerdOptions(path[2]);
+        setHerdOptions(topicpath);
       }
     } else if (genebanks.length > 0) {
       const defaultTopic = genebanks[0].name
@@ -151,9 +147,9 @@ export function Manage() {
       setGenebank(defaultTopic)
       setHerdOptions(defaultTopic)
     }
-    if (path[3]) {
-      setTarget(path[3])
-      parseTarget(path[2], path[3])
+    if (selectpath) {
+      setTarget(selectpath)
+      parseTarget(topicpath, selectpath)
     }
 
   }, [genebanks, users, location])
