@@ -142,9 +142,7 @@ class Genebank(BaseModel):
             "herds": [
                 h.short_info()
                 for h in Herd.select()
-                             .where(Herd.is_active
-                                    or Herd.is_active is None
-                                    and Herd.genebank == self.id)
+                             .where(Herd.genebank == self)
             ],
         }
 
@@ -476,6 +474,7 @@ class User(BaseModel, UserMixin):
     """
 
     id = AutoField(primary_key=True, column_name="user_id")
+    username = TextField(unique=True, null=True)
     email = TextField()
     uuid = UUIDField()
     password_hash = CharField(128)

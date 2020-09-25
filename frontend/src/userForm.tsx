@@ -13,6 +13,7 @@ import { useDataContext } from './data_context'
 import { Herd, Genebank, herdLabel, ServerMessage } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';
+import { NameID } from '@app/data_context_global';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -40,6 +41,7 @@ const useStyles = makeStyles({
 export interface ManagedUser {
   id: number | 'new'
   email: string
+  username: string
   validated: boolean
   privileges: any
   password?: string
@@ -48,6 +50,7 @@ export interface ManagedUser {
 const defaultValues: ManagedUser = {
   id: -1,
   email: "",
+  username: "",
   validated: false,
   privileges: [],
   password: ""
@@ -122,6 +125,9 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
         switch (data.status) {
           case "updated":
           case "unchanged":
+            const newUsers: NameID[] = users.filter((u: NameID) => u.id != postData.id)
+            newUsers.push({email: postData.email, id: +postData.id, name: postData.username})
+            setUsers(newUsers)
             userMessage('Changes saved', 'success')
             break; // updated user
           case "success":
@@ -129,7 +135,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
             const newUserId = data.data;
             unstable_batchedUpdates(() => {
               setNew(false);
-              const new_user = {email: user.email, id: newUserId, name: user.email}
+              const new_user = {email: user.email, id: newUserId, name: user.username}
               setUsers([...users, new_user])
               userMessage('User saved', 'success')
             })
@@ -224,20 +230,26 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
           <TextField label='E-mail'
                      type='email'
                      className={classes.simpleField}
-                     value={user.email ?? undefined}
+                     value={user.email ?? ''}
                      onChange={e => setUser({...user, email: e.target.value})}
             />
+            <TextField label='Användarnamn'
+                       type='username'
+                       className={classes.simpleField}
+                       value={user.username ?? ''}
+                       onChange={e => setUser({...user, username: e.target.value})}
+              />
           {isNew ? <TextField label='Lösenord'
                       type='password'
                       hidden={true}
                       className={classes.simpleField}
-                      value={user.password ?? undefined}
+                      value={user.password ?? ''}
                       onChange={e => setUser({...user, password: e.target.value})}
           /> : ''}
           <FormControlLabel
             control={
               <Checkbox color="primary"
-                        checked={user.validated ?? undefined}
+                        checked={user.validated ?? false}
                         onChange={e => setUser({...user, validated: e.target.checked})}
                 />
             }

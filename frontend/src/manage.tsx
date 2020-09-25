@@ -9,7 +9,7 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel } from '@app/data_context_global';
+import { Genebank, NameID, Herd, herdLabel, userLabel } from '@app/data_context_global';
 import { Button } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
 import { UserForm } from '@app/userForm';
@@ -63,7 +63,7 @@ export function Manage() {
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const userOptions: any[] = users.map((u: NameID) => {return {value: u.id, label: u.email}});
+    const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
@@ -106,7 +106,7 @@ export function Manage() {
     } else if (category == 'user' && +path != NaN) {
       const targetUser = users.find((u: NameID) => u.id == +path);
       if (targetUser) {
-        targetOption = {value: targetUser.id, label: targetUser.email}
+        targetOption = {value: targetUser.id, label: userLabel(targetUser)}
       }
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
@@ -125,21 +125,21 @@ export function Manage() {
    * selected item.
    */
   React.useEffect(() => {
-    const path = location.pathname.split('/')
-    if (path[1] != 'manage' || !genebanks) {
+    const [_, pagepath, topicpath, selectpath] = location.pathname.split('/')
+    if (pagepath != 'manage' || !genebanks) {
       return;
     }
-    if (path[2]) {
-      setTopic(path[2])
-      if (path[2] != 'user') {
-        setGenebank(path[2]);
+    if (topicpath) {
+      setTopic(topicpath)
+      if (topicpath != 'user') {
+        setGenebank(topicpath);
       } else if (!genebank && genebanks.length > 0) {
         setGenebank(genebanks[0].name)
       }
-      if (path[2] == 'user') {
+      if (topicpath == 'user') {
         setUserOptions();
       } else {
-        setHerdOptions(path[2]);
+        setHerdOptions(topicpath);
       }
     } else if (genebanks.length > 0) {
       const defaultTopic = genebanks[0].name
@@ -147,9 +147,9 @@ export function Manage() {
       setGenebank(defaultTopic)
       setHerdOptions(defaultTopic)
     }
-    if (path[3]) {
-      setTarget(path[3])
-      parseTarget(path[2], path[3])
+    if (selectpath) {
+      setTarget(selectpath)
+      parseTarget(topicpath, selectpath)
     }
 
   }, [genebanks, users, location])

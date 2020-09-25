@@ -44,6 +44,7 @@ def add_user(form, user_uuid=None):
 
     email = form.get("email", None)
     password = form.get("password", None)
+    username = form.get("username", None)
     validated = form.get("validated", False)
     if not email or not password:
         return {"status": "error", "message": "missing data"}
@@ -52,10 +53,10 @@ def add_user(form, user_uuid=None):
         if User.select().where(User.email == email).first():
             return {"status": "error", "message": "already exists"}
 
-    user = register_user(email, password, validated)
+    user = register_user(email, password, username, validated)
     return {"status": "created", "data": user.id}
 
-def register_user(email, password, validated=False, privileges=[]):
+def register_user(email, password, username = None, validated=False, privileges=[]):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
@@ -64,6 +65,7 @@ def register_user(email, password, validated=False, privileges=[]):
         email=email,
         uuid=uuid.uuid4().hex,
         password_hash=generate_password_hash(password),
+        username=username,
         validated=validated,
         privileges=privileges,
     )
@@ -71,22 +73,25 @@ def register_user(email, password, validated=False, privileges=[]):
         user.save()
     return user
 
-def authenticate_user(email, password):
+def authenticate_user(name, password):
     """
-    Authenticates an email/password pair against the database. Returns the
-    user info for the authenticated user on success, or None on failure.
+    Authenticates an email or username and password against the database.
+    Returns the user info for the authenticated user on success, or None on
+    failure.
     """
+    if not name or not password:
+        return None
     try:
         with DATABASE.atomic():
-            user_info = User.get(User.email == email)
+            user_info = User.select().where((User.email == name) | (User.username == name)).get()
         if check_password_hash(user_info.password_hash, password):
-            logging.info("Login from %s", email)
+            logging.info("Login from %s", name)
             return user_info
     except DoesNotExist:
         # Perform password check regardless of username to prevent timing
         # attacks
         check_password_hash("This-always-fails", password)
-    logging.info("Failed login attempt for %s", email)
+    logging.info("Failed login attempt for %s", name)
     return None
 
 def fetch_user_info(user_id):
@@ -255,7 +260,7 @@ def get_users(user_uuid=None):
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
-        return [{"email": u.email, "id": u.id} for u in users]
+        return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
     except DoesNotExist:
         return None
 
@@ -286,6 +291,7 @@ def get_user(user_id, user_uuid=None):
             "data": {
                 "id": target.id,
                 "email": target.email,
+                "username": target.username,
                 "validated": target.validated,
                 "privileges": target.privileges,
                 }
@@ -332,7 +338,7 @@ def update_user(form, user_uuid=None):
 
     # update target user data if needed
     updated = False
-    for field in ["email", "validated"]:
+    for field in ["email", "username", "validated"]:
         if getattr(target_user, field) != form[field]:
             setattr(target_user, field, form[field])
             updated = True
