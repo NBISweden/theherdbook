@@ -142,9 +142,7 @@ class Genebank(BaseModel):
             "herds": [
                 h.short_info()
                 for h in Herd.select()
-                             .where(Herd.is_active
-                                    or Herd.is_active is None
-                                    and Herd.genebank == self.id)
+                             .where(Herd.genebank == self)
             ],
         }
 
