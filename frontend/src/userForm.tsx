@@ -230,26 +230,26 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
           <TextField label='E-mail'
                      type='email'
                      className={classes.simpleField}
-                     value={user.email ?? undefined}
+                     value={user.email ?? ''}
                      onChange={e => setUser({...user, email: e.target.value})}
             />
             <TextField label='Användarnamn'
                        type='username'
                        className={classes.simpleField}
-                       value={user.username ?? undefined}
+                       value={user.username ?? ''}
                        onChange={e => setUser({...user, username: e.target.value})}
               />
           {isNew ? <TextField label='Lösenord'
                       type='password'
                       hidden={true}
                       className={classes.simpleField}
-                      value={user.password ?? undefined}
+                      value={user.password ?? ''}
                       onChange={e => setUser({...user, password: e.target.value})}
           /> : ''}
           <FormControlLabel
             control={
               <Checkbox color="primary"
-                        checked={user.validated ?? undefined}
+                        checked={user.validated ?? false}
                         onChange={e => setUser({...user, validated: e.target.checked})}
                 />
             }
