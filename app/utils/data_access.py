@@ -44,6 +44,7 @@ def add_user(form, user_uuid=None):
 
     email = form.get("email", None)
     password = form.get("password", None)
+    username = form.get("username", None)
     validated = form.get("validated", False)
     if not email or not password:
         return {"status": "error", "message": "missing data"}
@@ -52,10 +53,10 @@ def add_user(form, user_uuid=None):
         if User.select().where(User.email == email).first():
             return {"status": "error", "message": "already exists"}
 
-    user = register_user(email, password, validated)
+    user = register_user(email, password, username, validated)
     return {"status": "created", "data": user.id}
 
-def register_user(email, password, validated=False, privileges=[]):
+def register_user(email, password, username = None, validated=False, privileges=[]):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
@@ -64,6 +65,7 @@ def register_user(email, password, validated=False, privileges=[]):
         email=email,
         uuid=uuid.uuid4().hex,
         password_hash=generate_password_hash(password),
+        username=username,
         validated=validated,
         privileges=privileges,
     )
