@@ -27,6 +27,12 @@ chown www-data.www-data /code/*.pem
 chown www-data.www-data /tmp/database.ini
 chmod u+r /tmp/database.ini
 
-mv /etc/nginx/herdbook.standalone /etc/nginx/herdbook
+if getent hosts herdbook-frontend-devel >/dev/null; then
+    # Development mode
+    cp /etc/nginx/herdbook.devel /etc/nginx/herdbook
+else
+    # Standalone
+    cp /etc/nginx/herdbook.standalone /etc/nginx/herdbook
+fi
 
 supervisord -c /etc/supervisord.conf

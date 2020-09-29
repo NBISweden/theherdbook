@@ -6,9 +6,6 @@
   "devOptions": {
     "port": 4242
   },
-  "proxy": {
-    "/api": "http://main:8080/api"
-  },
   "alias": {
     "@app": "./src"
   },
