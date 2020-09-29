@@ -6,10 +6,11 @@ import {useDataContext} from './data_context'
 /** The currently logged in user, if any */
 export interface User {
   email: string | null
+  username: string | undefined
   validated: boolean
   is_admin: boolean
   is_manager: Array<number> | undefined
-  is_owner: Array<number> | undefined
+  is_owner: Array<string> | undefined
 }
 
 export type Result = 'logged_in' | 'logged_out' | 'error'

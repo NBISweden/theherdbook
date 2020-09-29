@@ -13,7 +13,7 @@ import { herdLabel } from '@app/data_context_global';
  * Shows herd information, with a list of all individuals belonging to that
  * herd.
  */
-export function HerdView({id}: {id: string}) {
+export function HerdView({id}: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as any)
 
   const fields = [
@@ -27,7 +27,7 @@ export function HerdView({id}: {id: string}) {
   ]
 
   React.useEffect(() => {
-    if (id != undefined) {
+    if (id) {
       get(`/api/herd/${id}`).then(
         data => data && setHerd(data),
         error => console.error(error)

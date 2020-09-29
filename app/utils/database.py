@@ -612,7 +612,7 @@ class User(BaseModel, UserMixin):
         herds = []
         for role in self.privileges:
             if role["level"] == "owner":
-                herds += [role["herd"]]
+                herds += [Herd.get(role["herd"]).herd]
         return herds or None
 
     @property
@@ -638,6 +638,7 @@ class User(BaseModel, UserMixin):
 
         return {
             "email": self.email,
+            "username": self.username,
             "validated": self.validated if self.validated else False,
             "is_admin": self.is_admin,
             "is_manager": self.is_manager,
