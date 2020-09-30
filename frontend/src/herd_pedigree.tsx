@@ -47,7 +47,7 @@ export function HerdPedigree({ id }: { id: string }) {
 
 
   return <>
-    {herd && pedigree && <>
+    {herd  && <>
       <Table width="100%">
         <TableBody>
           <TableRow style={{ verticalAlign: "top" }}>
@@ -68,7 +68,7 @@ export function HerdPedigree({ id }: { id: string }) {
               </ul>
             </TableCell>
             <TableCell width="85%" >
-              <PedigreeNetwork pedigree={pedigree} />
+              {pedigree && <PedigreeNetwork pedigree={pedigree} />}
             </TableCell>
           </TableRow>
         </TableBody>

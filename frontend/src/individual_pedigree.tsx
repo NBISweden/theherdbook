@@ -12,11 +12,11 @@ import TableRow from '@material-ui/core/TableRow';
 /**
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component
  */
+
 export function IndividualPedigree({ id, generations }: { id: string }) {
   const [pedigree, setPedigree] = React.useState(undefined as any)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
-
 
   React.useEffect(() => {
 
@@ -38,7 +38,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
   }, [id, generations_input])//dependent on these values
 
   return <>
-    {individual && pedigree && <>
+    {individual  && <>
       <Table width="100%">
         <TableBody>
           <TableRow style={{ verticalAlign: "top" }}>
@@ -46,7 +46,6 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
               <h2>{individual.name ?? 'unnamed'}</h2>
               <dl>
                 <dt>Inavelskoefficient</dt> <dd><b>{individual.inbreeding}%</b></dd>
-                <dt>Generationer</dt> <dd><input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50" /></dd>
                 <dt>Nummer</dt> <dd>{individual.number}</dd>
                 <dt>Certifikat</dt> <dd>{individual.certificate}</dd>
                 <dt>Kön</dt> <dd>{individual.sex ?? 'unknown'}</dd>
@@ -85,8 +84,9 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
 
               </dl>
             </TableCell>
-            <TableCell width="85%" >
-              <PedigreeNetwork pedigree={pedigree} />
+            <TableCell width="85%" style={{textAlign: "left"}}>
+              <h3>Pedigree: <input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50" /></h3>
+              {pedigree && <PedigreeNetwork pedigree={pedigree} />}
             </TableCell>
           </TableRow>
         </TableBody>
