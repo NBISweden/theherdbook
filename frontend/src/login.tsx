@@ -29,7 +29,7 @@ export function Login() {
     login(username, password).then(
       status => {
         if (status == 'logged_in') {
-          history.push("/")
+          history.goBack()
         }
       }
     )

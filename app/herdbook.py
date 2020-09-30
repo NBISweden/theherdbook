@@ -14,9 +14,7 @@ from flask import (
     Flask,
     jsonify,
     request,
-    session,
-    redirect,
-    url_for
+    session
 )
 
 from werkzeug.urls import url_parse
@@ -48,7 +46,6 @@ login = LoginManager(APP)
 login.login_view = '/login'
 
 
-
 @APP.after_request
 def after_request(response):
     """
@@ -68,11 +65,13 @@ def after_request(response):
 
     return response
 
+
 @login.user_loader
 def load_user(id):
     # id is not required, since user is loaded from the session. Method added to support flask-login
     user = da.fetch_user_info(session.get('user_id', None))
     return user
+
 
 @APP.route("/api/user")
 def get_user():
@@ -82,6 +81,7 @@ def get_user():
     """
     user = da.fetch_user_info(session.get("user_id", None))
     return jsonify(user.frontend_data() if user else None)
+
 
 @APP.route("/api/manage/users")
 def get_users():
@@ -142,6 +142,7 @@ def manage_roles():
     status = da.update_role(form, session.get("user_id", None))
     return jsonify(status)
 
+
 @APP.route("/api/manage/herd", methods=["POST", "UPDATE"])
 @login_required
 def manage_herd():
@@ -161,6 +162,7 @@ def manage_herd():
     elif request.method == "UPDATE":
         status = da.update_herd(form, session.get("user_id", None))
     return jsonify(status)
+
 
 @APP.route("/api/login", methods=["POST"])
 def loginHandler():
@@ -182,6 +184,7 @@ def loginHandler():
         login_user(user)
     return get_user()
 
+
 @APP.route("/api/logout")
 def logout():
     """
@@ -190,6 +193,7 @@ def logout():
     session.pop("user_id", None)
     logout_user()
     return get_user()
+
 
 @APP.route("/api/genebanks")
 @APP.route("/api/genebank/<int:g_id>")
@@ -204,6 +208,7 @@ def genebank(g_id=None):
         return jsonify(da.get_genebank(g_id, user_id))
     return jsonify(genebanks=da.get_genebanks(user_id))
 
+
 @APP.route("/api/genebank/<int:g_id>/individuals")
 @login_required
 def genebank_individuals(g_id):
@@ -214,6 +219,7 @@ def genebank_individuals(g_id):
     user_id = session.get("user_id", None)
     return jsonify(individuals=da.get_individuals(g_id, user_id))
 
+
 @APP.route("/api/herd/<h_id>")
 @login_required
 def herd(h_id):
@@ -222,6 +228,7 @@ def herd(h_id):
     """
     data = da.get_herd(h_id, session.get("user_id", None))
     return jsonify(data)
+
 
 @APP.route("/api/individual/<i_id>")
 @login_required
@@ -238,7 +245,6 @@ def individual(i_id):
 
 @APP.route('/api/herd_pedigree/<herd_id>')
 @login_required
-@cache.cached(timeout=36000)
 def herd_pedigree(herd_id):
     """
     Returns the pedigree information for the genebank_id provided.
@@ -258,7 +264,7 @@ def build_herd_pedigree(id):
     edges = []
     if leaves:
         for leave in leaves:
-            build_pedigree(leave, user_id, 1, 100, nodes, edges, True)
+            build_pedigree(leave, user_id, 1, 5, nodes, edges, True)
     result = {"nodes": list(nodes.values()), "edges": edges}
     later_time = datetime.now()
     difference = later_time - init_time
@@ -289,7 +295,7 @@ def pedigree(i_id, generations=5):
 def build_pedigree(ind, user_id, level, generations, nodes, edges, show_label):
     """Builds the pedigree dict tree for the individual"""
     id = ind["number"]
-    pnode = {"id": id, "level": level, "x": len(edges)}
+    pnode = {"id": id, "x": len(edges)}
     if show_label:
         label = "%s\n%s" % (ind["name"], ind["number"])
         pnode["label"] = label
@@ -330,10 +336,12 @@ def get_inbreeding(i_id):
         return coefficients[id]
     return None
 
+
 @APP.route("/api/inbreeding/")
 def all_inbreeding():
     coefficients = load_inbreeding()
     return jsonify({"coefficients": coefficients})
+
 
 @APP.before_first_request
 @cache.cached(timeout=3600, key_prefix="all_inbreeding")
@@ -341,6 +349,7 @@ def load_inbreeding():
     collections = ibc.get_pedigree_collections()
     coefficients = ibc.calculate_inbreeding(collections)
     return coefficients
+
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing

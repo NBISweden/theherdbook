@@ -10,16 +10,17 @@ import { PedigreeCSS } from './pedigree_css'
  * depending on the input data. The network data is built from the python api.
  */
 
-export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
 
+export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes: any[]} }){
   // A reference to the div rendered by this component
   const domNode = useRef(null);
   const network = useRef(null);
   const history = useHistory();
 
   const options = {
-    width: Math.round(domNode.offsetWidth * 0.85) + 'px',//width is calculated considering the parent component width
+    width: Math.round(window.innerWidth * 0.85) + 'px',//width is calculated considering the parent component width
     height: Math.round(window.innerHeight * 0.75) + 'px',//height uses the window height as reference, the domNode did not worked
+
     layout: {
       hierarchical: {
         enabled: true,
@@ -27,21 +28,24 @@ export function PedigreeNetwork({ pedigree }: { pedigree: string }) {
         sortMethod: 'directed',
         levelSeparation: 120,//vertical space between the nodes
         parentCentralization: true,
-        //shakeTowards: "roots",//it moves the parents up in the pedigree
+        shakeTowards: "roots",//it moves the parents up in the pedigree
         edgeMinimization: true,
         blockShifting: true,
-        nodeSpacing: 120
+        nodeSpacing: 140
       }
     },
+
     edges: {
-      //color:  { color: "LightGray", inherit: false },//avoids the arrows to inherit node color
-      arrows: { to: { enabled: true, scaleFactor: 0.50 } }//makes smaller arrows
-      //smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}//makes elbow arrows
+      color:  { color: "LightGray", inherit: false },//avoids the arrows to inherit node color
+      arrows: { to: { enabled: true, scaleFactor: 0.50 } },//makes smaller arrows
+      smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}//makes elbow arrows
     },
+
     interaction: {
       navigationButtons: true,
       keyboard: true
     },
+
     physics: false//it makes the rendering faster, recommended in hierarchical layout
   }
 
