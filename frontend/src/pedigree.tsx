@@ -1,73 +1,89 @@
-import React, { Component, useRef, useEffect } from 'react'
-import { Network } from 'vis-network';
-import { useHistory } from "react-router-dom";
-
-import { PedigreeCSS } from './pedigree_css'
-
-
 /**
- * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd,
- * depending on the input data. The network data is built from the python api.
+ * @file This file contains functions for calculating and formatting pedigrees.
  */
 
+import { Genebank, Individual, LimitedIndividual } from '@app/data_context_global';
 
-export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes: any[]} }){
-  // A reference to the div rendered by this component
-  const domNode = useRef(null);
-  const network = useRef(null);
-  const history = useHistory();
+export type Node = {id: string, x: number, label: string, shape: string, color: string}
+export type Edge = {id: string, from: string, to: string}
+export type Pedigree = {nodes: Node[], edges: Edge[]}
 
-  const options = {
-    width: Math.round(window.innerWidth * 0.85) + 'px',//width is calculated considering the parent component width
-    height: Math.round(window.innerHeight * 0.75) + 'px',//height uses the window height as reference, the domNode did not worked
+/**
+ * Looks through all loaded genebanks for information on the given individual
+ * number `id`.
+ *
+ * @param id individual number of the animal to find
+ */
+const getIndividual = (genebanks: Genebank[], id: string): Individual | undefined => {
+  return genebanks.filter((genebank: Genebank) => genebank.individuals)
+                  .flatMap((genebank: Genebank) => genebank.individuals)
+                  .find((i: Individual) => i.number == id)
+}
 
-    layout: {
-      hierarchical: {
-        enabled: true,
-        direction: "DU",//Down up orientation
-        sortMethod: 'directed',
-        levelSeparation: 120,//vertical space between the nodes
-        parentCentralization: true,
-        shakeTowards: "roots",//it moves the parents up in the pedigree
-        edgeMinimization: true,
-        blockShifting: true,
-        nodeSpacing: 140
-      }
-    },
-
-    edges: {
-      color:  { color: "LightGray", inherit: false },//avoids the arrows to inherit node color
-      arrows: { to: { enabled: true, scaleFactor: 0.50 } },//makes smaller arrows
-      smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}//makes elbow arrows
-    },
-
-    interaction: {
-      navigationButtons: true,
-      keyboard: true
-    },
-
-    physics: false//it makes the rendering faster, recommended in hierarchical layout
-  }
-
-
-  useEffect(
-    () => {
-      network.current = new Network(domNode.current, pedigree, options);
-      network.current.on("doubleClick", (params) => {
-        if (params.nodes.length > 0) {
-          const nodeid = params.nodes[0];
-          history.push("/individual/" + nodeid);
+/**
+ * Formats the limited individual information `ind` as a node descriptor with
+ * the x-value `x`.
+ *
+ * @param ind individual description as `{name: string, number: string, sex: string}
+ * @param x numerical x value
+ */
+const asNode = (ind: Individual, x: number): Node => {
+  return {id: ind.number,
+          x: x,
+          label: ind.name ? `${ind.name}\n${ind.number}` : ind.number,
+          shape: ind.sex == 'male'   ? 'box'
+                : ind.sex == 'female' ? 'oval'
+                                      : 'triangle', // unknown sex
+          color: ind.sex == 'male'   ? 'LightSkyBlue'
+                : ind.sex == 'female' ? 'pink'
+                                      : 'lightgreen' // unknown sex
         }
-      });
-    },
-    [pedigree]);
+}
 
+/**
+ * Returns `generations` from a pedigree of an individual given by an `id`
+ * string, using data from `genebanks`.
+ *
+ * @param genebanks genebank array to use for fetching individual data
+ * @param id individual number of the individual whose pedigree to generate
+ * @param generations the number of generations to plot
+ */
+export function calcPedigree(genebanks: Genebank[], id: string, generations: number): Pedigree {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+  const indData = getIndividual(genebanks, id)
+  if (indData) {
+    nodes.push( asNode(indData, edges.length) )
 
-  return <>
-    <PedigreeCSS />
-    <div ref={domNode}  >
-    </div>
-  </>;
-};
+    const getPedigree = (ind: Individual, level = generations) => {
+      let pedigreeNodes: Node[] = []
+      let pedigreeEdges: Edge[] = []
+      if (level > 0) {
+        // loop over mother and father, if they exist
+        [ind.mother, ind.father].forEach((parent: LimitedIndividual | null) => {
+          if (parent && parent.id !== null) {
+            const data = getIndividual(genebanks, parent.number)
+            if (data) {
+              pedigreeNodes.push(asNode(data, 0))
+              pedigreeEdges.push({id: `${ind.number}-${data.number}`,
+                                  from: ind.number,
+                                  to: data.number})
+              const parents = getPedigree(data, level - 1)
+              pedigreeNodes = [...pedigreeNodes, ...parents.nodes]
+              pedigreeEdges = [...pedigreeEdges, ...parents.edges]
+            }
+          }
+        })
+      }
+      return {nodes: pedigreeNodes, edges: pedigreeEdges}
+    }
+    const pedigree = getPedigree(indData)
+    nodes = [...nodes, ...pedigree.nodes]
+    edges = [...edges, ...pedigree.edges]
+  }
+  // remove duplicate nodes and edges
+  nodes = nodes.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
+  edges = edges.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
 
-
+  return {nodes: nodes, edges: edges}
+}

@@ -1,7 +1,7 @@
 
 import React, { Component, useEffect } from 'react'
 import { get } from './communication';
-import { PedigreeNetwork } from "./pedigree"
+import { PedigreeNetwork } from "@app/pedigree_plot"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
