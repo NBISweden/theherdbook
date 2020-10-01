@@ -218,4 +218,16 @@ psql <<-'END_SQL'
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Gotlandskanin';
+
+	-- Add names of people responsible for the herd
+	UPDATE herd h
+	SET name = (
+		SELECT "Namn"
+		FROM	data2
+		WHERE	"Nr" = h.herd
+		LIMIT	1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin';
 END_SQL

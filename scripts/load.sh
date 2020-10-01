@@ -41,19 +41,20 @@ while getopts 'g:G:hm:' opt; do
 done
 shift "$(( OPTIND - 1 ))"
 
+err=false
 if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
 	echo 'Missing or unusable Gotland data file (-g file)' >&2
-	err=1
+	err=true
 fi
 if [ -z "$Gfile" ] || [ ! -f "$Gfile" ]; then
 	echo 'Missing or unusable Gotland herd registry file (-G file)' >&2
-	err=1
+	err=true
 fi
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 	echo 'Missing or unusable Mellerud data file (-m file)' >&2
-	err=1
+	err=true
 fi
-if [ "$err" -eq 1 ]; then
+if "$err"; then
 	usage >&2
 	exit 1
 fi
