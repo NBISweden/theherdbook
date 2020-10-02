@@ -4,7 +4,13 @@
 
 import { Genebank, Individual, LimitedIndividual } from '@app/data_context_global';
 
-export type Node = {id: string, x: number, label: string, shape: string, color: string}
+type VisColor = {border: string, background: string,
+                 highlight: {border: string, background: string},
+                 hover: {border: string, background: string}
+                }
+export type Node = {id: string, x: number, label: string, shape: string,
+                    color: VisColor
+                  }
 export type Edge = {id: string, from: string, to: string}
 export type Pedigree = {nodes: Node[], edges: Edge[]}
 
@@ -28,15 +34,37 @@ const getIndividual = (genebanks: Genebank[], id: string): Individual | undefin
  * @param x numerical x value
  */
 const asNode = (ind: Individual, x: number): Node => {
+  const color: VisColor = {
+    border: 'darkgrey',
+    background: 'lightgreen',
+    highlight: {
+      border: 'grey',
+      background: 'yellowgreen'
+    },
+    hover: {
+      border: 'black',
+      background: 'yellowgreen'
+    }
+  }
+  switch (ind.sex) {
+    case 'male':
+      color.background = 'LightSkyBlue'
+      color.highlight.background = '#6DC4F9'
+      color.hover.background = '#6DC4F9'
+      break;
+    case 'female':
+      color.background = 'pink'
+      color.highlight.background = '#FFA5B4'
+      color.hover.background = '#FFA5B4'
+      break;
+  }
   return {id: ind.number,
           x: x,
           label: ind.name ? `${ind.name}\n${ind.number}` : ind.number,
           shape: ind.sex == 'male'   ? 'box'
-                : ind.sex == 'female' ? 'oval'
-                                      : 'triangle', // unknown sex
-          color: ind.sex == 'male'   ? 'LightSkyBlue'
-                : ind.sex == 'female' ? 'pink'
-                                      : 'lightgreen' // unknown sex
+               : ind.sex == 'female' ? 'oval'
+                                     : 'triangle', // unknown sex
+          color: color
         }
 }
 

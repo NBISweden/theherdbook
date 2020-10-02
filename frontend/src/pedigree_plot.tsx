@@ -36,7 +36,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes:
     },
 
     edges: {
-      color:  { color: "LightGray", inherit: false },//avoids the arrows to inherit node color
+      color:  { color: "DarkGray", inherit: false },//avoids the arrows to inherit node color
       arrows: { to: { enabled: true, scaleFactor: 0.50 } },//makes smaller arrows
       smooth: { type: "cubicBezier", forceDirection: "vertical", roundness: 1}//makes elbow arrows
     },
