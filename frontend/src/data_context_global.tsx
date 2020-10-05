@@ -6,6 +6,12 @@ export interface NameID {
     id: number
 }
 
+export interface HerdNameID {
+    herd_name: string,
+    herd: string,
+    id: number
+}
+
 export interface DateValue {
     date: string
     value: string | number
@@ -21,7 +27,7 @@ export interface LimitedIndividual {
 
 export interface Individual {
     id: number
-    herd: NameID
+    herd: HerdNameID
     name: string | null
     certificate: string | null
     number: string

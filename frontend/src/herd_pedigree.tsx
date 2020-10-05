@@ -1,6 +1,8 @@
 
 import React, { Component, useEffect } from 'react'
 import { get } from './communication';
+import { useDataContext } from './data_context';
+import { herdPedigree, Pedigree } from '@app/pedigree';
 import { PedigreeNetwork } from "@app/pedigree_plot"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -14,9 +16,9 @@ import { Link } from "react-router-dom";
  */
 
 export function HerdPedigree({ id }: { id: string }) {
-
-  const [pedigree, setPedigree] = React.useState(undefined as any)
+  const [pedigree, setPedigree] = React.useState(undefined as Pedigree | undefined)
   const [herd, setHerd] = React.useState(undefined as any)
+  const { genebanks } = useDataContext()
 
   const fields = [
     { key: 'herd_name', title: "Besättningnamn" },
@@ -29,12 +31,12 @@ export function HerdPedigree({ id }: { id: string }) {
   ]
 
   React.useEffect(() => {
-    let mounted = true; // Indicate the mount state
+    const pedigree = herdPedigree(genebanks, id, 5);
+    setPedigree(pedigree)
+  }, [genebanks, id])
 
-    get(`/api/herd_pedigree/${id}`).then(
-      data => mounted && data && setPedigree(data),
-      error => console.error(error)
-    )
+  React.useEffect(() => {
+    let mounted = true; // Indicate the mount state
 
     get(`/api/herd/${id}`).then(
       data => data && setHerd(data),

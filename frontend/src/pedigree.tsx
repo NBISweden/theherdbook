@@ -76,7 +76,7 @@ const asNode = (ind: Individual, x: number): Node => {
  * @param id individual number of the individual whose pedigree to generate
  * @param generations the number of generations to plot
  */
-export function calcPedigree(genebanks: Genebank[], id: string, generations: number): Pedigree {
+export function calcPedigree(genebanks: Genebank[], id: string, generations: number = 1000): Pedigree {
   let nodes: Node[] = []
   let edges: Edge[] = []
   const indData = getIndividual(genebanks, id)
@@ -109,6 +109,54 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
     nodes = [...nodes, ...pedigree.nodes]
     edges = [...edges, ...pedigree.edges]
   }
+  // remove duplicate nodes and edges
+  nodes = nodes.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
+  edges = edges.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
+
+  return {nodes: nodes, edges: edges}
+}
+
+/**
+ * Returns the combined pedigree for the herd identified by `herdId` from the
+ * data in `genebanks`.
+ *
+ * This function will generate the pedigree of all individuals in in the herd
+ * and then reduce them. This is a reasonably time consuming task that might
+ * need to be optimzed.
+ *
+ * @param genebanks the genebank data to use for pedigree generation
+ * @param herdId the id of the herd to plot
+ * @param generations the number of generations to plot
+ */
+export function herdPedigree(genebanks: Genebank[], herdId: string, generations: number = 1000): Pedigree {
+
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+
+  if (!genebanks || genebanks.length == 0) {
+    return {nodes: [], edges: []}
+  }
+
+  const genebank = genebanks.find(genebank => genebank.herds.some(herd => herd.herd == herdId))
+  if (!genebank || !genebank.individuals) {
+    return {nodes: [], edges: []}
+  }
+
+  const herd = genebank.individuals.filter(individual => individual.herd.herd == herdId)
+
+  if (herd.length == 0) {
+    return {nodes: [], edges: []}
+  }
+
+  herd.forEach(individual => {
+    const pedTime = new Date().getTime()
+    const pedigree = calcPedigree(genebanks, individual.number, generations)
+
+    nodes = [...nodes, ...pedigree.nodes]
+    edges = [...edges, ...pedigree.edges]
+
+  })
+
   // remove duplicate nodes and edges
   nodes = nodes.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
   edges = edges.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)

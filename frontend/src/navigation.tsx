@@ -95,7 +95,7 @@ export function Navigation() {
           {params => <HerdView id={params.id}/>}
         </ui.Routed>
         <ui.Routed path="/individual/:id/:generations?">
-          {params => <IndividualPedigree id={params.id} generations={params.generations? params.generations: 5}/>}
+          {params => <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>}
         </ui.Routed>
         <ui.Routed path="/herd-pedigree/:id">
           {params => <HerdPedigree id={params.id}/>}
