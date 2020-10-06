@@ -1,25 +1,25 @@
 
-import React, { Component, useEffect } from 'react'
+import React from 'react'
 import { Link } from "react-router-dom";
 import { get } from './communication';
-import { PedigreeNetwork } from "./pedigree"
+import { PedigreeNetwork } from "@app/pedigree_plot"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-
+import { useDataContext } from './data_context';
+import { calcPedigree, Pedigree } from '@app/pedigree';
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component
  */
-
-export function IndividualPedigree({ id, generations }: { id: string }) {
-  const [pedigree, setPedigree] = React.useState(undefined as any)
+export function IndividualPedigree({ id, generations }: { id: string, generations: number}) {
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
+  const { genebanks } = useDataContext()
+  const pedigree = React.useMemo(() => calcPedigree(genebanks, id, generations_input), [genebanks, id, generations_input])
 
   React.useEffect(() => {
-
     let mounted = true
     const url = `/api/individual/${id}`
     get(url).then(
@@ -28,14 +28,10 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
       },
       error => console.error(error)
     )
-    get(`/api/pedigree/${id}/${generations_input}`).then(
-      data => mounted && data && setPedigree(data),
-      error => console.error(error)
-    )
 
     return () => { mounted = false }//allows to validate the mount state of the component
 
-  }, [id, generations_input])//dependent on these values
+  }, [id])//dependent on these values
 
   return <>
     {individual  && <>
@@ -85,7 +81,7 @@ export function IndividualPedigree({ id, generations }: { id: string }) {
               </dl>
             </TableCell>
             <TableCell width="85%" style={{textAlign: "left"}}>
-              <h3>Pedigree: <input value={generations_input} onChange={event => setGenerations(event.target.value)} type="number" min="1" max="50" /></h3>
+              <h3>Pedigree: <input value={generations_input} onChange={event => setGenerations(+event.currentTarget.value)} type="number" min="1" max="50" /></h3>
               {pedigree && <PedigreeNetwork pedigree={pedigree} />}
             </TableCell>
           </TableRow>

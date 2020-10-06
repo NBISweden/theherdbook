@@ -6,22 +6,31 @@ export interface NameID {
     id: number
 }
 
+export interface HerdNameID {
+    herd_name: string,
+    herd: string,
+    id: number
+}
+
 export interface DateValue {
     date: string
     value: string | number
     id?: number
 }
 
-export interface Individual {
-    id: number
-    herd: NameID
-    name: string | null
+export interface LimitedIndividual {
+    id: number,
+    name: string | null,
+    number: string,
+    sex?: string,
+}
+
+export interface Individual extends LimitedIndividual{
+    herd: HerdNameID
     certificate: string | null
-    number: string
-    sex: string | null
     birthDate: string | null
-    mother: NameID | null
-    father: NameID | null
+    mother: LimitedIndividual | null
+    father: LimitedIndividual | null
     color: string | null
     colorNote: string | null
     deathDate: string | null
@@ -85,7 +94,7 @@ export interface Genebank {
     id: number
     name: string
     herds: Array<Herd>
-    individuals: Array<Individual> | null
+    individuals: Array<Individual>
 }
 
 export interface DataContext {
