@@ -14,15 +14,10 @@ import { calcPedigree, Pedigree } from '@app/pedigree';
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component
  */
 export function IndividualPedigree({ id, generations }: { id: string, generations: number}) {
-  const [pedigree, setPedigree] = React.useState(undefined as Pedigree | undefined)
   const [individual, setIndividual] = React.useState(undefined as any)
   const [generations_input, setGenerations] = React.useState(generations)
   const { genebanks } = useDataContext()
-
-  React.useEffect(() => {
-    const pedigree = calcPedigree(genebanks, id, generations_input);
-    setPedigree(pedigree)
-  }, [genebanks, id, generations_input])
+  const pedigree = React.useMemo(() => calcPedigree(genebanks, id, generations_input), [genebanks, id, generations_input])
 
   React.useEffect(() => {
     let mounted = true

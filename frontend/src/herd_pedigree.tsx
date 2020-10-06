@@ -16,9 +16,9 @@ import { Link } from "react-router-dom";
  */
 
 export function HerdPedigree({ id }: { id: string }) {
-  const [pedigree, setPedigree] = React.useState(undefined as Pedigree | undefined)
   const [herd, setHerd] = React.useState(undefined as any)
   const { genebanks } = useDataContext()
+  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
 
   const fields = [
     { key: 'herd_name', title: "Besättningnamn" },
@@ -29,11 +29,6 @@ export function HerdPedigree({ id }: { id: string }) {
     { key: 'physical_address', title: "Adress" },
     { key: 'www', title: "Hemsida" },
   ]
-
-  React.useEffect(() => {
-    const pedigree = herdPedigree(genebanks, id, 5);
-    setPedigree(pedigree)
-  }, [genebanks, id])
 
   React.useEffect(() => {
     let mounted = true; // Indicate the mount state

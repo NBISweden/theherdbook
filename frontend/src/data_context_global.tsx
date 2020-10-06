@@ -25,13 +25,9 @@ export interface LimitedIndividual {
     sex?: string,
 }
 
-export interface Individual {
-    id: number
+export interface Individual extends LimitedIndividual{
     herd: HerdNameID
-    name: string | null
     certificate: string | null
-    number: string
-    sex: string | null
     birthDate: string | null
     mother: LimitedIndividual | null
     father: LimitedIndividual | null

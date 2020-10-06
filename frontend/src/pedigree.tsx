@@ -15,6 +15,24 @@ export type Edge = {id: string, from: string, to: string}
 export type Pedigree = {nodes: Node[], edges: Edge[]}
 
 /**
+ * Returns a copy of the array with duplicates removed, via reference equality,
+ * or via key equality if a key is given. Note that all array elements need to
+ * have the given key if a key is given
+ *
+ * unique([1,2,3,2,1,3]) // => [1,2,3]
+ * unique({id: 1}, {id: 1}, {id: 2}, 'id') // => [{id: 1}, {id: 2}]
+ *
+ */
+export function unique(xs: any[], key: string | undefined = undefined): any[] {
+  const seen = new Set()
+  return xs.filter(x => {
+    const duplicate = key ? seen.has(x[key]) : seen.has(x)
+    key ? seen.add(x[key]) : seen.add(x)
+    return !duplicate
+  })
+}
+
+/**
  * Looks through all loaded genebanks for information on the given individual
  * number `id`.
  *
@@ -110,8 +128,8 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
     edges = [...edges, ...pedigree.edges]
   }
   // remove duplicate nodes and edges
-  nodes = nodes.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
-  edges = edges.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
+  nodes = unique(nodes, 'id')
+  edges = unique(edges, 'id')
 
   return {nodes: nodes, edges: edges}
 }
@@ -158,8 +176,8 @@ export function herdPedigree(genebanks: Genebank[], herdId: string, generations:
   })
 
   // remove duplicate nodes and edges
-  nodes = nodes.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
-  edges = edges.filter((v,i,s) => s.findIndex(o => o.id == v.id) == i)
+  nodes = unique(nodes, 'id')
+  edges = unique(edges, 'id')
 
   return {nodes: nodes, edges: edges}
 }
