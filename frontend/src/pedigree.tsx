@@ -146,12 +146,12 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
  * @param herdId the id of the herd to plot
  * @param generations the number of generations to plot
  */
-export function herdPedigree(genebanks: Genebank[], herdId: string, generations: number = 1000): Pedigree {
+export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, generations: number = 1000): Pedigree {
 
   let nodes: Node[] = []
   let edges: Edge[] = []
 
-  if (!genebanks || genebanks.length == 0) {
+  if (herdId == undefined || !genebanks || genebanks.length == 0) {
     return {nodes: [], edges: []}
   }
 
