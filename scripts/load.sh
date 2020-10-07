@@ -101,7 +101,12 @@ createdb "$PGDATABASE"
 ../init_db.sh
 
 ./load-gotland.sh "$connstr" "$gfile" "$Gfile"
+./check-gotland.sh
+
 ./load-mellerud.sh "$connstr" "$mfile"
+./check-mellerud.sh
+
+./check-common.sh
 
 # Find next free dump number for today
 prefix=$(date +'%Y%m%d')
