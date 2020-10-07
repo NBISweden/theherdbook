@@ -7,7 +7,7 @@ csvsql  --db "$1" \
 	--overwrite \
 	--insert "$2"
 
-psql <<-'END_SQL'
+psql --quiet <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
 	------------------------------------------------------------
@@ -129,7 +129,7 @@ while [ "$year" -le 2020 ]; do
 	END_SQL
 
 	year=$(( year + 1 ))
-done | psql
+done | psql --quiet
 
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
@@ -157,7 +157,7 @@ while [ "$year" -le 2019 ]; do
 	END_SQL
 
 	year=$(( year + 1 ))
-done | psql
+done | psql --quiet
 
 # Load body fat data for years 2012 through to 2018
 year=2012
@@ -178,7 +178,7 @@ while [ "$year" -le 2018 ]; do
 	END_SQL
 
 	year=$(( year + 1 ))
-done | psql
+done | psql --quiet
 
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.
@@ -189,7 +189,7 @@ csvsql	--db "$1" \
 	--insert \
 	--skip-lines 5 "$3"
 
-psql <<-'END_SQL'
+psql --quiet <<-'END_SQL'
 	-- Fixup data somewhat
 	ALTER TABLE data2 ALTER "Nr" TYPE VARCHAR(10);
 	UPDATE data2 SET "Nr" = CONCAT('G', "Nr")
