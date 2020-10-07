@@ -8,7 +8,7 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
 import { useDataContext } from './data_context';
-import { calcPedigree, Pedigree } from '@app/pedigree';
+import { calcPedigree } from '@app/pedigree';
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component

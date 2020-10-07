@@ -1,13 +1,14 @@
 
-import React, { Component, useEffect } from 'react'
+import React from 'react'
 import { get } from './communication';
 import { useDataContext } from './data_context';
-import { herdPedigree, Pedigree } from '@app/pedigree';
+import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from "@app/pedigree_plot"
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
+import { useHistory } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 
@@ -18,6 +19,7 @@ import { Link } from "react-router-dom";
 export function HerdPedigree({ id }: { id: string }) {
   const [herd, setHerd] = React.useState(undefined as any)
   const { genebanks } = useDataContext()
+  const history = useHistory();
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
 
   const fields = [
@@ -65,7 +67,7 @@ export function HerdPedigree({ id }: { id: string }) {
               </ul>
             </TableCell>
             <TableCell width="85%" >
-              {pedigree && <PedigreeNetwork pedigree={pedigree} />}
+              {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(nodeId:string) => history.push("/individual/" + nodeId)}/>}
             </TableCell>
           </TableRow>
         </TableBody>

@@ -7,8 +7,9 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { get } from './communication';
 import { Herd, herdLabel, Individual } from '@app/data_context_global';
-import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box,
-         Paper, Tab, Tabs, Typography } from '@material-ui/core';
+import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Button,
+         Dialog, DialogActions, DialogContent, DialogTitle, Paper, Tab, Tabs
+        } from '@material-ui/core';
 import { ExpandMore } from '@material-ui/icons'
 import { HerdForm } from '@app/herdForm';
 import { useMessageContext } from '@app/message_context';
@@ -23,7 +24,13 @@ const useStyles = makeStyles({
   title: {
     fontSize: '1.33em',
     fontWeight: 'bold',
-  }
+  },
+  animalList: {
+    cursor: 'pointer',
+    '&:hover': {
+      color: 'blue',
+    }
+  },
 });
 
 interface TabPanelProps {
@@ -62,20 +69,15 @@ type TabValue = 'list' | 'pedigree';
 export function HerdView({id}: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as Herd | undefined)
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
+  const [showIndividual, setShowIndividual] = React.useState(false as string | false)
   const {userMessage} = useMessageContext()
   const { genebanks } = useDataContext()
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
   const style  = useStyles()
 
-  const fields = [
-    {key: 'herd_name', title: "Besättningnamn"},
-    {key: 'name', title: "Namn"},
-    {key: 'email', title: "E-post"},
-    {key: 'mobile_phone', title: "Mobiltelefon"},
-    {key: 'wire_phone', title: "Fast telefon"},
-    {key: 'physical_address', title: "Adress"},
-    {key: 'www', title: "Hemsida"},
-  ]
+  const closeIndividual = () => {
+    setShowIndividual(false)
+  }
 
   React.useEffect(() => {
     if (id) {
@@ -111,15 +113,33 @@ export function HerdView({id}: {id: string | undefined}) {
       <TabPanel value={activeTab} index='list'>
         <ul>
           {herd && herd.individuals && herd.individuals.map((individual: Individual) =>
-            <li key={individual.id}>
+            <li key={individual.id}
+                className={style.animalList}
+                onClick={() => setShowIndividual(individual.number)}>
               {individual.number}
             </li>
           )}
         </ul>
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>
-        {pedigree && <PedigreeNetwork pedigree={pedigree} />}
+        {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(node: string) => setShowIndividual(node)} />}
       </TabPanel>
+
+      <Dialog
+        open={!!showIndividual}
+        keepMounted
+        onClose={closeIndividual}
+      >
+        <DialogTitle>{`Details for individual ${showIndividual}`}</DialogTitle>
+        <DialogContent>
+          Individual {showIndividual}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeIndividual} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Accordion defaultExpanded={false}>
         <AccordionSummary
