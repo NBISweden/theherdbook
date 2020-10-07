@@ -28,18 +28,18 @@ export interface LimitedIndividual {
 export interface Individual extends LimitedIndividual{
     herd: HerdNameID
     certificate: string | null
-    birthDate: string | null
+    birth_date: string | null
     mother: LimitedIndividual | null
     father: LimitedIndividual | null
-    color: string | null
-    colorNote: string | null
-    deathDate: string | null
-    deathNote: string | null
+    colour: string | null
+    colour_note: string | null
+    death_date: string | null
+    death_note: string | null
     litter: number | null
     notes: string | null
     weights: Array<DateValue> | null
     bodyfat: Array<DateValue> | null
-    herdTracking: Array<DateValue> | null
+    herd_tracking: Array<DateValue> | null
     herd_active: boolean
     active: boolean
     alive: boolean

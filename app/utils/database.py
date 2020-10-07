@@ -375,7 +375,8 @@ class Individual(BaseModel):
         data["herd_tracking"] = [
             {
                 "herd_id": h.herd.id,
-                "herd": h.herd.herd_name,
+                "herd": h.herd.herd,
+                "herd_name": h.herd.herd_name,
                 "date": h.herd_tracking_date.strftime("%Y-%m-%d")
                 if h.herd_tracking_date
                 else None,
