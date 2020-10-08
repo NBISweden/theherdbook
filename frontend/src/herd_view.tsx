@@ -5,12 +5,11 @@
  */
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { Accordion, AccordionDetails, AccordionSummary, AppBar, Box, Button,
-         Dialog, DialogActions, DialogContent, DialogTitle, Paper, Tab, Tabs
+import { AppBar, Box, Button,
+         Dialog, DialogActions, DialogContent, Paper, Tab, Tabs
         } from '@material-ui/core';
-import { ExpandMore } from '@material-ui/icons'
 import { get } from '@app/communication';
-import { Herd, herdLabel, Individual } from '@app/data_context_global';
+import { Herd, Individual } from '@app/data_context_global';
 import { HerdForm } from '@app/herdForm';
 import { useMessageContext } from '@app/message_context';
 import { useDataContext } from './data_context';
@@ -133,7 +132,6 @@ export function HerdView({id}: {id: string | undefined}) {
         maxWidth={'xl'}
         onClose={closeIndividual}
       >
-        <DialogTitle>{`Details for individual ${showIndividual}`}</DialogTitle>
         <DialogContent>
           {showIndividual && <IndividualView id={showIndividual} />}
         </DialogContent>
