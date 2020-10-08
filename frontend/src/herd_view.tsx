@@ -93,8 +93,9 @@ export function HerdView({id}: {id: string | undefined}) {
   }, [id])
 
   return <>
-    <h2>{herd && herdLabel(herd)}</h2>
     <Paper className={style.container}>
+      {React.useMemo(() => <HerdForm id={id} view='info'/>, [id])}
+
       <AppBar position="static" color="default">
         <Tabs
           value={activeTab}
@@ -142,18 +143,6 @@ export function HerdView({id}: {id: string | undefined}) {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Accordion defaultExpanded={false}>
-        <AccordionSummary
-          expandIcon={<ExpandMore />}>
-          <span className={style.title}>
-            Kontaktperson och Besättningsinformation
-          </span>
-        </AccordionSummary>
-        <AccordionDetails>
-          {React.useMemo(() => <HerdForm id={id} />, [id])}
-        </AccordionDetails>
-      </Accordion>
     </Paper>
   </>
 }
