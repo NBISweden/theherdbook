@@ -96,18 +96,25 @@ if [ "$PGHOST" = localhost ]; then
 fi
 connstr="postgresql+psycopg2://$PGUSER:$password@${PGPORT:+$PGHOST:$PGPORT}/$PGDATABASE"
 
+echo '## Initializing database'
 dropdb "$PGDATABASE"
 createdb "$PGDATABASE"
 ../init_db.sh
 
+echo '## Loading Gotlandskanin'
 ./load-gotland.sh "$connstr" "$gfile" "$Gfile"
+echo '## Running Gotlandskanin healthchecks'
 ./check-gotland.sh
 
+echo '## Loading Mellerudskanin'
 ./load-mellerud.sh "$connstr" "$mfile"
+echo '## Running Mellerudskanin healthchecks'
 ./check-mellerud.sh
 
+echo '## Running common healthchecks'
 ./check-common.sh
 
+echo '## Dumping database to file'
 # Find next free dump number for today
 prefix=$(date +'%Y%m%d')
 d=1
