@@ -68,7 +68,7 @@ export function IndividualView({id} : {id: string}) {
 
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
-      (data: Individual) => {console.debug(data); setIndividual(data)},
+      (data: Individual) => setIndividual(data),
       error => {
         console.error(error);
         userMessage(error, 'error')
