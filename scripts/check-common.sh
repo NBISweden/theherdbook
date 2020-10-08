@@ -6,7 +6,7 @@
 
 echo 'Bad herd numbers (all genebanks):'
 psql --quiet <<-'END_SQL'
-	SELECT  herd
-	FROM    herd
-	WHERE   herd NOT SIMILAR TO '[GM][0-9]+';
+	SELECT	herd
+	FROM	herd
+	WHERE	herd NOT SIMILAR TO '[GM][0-9]+';
 END_SQL
