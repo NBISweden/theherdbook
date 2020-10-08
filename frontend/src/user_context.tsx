@@ -11,6 +11,7 @@ export interface User {
   is_admin: boolean
   is_manager: Array<number> | undefined
   is_owner: Array<string> | undefined
+  canEdit: Function
 }
 
 export type Result = 'logged_in' | 'logged_out' | 'error'
@@ -50,6 +51,7 @@ export function useUserContext(): UserContext {
 export function WithUserContext(props: {children: React.ReactNode}) {
   const [user, set_state] = React.useState(undefined as undefined | User)
   const {loadData} = useDataContext()
+  const {genebanks} = useDataContext()
 
   async function handle_promise(promise: Promise<User | null>): Promise<Result> {
     return await promise.then(
@@ -76,6 +78,45 @@ export function WithUserContext(props: {children: React.ReactNode}) {
     )
   }
 
+  function canEdit(id: string) {
+    if (!user) {
+      return false
+    }
+    // administrators can edit everything
+    if (user.is_admin) {
+      return true
+    }
+
+    // id is an individual.
+    // currently no permissions are on the individual level, but it's added as
+    // a future-proofing option.
+    if (/^([a-zA-Z][0-9]+-[0-9]+)$/.test(id)) {
+      const herd:string = id.split('-')[0]
+      const genebank = genebanks.find(genebank => genebank.herds.some(h => h.herd == herd))
+      // you can edit if you own the herd, or are manager of the genebank
+      if (user.is_owner?.includes(herd) || (genebank && user.is_manager?.includes(+genebank.id))) {
+        return true
+      }
+    }
+    // id is a herd
+    else if (/^([a-zA-Z][0-9]+)$/.test(id)) {
+      const genebank = genebanks.find(genebank => genebank.herds.some(h => h.herd == id))
+      // you can edit if you own the herd, or are manager of the genebank
+      if (user.is_owner?.includes(id) || (genebank && user.is_manager?.includes(+genebank.id))) {
+        return true
+      }
+    }
+    // id is a genebank
+    else if (genebanks.find(genebank => genebank.name == id)) {
+      const genebank = genebanks.find(genebank => genebank.name == id)
+      // you can edit if you are manager of the genebank
+      if (genebank && user.is_manager?.includes(+genebank.id)) {
+        return true
+      }
+    }
+    return false
+  }
+
   function logout() {
     let status = handle_promise(get('/api/logout'))
     loadData('none')
@@ -89,8 +130,11 @@ export function WithUserContext(props: {children: React.ReactNode}) {
   React.useEffect(on_mount, [])
 
   const value = React.useMemo(() => {
+    if (user) {
+      user.canEdit = canEdit
+    }
     return {user, login, logout}
-  }, [user, loadData])
+  }, [user, loadData, canEdit])
 
   return (
     <UserContext.Provider value={value}>
