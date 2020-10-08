@@ -5,10 +5,9 @@ services:
         restart: always
         image: postgres:12
         container_name: herdbook-db
+        env_file:
+            - ./docker/database-variables.env
         environment:
-            - POSTGRES_DB=herdbook
-            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-insecure}
-            - POSTGRES_USER=herdbook
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
@@ -32,6 +31,9 @@ services:
             context: ./
             dockerfile: .docker/main
         container_name: herdbook-main
+        env_file:
+            - ./docker/database-variables.env
+            - ./docker/r-api-variables.env
         ports:
             - 8080:8080
             - 8443:8443
@@ -46,16 +48,13 @@ services:
             - database
             - herdbook-frontend-devel
     r-api:
-         container_name: r-api 
-         build:
-             context: ./
-             dockerfile: .docker/r-api
-         environment:
-            - OPTISEL_PORT=31113
-            - OPTISEL_BIND_ADDR=0.0.0.0
-            - POSTGRES_HOST=herdbook-db
-         volumes:
+        container_name: r-api
+        build:
+            context: ./
+            dockerfile: .docker/r-api
+        env_file:
+            - ./docker/database-variables.env
+            - ./docker/r-api-variables.env
+        volumes:
             - ./R:/usr/local/optisel/R
-         image: r-api
-         ports:
-             - 31113:31113 
+        image: r-api
