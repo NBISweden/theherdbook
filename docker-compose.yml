@@ -1,5 +1,4 @@
 ---
-
 version: "3.4"
 services:
     database:
@@ -46,3 +45,17 @@ services:
         depends_on:
             - database
             - herdbook-frontend-devel
+    r-api:
+         container_name: r-api 
+         build:
+             context: ./
+             dockerfile: .docker/r-api
+         environment:
+            - OPTISEL_PORT=31113
+            - OPTISEL_BIND_ADDR=0.0.0.0
+            - POSTGRES_HOST=herdbook-db
+         volumes:
+            - ./R:/usr/local/optisel/R
+         image: r-api
+         ports:
+             - 31113:31113 
