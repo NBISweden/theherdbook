@@ -6,7 +6,7 @@ services:
         image: postgres:12
         container_name: herdbook-db
         env_file:
-            - ./docker/database-variables.env
+            - ./.docker/database-variables.env
         environment:
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
@@ -32,8 +32,8 @@ services:
             dockerfile: .docker/main
         container_name: herdbook-main
         env_file:
-            - ./docker/database-variables.env
-            - ./docker/r-api-variables.env
+            - ./.docker/database-variables.env
+            - ./.docker/r-api-variables.env
         ports:
             - 8080:8080
             - 8443:8443
@@ -53,8 +53,8 @@ services:
             context: ./
             dockerfile: .docker/r-api
         env_file:
-            - ./docker/database-variables.env
-            - ./docker/r-api-variables.env
+            - ./.docker/database-variables.env
+            - ./.docker/r-api-variables.env
         volumes:
             - ./R:/usr/local/optisel/R
         image: r-api
