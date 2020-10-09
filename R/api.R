@@ -1,4 +1,3 @@
-rgl.useNULL = TRUE
 library(optiSel)
 library(nprcgenekeepr)
 library(DBI)
