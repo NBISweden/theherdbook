@@ -13,7 +13,7 @@ postgres = Namespace()  # pylint: disable=C0103
 #Read configuration from environment variable
 
 postgres.name = os.environ.get("POSTGRES_DB", "herdbook")
-postgres.host = os.environ.get("POSTGRES_host", "herdbook-db")
+postgres.host = os.environ.get("POSTGRES_HOST", "herdbook-db")
 postgres.port = os.environ.get("POSTGRES_PORT", "5432")
 postgres.user = os.environ.get("POSTGRES_USER", "herdbook")
 postgres.password = os.environ.get("POSTGRES_PASSWORD", "insecure")
