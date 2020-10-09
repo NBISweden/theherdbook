@@ -93,7 +93,7 @@ password="${POSTGRES_PASSWORD?}"
 
 # Assume that we're connecting through a socket if $PGHOST is localhost
 # (use 127.0.0.1 if this is not the case).
-if [ "$PGHOST" = localhost ]; then
+if [ -z "$PGHOST" ] || [ "$PGHOST" = localhost ]; then
 	unset PGHOST PGPORT
 fi
 connstr="postgresql+psycopg2://$PGUSER:$password@${PGPORT:+$PGHOST:$PGPORT}/$PGDATABASE"
