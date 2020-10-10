@@ -26,6 +26,15 @@ breeding/preservation effort for a race.
 
 # Development setup
 
+First set up your secure environment variables by 
+copy or rename the default .env files found in the .docker folder and name them
+Remember to update your secrets before going in production
+
+```console
+.docker/database-variables.env
+.docker/r-api-variables.env
+```
+
 To set up the developer environment, you should be able to run
 
 ```console
@@ -43,6 +52,8 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 5c9193fc774c        herdbook_frontend:latest   "docker-entrypoint.s…"   20 hours ago        Up 3 hours                                                                                   theherdbook_herdbook-frontend-devel_1
 
 ```
+
+If you 
 
 To access the local server deployed open this url https://localhost:8443 in your browser. You will need to 
 configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing 
