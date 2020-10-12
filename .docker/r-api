@@ -1,21 +1,28 @@
-FROM rocker/r-ver:4.0.2
-
-WORKDIR /usr/local/optisel
+FROM rocker/r-ver:4.0.2 as R-build
 
 RUN apt update \
   && apt install -y --no-install-recommends \
-  xvfb \
   libpq-dev \
-  libx11-dev \
-  pkg-config \
   libglu1-mesa-dev \
   zlib1g-dev \
   libxml2-dev \
+  && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-COPY . .
-
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("here","RPostgres","optiSel","plumber","jsonlite","devtools"),clean=TRUE, Ncpus=8);\
+RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","optiSel","plumber","jsonlite","devtools"),clean=TRUE, Ncpus=8);\
                     library(devtools);devtools::install_github("rmsharp/nprcgenekeepr")'
 
-ENTRYPOINT ["Rscript", "/usr/local/optisel/R/serve.R"]
+FROM rocker/r-ver:4.0.2
+
+COPY --from=R-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
+
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends \
+        libglu1-mesa \
+        && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/r-api
+
+COPY R .
+
+ENTRYPOINT ["Rscript", "/usr/local/r-api/serve.R"]
