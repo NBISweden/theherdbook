@@ -83,7 +83,9 @@ gfile=${gfile%.*}.csv
 Gfile=${Gfile%.*}.csv
 mfile=${mfile%.*}.csv
 
+set -a	# export all variables
 . ../.docker/database-variables.env
+set +a
 
 export PGDATABASE="${POSTGRES_DB:?}"
 export PGUSER="${POSTGRES_USER:?}"
