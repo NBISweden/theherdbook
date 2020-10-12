@@ -26,6 +26,15 @@ breeding/preservation effort for a race.
 
 # Development setup
 
+First set up your secure environment variables by 
+copy or rename the default .env files found in the .docker folder and name them
+Remember to update your secrets before going in production
+
+```console
+.docker/database-variables.env
+.docker/r-api-variables.env
+```
+
 To set up the developer environment, you should be able to run
 
 ```console
