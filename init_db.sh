@@ -1,7 +1,6 @@
-#
-# This script reads the configuration file in app/config.ini to access a
-# an existing PostgreSQL database and create the tables for the herdbook
-# schema.
+# This script reads the configuration file in
+# .docker/database-variables.env to access an existing PostgreSQL
+# database and create the tables for the herdbook schema.
 #
 # Note that this script only needs to be run if you wish to initialize
 # the database without using the herdbook application, as the app will
