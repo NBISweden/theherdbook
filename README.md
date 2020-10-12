@@ -53,8 +53,6 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 
 ```
 
-If you 
-
 To access the local server deployed open this url https://localhost:8443 in your browser. You will need to 
 configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing 
 this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled. 
