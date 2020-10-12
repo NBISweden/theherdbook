@@ -55,6 +55,4 @@ services:
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
-        volumes:
-            - ./R:/usr/local/optisel/R
         image: r-api
