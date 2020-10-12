@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles'
 import { useMessageContext } from '@app/message_context'
 import { get } from '@app/communication'
-import { Individual, herdLabel, DateValue } from '@app/data_context_global'
+import { Individual, herdLabel, DateValue, individualLabel } from '@app/data_context_global'
 import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 
@@ -45,6 +45,11 @@ const useStyles = makeStyles({
       clear: 'both',
     }
   },
+  listIcon: {
+    display: 'inline-block',
+    width: '20px',
+    textAlign: 'center',
+  }
 });
 
 /**
@@ -54,8 +59,16 @@ export function IndividualView({id} : {id: string}) {
   const style  = useStyles()
   const { genebanks } = useDataContext()
   const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
+  const [children, setChildren] = React.useState([] as Individual[])
   const {userMessage} = useMessageContext()
 
+  const activeIcon = '✅'
+  const inactiveIcon = '❌'
+  const deadIcon = '✞'
+
+  /**
+   * Fetch individual data from the backend
+   */
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
       (data: Individual) => setIndividual(data),
@@ -65,6 +78,27 @@ export function IndividualView({id} : {id: string}) {
       }
     )
   }, [id])
+
+  /**
+   * Set children
+   */
+  React.useEffect(() => {
+    if (!individual || !genebanks || genebanks.some(g => g.individuals == null)) {
+      return
+    }
+    const genebank = genebanks.find(genebank =>
+      genebank.individuals.some(i => i.number == individual.number)
+    )
+    if (!genebank || genebank.individuals == null || !genebank.individuals.length) {
+      return
+    }
+    const children = genebank.individuals.filter(i =>
+      (i.mother && i.mother.number == individual.number) ||
+      (i.father && i.father.number == individual.number)
+    )
+    setChildren(children)
+
+  }, [individual, genebanks])
 
   return <>
     <div className={style.body}>
@@ -120,10 +154,52 @@ export function IndividualView({id} : {id: string}) {
             </ul>
           </div>
           <div>
+            <h3>Föräldrar</h3>
+            {individual &&
+              <ul className={style.herdList}>
+                <li>
+                  Mor:
+                  {individual.mother
+                  ? <Link to={`/individual/${individual.mother.number}`} >
+                      {individualLabel(individual.mother)}
+                    </Link>
+                  : 'Okänd'
+                  }
+                </li>
+                <li>
+                  Far:
+                  {individual.father
+                  ? <Link to={`/individual/${individual.father.number}`} >
+                      {individualLabel(individual.father)}
+                    </Link>
+                  : 'Okänd'
+                  }
+                </li>
+              </ul>
+            }
+          </div>
+          <div>
             <h3>Avkomma</h3>
             <ul className={style.herdList}>
               <li>Antal kullar: {individual?.litter}</li>
-              <li></li>
+            </ul>
+            <h4>Avkomma i genbanken</h4>
+            ({activeIcon}: Aktiv, {inactiveIcon}: Inaktiv, {deadIcon}: Död)
+            <ul className={style.herdList}>
+              {children.map(child =>
+                  <li key={child.number}>
+                    <span className={style.listIcon}>
+                      {child.alive ? child.active ? activeIcon
+                                                  : inactiveIcon
+                                  : deadIcon
+                      }
+                    </span>
+                    <Link to={`/individual/${child.number}`} >
+                      {individualLabel(child)}
+                    </Link>
+                  </li>
+                )
+              }
             </ul>
           </div>
         </div>
