@@ -1,5 +1,5 @@
 library(plumber)
 options(rgl.useNULL=TRUE)
-r <- plumber::plumb(here::here("R/api.R"))
-port <- Sys.getenv("RAPI_PORT", "31113") 
+r <- plumber::plumb("api.R")
+port <- Sys.getenv("RAPI_PORT", "31113")
 r$run( host="0.0.0.0", port = as.integer(get("port")), swagger=FALSE)
