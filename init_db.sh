@@ -10,12 +10,13 @@
 
 cd "$( dirname "$0" )" || { echo 'cd error' >&2; exit 1; }
 
-if [ ! -e app/config.ini ]
+if [ ! -e .docker/database-variables.env ]
 then
 	cat <<-'END_ERROR' >&2
-	Couldn't find config file 'app/config.ini'
-	Create this file from 'app/config.ini.default' with the credentials
-	to your database and then run this script again.
+	Couldn't find config file '.docker/database-variables.env'
+	Create this file from '.docker/database-variables.env.default'
+	with the credentials to your database and then run this script
+	again.
 	END_ERROR
 	exit 1
 fi
