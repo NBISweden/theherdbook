@@ -36,31 +36,6 @@ const tableIcons: Icons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
-const defaultColumns = [
-  {field: 'herd', title: 'Besättning', hidden: false,
-    render: (rowData:any) => <Link to={`/herd/${rowData.herd['herd']}`}>{rowData.herd['herd']}</Link>
-  },
-  {field: 'name', title: 'Namn', hidden: false},
-  {field: 'certificate', title: 'Certifikat', hidden: false},
-  {field: 'number', title: 'Nummer', hidden: false,
-    render: (rowData:any) => <Link to={`/individual/${rowData.number}`}>{rowData.number}</Link>
-  },
-  {field: 'sex', title: 'Kön', hidden: false},
-  {field: 'birth_date', title: 'Födelsedatum', hidden: false},
-  {field: 'death_date', title: 'Dödsdatum', hidden: false},
-  {field: 'death_note', title: 'Dödsanteckning', hidden: false},
-  {field: 'mother', title: 'Moder', hidden: false,
-    render: (rowData:any) => <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['number']}</Link>
-  },
-  {field: 'father', title: 'Fader', hidden: false,
-    render: (rowData:any) => <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['number']}</Link>
-  },
-  {field: 'color', title: 'Färg', hidden: false,
-    render: (rowData:any) => rowData.color['name']
-  },
-  {field: 'color_note', title: 'Färganteckning', hidden: false},
-]
-
 // The material-table really doesn't like adding columns that were hidden at the
 // beginning - so I start with everything visible, and then reset to this
 // selection.
@@ -91,6 +66,11 @@ const useStyles = makeStyles({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
+  },
+  functionLink: {
+    color: 'blue',
+    textDecoration: 'underline',
+    cursor: 'pointer',
   }
 });
 
@@ -100,9 +80,60 @@ type Filter = {field: keyof(Individual), label: string, active?: boolean}
  * Shows a table of individual information for the given list of `individuals`.
  * Optionally `filters` or `title` can be set to further customize the table.
  */
-export function FilterTable({individuals, title = undefined, filters = []}:
-    {individuals: Individual[], title: string | undefined, filters: Filter[]}) {
+export function FilterTable({individuals, title = undefined, filters = [],
+                             individualClick = undefined, herdClick = undefined}:
+    {individuals: Individual[], title: string | undefined, filters: Filter[],
+     individualClick: Function | undefined, herdClick: Function | undefined}) {
   const styles = useStyles();
+  const defaultColumns = [
+    {field: 'herd', title: 'Besättning', hidden: false,
+      render: (rowData:any) => {
+        if (herdClick) {
+          return <a className={styles.functionLink} onClick={() => herdClick(rowData)}>{rowData.herd['herd']}</a>
+        } else {
+          return <Link to={`/herd/${rowData.herd['herd']}`}>{rowData.herd['herd']}</Link>
+        }
+      }
+    },
+    {field: 'name', title: 'Namn', hidden: false},
+    {field: 'certificate', title: 'Certifikat', hidden: false},
+    {field: 'number', title: 'Nummer', hidden: false,
+      render: (rowData:any) => {
+        if (individualClick) {
+          return <a className={styles.functionLink} onClick={() => individualClick(rowData)}>{rowData.number}</a>
+        } else {
+          return <Link to={`/individual/${rowData.number}`}>{rowData.number}</Link>
+        }
+      }
+    },
+    {field: 'sex', title: 'Kön', hidden: false},
+    {field: 'birth_date', title: 'Födelsedatum', hidden: false},
+    {field: 'death_date', title: 'Dödsdatum', hidden: false},
+    {field: 'death_note', title: 'Dödsanteckning', hidden: false},
+    {field: 'mother', title: 'Moder', hidden: false,
+      render: (rowData:any) => {
+        if (individualClick) {
+          return <a className={styles.functionLink} onClick={() => individualClick(rowData.mother)}>{rowData.mother['number']}</a>
+        } else {
+          return <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['number']}</Link>
+        }
+      }
+    },
+    {field: 'father', title: 'Fader', hidden: false,
+      render: (rowData:any) => {
+        if (individualClick) {
+          return <a className={styles.functionLink} onClick={() => individualClick(rowData.father)}>{rowData.father['number']}</a>
+        } else {
+          return <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['number']}</Link>
+        }
+      }
+    },
+    {field: 'color', title: 'Färg', hidden: false,
+      render: (rowData:any) => rowData.color['name']
+    },
+    {field: 'color_note', title: 'Färganteckning', hidden: false},
+  ]
+
   const [columns, setColumns] = React.useState(defaultColumns)
   const [currentFilters, setFilters] = React.useState(filters)
 
