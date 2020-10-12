@@ -167,7 +167,6 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
   }
 
   herd.forEach(individual => {
-    const pedTime = new Date().getTime()
     const pedigree = calcPedigree(genebanks, individual.number, generations)
 
     nodes = [...nodes, ...pedigree.nodes]

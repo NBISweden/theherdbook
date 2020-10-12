@@ -120,6 +120,7 @@ export function HerdView({id}: {id: string | undefined}) {
         {herdIndividuals &&
           <FilterTable
             individuals={herdIndividuals}
+            title={'Individer i besättningen'}
             filters={[{field: 'alive', label: 'Dölj döda'},
                       {field: 'active', label: 'Dölj inaktiva djur'}]}
             />
