@@ -9,13 +9,14 @@ import { AppBar, Box, Button,
          Dialog, DialogActions, DialogContent, Paper, Tab, Tabs
         } from '@material-ui/core';
 import { get } from '@app/communication';
-import { Herd, Individual } from '@app/data_context_global';
+import { Herd, Individual, LimitedIndividual } from '@app/data_context_global';
 import { HerdForm } from '@app/herdForm';
 import { useMessageContext } from '@app/message_context';
-import { useDataContext } from './data_context';
+import { useDataContext } from '@app/data_context';
 import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from '@app/pedigree_plot';
 import { IndividualView } from '@app/individual_view';
+import { FilterTable } from '@app/filter_table';
 
 const useStyles = makeStyles({
   container: {
@@ -68,6 +69,7 @@ type TabValue = 'list' | 'pedigree';
  */
 export function HerdView({id}: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as Herd | undefined)
+  const [herdIndividuals, setHerdIndividuals] = React.useState([] as Individual[])
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
   const [showIndividual, setShowIndividual] = React.useState(false as string | false)
   const {userMessage} = useMessageContext()
@@ -91,6 +93,17 @@ export function HerdView({id}: {id: string | undefined}) {
     }
   }, [id])
 
+  React.useEffect(() => {
+    if (herd && genebanks && herd.individuals) {
+      const genebank = genebanks.find(g => g.herds.some(h => h.herd == herd.herd))
+      const individualIds = herd.individuals.map(i => i.number)
+      if (genebank && genebank.individuals != null) {
+        const individualsList = genebank.individuals.filter(i => individualIds.includes(i.number))
+        setHerdIndividuals(individualsList)
+      }
+    }
+  }, [herd, genebanks])
+
   return <>
     <Paper className={style.container}>
       {React.useMemo(() => <HerdForm id={id} view='info'/>, [id])}
@@ -106,21 +119,18 @@ export function HerdView({id}: {id: string | undefined}) {
           variant="fullWidth"
           aria-label="full width tabs example"
           >
-            <Tab label="List of Individuals" value='list'/>
-            <Tab label="Pedigree of Individuals" value='pedigree'/>
+            <Tab label="Lista över individer" value='list'/>
+            <Tab label="Släktträd för besättningen" value='pedigree'/>
         </Tabs>
       </AppBar>
 
       <TabPanel value={activeTab} index='list'>
-        <ul>
-          {herd && herd.individuals && herd.individuals.map((individual: Individual) =>
-            <li key={individual.id}
-                className={style.animalList}
-                onClick={() => setShowIndividual(individual.number)}>
-              {individual.number}
-            </li>
-          )}
-        </ul>
+        {herdIndividuals &&
+          <FilterTable
+            individuals={herdIndividuals}
+            individualClick={(individual: LimitedIndividual) => setShowIndividual(individual.number)}
+            />
+        }
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>
         {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(node: string) => setShowIndividual(node)} />}
