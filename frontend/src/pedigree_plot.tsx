@@ -2,8 +2,7 @@ import React, { Component, useRef, useEffect } from 'react'
 import { Network } from 'vis-network';
 import { useHistory } from "react-router-dom";
 
-import { PedigreeCSS } from './pedigree_css'
-
+import "vis-network/styles/vis-network.css"
 
 /**
  * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd,
@@ -63,11 +62,7 @@ export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes:
     [pedigree]);
 
 
-  return <>
-    <PedigreeCSS />
-    <div ref={domNode}  >
-    </div>
-  </>;
+  return <div ref={domNode}/>
 };
 
 
