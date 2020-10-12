@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # This script reads the configuration file in
 # .docker/database-variables.env to access an existing PostgreSQL
 # database and create the tables for the herdbook schema.
