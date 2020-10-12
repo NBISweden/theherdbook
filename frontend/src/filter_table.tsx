@@ -1,5 +1,5 @@
 /**
- * @file This file contains the IndividualTable function. This function is a
+ * @file This file contains the FilterTable function. This function is a
  * wrapper around MaterialTable, with defaults for individual columns as well as
  * extra options for filtering.
  */
@@ -11,10 +11,13 @@ import Select from 'react-select'
 import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
-import { CircularProgress, Checkbox, makeStyles, FormControlLabel
+import { Button, CircularProgress, Checkbox, Dialog, DialogActions,
+         DialogContent, makeStyles, FormControlLabel,
        } from '@material-ui/core';
 
 import { Individual } from '@app/data_context_global';
+import { IndividualView } from '@app/individual_view';
+import { HerdView } from './herd_view'
 
 const tableIcons: Icons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -80,53 +83,56 @@ type Filter = {field: keyof(Individual), label: string, active?: boolean}
  * Shows a table of individual information for the given list of `individuals`.
  * Optionally `filters` or `title` can be set to further customize the table.
  */
-export function FilterTable({individuals, title = undefined, filters = [],
-                             individualClick = undefined, herdClick = undefined}:
-    {individuals: Individual[], title: string | undefined, filters: Filter[],
-     individualClick: Function | undefined, herdClick: Function | undefined}) {
+export function FilterTable({individuals, title = '', filters = []}:
+    {individuals: Individual[], title: string, filters: Filter[]}) {
+
+  const [showDialog, setShowDialog] = React.useState(false)
+  const [dialogTarget, setDialogTarget] = React.useState(undefined as {type: string, id: string} | undefined)
   const styles = useStyles();
+
+  const open = (type: string, id: string) => {
+    setDialogTarget({type: type, id: id})
+    setShowDialog(true)
+  }
+
   const defaultColumns = [
     {field: 'herd', title: 'Besättning', hidden: false,
-      render: (rowData:any) => {
-        if (herdClick) {
-          return <a className={styles.functionLink} onClick={() => herdClick(rowData)}>{rowData.herd['herd']}</a>
-        } else {
-          return <Link to={`/herd/${rowData.herd['herd']}`}>{rowData.herd['herd']}</Link>
-        }
-      }
+      render: (rowData:any) =>
+        <a className={styles.functionLink}
+          onClick={() => open('herd', rowData.herd['herd'])}
+          >
+          {rowData.herd['herd']}
+        </a>
     },
     {field: 'name', title: 'Namn', hidden: false},
     {field: 'certificate', title: 'Certifikat', hidden: false},
     {field: 'number', title: 'Nummer', hidden: false,
-      render: (rowData:any) => {
-        if (individualClick) {
-          return <a className={styles.functionLink} onClick={() => individualClick(rowData)}>{rowData.number}</a>
-        } else {
-          return <Link to={`/individual/${rowData.number}`}>{rowData.number}</Link>
-        }
-      }
+      render: (rowData:any) =>
+        <a className={styles.functionLink}
+          onClick={() => open('individual', rowData.number)}
+          >
+          {rowData.number}
+        </a>
     },
     {field: 'sex', title: 'Kön', hidden: false},
     {field: 'birth_date', title: 'Födelsedatum', hidden: false},
     {field: 'death_date', title: 'Dödsdatum', hidden: false},
     {field: 'death_note', title: 'Dödsanteckning', hidden: false},
     {field: 'mother', title: 'Moder', hidden: false,
-      render: (rowData:any) => {
-        if (individualClick) {
-          return <a className={styles.functionLink} onClick={() => individualClick(rowData.mother)}>{rowData.mother['number']}</a>
-        } else {
-          return <Link to={`/individual/${rowData.mother['number']}`}>{rowData.mother['number']}</Link>
-        }
-      }
+      render: (rowData:any) =>
+      <a className={styles.functionLink}
+        onClick={() => open('individual', rowData.mother['number'])}
+        >
+        {rowData.mother['number']}
+      </a>
     },
     {field: 'father', title: 'Fader', hidden: false,
-      render: (rowData:any) => {
-        if (individualClick) {
-          return <a className={styles.functionLink} onClick={() => individualClick(rowData.father)}>{rowData.father['number']}</a>
-        } else {
-          return <Link to={`/individual/${rowData.father['number']}`}>{rowData.father['number']}</Link>
-        }
-      }
+      render: (rowData:any) =>
+      <a className={styles.functionLink}
+        onClick={() => open('individual', rowData.father['number'])}
+        >
+        {rowData.father['number']}
+      </a>
     },
     {field: 'color', title: 'Färg', hidden: false,
       render: (rowData:any) => rowData.color['name']
@@ -136,6 +142,10 @@ export function FilterTable({individuals, title = undefined, filters = [],
 
   const [columns, setColumns] = React.useState(defaultColumns)
   const [currentFilters, setFilters] = React.useState(filters)
+
+  const closeDialog = () => {
+    setShowDialog(false)
+  }
 
   const updateColumns = (values: any[]) => {
     const newColumns = [...columns];
@@ -214,6 +224,27 @@ export function FilterTable({individuals, title = undefined, filters = [],
           </div>
         </>
       }
+      <Dialog
+        open={showDialog}
+        keepMounted
+        maxWidth={'xl'}
+        onClose={closeDialog}
+      >
+        <DialogContent>
+          {dialogTarget?.type == 'individual' && <IndividualView id={dialogTarget?.id} />}
+          {dialogTarget?.type == 'herd' && <HerdView id={dialogTarget?.id} />}
+        </DialogContent>
+        <DialogActions>
+          <Link to={`/${dialogTarget?.type}/${dialogTarget?.id}`} target='_blank'>
+            <Button color="primary">
+              Öppna i eget fönster
+            </Button>
+          </Link>
+          <Button onClick={closeDialog} color="primary">
+            Stäng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   </>
 }

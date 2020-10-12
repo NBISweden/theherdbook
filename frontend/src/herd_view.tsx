@@ -5,17 +5,14 @@
  */
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { AppBar, Box, Button,
-         Dialog, DialogActions, DialogContent, Paper, Tab, Tabs
-        } from '@material-ui/core';
+import { AppBar, Box, Paper, Tab, Tabs } from '@material-ui/core';
 import { get } from '@app/communication';
-import { Herd, Individual, LimitedIndividual } from '@app/data_context_global';
+import { Herd, Individual } from '@app/data_context_global';
 import { HerdForm } from '@app/herdForm';
 import { useMessageContext } from '@app/message_context';
 import { useDataContext } from '@app/data_context';
 import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from '@app/pedigree_plot';
-import { IndividualView } from '@app/individual_view';
 import { FilterTable } from '@app/filter_table';
 
 const useStyles = makeStyles({
@@ -71,15 +68,10 @@ export function HerdView({id}: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as Herd | undefined)
   const [herdIndividuals, setHerdIndividuals] = React.useState([] as Individual[])
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
-  const [showIndividual, setShowIndividual] = React.useState(false as string | false)
   const {userMessage} = useMessageContext()
   const { genebanks } = useDataContext()
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
   const style  = useStyles()
-
-  const closeIndividual = () => {
-    setShowIndividual(false)
-  }
 
   React.useEffect(() => {
     if (id) {
@@ -128,29 +120,15 @@ export function HerdView({id}: {id: string | undefined}) {
         {herdIndividuals &&
           <FilterTable
             individuals={herdIndividuals}
-            individualClick={(individual: LimitedIndividual) => setShowIndividual(individual.number)}
+            filters={[{field: 'alive', label: 'Dölj döda'},
+                      {field: 'active', label: 'Dölj inaktiva djur'}]}
             />
         }
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>
-        {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(node: string) => setShowIndividual(node)} />}
+        {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(node: string) => console.debug(node)} />}
       </TabPanel>
 
-      <Dialog
-        open={!!showIndividual}
-        keepMounted
-        maxWidth={'xl'}
-        onClose={closeIndividual}
-      >
-        <DialogContent>
-          {showIndividual && <IndividualView id={showIndividual} />}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeIndividual} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Paper>
   </>
 }
