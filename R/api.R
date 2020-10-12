@@ -2,14 +2,20 @@ library(optiSel)
 library(nprcgenekeepr)
 library(DBI)
 library(jsonlite)
+
 # Returns a connection instance to a PG server
 connect_to_pg <- function() {
-  pg_host <- Sys.getenv("POSTGRES_HOST", "localhost")
-  con <- dbConnect(RPostgres::Postgres(),dbname = 'herdbook',
+  pg_host   <- Sys.getenv("POSTGRES_HOST", "localhost")
+  pg_dbname <- Sys.getenv("POSTGRES_DBNAME", "herdbook")
+  pg_port   <- Sys.getenv("POSTGRES_PORT", "5432")
+  pg_user   <- Sys.getenv("POSTGRES_USER", "herdbook")
+  pg_passw  <- Sys.getenv("POSTGRES_PASSWORD", "insecure")
+  
+  con <- dbConnect(RPostgres::Postgres(),dbname = get("pg_dbname"),
                    host = get("pg_host"),
-                   port = 5432,
-                   user = 'herdbook',
-                   password = 'insecure')
+                   port = get("pg_port"),
+                   user = get("pg_user"),
+                   password = get("pg_passw"))
   return (con)
 }
 
