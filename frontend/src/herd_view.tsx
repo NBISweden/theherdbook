@@ -71,7 +71,8 @@ export function HerdView({id}: {id: string | undefined}) {
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
   const {userMessage, popup} = useMessageContext()
   const { genebanks } = useDataContext()
-  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
+  const [algo, set_algo] = React.useState('Martin' as 'Martin' | 'Dan')
+  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [genebanks, id, algo])
   const style  = useStyles()
 
   React.useEffect(() => {
@@ -128,10 +129,20 @@ export function HerdView({id}: {id: string | undefined}) {
         }
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>
-        {pedigree && <PedigreeNetwork
-                        pedigree={pedigree}
-                        onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
-                      />
+        <div style={{marginTop: 10, display: 'flex'}}>
+          <label style={{margin: 'auto'}}>
+            Algorithm:
+            <select style={{marginLeft: 10}} onChange={e => e.target && set_algo(e.target.value as any)} >
+              <option value="Martin">Martin</option>
+              <option value="Dan">Dan</option>
+            </select>
+          </label>
+        </div>
+        {pedigree &&
+          <PedigreeNetwork
+            pedigree={pedigree}
+            onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
+          />
         }
       </TabPanel>
     </Paper>

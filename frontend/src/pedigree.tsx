@@ -32,6 +32,21 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
   })
 }
 
+const indexes = new WeakMap<Genebank[], Record<string, Individual>>()
+
+function get_index(genebanks: Genebank[]): Record<string, Individual> {
+  if (!indexes.has(genebanks)) {
+    const index = {}
+    genebanks.forEach(genebank =>
+      (genebank.individuals || []).forEach(
+        i => {
+          index[i.number] = i
+        }))
+    indexes.set(genebanks, index)
+  }
+  return indexes.get(genebanks)!
+}
+
 /**
  * Looks through all loaded genebanks for information on the given individual
  * number `id`.
@@ -39,9 +54,8 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
  * @param id individual number of the animal to find
  */
 const getIndividual = (genebanks: Genebank[], id: string): Individual | undefined => {
-  return genebanks.filter((genebank: Genebank) => genebank.individuals)
-                  .flatMap((genebank: Genebank) => genebank.individuals)
-                  .find((i: Individual) => i.number == id)
+  const index = get_index(genebanks)
+  return index[id]
 }
 
 /**
@@ -98,6 +112,7 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
   let nodes: Node[] = []
   let edges: Edge[] = []
   const indData = getIndividual(genebanks, id)
+
   if (indData) {
     nodes.push( asNode(indData, edges.length) )
 
@@ -131,7 +146,55 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
   nodes = unique(nodes, 'id')
   edges = unique(edges, 'id')
 
+  nodes.sort((a, b) => a.id > b.id ? 1 : -1)
+  edges.sort((a, b) => a.id > b.id ? 1 : -1)
+
   return {nodes: nodes, edges: edges}
+}
+
+export function calcPedigreeDan(genebanks: Genebank[], id: string, generations: number = 1000): Pedigree {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+  const indData = getIndividual(genebanks, id)
+
+  const visited = {} as Record<string, number>
+  const queue = [{depth: 0, id}] as {depth: number, id: string}[]
+  let pos = 0
+
+  while (pos < queue.length) {
+    const {depth, id} = queue[pos++]
+    if (depth > generations) {
+      break
+    }
+    if (visited[id] !== undefined) {
+      continue
+    }
+    visited[id] = depth
+    const ind = getIndividual(genebanks, id)
+    if (!ind) {
+      continue
+    }
+    nodes.push(asNode(ind, 0))
+    const parents = [ind.mother, ind.father]
+    parents.forEach((parent: LimitedIndividual | null) => {
+      if (parent && parent.id !== null) {
+        queue.push({
+          depth: depth + 1,
+          id: parent.number,
+        })
+        edges.push({
+          id: `${id}-${parent.number}`,
+          from: id,
+          to: parent.number,
+        })
+      }
+    })
+  }
+
+  nodes.sort((a, b) => a.id > b.id ? 1 : -1)
+  edges.sort((a, b) => a.id > b.id ? 1 : -1)
+
+  return {nodes, edges}
 }
 
 /**
@@ -146,7 +209,7 @@ export function calcPedigree(genebanks: Genebank[], id: string, generations: num
  * @param herdId the id of the herd to plot
  * @param generations the number of generations to plot
  */
-export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, generations: number = 1000): Pedigree {
+export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, generations: number = 1000, algo = 'Martin' as 'Martin' | 'Dan'): Pedigree {
 
   let nodes: Node[] = []
   let edges: Edge[] = []
@@ -167,7 +230,7 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
   }
 
   herd.forEach(individual => {
-    const pedigree = calcPedigree(genebanks, individual.number, generations)
+    const pedigree = (algo === 'Martin' ? calcPedigree : calcPedigreeDan)(genebanks, individual.number, generations)
 
     nodes = [...nodes, ...pedigree.nodes]
     edges = [...edges, ...pedigree.edges]
