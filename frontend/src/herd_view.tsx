@@ -14,6 +14,7 @@ import { useDataContext } from '@app/data_context';
 import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from '@app/pedigree_plot';
 import { FilterTable } from '@app/filter_table';
+import { IndividualView } from './individual_view';
 
 const useStyles = makeStyles({
   container: {
@@ -68,7 +69,7 @@ export function HerdView({id}: {id: string | undefined}) {
   const [herd, setHerd] = React.useState(undefined as Herd | undefined)
   const [herdIndividuals, setHerdIndividuals] = React.useState([] as Individual[])
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
-  const {userMessage} = useMessageContext()
+  const {userMessage, popup} = useMessageContext()
   const { genebanks } = useDataContext()
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5), [genebanks, id])
   const style  = useStyles()
@@ -109,7 +110,6 @@ export function HerdView({id}: {id: string | undefined}) {
           indicatorColor="primary"
           textColor="primary"
           variant="fullWidth"
-          aria-label="full width tabs example"
           >
             <Tab label="Lista över individer" value='list'/>
             <Tab label="Släktträd för besättningen" value='pedigree'/>
@@ -117,19 +117,23 @@ export function HerdView({id}: {id: string | undefined}) {
       </AppBar>
 
       <TabPanel value={activeTab} index='list'>
-        {herdIndividuals &&
+        {herdIndividuals.length ?
           <FilterTable
             individuals={herdIndividuals}
             title={'Individer i besättningen'}
             filters={[{field: 'alive', label: 'Dölj döda'},
                       {field: 'active', label: 'Dölj inaktiva djur'}]}
             />
+          : 'Loading Herd'
         }
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>
-        {pedigree && <PedigreeNetwork pedigree={pedigree} onClick={(node: string) => console.debug(node)} />}
+        {pedigree && <PedigreeNetwork
+                        pedigree={pedigree}
+                        onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
+                      />
+        }
       </TabPanel>
-
     </Paper>
   </>
 }

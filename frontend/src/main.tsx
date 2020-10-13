@@ -28,15 +28,15 @@ const CSS = sc.createGlobalStyle`
 const Main =
   <>
     <CssBaseline />
-    <WithDataContext>
-      <WithUserContext>
-        <WithMessageContext>
-          <BrowserRouter>
-            <Navigation/>
-          </BrowserRouter>
-        </WithMessageContext>
-      </WithUserContext>
-    </WithDataContext>
+    <BrowserRouter>
+      <WithDataContext>
+        <WithUserContext>
+          <WithMessageContext>
+              <Navigation/>
+          </WithMessageContext>
+        </WithUserContext>
+      </WithDataContext>
+    </BrowserRouter>
     <CSS/>
   </>
 

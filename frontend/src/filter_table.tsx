@@ -5,19 +5,18 @@
  */
 import React, {forwardRef} from 'react'
 import { default as MaterialTable, Icons } from 'material-table'
-import { Link } from 'react-router-dom'
 import Select from 'react-select'
 
 import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
-import { Button, CircularProgress, Checkbox, Dialog, DialogActions,
-         DialogContent, makeStyles, FormControlLabel,
+import { CircularProgress, Checkbox,  makeStyles, FormControlLabel,
        } from '@material-ui/core';
 
 import { Individual } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
 import { HerdView } from './herd_view'
+import { useMessageContext } from '@app/message_context';
 
 const tableIcons: Icons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -86,20 +85,14 @@ type Filter = {field: keyof(Individual), label: string, active?: boolean}
 export function FilterTable({individuals, title = '', filters = []}:
     {individuals: Individual[], title: string, filters: Filter[]}) {
 
-  const [showDialog, setShowDialog] = React.useState(false)
-  const [dialogTarget, setDialogTarget] = React.useState(undefined as {type: string, id: string} | undefined)
+  const { popup } = useMessageContext()
   const styles = useStyles();
-
-  const open = (type: string, id: string) => {
-    setDialogTarget({type: type, id: id})
-    setShowDialog(true)
-  }
 
   const defaultColumns = [
     {field: 'herd', title: 'Besättning', hidden: false,
       render: (rowData:any) =>
         <a className={styles.functionLink}
-          onClick={() => open('herd', rowData.herd['herd'])}
+          onClick={() => popup(<HerdView id={rowData.herd['herd']} />, `/herd/${rowData.herd['herd']}`)}
           >
           {rowData.herd['herd']}
         </a>
@@ -109,7 +102,7 @@ export function FilterTable({individuals, title = '', filters = []}:
     {field: 'number', title: 'Nummer', hidden: false,
       render: (rowData:any) =>
         <a className={styles.functionLink}
-          onClick={() => open('individual', rowData.number)}
+          onClick={() => popup(<IndividualView id={rowData.number} />, `/individual/${rowData.number}`)}
           >
           {rowData.number}
         </a>
@@ -121,7 +114,7 @@ export function FilterTable({individuals, title = '', filters = []}:
     {field: 'mother', title: 'Moder', hidden: false,
       render: (rowData:any) =>
       <a className={styles.functionLink}
-        onClick={() => open('individual', rowData.mother['number'])}
+        onClick={() => popup(<IndividualView id={rowData.mother['number']} />, `/individual/${rowData.mother['number']}`)}
         >
         {rowData.mother['number']}
       </a>
@@ -129,7 +122,7 @@ export function FilterTable({individuals, title = '', filters = []}:
     {field: 'father', title: 'Fader', hidden: false,
       render: (rowData:any) =>
       <a className={styles.functionLink}
-        onClick={() => open('individual', rowData.father['number'])}
+        onClick={() => popup(<IndividualView id={rowData.father['number']} />, `/individual/${rowData.father['number']}`)}
         >
         {rowData.father['number']}
       </a>
@@ -142,10 +135,6 @@ export function FilterTable({individuals, title = '', filters = []}:
 
   const [columns, setColumns] = React.useState(defaultColumns)
   const [currentFilters, setFilters] = React.useState(filters)
-
-  const closeDialog = () => {
-    setShowDialog(false)
-  }
 
   const updateColumns = (values: any[]) => {
     const newColumns = [...columns];
@@ -224,27 +213,6 @@ export function FilterTable({individuals, title = '', filters = []}:
           </div>
         </>
       }
-      <Dialog
-        open={showDialog}
-        keepMounted
-        maxWidth={'xl'}
-        onClose={closeDialog}
-      >
-        <DialogContent>
-          {dialogTarget?.type == 'individual' && <IndividualView id={dialogTarget?.id} />}
-          {dialogTarget?.type == 'herd' && <HerdView id={dialogTarget?.id} />}
-        </DialogContent>
-        <DialogActions>
-          <Link to={`/${dialogTarget?.type}/${dialogTarget?.id}`} target='_blank'>
-            <Button color="primary">
-              Öppna i eget fönster
-            </Button>
-          </Link>
-          <Button onClick={closeDialog} color="primary">
-            Stäng
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   </>
 }
