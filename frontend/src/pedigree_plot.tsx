@@ -1,6 +1,5 @@
-import React, { Component, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { Network } from 'vis-network';
-import { useHistory } from "react-router-dom";
 
 import "vis-network/styles/vis-network.css"
 
@@ -8,13 +7,10 @@ import "vis-network/styles/vis-network.css"
  * @file This file contains the PedigreeNetwork component that displays the pedigree for an individual or a herd,
  * depending on the input data. The network data is built from the python api.
  */
-
-
-export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes: any[]} }){
+export function PedigreeNetwork({ pedigree, onClick = () => {} }: { pedigree: { edges: any[], nodes: any[]}, onClick: Function }){
   // A reference to the div rendered by this component
   const domNode = useRef(null);
   const network = useRef(null);
-  const history = useHistory();
 
   const options = {
     width: Math.round(window.innerWidth * 0.85) + 'px',//width is calculated considering the parent component width
@@ -54,8 +50,8 @@ export function PedigreeNetwork({ pedigree }: { pedigree: { edges: any[], nodes:
       network.current = new Network(domNode.current, pedigree, options);
       network.current.on("doubleClick", (params) => {
         if (params.nodes.length > 0) {
-          const nodeid = params.nodes[0];
-          history.push("/individual/" + nodeid);
+          const nodeId = params.nodes[0];
+          onClick(nodeId)
         }
       });
     },

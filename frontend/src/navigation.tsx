@@ -11,7 +11,9 @@ import {Login} from './login'
 import {Genebanks} from './genebanks'
 import {HerdView} from './herd_view'
 import {Manage} from './manage'
+import { Owner } from '@app/owner';
 import {IndividualPedigree} from './individual_pedigree'
+import { IndividualView } from '@app/individual_view'
 import {HerdPedigree} from './herd_pedigree'
 import {Switch, Route} from 'react-router-dom'
 import {useUserContext} from './user_context'
@@ -33,6 +35,7 @@ export function Navigation() {
   const {logout} = useUserContext();
   const {user} = useUserContext();
   const is_admin = !!(user?.is_manager || user?.is_admin)
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0)
   const is_logged_in = !!user
 
   const tabs: ui.RoutedTab[] = [
@@ -50,6 +53,15 @@ export function Navigation() {
       component: <Genebanks/>,
       visible: is_logged_in,
       icon: <AccountBalanceIcon />
+    },
+    {
+      label: user?.is_owner && user.is_owner.length > 1
+             ? 'Mina besättningar'
+             : 'Min besättning',
+      path: "/owner",
+      component: <Owner/>,
+      visible: is_owner,
+      icon: <GroupIcon />
     },
     {
       label: "Administrera",
@@ -94,7 +106,10 @@ export function Navigation() {
         <ui.Routed path="/herd/:id">
           {params => <HerdView id={params.id}/>}
         </ui.Routed>
-        <ui.Routed path="/individual/:id/:generations?">
+        <ui.Routed path="/individual/:id">
+          {params => <IndividualView id={params.id} />}
+        </ui.Routed>
+        <ui.Routed path="/individual-pedigree/:id/:generations?">
           {params => <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>}
         </ui.Routed>
         <ui.Routed path="/herd-pedigree/:id">

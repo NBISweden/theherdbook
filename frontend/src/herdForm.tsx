@@ -3,16 +3,16 @@
  * changing herd attributes in the database.
  */
 import React from 'react'
+import { unstable_batchedUpdates } from 'react-dom';
 import { useHistory } from "react-router-dom";
+import Select from 'react-select';
 import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import Select from 'react-select';
-import { useDataContext } from './data_context'
-import { Herd, Genebank, ServerMessage } from '@app/data_context_global';
-
-import { get, updateHerd, createHerd } from './communication';
+import { useDataContext } from '@app/data_context'
+import { useUserContext } from '@app/user_context';
 import { useMessageContext } from '@app/message_context';
-import { unstable_batchedUpdates } from 'react-dom';
+import { Herd, herdLabel, Genebank, ServerMessage } from '@app/data_context_global';
+import { get, updateHerd, createHerd } from '@app/communication';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -24,7 +24,7 @@ const useStyles = makeStyles({
     width: "100%",
   },
   title: {
-    fontSize: 16,
+    fontSize: '2em',
     borderBottom: '1px solid lightgrey',
     margin: '5px 0 20px 0',
   },
@@ -39,6 +39,24 @@ const useStyles = makeStyles({
     maxWidth: '450px',
     border: '1px solid grey',
     borderRadius: '5px',
+  },
+  editButton: {
+    float: "right",
+    margin: "20px 0 0 0",
+  },
+  editLink: {
+    color: "blue",
+    '&:hover': {
+      color: 'purple',
+      cursor: 'pointer',
+    }
+  },
+  spanTitle: {
+    fontWeight: 'bold',
+    marginLeft: '20px',
+  },
+  contactInfo: {
+    marginBottom: '30px',
   }
 });
 
@@ -76,13 +94,15 @@ const defaultValues: Herd = {
  * load herd data for the id `id` if it's a number, or for a new herd if `id` is
  * `undefined` or `'new'`.
  */
-export function HerdForm({id}: {id: string | undefined}) {
+export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'form' | 'info'}) {
   const {genebanks, setGenebanks} = useDataContext()
+  const { user } = useUserContext()
   const {userMessage} = useMessageContext()
   const [herd, setHerd] = React.useState({...defaultValues} as Herd)
   const [loading, setLoading] = React.useState(true);
   const [postalcode, setPostalcode] = React.useState('000 00')
   const [postalcity, setPostalcity] = React.useState('')
+  const [currentView, setCurrentView] = React.useState(view)
   const [isNew, setNew] = React.useState(false)
   const history = useHistory()
   const classes = useStyles();
@@ -216,93 +236,114 @@ export function HerdForm({id}: {id: string | undefined}) {
   return <>
     {loading && <h2>Loading...</h2> ||
       <>
-        <h1>{herd ? `Besättning ${herd.herd}` : `Ny Besättning`}</h1>
-
-        <form className={classes.form}>
-          <div className={classes.formCard}>
-            <Typography className={classes.title} color="primary" gutterBottom>
-              Kontaktperson
-            </Typography>
-
-            <TextField label='Namn' className={classes.simpleField}
-              value={herd.name}
-              onChange={(e: any) => {setFormField('name', e.target.value)}}
-              />
-            <TextField label='E-mail' className={classes.simpleField}
-              value={herd.email}
-              onChange={(e: any) => {setFormField('email', e.target.value)}}
-              />
-            <TextField label='Mobiltelefon' className={classes.simpleField}
-              value={herd.mobile_phone}
-              onChange={(e: any) => {setFormField('mobile_phone', e.target.value)}}
-              />
-            <TextField label='Fast Telefon' className={classes.simpleField}
-              value={herd.wire_phone}
-              onChange={(e: any) => {setFormField('wire_phone', e.target.value)}}
-              />
-            <TextField label='Hemsida' className={classes.simpleField}
-              value={herd.www}
-              onChange={(e: any) => {setFormField('www', e.target.value)}}
-              />
-            <TextField label='Gatuadress' className={classes.simpleField}
-              value={herd.physical_address}
-              onChange={(e: any) => {setFormField('physical_address', e.target.value)}}
-              />
-            <TextField label='Postnummer'
-              value={postalcode}
-              onChange={(e: any) => {setPostalcode(e.target.value)}}
-              />
-            <TextField label='Postort'
-              value={postalcity}
-              onChange={(e: any) => {setPostalcity(e.target.value)}}
-              />
+        {user?.canEdit(herd.herd) && <div className={classes.editButton}>
+            [ <a className={classes.editLink}
+                 onClick={() => setCurrentView(currentView == 'form' ? 'info' : 'form')}>
+                {currentView == 'info' ? 'Edit' : 'Stop Editing'}
+              </a>
+            ]
           </div>
+        }
+        <h1 className={classes.title}>{herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}</h1>
+        {(currentView == 'form' && user && user.canEdit(herd.herd)) && <>
+          <form className={classes.form}>
+            <div className={classes.formCard}>
+              <Typography className={classes.title} color="primary" gutterBottom>
+                Kontaktperson
+              </Typography>
 
-          <div className={classes.formCard}>
-            <Typography className={classes.title} color="primary" gutterBottom>
-              Besättningsinformation
-            </Typography>
+              <TextField label='Namn' className={classes.simpleField}
+                value={herd.name}
+                onChange={(e: any) => {setFormField('name', e.target.value)}}
+                />
+              <TextField label='E-mail' className={classes.simpleField}
+                value={herd.email}
+                onChange={(e: any) => {setFormField('email', e.target.value)}}
+                />
+              <TextField label='Mobiltelefon' className={classes.simpleField}
+                value={herd.mobile_phone}
+                onChange={(e: any) => {setFormField('mobile_phone', e.target.value)}}
+                />
+              <TextField label='Fast Telefon' className={classes.simpleField}
+                value={herd.wire_phone}
+                onChange={(e: any) => {setFormField('wire_phone', e.target.value)}}
+                />
+              <TextField label='Hemsida' className={classes.simpleField}
+                value={herd.www}
+                onChange={(e: any) => {setFormField('www', e.target.value)}}
+                />
+              <TextField label='Gatuadress' className={classes.simpleField}
+                value={herd.physical_address}
+                onChange={(e: any) => {setFormField('physical_address', e.target.value)}}
+                />
+              <TextField label='Postnummer'
+                value={postalcode}
+                onChange={(e: any) => {setPostalcode(e.target.value)}}
+                />
+              <TextField label='Postort'
+                value={postalcity}
+                onChange={(e: any) => {setPostalcity(e.target.value)}}
+                />
+            </div>
 
-            <TextField label='Besättningsnamn' className={classes.simpleField}
-              value={herd.herd_name}
-              onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
-              />
-            <FormControlLabel label="Aktiv" labelPlacement="end"
-              control={<Checkbox color="primary" checked={herd.is_active == null ? false : !!herd.is_active} />}
-              value={herd.is_active}
-              onChange={(e: any) => {setFormField('is_active', e.target.checked)}}
-              />
-            <TextField label='Startdatum' className={classes.simpleField}
-              value={herd.start_date}
-              onChange={(e: any) => {setFormField('start_date', e.target.value)}}
-              />
+            <div className={classes.formCard}>
+              <Typography className={classes.title} color="primary" gutterBottom>
+                Besättningsinformation
+              </Typography>
 
-            <TextField label='Besättnings-ID' className={classes.simpleField}
-              disabled={!isNew}
-              value={herd.herd}
-              onChange={(e: any) => {setFormField('herd', e.target.value)}}
-              />
+              <TextField label='Besättningsnamn' className={classes.simpleField}
+                value={herd.herd_name}
+                onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
+                />
+              <FormControlLabel label="Aktiv" labelPlacement="end"
+                control={<Checkbox color="primary" checked={herd.is_active == null ? false : !!herd.is_active} />}
+                value={herd.is_active}
+                onChange={(e: any) => {setFormField('is_active', e.target.checked)}}
+                />
+              <TextField label='Startdatum' className={classes.simpleField}
+                value={herd.start_date}
+                onChange={(e: any) => {setFormField('start_date', e.target.value)}}
+                />
 
-            <Typography className={classes.subheading} color="textSecondary">
-              Genbank
-            </Typography>
-            <Select label='Genbank' isDisabled={!isNew}
-              value={genebankOption(herd.genebank)}
-              options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
-              onChange={(e: any) => setFormField('genebank', e.value)}
-              />
+              <TextField label='Besättnings-ID' className={classes.simpleField}
+                disabled={!isNew}
+                value={herd.herd}
+                onChange={(e: any) => {setFormField('herd', e.target.value)}}
+                />
 
-            <Typography className={classes.subheading} color="textSecondary">
-              Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer
-            </Typography>
-          </div>
+              <Typography className={classes.subheading} color="textSecondary">
+                Genbank
+              </Typography>
+              <Select label='Genbank' isDisabled={!isNew}
+                value={genebankOption(herd.genebank)}
+                options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
+                onChange={(e: any) => setFormField('genebank', e.value)}
+                />
 
-        </form>
-        <Button variant="contained"
-                color="primary"
-                onClick={() => submitForm()}>
-          {isNew ? "Skapa" : "Spara"}
-        </Button>
+              <Typography className={classes.subheading} color="textSecondary">
+                Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer
+              </Typography>
+            </div>
+
+          </form>
+          <Button variant="contained"
+                  color="primary"
+                  onClick={() => submitForm()}>
+            {isNew ? "Skapa" : "Spara"}
+          </Button>
+        </> || <div className={classes.contactInfo}>
+          {herd.name && <>
+            <span className={classes.spanTitle}>Kontaktperson: </span>
+              {herd.name}
+            {herd.email && <> - <a href={`mailto:${herd.email}`}>{herd.email}</a> </>}
+            {herd.mobile_phone && <> - {herd.mobile_phone} </>}
+            {herd.wire_phone && <> - {herd.wire_phone} </>}
+            {herd.www && <> - <a href={herd.www}>{herd.www}</a> </>}
+            {herd.physical_address && <> - {herd.physical_address}, {postalcode} {postalcity} </>}
+            </>
+          }
+        </div>}
+
       </>
     }
   </>
