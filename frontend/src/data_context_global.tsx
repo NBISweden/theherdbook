@@ -74,7 +74,7 @@ export interface Herd {
     individuals?: Individual[]
 }
 
-export function individualLabel(individual: Individual | LimitedIndividual): string {
+export function individualLabel(individual: LimitedIndividual): string {
     let label = `${individual.number}`
     if (individual.name){
         label += ` - ${individual.name}`

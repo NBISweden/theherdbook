@@ -59,8 +59,23 @@ export function IndividualView({id} : {id: string}) {
   const style  = useStyles()
   const { genebanks } = useDataContext()
   const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
-  const [children, setChildren] = React.useState([] as Individual[])
   const {userMessage} = useMessageContext()
+
+  const children: Individual[] = React.useMemo(() => {
+    if (!individual || !genebanks || genebanks.some(g => g.individuals == null)) {
+      return []
+    }
+    const genebank = genebanks.find(genebank =>
+      genebank.individuals.some(i => i.number == individual.number)
+    )
+    if (!genebank || genebank.individuals == null || !genebank.individuals.length) {
+      return []
+    }
+    return genebank.individuals.filter(i =>
+      (i.mother && i.mother.number == individual.number) ||
+      (i.father && i.father.number == individual.number)
+    ) ?? []
+  }, [individual, genebanks])
 
   const activeIcon = '✅'
   const inactiveIcon = '❌'
@@ -78,27 +93,6 @@ export function IndividualView({id} : {id: string}) {
       }
     )
   }, [id])
-
-  /**
-   * Set children
-   */
-  React.useEffect(() => {
-    if (!individual || !genebanks || genebanks.some(g => g.individuals == null)) {
-      return
-    }
-    const genebank = genebanks.find(genebank =>
-      genebank.individuals.some(i => i.number == individual.number)
-    )
-    if (!genebank || genebank.individuals == null || !genebank.individuals.length) {
-      return
-    }
-    const children = genebank.individuals.filter(i =>
-      (i.mother && i.mother.number == individual.number) ||
-      (i.father && i.father.number == individual.number)
-    )
-    setChildren(children)
-
-  }, [individual, genebanks])
 
   return <>
     <div className={style.body}>

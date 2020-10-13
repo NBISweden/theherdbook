@@ -154,8 +154,8 @@ export function FilterTable({individuals, title = '', filters = []}:
       return []
     }
     return individuals.filter((i: Individual) => {
-      for (let f = 0; f < currentFilters.length; f++) {
-        if (currentFilters[f].active && !i[currentFilters[f].field]) {
+      for (let filter of currentFilters) {
+        if (filter.active && !i[filter.field]) {
           return false;
         }
       }

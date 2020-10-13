@@ -26,14 +26,10 @@ const useStyles = makeStyles({
  */
 export function Owner() {
   const { user } = useUserContext()
-  const [ activeHerd, setActiveHerd ] = useState(undefined as string | undefined)
+  const [ activeHerd, setActiveHerd ] = useState((user?.is_owner && user.is_owner.length > 0
+                                                  ? user.is_owner[0]
+                                                  : undefined) as string | undefined)
   const style  = useStyles()
-
-  React.useEffect(() => {
-    setActiveHerd(user?.is_owner && user.is_owner.length > 0
-                  ? user.is_owner[0]
-                  : undefined)
-  }, [user])
 
   return <>
     <Paper className={style.container}>

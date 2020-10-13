@@ -32,9 +32,8 @@ const useStyles = makeStyles({
   },
 });
 
-interface TabPanelProps {
+interface TabPanelProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
   children?: React.ReactNode;
-  dir?: string;
   index: any;
   value: any;
 }
