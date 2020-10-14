@@ -48,6 +48,12 @@ psql --quiet <<-'END_SQL'
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
 
+	-- Dummy herd for individuals sold outside of the genebank
+	INSERT INTO herd (genebank_id, herd, herd_name)
+	SELECT	DISTINCT gb.genebank_id, 'MX1', 'Dummy herd (Mellerud)'
+	FROM	genebank gb
+	WHERE	gb.name = 'Mellerudskanin';
+
 	-- Stub herd data
 	INSERT INTO herd (genebank_id, herd)
 	SELECT	DISTINCT gb.genebank_id, d."Genb"
