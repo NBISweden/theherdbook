@@ -7,7 +7,7 @@ csvsql  --db "$1" \
 	--overwrite \
 	--insert "$2"
 
-psql <<-'END_SQL'
+psql --quiet <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
 	------------------------------------------------------------
@@ -130,10 +130,10 @@ while [ "$year" -le 2020 ]; do
 	END_SQL
 
 	year=$(( year + 1 ))
-done | psql
+done | psql --quiet
 
 # Update the herd table with the herd names
-psql <<-'END_SQL'
+psql --quiet <<-'END_SQL'
 	UPDATE herd h
 	SET herd_name = (
 		SELECT MAX("Besättning")
