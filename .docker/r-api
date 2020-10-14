@@ -9,7 +9,7 @@ RUN apt update \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","optiSel","plumber","jsonlite","devtools"),clean=TRUE, Ncpus=8);\
+RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","optiSel","plumber","jsonlite","devtools"),repos=c("https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8); \
                     library(devtools);devtools::install_github("rmsharp/nprcgenekeepr")'
 
 FROM rocker/r-ver:4.0.2
