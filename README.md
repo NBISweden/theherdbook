@@ -9,20 +9,23 @@ book and spreading admin task to all local genebank holders.
 
 ## Termology
 
-### Genebank
+### Herd/Besättning
 
 A site participating in the preservation program. These will typically
 have signed an agreement and have efforts in place to make sure there
 is no accidental breeding with other races.
 
-### Genebank owner
+### Genebank
+Several different Herds of the same race will form a Genebank
 
-A user tied to one or more genebanks.
+### Herd owner
 
-### Herd book owner
+A user tied to one or more herds
+
+### Genebank Manager
 
 A user tasked with overall maintenance of the herd book and managing the
-breeding/preservation effort for a race.
+breeding/preservation effort for a genebank
 
 # Development setup
 
