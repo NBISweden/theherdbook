@@ -14,6 +14,7 @@ from werkzeug.security import (
 
 from utils.database import (
     DB_PROXY as DATABASE,
+    Colour,
     Herd,
     HerdTracking,
     Individual,
@@ -103,6 +104,23 @@ def fetch_user_info(user_id):
             return User.get(User.uuid == user_id)
     except DoesNotExist:
         return None
+
+def get_colors():
+    """
+    Returns all legal colors for all genebanks, like:
+
+    {<genebank>: [{id: <color-id>: name: <color-description>}, [...]],
+     [...]
+    }
+    """
+    with DATABASE.atomic():
+        #TODO: colors should be connected to genebanks in the database, not in
+        #      this function.
+        gotlandsColors = Colour.select().where(Colour.id < 100)
+        mellerudColors = Colour.select().where(Colour.id >= 100)
+        return {'Gotlandskanin': [{'id': c.id, 'name': c.name} for c in gotlandsColors],
+                'Mellerudskanin': [{'id': c.id, 'name': c.name} for c in mellerudColors]
+                }
 
 def get_genebank(genebank_id, user_uuid=None):
     """

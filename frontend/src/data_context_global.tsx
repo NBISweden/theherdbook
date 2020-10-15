@@ -74,6 +74,11 @@ export interface Herd {
     individuals?: Individual[]
 }
 
+export interface Colour {
+    id: number,
+    name: string,
+}
+
 export function individualLabel(individual: LimitedIndividual): string {
     let label = `${individual.number}`
     if (individual.name){
@@ -108,6 +113,7 @@ export interface Genebank {
 export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
+    colors: {[genebank: string]:Colour[]}
     setGenebanks(data: Genebank[]): void,
     setUsers(data: NameID[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
@@ -122,6 +128,7 @@ export type ServerMessage = {
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
+  colors: {},
   setGenebanks() {},
   setUsers() {},
   async loadData() {return false},
