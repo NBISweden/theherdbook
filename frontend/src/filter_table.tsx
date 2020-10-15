@@ -10,8 +10,7 @@ import Select from 'react-select'
 import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
-import { CircularProgress, Checkbox,  makeStyles, FormControlLabel,
-       } from '@material-ui/core';
+import { CircularProgress, Checkbox,  makeStyles, FormControlLabel } from '@material-ui/core';
 
 import { Individual } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
@@ -77,13 +76,16 @@ const useStyles = makeStyles({
 });
 
 type Filter = {field: keyof(Individual), label: string, active?: boolean}
+type Action = ((event: any, rowData: Individual | Individual[]) => {})
 
 /**
  * Shows a table of individual information for the given list of `individuals`.
  * Optionally `filters` or `title` can be set to further customize the table.
  */
-export function FilterTable({individuals, title = '', filters = []}:
-    {individuals: Individual[], title: string, filters: Filter[]}) {
+export function FilterTable({individuals, title = '', filters = [],
+                             action = undefined, actionIcon = Edit}:
+    {individuals: Individual[], title: string, filters: Filter[],
+      action: Action | undefined, actionIcon: any}) {
 
   const { popup } = useMessageContext()
   const styles = useStyles();
@@ -201,6 +203,11 @@ export function FilterTable({individuals, title = '', filters = []}:
               columns={columns}
               data={filteredIndividuals()}
               title={title}
+              actions={action && [{
+                icon: actionIcon,
+                tooltip: 'Save User',
+                onClick: action
+              }]}
               options={{
                 tableLayout: 'fixed'
               }}
