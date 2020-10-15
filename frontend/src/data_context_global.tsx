@@ -27,6 +27,8 @@ export interface LimitedIndividual {
 
 export interface Individual extends LimitedIndividual{
     herd: HerdNameID
+    origin_herd?: HerdNameID
+    genebank: string
     certificate: string | null
     birth_date: string | null
     mother: LimitedIndividual | null

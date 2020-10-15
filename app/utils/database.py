@@ -358,6 +358,7 @@ class Individual(BaseModel):
         """
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
+        data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {"id": self.origin_herd.id,
                                "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id,

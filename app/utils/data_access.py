@@ -477,6 +477,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     m.individual_id, m.name, m.number,
                     c.colour_id, c.name,
                     h.herd_id, h.herd, h.herd_name,
+                    g.name,
                     (h.is_active OR h.is_active IS NULL) AS herd_active,
                     ( (ih.herd_tracking_date > current_date - interval '1 year')
                       AND (h.is_active OR h.is_active IS NULL)
@@ -499,6 +500,7 @@ def get_individuals(genebank_id, user_uuid=None):
                         ORDER BY individual_id, herd_tracking_date DESC
                     ) AS ih ON (ih.individual_id = i.individual_id)
         JOIN        herd h ON (ih.herd_id = h.herd_id)
+        JOIN        genebank g ON (h.genebank_id = g.genebank_id)
         WHERE       h.genebank_id = %s;
         ;"""
         with DATABASE.atomic():
@@ -520,7 +522,8 @@ def get_individuals(genebank_id, user_uuid=None):
                 "mother": {"id": i[14], "name": i[15], "number": i[16]},
                 "color": {"id": i[17], "name": i[18]},
                 "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
-                "herd_active": i[22], "active": i[23], "alive": i[24],
+                "genebank": i[22],
+                "herd_active": i[23], "active": i[24], "alive": i[25],
             }
             for i in cursor.fetchall()
         ]
