@@ -51,17 +51,17 @@ class DatabaseTest(unittest.TestCase):
             genebank.save()
 
         self.herds = [
-            db.Herd.get_or_create(genebank=self.genebanks[0], herd=1, name="herd1")[0],
-            db.Herd.get_or_create(genebank=self.genebanks[0], herd=2, name="herd2")[0],
-            db.Herd.get_or_create(genebank=self.genebanks[1], herd=3, name="herd3")[0],
+            db.Herd.get_or_create(genebank=self.genebanks[0], herd='H1', name="herd1")[0],
+            db.Herd.get_or_create(genebank=self.genebanks[0], herd='H2', name="herd2")[0],
+            db.Herd.get_or_create(genebank=self.genebanks[1], herd='H3', name="herd3")[0],
         ]
         for herd in self.herds:
             herd.save()
 
         self.individuals = [
-            db.Individual.get_or_create(origin_herd=self.herds[0], number="ind-1")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[1], number="ind-2")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[2], number="ind-3")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0], number="H1-1")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1], number="H2-2")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[2], number="H3-3")[0],
         ]
         for individual in self.individuals:
             individual.save()
@@ -316,6 +316,54 @@ class TestPermissions(DatabaseTest):
         # unnecessary insert
         self.assertEqual(da.update_role(operation, self.admin.uuid)["status"], "unchanged")
 
+    def test_can_edit(self):
+        """
+        Checks that `utils.database.User.can_edit` performs correctly for all
+        permissions.
+        """
+        # Admin
+        for genebank in self.genebanks:
+            self.assertEqual(self.admin.can_edit(genebank.name), True)
+        for herd in self.herds:
+            self.assertEqual(self.admin.can_edit(herd.herd), True)
+        for individual in self.individuals:
+            self.assertEqual(self.admin.can_edit(individual.number), True)
+
+        # Manager
+        self.assertEqual(self.manager.can_edit(self.genebanks[0].name), True)
+        self.assertEqual(self.manager.can_edit(self.genebanks[1].name), False)
+
+        self.assertEqual(self.manager.can_edit(self.herds[0].herd), True)
+        self.assertEqual(self.manager.can_edit(self.herds[1].herd), True)
+        self.assertEqual(self.manager.can_edit(self.herds[2].herd), False)
+
+        self.assertEqual(self.manager.can_edit(self.individuals[0].number), True)
+        self.assertEqual(self.manager.can_edit(self.individuals[1].number), True)
+        self.assertEqual(self.manager.can_edit(self.individuals[2].number), False)
+
+        # Specialist
+        self.assertEqual(self.specialist.can_edit(self.genebanks[0].name), False)
+        self.assertEqual(self.specialist.can_edit(self.genebanks[1].name), False)
+
+        self.assertEqual(self.specialist.can_edit(self.herds[0].herd), False)
+        self.assertEqual(self.specialist.can_edit(self.herds[1].herd), False)
+        self.assertEqual(self.specialist.can_edit(self.herds[2].herd), False)
+
+        self.assertEqual(self.specialist.can_edit(self.individuals[0].number), False)
+        self.assertEqual(self.specialist.can_edit(self.individuals[1].number), False)
+        self.assertEqual(self.specialist.can_edit(self.individuals[2].number), False)
+
+        # Owner
+        self.assertEqual(self.owner.can_edit(self.genebanks[0].name), False)
+        self.assertEqual(self.owner.can_edit(self.genebanks[1].name), False)
+
+        self.assertEqual(self.owner.can_edit(self.herds[0].herd), True)
+        self.assertEqual(self.owner.can_edit(self.herds[1].herd), False)
+        self.assertEqual(self.owner.can_edit(self.herds[2].herd), False)
+
+        self.assertEqual(self.owner.can_edit(self.individuals[0].number), True)
+        self.assertEqual(self.owner.can_edit(self.individuals[1].number), False)
+        self.assertEqual(self.owner.can_edit(self.individuals[2].number), False)
 
 class FlaskTest(DatabaseTest):
     """
