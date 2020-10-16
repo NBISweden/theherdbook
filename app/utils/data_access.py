@@ -109,7 +109,7 @@ def get_colors():
     """
     Returns all legal colors for all genebanks, like:
 
-    {<genebank>: [{id: <color-id>: name: <color-description>}, [...]],
+    {<genebank>: [{id: <color-id>, name: <color-description>}, [...]],
      [...]
     }
     """
