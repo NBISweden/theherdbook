@@ -137,6 +137,12 @@ while [ "$year" -le 2020 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
+# Handle individual that have disappeared from this genebank (animals
+# sold to external herds).  For each individual with "ny G" equal to
+# "0", figure out the most recent tracking date.  Add tracking info
+# to the "GX1" herd at the last of December of the year
+# MAX(YEAR(most recent tracking date), YEAR(birth date)).
+
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
 # $year (etc.)
