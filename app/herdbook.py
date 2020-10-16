@@ -20,10 +20,11 @@ from flask import (
 from werkzeug.urls import url_parse
 import utils.database as db
 import utils.data_access as da
-import utils.inbreeding as ibc
 import logging
 from flask_caching import Cache
 from flask_login import login_required, login_user, logout_user, current_user, LoginManager
+import requests
+import os
 
 
 APP = Flask(__name__, static_folder="/static")
@@ -238,34 +239,64 @@ def individual(i_id):
     """
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_id, user_id)
+    g_id = da.get_genbank_id(i_id, user_id)
+
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id']) * 100)
+        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id'], g_id) * 100)
     return jsonify(ind)
 
-def get_inbreeding(i_id):
+def get_inbreeding(i_id, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_id`.
     """
     id = str(i_id)
-    coefficients = load_inbreeding()
+    coefficients = load_inbreeding(g_id)
     if id in coefficients:
         return coefficients[id]
     return None
 
 
-@APP.route("/api/inbreeding/")
-def all_inbreeding():
-    coefficients = load_inbreeding()
+@APP.route("/api/<int:g_id>/inbreeding/")
+def inbreeding(g_id):
+    coefficients = load_inbreeding(g_id)
     return jsonify({"coefficients": coefficients})
 
 
 @APP.before_first_request
 @cache.cached(timeout=3600, key_prefix="all_inbreeding")
-def load_inbreeding():
-    collections = ibc.get_pedigree_collections()
-    coefficients = ibc.calculate_inbreeding(collections)
-    return coefficients
+def load_inbreeding(g_id):
+    response = requests.get('http://{}:{}/inbreeding/{}'.format(os.environ.get("RAPI_HOST"), os.environ.get("RAPI_PORT"), g_id),
+                             params={})
 
+    if response.status_code == 200:
+        return response.content
+
+    else:
+        APP.logger.error("Could not fetch inbreeding data.")
+        APP.logger.error("Error {}".format(response))
+
+@APP.route("/api/<int:g_id>/kinship/")
+def kinship(g_id):
+    coefficients = load_kinship(g_id)
+    return jsonify({"coefficients": coefficients})
+
+
+@APP.before_first_request
+@cache.cached(timeout=3600, key_prefix="all_kinship")
+def load_kinship(g_id):
+    response = requests.get('http://{}:{}/kinship/{}'.format(os.environ.get("RAPI_HOST"), os.environ.get("RAPI_PORT"), g_id),
+                             params={})
+
+    if response.status_code == 200:
+        return response.content
+
+    else:
+        APP.logger.error("Could not fetch kinship data.")
+        APP.logger.error("Error {}".format(response))
+
+#kinship/1?update_from_db=FALSE"
+#inbreeding/{genebank_id}?update_from_db=FALSE"
+#/meankinship/{genebank_id}?update_from_db=FALSE"
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
