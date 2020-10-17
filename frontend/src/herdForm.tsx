@@ -302,6 +302,10 @@ export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'fo
                 />
               <TextField label='Startdatum' className={classes.simpleField}
                 value={herd.start_date}
+                type='date'
+                InputLabelProps={{
+                  shrink: true,
+                }}
                 onChange={(e: any) => {setFormField('start_date', e.target.value)}}
                 />
 
