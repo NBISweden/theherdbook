@@ -12,13 +12,13 @@ export interface RoutedTab extends MatchProps {
   component?: React.ReactNode
   visible?: boolean
   icon?: React.ReactElement
+  restricted?: boolean
   on_click?: () => void
 }
 
 type Arg0<T> = T extends (a: infer A) => any ? A : never
 
 import * as Router from 'react-router-dom'
-import {Route} from 'react-router-dom'
 import {Tab, Tabs} from '@material-ui/core'
 
 export function useRoutedTabs(routed_tabs: RoutedTab[], options?: Partial<{autoselect_first: boolean}>) {
@@ -67,30 +67,7 @@ export function useRoutedTabs(routed_tabs: RoutedTab[], options?: Partial<{autos
           <Tab key={i} icon={tab.icon} label={tab.label} style={{display: tab.visible === false ? 'none' : undefined}}/>
         )}
       </Tabs>,
-    TabbedRoutes:
-      routed_tabs.map((tab, i) =>
-        tab.path && tab.component && <Route {...matchprops(tab)} key={i}>
-          {tab.component}
-        </Route>),
     tab_index,
     set_tab,
   }
 }
-
-function RoutedInner(props: {children: (params: Record<string, string>) => React.ReactNode}) {
-  const params = Router.useParams()
-  return <>
-    {props.children(params)}
-  </>
-}
-
-export function Routed(props: {path: string, children: (params: Record<string, string>) => React.ReactNode}) {
-  return (
-    <Route path={props.path}>
-      <RoutedInner>
-        {props.children}
-      </RoutedInner>
-    </Route>
-  )
-}
-
