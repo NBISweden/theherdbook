@@ -190,7 +190,7 @@ def add_herd(form, user_uuid):
     """
     Adds a new herd, defined by `form`, into the database, if the given `user`
     has sufficient permissions to insert herds.
-    Rhe response will be on the format:
+    The response will be on the format:
         JSON: {
                 status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
                 message?: string,
@@ -260,6 +260,53 @@ def get_individual(individual_id, user_uuid=None):
         return None
     except DoesNotExist:
         return None
+
+
+def add_individual(form, user_uuid):
+    """
+    Adds a new individual, defined by `form`, into the database, if the given
+    `user` has sufficient permissions to insert individuals into the herd
+    specified in the form data.
+    The response will be on the format:
+        JSON: {
+                status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+                message?: string,
+                data: any
+            }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+    try:
+        with DATABASE.atomic():
+            herd = Herd.get(Herd.herd == form['herd'])
+    except DoesNotExist:
+        return {"status": "error", "message": "Individual must have a valid herd"}
+
+    if not user.can_edit(herd.herd):
+        return {"status": "error", "message": "Forbidden"}
+
+    return {"status": "error", "message": "Not implemented"}
+
+
+def update_individual(form, user_uuid):
+    """
+    Updates an individual, identified by `form.number`, by the values in `form`,
+    if the user identified by `user_uuid` has sufficient permissions to do so.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    if not user.can_edit(form['number']):
+        return {"status": "error", "message": "Forbidden"}
+
+    if isinstance(form['herd'], dict) and form['herd']:
+        form['herd'] = form['herd'].get('herd', None)
+    if not Herd.select().where(Herd.herd == form['herd']).exists():
+        return {"status": "error", "message": "Individual must have a valid herd"}
+
+    return {"status": "error", "message": "Not implemented"}
 
 def get_users(user_uuid=None):
     """

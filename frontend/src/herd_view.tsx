@@ -15,6 +15,7 @@ import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from '@app/pedigree_plot';
 import { FilterTable } from '@app/filter_table';
 import { IndividualView } from '@app/individual_view';
+import { IndividualEdit } from '@app/individual_edit';
 import { useUserContext } from '@app/user_context';
 
 const useStyles = makeStyles({
@@ -76,6 +77,7 @@ export function HerdView({id}: {id: string | undefined}) {
   const [herdIndividuals, setHerdIndividuals] = React.useState([] as Individual[])
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
   const {userMessage, popup} = useMessageContext()
+  const { user } = useUserContext()
   const { genebanks } = useDataContext()
   const [algo, set_algo] = React.useState('Martin' as 'Martin' | 'Dan')
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [genebanks, id, algo])
@@ -130,6 +132,11 @@ export function HerdView({id}: {id: string | undefined}) {
             title={'Individer i besättningen'}
             filters={[{field: 'alive', label: 'Dölj döda'},
                       {field: 'active', label: 'Dölj inaktiva djur'}]}
+            action={user?.canEdit(id)
+                      ? (event: any, rowData: any) => {
+                          popup(<IndividualEdit id={rowData.number} />)
+                        }
+                      : undefined}
             />
           :
           <div className={style.loading}>
