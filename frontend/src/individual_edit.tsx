@@ -24,10 +24,54 @@ const useStyles = makeStyles({
   form: {
     display: 'flex',
     flexDirection: 'column',
+    width: '95%',
+  },
+  flexRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    ['@media (min-width:600px)']: {
+      flexDirection: 'row',
+    },
   },
   control: {
     margin: '5px',
   },
+  formPane: {
+    borderRight: 'none',
+    ['@media (min-width:600px)']: {
+      borderRight: '1px solid lightgrey',
+    },
+    paddingRight: '5px',
+    '&:last-child': {
+      paddingLeft: '5px',
+      paddingRight: '0',
+      borderRight: 'none',
+    }
+  },
+  adminPane: {
+    width: '100%',
+    padding: '15px 0 5px 10px',
+    border: '1px solid lightgrey',
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'row',
+    background: 'repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )',
+  },
+  titleText: {
+    width: '100%',
+    borderBottom: '1px solid lightgrey',
+    padding: '0 20px',
+    fontSize: '2.3em',
+  },
+  paneTitle: {
+    position: 'absolute',
+    top: '0px',
+    left: '10px',
+  },
+  paneControls: {
+    display: 'flex',
+    flexDirection: 'row',
+  }
 });
 
 
@@ -93,55 +137,72 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   return <>
   {individual
     ? <div className={style.form}>
-        <TextField
-          label="Namn"
-          className={style.control}
-          variant={inputVariant}
-          value={individual.name ?? ''}
-          onChange={(event) => {updateField('name', event.currentTarget.value)}}
-        />
-        <TextField
-          disabled
-          label="Nummer"
-          className={style.control}
-          variant={inputVariant}
-          value={individual.number ?? ''}
-          onChange={(event) => {updateField('number', event.currentTarget.value)}}
-        />
-        <TextField
-          disabled
-          label="Certifikat"
-          className={style.control}
-          variant={inputVariant}
-          value={individual.certificate ?? ''}
-          onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
-        />
+        <div className={style.flexRow}>
+          <div className={style.formPane}>
+            <div className={style.titleText}>
+              Redigera Individ
+            </div>
+            <div className={style.adminPane}>
+              <div className={style.paneTitle}>
+                Admin Fields
+              </div>
 
-        <TextField label='Födelsedatum' className={style.control}
-          value={individual.birth_date ?? ''}
-          type='date'
-          variant={inputVariant}
-          InputLabelProps={{
-            shrink: true,
-          }}
-          onChange={(e: any) => {updateField('birth_date', e.target.value)}}
-          />
-
-        <TextField
-          label="Anteckningar"
-          variant={inputVariant}
-          className={style.control}
-          multiline
-          rows={4}
-          value={individual.notes ?? ''}
-          onChange={(event) => {updateField('notes', event.currentTarget.value)}}
-        />
-
-        <Button variant="contained"
-                color="primary"
-                onClick={() => save(individual)}>
-          {'Spara'}
-        </Button>
+              <TextField
+                disabled
+                label="Nummer"
+                className={style.control}
+                variant={inputVariant}
+                value={individual.number ?? ''}
+                onChange={(event) => {updateField('number', event.currentTarget.value)}}
+              />
+              <TextField
+                disabled
+                label="Certifikat"
+                className={style.control}
+                variant={inputVariant}
+                value={individual.certificate ?? ''}
+                onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
+              />
+            </div>
+            <TextField
+              label="Namn"
+              className={style.control}
+              variant={inputVariant}
+              value={individual.name ?? ''}
+              onChange={(event) => {updateField('name', event.currentTarget.value)}}
+            />
+            <TextField label='Födelsedatum' className={style.control}
+              value={individual.birth_date ?? ''}
+              type='date'
+              variant={inputVariant}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(e: any) => {updateField('birth_date', e.target.value)}}
+              />
+            <TextField
+              label="Anteckningar"
+              variant={inputVariant}
+              className={style.control}
+              multiline
+              rows={4}
+              value={individual.notes ?? ''}
+              onChange={(event) => {updateField('notes', event.currentTarget.value)}}
+            />
+          </div>
+          <div className={style.formPane}>
+            <div className={style.titleText}>
+              Mått
+            </div>
+          </div>
+        </div>
+        <div className={style.paneControls}>
+          <Button variant="contained"
+                  color="primary"
+                  onClick={() => save(individual)}>
+            {'Spara'}
+          </Button>
+        </div>
       </div>
     : <div className={style.loading}>
         <h2>Loading data</h2>
