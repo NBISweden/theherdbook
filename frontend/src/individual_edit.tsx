@@ -97,7 +97,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
           label="Namn"
           className={style.control}
           variant={inputVariant}
-          value={individual.name}
+          value={individual.name ?? ''}
           onChange={(event) => {updateField('name', event.currentTarget.value)}}
         />
         <TextField
@@ -105,7 +105,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
           label="Nummer"
           className={style.control}
           variant={inputVariant}
-          value={individual.number}
+          value={individual.number ?? ''}
           onChange={(event) => {updateField('number', event.currentTarget.value)}}
         />
         <TextField
@@ -113,12 +113,12 @@ export function IndividualEdit({id}: {id: string | undefined}) {
           label="Certifikat"
           className={style.control}
           variant={inputVariant}
-          value={individual.certificate}
+          value={individual.certificate ?? ''}
           onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
         />
 
         <TextField label='Födelsedatum' className={style.control}
-          value={individual.birth_date}
+          value={individual.birth_date ?? ''}
           type='date'
           variant={inputVariant}
           InputLabelProps={{
@@ -133,7 +133,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
           className={style.control}
           multiline
           rows={4}
-          value={individual.notes}
+          value={individual.notes ?? ''}
           onChange={(event) => {updateField('notes', event.currentTarget.value)}}
         />
 
