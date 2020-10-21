@@ -1,4 +1,6 @@
 import React, {useState} from 'react'
+import {useHistory, useLocation} from 'react-router-dom'
+
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
@@ -6,9 +8,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {useHistory} from 'react-router-dom'
 
-import {useUserContext} from './user_context'
+import {useUserContext} from '@app/user_context'
 
 /**
  * Shows login and logout in a form, submits it to the user context callbacks
@@ -19,6 +20,8 @@ export function Login() {
   const [username, set_username] = useState('')
   const [password, set_password] = useState('')
   const history = useHistory()
+  const location = useLocation();
+  const { from } = location.state || { from: { pathname: "/" } };
 
   const close = () => {
     setOpen(false)
@@ -29,7 +32,7 @@ export function Login() {
     login(username, password).then(
       status => {
         if (status == 'logged_in') {
-          history.goBack()
+          history.replace(from);
         }
       }
     )
