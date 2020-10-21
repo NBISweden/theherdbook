@@ -137,11 +137,28 @@ while [ "$year" -le 2020 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
-# Handle individual that have disappeared from this genebank (animals
+# Handle individuals that have disappeared from this genebank (animals
 # sold to external herds).  For each individual with "ny G" equal to
-# "0", figure out the most recent tracking date.  Add tracking info
-# to the "GX1" herd at the last of December of the year
-# MAX(YEAR(most recent tracking date), YEAR(birth date)).
+# "0", figure out the most recent tracking date.  Add tracking info to
+# the "GX1" herd at the last of December of the year of that date.
+psql --quiet <<-'END_SQL'
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	h.herd_id,
+		i.individual_id,
+		DATE(CONCAT_WS('-', DATE_PART('year', ht.herd_tracking_date), '12-31'))
+	FROM	herd h
+	JOIN	individual i ON (true)
+	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
+	JOIN	data d ON (d."Nummer" = i.number)
+	WHERE	h.herd = 'GX1'
+	AND	ht.herd_tracking_date = (
+		SELECT	MAX(herd_tracking_date)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+	)
+	AND	d."ny G" = '0'
+	ORDER BY	i.individual_id;
+END_SQL
 
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
