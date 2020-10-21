@@ -41,25 +41,27 @@ while getopts 'g:G:hm:' opt; do
 done
 shift "$(( OPTIND - 1 ))"
 
-err=false
+load_gotland=true
+load_mellerud=true
 if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
-	echo 'Missing or unusable Gotland data file (-g file)' >&2
-	err=true
-fi
-if [ -z "$Gfile" ] || [ ! -f "$Gfile" ]; then
-	echo 'Missing or unusable Gotland herd registry file (-G file)' >&2
-	err=true
-fi
+	echo 'Missing or unusable Gotland data file (-g file)'
+	echo 'Will not load Gotland data'
+	load_gotland=false
+fi >&2
+if "$load_gotland" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
+	echo 'Missing or unusable Gotland herd registry file (-G file)'
+	echo 'Will not load Gotland data'
+	load_gotland=false
+fi >&2
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 	echo 'Missing or unusable Mellerud data file (-m file)' >&2
-	err=true
-fi
-if "$err"; then
-	usage >&2
-	exit 1
+	echo 'Will not load Mellerud data'
+	load_mellerud=false
 fi
 
 for name in "$gfile" "$Gfile" "$mfile"; do
+	[ ! -f "$name" ] && continue
+
 	case $name in
 		*.xlsx)
 			csvname=${name%.xlsx}.csv
@@ -105,15 +107,19 @@ dropdb "$PGDATABASE"
 createdb "$PGDATABASE"
 ../init_db.sh
 
-echo '## Loading Gotlandskanin'
-./load-gotland.sh "$connstr" "$gfile" "$Gfile"
-echo '## Running Gotlandskanin healthchecks'
-./check-gotland.sh
+if "$load_gotland"; then
+	echo '## Loading Gotlandskanin'
+	./load-gotland.sh "$connstr" "$gfile" "$Gfile"
+	echo '## Running Gotlandskanin healthchecks'
+	./check-gotland.sh
+fi
 
-echo '## Loading Mellerudskanin'
-./load-mellerud.sh "$connstr" "$mfile"
-echo '## Running Mellerudskanin healthchecks'
-./check-mellerud.sh
+if "$load_mellerud"; then
+	echo '## Loading Mellerudskanin'
+	./load-mellerud.sh "$connstr" "$mfile"
+	echo '## Running Mellerudskanin healthchecks'
+	./check-mellerud.sh
+fi
 
 echo '## Running common healthchecks'
 ./check-common.sh
