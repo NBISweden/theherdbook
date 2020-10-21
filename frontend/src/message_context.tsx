@@ -40,7 +40,8 @@ export function WithMessageContext(props: {children: React.ReactNode}) {
   const [dialogLink, setDialogLink] = React.useState(undefined as string | undefined)
 
   function userMessage(message: string, severity: MessageLevel) {
-      setMessage(message);
+      // print json format if the message isn't a string.
+      setMessage(typeof message == "string" ? message : JSON.stringify(message));
       setSeverity(severity);
       setShowMessage(true);
   }
