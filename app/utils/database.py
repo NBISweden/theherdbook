@@ -423,6 +423,37 @@ class Individual(BaseModel):
 
         indexes = ((("number", "origin_herd"), True),)
 
+class Breeding(BaseModel):
+    """
+    Table for tracking breeding events.
+    """
+    id = AutoField(primary_key=True, column_name="breeding_id")
+    mother = ForeignKeyField(Individual)
+    father = ForeignKeyField(Individual)
+    date = DateField()
+    notes = TextField(default='')
+
+class Birth(BaseModel):
+    """
+    Table for tracking birth events.
+    """
+    id = AutoField(primary_key=True, column_name="birth_id")
+    breeding = ForeignKeyField(Breeding)
+    litter_size = IntegerField(default=0, null=False)
+    date = DateField()
+    notes = TextField(default='')
+
+class BirthIndividual(BaseModel):
+    """
+    Table connecting individuals to births
+    """
+    id = AutoField(primary_key=True, column_name="birth_individual_id")
+    birth = ForeignKeyField(Birth)
+    child = ForeignKeyField(Individual)
+    litter_number = IntegerField() # Each individual in a litter is given a
+                                   # number from 1 to the size of the litter.
+                                   # This number is then part of the individual
+                                   # number.
 
 class Weight(BaseModel):
     """
@@ -705,6 +736,9 @@ MODELS = [
     Herd,
     Colour,
     Individual,
+    Breeding,
+    Birth,
+    BirthIndividual,
     Weight,
     Bodyfat,
     HerdTracking,
