@@ -145,7 +145,7 @@ psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
 		i.individual_id,
-		DATE(CONCAT_WS('-', DATE_PART('year', ht.herd_tracking_date), '12-31'))
+		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer, 12, 31)
 	FROM	herd h
 	JOIN	individual i ON (true)
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
