@@ -47,6 +47,12 @@ psql --quiet <<-'END_SQL'
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Gotlandskanin');
 
+	-- Dummy herd for individuals sold outside of the genebank
+	INSERT INTO herd (genebank_id, herd, herd_name)
+	SELECT	DISTINCT gb.genebank_id, 'GX1', 'Externa djur (Gotland)'
+	FROM	genebank gb
+	WHERE	gb.name = 'Gotlandskanin';
+
 	-- Stub herd data
 	INSERT INTO herd (genebank_id, herd)
 	SELECT	DISTINCT gb.genebank_id, d."Genb"
@@ -130,6 +136,29 @@ while [ "$year" -le 2020 ]; do
 
 	year=$(( year + 1 ))
 done | psql --quiet
+
+# Handle individuals that have disappeared from this genebank (animals
+# sold to external herds).  For each individual with "ny G" equal to
+# "0", figure out the most recent tracking date.  Add tracking info to
+# the "GX1" herd at the last of December of the year of that date.
+psql --quiet <<-'END_SQL'
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	h.herd_id,
+		i.individual_id,
+		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer, 12, 31)
+	FROM	herd h
+	JOIN	individual i ON (true)
+	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
+	JOIN	data d ON (d."Nummer" = i.number)
+	WHERE	h.herd = 'GX1'
+	AND	ht.herd_tracking_date = (
+		SELECT	MAX(herd_tracking_date)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+	)
+	AND	d."ny G" = '0'
+	ORDER BY	i.individual_id;
+END_SQL
 
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for

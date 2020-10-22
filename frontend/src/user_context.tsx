@@ -99,7 +99,7 @@ export function WithUserContext(props: {children: React.ReactNode}) {
       }
     }
     // id is a herd
-    else if (/^([a-zA-Z][0-9]+)$/.test(id)) {
+    else if (/^([a-zA-Z]X?[0-9]+)$/.test(id)) {
       const genebank = genebanks.find(genebank => genebank.herds.some(h => h.herd == id))
       // you can edit if you own the herd, or are manager of the genebank
       if (user.is_owner?.includes(id) || (genebank && user.is_manager?.includes(+genebank.id))) {
