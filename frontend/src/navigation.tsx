@@ -1,5 +1,7 @@
 
 import * as React from 'react'
+import {Switch, Route, useLocation, Redirect} from 'react-router-dom'
+
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import HomeIcon from '@material-ui/icons/Home';
@@ -7,17 +9,17 @@ import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
-import {Login} from './login'
-import {Genebanks} from './genebanks'
-import {HerdView} from './herd_view'
-import {Manage} from './manage'
+
+import {Login} from '@app/login'
+import {Genebanks} from '@app/genebanks'
+import {HerdView} from '@app/herd_view'
+import {Manage} from '@app/manage'
 import { Owner } from '@app/owner';
-import {IndividualPedigree} from './individual_pedigree'
+import {IndividualPedigree} from '@app/individual_pedigree'
 import { IndividualView } from '@app/individual_view'
-import {HerdPedigree} from './herd_pedigree'
-import {Switch, Route} from 'react-router-dom'
-import {useUserContext} from './user_context'
-import * as ui from './ui_utils'
+import {HerdPedigree} from '@app/herd_pedigree'
+import {useUserContext} from '@app/user_context'
+import * as ui from '@app/ui_utils'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -28,6 +30,12 @@ const useStyles = makeStyles({
     height: "calc(100% - 72px)",
   }
 });
+
+function Restricted(props: {children: React.ReactElement}) {
+  const {user} = useUserContext()
+  const location = useLocation()
+  return user ? props.children : <Redirect to={{ pathname: "/login", state: { from: location } }}/>
+}
 
 export function Navigation() {
 
@@ -50,7 +58,7 @@ export function Navigation() {
     {
       label: "Genbanker",
       path: "/genebank",
-      component: <Genebanks/>,
+      component: <Restricted><Genebanks/></Restricted>,
       visible: is_logged_in,
       icon: <AccountBalanceIcon />
     },
@@ -59,14 +67,14 @@ export function Navigation() {
              ? 'Mina besättningar'
              : 'Min besättning',
       path: "/owner",
-      component: <Owner/>,
+      component: <Restricted><Owner/></Restricted>,
       visible: is_owner,
       icon: <GroupIcon />
     },
     {
       label: "Administrera",
       path: "/manage",
-      component: <Manage/>,
+      component: <Restricted><Manage/></Restricted>,
       visible: is_admin,
       icon: <GroupIcon />
     },
@@ -104,16 +112,19 @@ export function Navigation() {
       <Switch>
         {TabbedRoutes}
         <ui.Routed path="/herd/:id">
-          {params => <HerdView id={params.id}/>}
+          {params => <Restricted><HerdView id={params.id}/></Restricted>}
         </ui.Routed>
         <ui.Routed path="/individual/:id">
-          {params => <IndividualView id={params.id} />}
+          {params => <Restricted><IndividualView id={params.id} /></Restricted>}
         </ui.Routed>
         <ui.Routed path="/individual-pedigree/:id/:generations?">
-          {params => <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>}
+          {params =>
+            <Restricted>
+              <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>
+            </Restricted>}
         </ui.Routed>
         <ui.Routed path="/herd-pedigree/:id">
-          {params => <HerdPedigree id={params.id}/>}
+          {params => <Restricted><HerdPedigree id={params.id}/></Restricted>}
         </ui.Routed>
         <Route path="/">
           Welcome!
