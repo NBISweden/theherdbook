@@ -1,7 +1,6 @@
 library(optiSel)
 library(nprcgenekeepr)
 library(DBI)
-library(jsonlite)
 library(digest)
 
 #Only load the environment one
