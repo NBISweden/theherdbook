@@ -239,10 +239,9 @@ def individual(i_id):
     """
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_id, user_id)
-    g_id = da.get_genbank_id(i_id, user_id)
 
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id'], g_id) * 100)
+        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id'], ind['genebank_id']) * 100)
     return jsonify(ind)
 
 def get_inbreeding(i_id, g_id):
