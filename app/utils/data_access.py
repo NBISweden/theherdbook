@@ -6,6 +6,8 @@ database.
 import uuid
 import logging
 
+from datetime import datetime
+
 from peewee import DoesNotExist, IntegrityError
 from werkzeug.security import (
     check_password_hash,
@@ -261,6 +263,64 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
+def form_to_individual(form):
+    """
+    Individual data is split over a number of tables; Individual, HerdTracking,
+    Colour, Weight, and Bodyfat. This function takes a `form` dict (as returned
+    by Individual.as_dict(), and as used in the frontend), verifies the data
+    (where possible) and either creates a new Individual object or fetches an
+    existing individual from the database and updates it with the information in
+    the form.
+
+    The function returns an Individual object with values from `form` or throws
+    a ValueError if there's any detected problems with the data.
+    """
+
+    # check if the individual exists in the datbase
+    with DATABASE.atomic():
+        try:
+            individual = Individual.get(Individual.number == form["number"])
+        except DoesNotExist:
+            individual = Individual()
+
+    # Colour is stored as name in the form, but needs to be converted to id
+    try:
+        with DATABASE.atomic():
+            form['colour'] = Colour.get(Colour.name == form['colour'])
+    except DoesNotExist:
+        raise ValueError(f"Unknown color: '{form['colour']}''")
+
+    # fetch the origin herd
+    try:
+        with DATABASE.atomic():
+            form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
+    except DoesNotExist:
+        raise ValueError(f"Unknown origin herd: '{form['origin_herd']['herd']}''")
+
+    # parents
+    try:
+        with DATABASE.atomic():
+            form['mother'] = Individual.get(Individual.number == form['mother']['number'])
+            form['father'] = Individual.get(Individual.number == form['father']['number'])
+    except DoesNotExist:
+        raise ValueError("Invalid parents")
+
+    # Update individual fields by looping through all fields on an Individual
+    # object.
+    for key in vars(Individual).keys():
+        if key in form:
+            if key.startswith('_'):
+                continue
+            if key and key.endswith('date'):
+                try:
+                    date = datetime.strptime(form[key], '%Y-%m-%d').date()
+                    setattr(individual, key, date)
+                except TypeError:
+                    setattr(individual, key, form[key])
+            else:
+                setattr(individual, key, form[key])
+
+    return individual
 
 def add_individual(form, user_uuid):
     """
@@ -306,7 +366,16 @@ def update_individual(form, user_uuid):
     if not Herd.select().where(Herd.herd == form['herd']).exists():
         return {"status": "error", "message": "Individual must have a valid herd"}
 
-    return {"status": "error", "message": "Not implemented"}
+    try:
+        try:
+            individual = form_to_individual(form)
+        except ValueError as e:
+            return {"status": "error", "message": e}
+        logging.warning('Weights, herd tracking, and bodyfat not updated.')
+        individual.save()
+        return  {"status": "success", "message": "Individual Updated"}
+    except DoesNotExist:
+        return {"status": "error", "message": "Unknown herd"}
 
 def get_users(user_uuid=None):
     """
