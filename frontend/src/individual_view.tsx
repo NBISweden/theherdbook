@@ -113,6 +113,7 @@ export function IndividualView({id} : {id: string}) {
                 {individual?.birth_date}
                 {individual && individual?.death_date && ` - Död: ${individual?.death_date}`}
               </dd>
+              <dt>Kullstorlek:</dt><dd>{individual?.litter}</dd>
               <dt>Vikt:</dt>
               <dd>
                 {individual && individual.weights && individual.weights.length > 1
@@ -174,9 +175,6 @@ export function IndividualView({id} : {id: string}) {
           </div>
           <div>
             <h3>Avkomma</h3>
-            <ul className={style.herdList}>
-              <li>Antal kullar: {individual?.litter}</li>
-            </ul>
             <h4>Avkomma i genbanken</h4>
             ({activeIcon}: Aktiv, {inactiveIcon}: Inaktiv, {deadIcon}: Död)
             <ul className={style.herdList}>
