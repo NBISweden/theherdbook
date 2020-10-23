@@ -243,22 +243,6 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-def get_genbank_id(individual_id, user_uuid=None):
-    """
-    Returns genbank id on a given individual id
-    identified by `user_uuid`.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-    try:
-        with DATABASE.atomic():
-            individual = Individual.select().where(Individual.number == individual_id).get()
-            return individual.current_herd.genebank.id
-        return None
-    except DoesNotExist:
-        return None
-
 def get_users(user_uuid=None):
     """
     Returns all users that the logged in user has access to. This is all users
