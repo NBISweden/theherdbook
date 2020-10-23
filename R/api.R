@@ -107,8 +107,7 @@ update_data <- function(con,genebank_id) {
   assign(paste0("MK_",genebank_id),colMeans(get(paste0("KIN_",genebank_id))),envir = .GlobalEnv)
 }
 
-
-#* @serializer json
+#* @serializer csv
 #* @get /kinship/<genebank_id:int>
 calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
   if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
@@ -122,7 +121,7 @@ calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
     }
     dbDisconnect(con)
   }
-  return (as.data.frame(get(paste0("KIN_",genebank_id))))
+  return(as.data.frame(get(paste0("KIN_",genebank_id))))
 }
 
 calculateFEFG <- function() {
@@ -154,7 +153,7 @@ update_data_cron <- function() {
   dbDisconnect(con)
 }
 
-#* @serializer json
+#* @serializer csv
 #* @get /inbreeding/<genebank_id:int>
 inbreeding <- function(genebank_id,update_from_db="FALSE") {
   if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
@@ -172,7 +171,7 @@ inbreeding <- function(genebank_id,update_from_db="FALSE") {
 }
 
 
-#* @serializer json
+#* @serializer csv
 #* @get /meankinship/<genebank_id:int>
 meankinship <- function(genebank_id,update_from_db="FALSE") {
   if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
