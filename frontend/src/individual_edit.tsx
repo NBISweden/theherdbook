@@ -6,13 +6,15 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { get, update } from '@app/communication';
-import { Individual, ServerMessage
+import { BodyFat, DateBodyfat, DateWeight, Individual, individualLabel,
+         LimitedIndividual, OptionType, ServerMessage,
         } from '@app/data_context_global';
 import { useMessageContext } from '@app/message_context';
 import { Button, CircularProgress, TextField,
         } from '@material-ui/core';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
+import { Autocomplete } from '@material-ui/lab';
 
 const useStyles = makeStyles({
   loading: {
@@ -23,22 +25,51 @@ const useStyles = makeStyles({
   },
   form: {
     display: 'flex',
+    height: '100%',
+    overflow: 'hidden',
     flexDirection: 'column',
     width: '95%',
   },
-  flexRow: {
+  flexRowOrColumn: {
     display: 'flex',
     flexDirection: 'column',
+    overflowX: 'hidden',
+    overflowY: 'auto',
     ['@media (min-width:600px)']: {
       flexDirection: 'row',
     },
   },
+  flexRow: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
   control: {
     margin: '5px',
+    minWidth: '195px',
+    paddingRight: '5px',
+  },
+  wideControl: {
+    margin: '5px',
+    minWidth: '195px',
+    width: '100%',
+    paddingRight: '5px',
+  },
+  measureList: {
+    position: 'relative',
+  },
+  listButton: {
+    position: 'absolute',
+    right: '50px',
+    top: 0,
+  },
+  scriptLink: {
+    color: 'blue',
+    cursor: 'pointer',
   },
   formPane: {
     borderRight: 'none',
-    ['@media (min-width:600px)']: {
+    minWidth: '410px',
+    ['@media (min-width:660px)']: {
       borderRight: '1px solid lightgrey',
     },
     paddingRight: '5px',
@@ -81,11 +112,65 @@ const useStyles = makeStyles({
  */
 export function IndividualEdit({id}: {id: string | undefined}) {
   const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
+  const [bodyfat, setBodyfat] = React.useState('normal')
+  const [weight, setWeight] = React.useState(3.0)
+  const [hullDate, setHullDate] = React.useState(new Date().toLocaleDateString('sv'))
+  const [weightDate, setWeightDate] = React.useState(new Date().toLocaleDateString('sv'))
   const { user } = useUserContext()
   const { genebanks, colors } = useDataContext()
   const {userMessage} = useMessageContext()
   const style  = useStyles()
   const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
+
+  const sexOptions = [{value: 'female', label: 'Hona'},
+                      {value: 'male', label: 'Hane'},
+                      {value: 'unknown', label: 'Okänd'}]
+  const bodyfatOptions: OptionType[] = [{value: 'low', label: 'Låg'},
+                                        {value: 'normal', label: 'Normal'},
+                                        {value: 'high', label: 'Hög'},]
+  const colorOptions: OptionType[] = React.useMemo(() => {
+    if (individual && colors && Object.keys(colors).includes(individual.genebank)) {
+      return colors[individual.genebank].map(c => {
+        return {value: c.name, label: `${c.id} - ${c.name}`}
+      })
+    }
+    return []
+  }, [colors, individual])
+  const genebankIndividuals = React.useMemo(() => {
+    if (individual && colors) {
+      const genebank = genebanks.find(g => g.name == individual.genebank)
+      if (genebank) {
+        return genebank.individuals
+      }
+    }
+    return []
+  }, [genebanks, individual])
+  const motherOptions: OptionType[] = React.useMemo(() => {
+    return genebankIndividuals.filter(i => i.sex == 'female').map(i => {
+      return {value: i.number, label: individualLabel(i)}
+    })
+  }, [genebankIndividuals])
+  const fatherOptions: OptionType[] = React.useMemo(() => {
+    return genebankIndividuals.filter(i => i.sex == 'male').map(i => {
+      return {value: i.number, label: individualLabel(i)}
+    })
+  }, [genebankIndividuals])
+
+  const asIndividual = (number: string | undefined): LimitedIndividual | null => {
+    if (number === null) {
+      return null
+    }
+    const individual = genebankIndividuals.find(i => i.number == number)
+    return individual ? individual : null
+  }
+
+  const removeMeasure = (field: 'weights' | 'bodyfat', index: number) => {
+    console.debug('Deleting ', field, 'number', index)
+    if (individual && individual[field]) {
+      individual[field].splice(index, 1)
+      updateField(field, individual[field])
+    }
+  }
 
   /**
    * Fetch individual data from the backend
@@ -137,7 +222,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   return <>
   {individual
     ? <div className={style.form}>
-        <div className={style.flexRow}>
+        <div className={style.flexRowOrColumn}>
           <div className={style.formPane}>
             <div className={style.titleText}>
               Redigera Individ
@@ -171,19 +256,70 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               value={individual.name ?? ''}
               onChange={(event) => {updateField('name', event.currentTarget.value)}}
             />
-            <TextField label='Födelsedatum' className={style.control}
-              value={individual.birth_date ?? ''}
-              type='date'
-              variant={inputVariant}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(e: any) => {updateField('birth_date', e.target.value)}}
+            <div className={style.flexRow}>
+              <Autocomplete
+                options={sexOptions}
+                value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => <TextField {...params} label="Kön" className={style.control} variant={inputVariant} margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  updateField('sex', newValue?.value ?? '')
+                }}
               />
+              <TextField label='Födelsedatum' className={style.control}
+                value={individual.birth_date ?? ''}
+                type='date'
+                variant={inputVariant}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e: any) => {updateField('birth_date', e.target.value)}}
+                />
+            </div>
+            <div className={style.flexRow}>
+              <Autocomplete
+                options={motherOptions}
+                value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => <TextField {...params} label="Mor" className={style.control} variant={inputVariant} margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  updateField('mother', asIndividual(newValue?.value))
+                }}
+              />
+              <Autocomplete
+                options={fatherOptions}
+                value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => <TextField {...params} label="Far" className={style.control} variant={inputVariant} margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  updateField('father', asIndividual(newValue?.value))
+                }}
+              />
+            </div>
+            <div className={style.flexRow}>
+              <Autocomplete
+                options={colorOptions}
+                value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => <TextField {...params} label="Färg" className={style.control} variant={inputVariant} margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  updateField('colour', newValue?.value ?? '')
+                }}
+              />
+              <TextField
+                label="Färgantecking"
+                variant={inputVariant}
+                className={style.control}
+                multiline
+                rows={3}
+                value={individual.colour_note ?? ''}
+                onChange={(event) => {updateField('colour_note', event.currentTarget.value)}}
+              />
+            </div>
             <TextField
               label="Anteckningar"
               variant={inputVariant}
-              className={style.control}
+              className={style.wideControl}
               multiline
               rows={4}
               value={individual.notes ?? ''}
@@ -194,6 +330,81 @@ export function IndividualEdit({id}: {id: string | undefined}) {
             <div className={style.titleText}>
               Mått
             </div>
+            <h3>Vikter</h3>
+            <ul>
+              {individual.weights && individual.weights.map((w: DateWeight, i: number) =>
+                <li key={i} className={style.measureList}>
+                  {`${new Date(w.date).toLocaleDateString('sv')} - ${w.weight} kg`}
+                  <span className={style.listButton}>
+                    [<a className={style.scriptLink} onClick={() => removeMeasure('weights', i)}>
+                      Delete
+                    </a>]
+                  </span>
+                </li>)}
+            </ul>
+            <div className={style.flexRow}>
+              <TextField label='Mätningsdatum' className={style.control}
+                value={weightDate}
+                type='date'
+                variant={inputVariant}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e: any) => {setWeightDate(e.target.value)}}
+                />
+              <TextField label='Mätningsdatum' className={style.control}
+                value={weight}
+                type='number'
+                variant={inputVariant}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e: any) => {setWeight(e.target.value)}}
+                />
+            </div>
+
+            <Button variant="contained"
+                    color="primary"
+                    onClick={() => {updateField('weights', [...individual.weights, {date: weightDate, weight: weight}])}}>
+              {'Lägg till viktmätning'}
+            </Button>
+            <h3>Hull</h3>
+            <ul>
+              {individual.bodyfat && individual.bodyfat.map((b: DateBodyfat, i: number) =>
+                <li key={i} className={style.measureList}>
+                  {`${new Date(b.date).toLocaleDateString('sv')} - ${b.bodyfat}`}
+                  <span className={style.listButton}>
+                    [<a className={style.scriptLink} onClick={() => removeMeasure('bodyfat', i)}>
+                      Delete
+                    </a>]
+                  </span>
+                </li>)}
+            </ul>
+            <div className={style.flexRow}>
+              <TextField label='Mätningsdatum' className={style.control}
+                value={hullDate}
+                type='date'
+                variant={inputVariant}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e: any) => {setHullDate(e.target.value)}}
+                />
+              <Autocomplete
+                options={bodyfatOptions}
+                value={bodyfatOptions.find(option => option.value == bodyfat) ?? sexOptions[1]}
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => <TextField {...params} label="Hull" className={style.control} variant={inputVariant} margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  setBodyfat(newValue?.value ?? 'normal')
+                }}
+              />
+            </div>
+            <Button variant="contained"
+                    color="primary"
+                    onClick={() => {updateField('bodyfat', [...individual.bodyfat, {date: hullDate, bodyfat: bodyfat as BodyFat}])}}>
+              {'Lägg till hullmätning'}
+            </Button>
           </div>
         </div>
         <div className={style.paneControls}>

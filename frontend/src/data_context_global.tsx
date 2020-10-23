@@ -18,6 +18,18 @@ export interface DateValue {
     id?: number
 }
 
+export interface DateWeight {
+    date: string
+    weight: number
+}
+
+export type BodyFat = 'low' | 'normal' | 'high'
+
+export interface DateBodyfat {
+    date: string
+    bodyfat: BodyFat
+}
+
 export interface LimitedIndividual {
     id: number,
     name: string | null,
@@ -39,8 +51,8 @@ export interface Individual extends LimitedIndividual{
     death_note: string | null
     litter: number | null
     notes: string | null
-    weights: Array<DateValue> | null
-    bodyfat: Array<DateValue> | null
+    weights: Array<DateWeight> | null
+    bodyfat: Array<DateBodyfat> | null
     herd_tracking: Array<DateValue> | null
     herd_active: boolean
     active: boolean
@@ -126,6 +138,8 @@ export type ServerMessage = {
     message?: string,
     data?: any
 }
+
+export type OptionType = {value: string, label: string};
 
 const emptyContext: DataContext = {
   genebanks: [],
