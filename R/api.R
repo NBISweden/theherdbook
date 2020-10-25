@@ -78,11 +78,11 @@ WHERE       h.genebank_id =",genebank_id))
   individuals <- dbFetch(res)
   dbClearResult(res)
   return (individuals)
-  
+
 }
 
 
-# Function to Preload data on startup 
+# Function to Preload data on startup
 update_preload_all_data <- function() {
   con <- connect_to_pg()
   genebanks<<-get_all_genebanks(con)
@@ -134,7 +134,7 @@ calculateFEFG <- function() {
   ped$population <- getGVPopulation(ped, keep)
   fe <- calcFE(ped)
   allelesFactors <- geneDrop(ped$id, ped$sire, ped$dam, ped$gen,, genotype = NULL, n = 5000, updateProgress = NULL)
-} 
+}
 
 
 #* @get /update-db/
@@ -187,7 +187,7 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
   return(
     data.frame(number=names(get(paste0("MK_",genebank_id))), MK=get(paste0("MK_",genebank_id)), row.names=NULL)
   )
-  
+
 }
 
 
