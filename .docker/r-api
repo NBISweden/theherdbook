@@ -28,7 +28,7 @@ COPY --from=R-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-  libpq-dev \
+  libpq5 \
   libglu1-mesa \
   pandoc \
   && rm -rf /var/lib/apt/lists/*
