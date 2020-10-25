@@ -20,6 +20,8 @@ from flask import (
 from werkzeug.urls import url_parse
 import utils.database as db
 import utils.data_access as da
+import utils.settings as settings
+import utils.csvparser as csvparser
 import logging
 from flask_caching import Cache
 from flask_login import login_required, login_user, logout_user, current_user, LoginManager
@@ -244,6 +246,7 @@ def individual(i_id):
         ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id'], ind['genebank_id']) * 100)
     return jsonify(ind)
 
+
 def get_inbreeding(i_id, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_id`.
@@ -257,45 +260,64 @@ def get_inbreeding(i_id, g_id):
 
 @APP.route("/api/<int:g_id>/inbreeding/")
 def inbreeding(g_id):
-    coefficients = load_inbreeding(g_id)
-    return jsonify({"coefficients": coefficients})
+    id = str(g_id)
+    inb_coeffcient = load_inbreeding(id)
+    return jsonify(inb_coeffcient)
 
 
-@APP.before_first_request
-@cache.cached(timeout=3600, key_prefix="all_inbreeding")
 def load_inbreeding(g_id):
-    response = requests.get('http://{}:{}/inbreeding/{}'.format(os.environ.get("RAPI_HOST"), os.environ.get("RAPI_PORT"), g_id),
+    response = requests.get('http://{}:{}/inbreeding/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
                              params={})
 
     if response.status_code == 200:
-        return response.content
+        return csvparser.parse_csv(response)
 
     else:
         APP.logger.error("Could not fetch inbreeding data.")
         APP.logger.error("Error {}".format(response))
+        return {}
+
 
 @APP.route("/api/<int:g_id>/kinship/")
 def kinship(g_id):
-    coefficients = load_kinship(g_id)
-    return jsonify({"coefficients": coefficients})
+    id = str(g_id)
+    kinship = load_kinship(id)
+    return jsonify(kinship)
 
 
-@APP.before_first_request
-@cache.cached(timeout=3600, key_prefix="all_kinship")
 def load_kinship(g_id):
-    response = requests.get('http://{}:{}/kinship/{}'.format(os.environ.get("RAPI_HOST"), os.environ.get("RAPI_PORT"), g_id),
+    response = requests.get('http://{}:{}/kinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
                              params={})
 
     if response.status_code == 200:
-        return response.content
+        return csvparser.parse_kinship(response)
 
     else:
         APP.logger.error("Could not fetch kinship data.")
         APP.logger.error("Error {}".format(response))
+        return {}
 
-#kinship/1?update_from_db=FALSE"
-#inbreeding/{genebank_id}?update_from_db=FALSE"
-#/meankinship/{genebank_id}?update_from_db=FALSE"
+
+@APP.route("/api/<int:g_id>/kinship/")
+def mean_kinship(g_id):
+    id = str(g_id)
+    mean_kinship = load_mean_kinship(id)
+    return jsonify(mean_kinship)
+
+
+@APP.route("/api/<int:g_id>/meankinship/")
+def load_mean_kinship(g_id):
+    response = requests.get('http://{}:{}/meankinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
+                             params={})
+
+    if response.status_code == 200:
+        return csvparser.parse_csv(response)
+
+    else:
+        APP.logger.error("Could not fetch kinship data.")
+        APP.logger.error("Error {}".format(response))
+        return {}
+
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
