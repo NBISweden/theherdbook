@@ -18,8 +18,8 @@ jobs:
           GHCR_USER: ${{ secrets.GHCR_USER }}
         run: |
              echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-             docker "pull ghcr.io/${GITHUB_REPOSITORY,}:latest"
-             docker "pull ghcr.io/${GITHUB_REPOSITORY,}:${GITHUB_REF}"
+             docker pull ghcr.io/${GITHUB_REPOSITORY,}:latest || true
+             docker pull "ghcr.io/${GITHUB_REPOSITORY,}:${GITHUB_REF}" || true
 
              docker-compose build
              docker tag r-api:latest ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
