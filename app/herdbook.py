@@ -243,16 +243,17 @@ def individual(i_id):
     ind = da.get_individual(i_id, user_id)
 
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id'], ind['genebank_id']) * 100)
+        ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(ind['number'], ind['genebank_id']) * 100)
+        ind["MK"] = "%.2f" % (get_ind_mean_kinship(ind['number'], ind['genebank_id']) * 100)
     return jsonify(ind)
 
 
-def get_inbreeding(i_id, g_id):
+def get_ind_inbreeding(i_id, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_id`.
     """
     id = str(i_id)
-    coefficients = load_inbreeding(g_id)
+    coefficients = get_inbreeding(g_id)
     if id in coefficients:
         return coefficients[id]
     return None
@@ -261,11 +262,11 @@ def get_inbreeding(i_id, g_id):
 @APP.route("/api/<int:g_id>/inbreeding/")
 def inbreeding(g_id):
     id = str(g_id)
-    inb_coeffcient = load_inbreeding(id)
+    inb_coeffcient = get_inbreeding(id)
     return jsonify(inb_coeffcient)
 
 
-def load_inbreeding(g_id):
+def get_inbreeding(g_id):
     response = requests.get('http://{}:{}/inbreeding/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
                              params={})
 
@@ -281,11 +282,11 @@ def load_inbreeding(g_id):
 @APP.route("/api/<int:g_id>/kinship/")
 def kinship(g_id):
     id = str(g_id)
-    kinship = load_kinship(id)
+    kinship = get_kinship(id)
     return jsonify(kinship)
 
 
-def load_kinship(g_id):
+def get_kinship(g_id):
     response = requests.get('http://{}:{}/kinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
                              params={})
 
@@ -298,15 +299,26 @@ def load_kinship(g_id):
         return {}
 
 
+def get_ind_mean_kinship(i_id, g_id):
+    """
+    Returns the mean kinship coefficient of the individual given by `i_id`.
+    """
+    id = str(i_id)
+    coefficients = get_mean_kinship(g_id)
+    if id in coefficients:
+        return coefficients[id]
+    return None
+
+
 @APP.route("/api/<int:g_id>/kinship/")
 def mean_kinship(g_id):
     id = str(g_id)
-    mean_kinship = load_mean_kinship(id)
+    mean_kinship = get_mean_kinship(id)
     return jsonify(mean_kinship)
 
 
 @APP.route("/api/<int:g_id>/meankinship/")
-def load_mean_kinship(g_id):
+def get_mean_kinship(g_id):
     response = requests.get('http://{}:{}/meankinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
                              params={})
 
