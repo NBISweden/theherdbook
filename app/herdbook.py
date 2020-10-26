@@ -270,7 +270,7 @@ def load_inbreeding(g_id):
                              params={})
 
     if response.status_code == 200:
-        return csvparser.parse_csv(response)
+        return csvparser.parse_csv(response.content)
 
     else:
         APP.logger.error("Could not fetch inbreeding data.")
@@ -290,7 +290,7 @@ def load_kinship(g_id):
                              params={})
 
     if response.status_code == 200:
-        return csvparser.parse_kinship(response)
+        return csvparser.parse_kinship(response.content)
 
     else:
         APP.logger.error("Could not fetch kinship data.")
