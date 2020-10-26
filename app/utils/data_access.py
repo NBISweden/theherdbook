@@ -265,7 +265,7 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-def form_to_individual(form):
+def form_to_individual(form, user = None):
     """
     Individual data is split over a number of tables; Individual, HerdTracking,
     Colour, Weight, and Bodyfat. This function takes a `form` dict (as returned
@@ -284,6 +284,15 @@ def form_to_individual(form):
             individual = Individual.get(Individual.number == form["number"])
         except DoesNotExist:
             individual = Individual()
+
+    # If the form has an id - make sure that it points to the same individual as
+    # the number.
+    if 'id' in form and form['id'] != individual.id:
+        raise ValueError(f"Number can not be updated in the current version")
+
+    if 'certificate' in form and form['certificate'] != individual.certificate:
+        if not user or not (user.is_admin or user.is_manager and individual.current_herd.genebank_id in user.is_manager):
+            raise ValueError(f"Only managers can update certificate numbers")
 
     # Colour is stored as name in the form, but needs to be converted to id
     try:
@@ -350,7 +359,6 @@ def add_individual(form, user_uuid):
 
     return {"status": "error", "message": "Not implemented"}
 
-
 def update_individual(form, user_uuid):
     """
     Updates an individual, identified by `form.number`, by the values in `form`,
@@ -370,9 +378,9 @@ def update_individual(form, user_uuid):
 
     try:
         try:
-            individual = form_to_individual(form)
+            individual = form_to_individual(form, user)
         except ValueError as e:
-            return {"status": "error", "message": e}
+            return {"status": "error", "message": f'{e}'}
         update_weights(individual, form['weights'])
         update_bodyfat(individual, form['bodyfat'])
 
@@ -435,7 +443,6 @@ def update_bodyfat(individual, bodyfat):
                     logging.error('Unknown bodyfat level: %s', measure[1])
                 else:
                     Bodyfat(individual=individual, bodyfat_date=measure[0], bodyfat=measure[1]).save()
-
 
 def get_users(user_uuid=None):
     """
