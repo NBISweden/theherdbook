@@ -18,9 +18,12 @@ jobs:
           GHCR_USER: ${{ secrets.GHCR_USER }}
         run: |
              echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-             docker pull ghcr.io/${GITHUB_REPOSITORY,}:latest || true
-             docker pull "ghcr.io/${GITHUB_REPOSITORY,}:${GITHUB_REF}" || true
 
+             for image in r-api herdbook_main herdbook_frontend; do
+               docker pull ghcr.io/nbisweden/${image}:latest || true
+               docker pull "ghcr.io/nbisweden${image}:${GITHUB_REF}" || true
+             done
+             
              docker-compose build
              docker tag r-api:latest ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
              docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}"
