@@ -16,6 +16,7 @@ from werkzeug.security import (
 
 from utils.database import (
     DB_PROXY as DATABASE,
+    Bodyfat,
     Colour,
     Herd,
     HerdTracking,
@@ -373,8 +374,9 @@ def update_individual(form, user_uuid):
         except ValueError as e:
             return {"status": "error", "message": e}
         update_weights(individual, form['weights'])
+        update_bodyfat(individual, form['bodyfat'])
 
-        logging.warning('Herd tracking, and bodyfat not updated.')
+        logging.warning('Herd tracking not updated.')
         individual.save()
         return  {"status": "success", "message": "Individual Updated"}
     except DoesNotExist:
@@ -404,6 +406,35 @@ def update_weights(individual, weights):
         for weight in new_list:
             if weight not in current_list:
                 Weight(individual=individual, weight_date=weight[0], weight=weight[1]).save()
+
+def update_bodyfat(individual, bodyfat):
+    """
+    Updates the bodufat measurements of `individual` to match those in `bodyfat`.
+
+    `bodyfat` should be a list formatted like:
+    [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
+    """
+    with DATABASE.atomic():
+        logging.warning('bodyfat: %s', bodyfat)
+        current_bodyfat = Bodyfat.select() \
+                                 .where(Bodyfat.individual == individual.id)
+        current_list = [(b.bodyfat_date.strftime('%Y-%m-%d'), b.bodyfat) for b in current_bodyfat]
+        new_list = [(b['date'], b['bodyfat']) for b in bodyfat]
+
+        # check for current measurements to delete
+        for measure in current_list:
+            if measure not in new_list:
+                Bodyfat.delete().where(Bodyfat.individual == individual, \
+                                       Bodyfat.bodyfat_date == measure[0], \
+                                       Bodyfat.bodyfat == measure[1]).execute()
+
+        # check for new measurements to add
+        for measure in new_list:
+            if measure not in current_list:
+                if measure[1] not in ['low', 'normal', 'high']:
+                    logging.error('Unknown bodyfat level: %s', measure[1])
+                else:
+                    Bodyfat(individual=individual, bodyfat_date=measure[0], bodyfat=measure[1]).save()
 
 
 def get_users(user_uuid=None):
