@@ -1,0 +1,41 @@
+name: Create packages
+on:
+  push:
+    branches:
+
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build container
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+        run: |
+             echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+             docker "pull ghcr.io/${GITHUB_REPOSITORY,}:latest"
+             docker "pull ghcr.io/${GITHUB_REPOSITORY,}:${GITHUB_REF}"
+
+             docker-compose build
+             docker tag r-api:latest ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
+             docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}"
+             docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"${GITHUB_REF}"
+
+             docker push ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
+             docker push ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}" 
+             docker push ghcr.io/nbisweden/herdbook_frontend:"${GITHUB_REF}" 
+
+             if [ master = "${GITHUB_REF}" ]; then
+               docker tag r-api:latest ghcr.io/nbisweden/r-api:latest
+               docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:latest
+               docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"latest
+
+               docker push ghcr.io/nbisweden/r-api:latest
+               docker push ghcr.io/nbisweden/herdbook_main:latest"
+               docker push ghcr.io/nbisweden/herdbook_frontend:latest 
+             fi
