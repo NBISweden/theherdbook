@@ -326,7 +326,7 @@ def get_mean_kinship(g_id):
         return csvparser.parse_csv(response)
 
     else:
-        APP.logger.error("Could not fetch kinship data.")
+        APP.logger.error("Could not fetch mean kinship data.")
         APP.logger.error("Error {}".format(response))
         return {}
 
