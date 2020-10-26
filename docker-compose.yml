@@ -49,4 +49,4 @@ services:
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
-        image: r-api
+        image: herdbook_r-api

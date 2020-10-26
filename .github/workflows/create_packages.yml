@@ -21,9 +21,9 @@ jobs:
 
              branch=${GITHUB_REF##*/}
              
-             for image in r-api herdbook_main herdbook_frontend; do
-               docker pull ghcr.io/nbisweden/${image}:latest || true
-               docker pull "ghcr.io/nbisweden${image}:$branch" || true
+             for image in herdbook_r-api herdbook_main herdbook_frontend; do
+               docker pull "ghcr.io/nbisweden/$image:latest" || true
+               docker pull "ghcr.io/nbisweden/$image:$branch" || true
              done
              
              for p in .docker/*.default ; do
@@ -31,21 +31,15 @@ jobs:
              done
 
              docker-compose build
-             
-             docker tag r-api:latest ghcr.io/nbisweden/r-api:"$branch"
-             docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"$branch"
-             docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"$branch"
 
-             docker push ghcr.io/nbisweden/r-api:"$branch"
-             docker push ghcr.io/nbisweden/herdbook_main:"$branch" 
-             docker push ghcr.io/nbisweden/herdbook_frontend:"$branch" 
+             for image in herdbook_r-api herdbook_main herdbook_frontend; do
+               docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
+               docker push "ghcr.io/nbisweden/$image:$branch"
 
-             if [ master = "$branch" ]; then
-               docker tag r-api:latest ghcr.io/nbisweden/r-api:latest
-               docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:latest
-               docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"latest
-
-               docker push ghcr.io/nbisweden/r-api:latest
-               docker push ghcr.io/nbisweden/herdbook_main:latest"
-               docker push ghcr.io/nbisweden/herdbook_frontend:latest 
-             fi
+               for mb in main master develop; do
+                 if [ "$mb" = "$branch" ]; then
+                   docker tag "$image:latest" "ghcr.io/nbisweden/$image:latest"
+                   docker push "ghcr.io/nbisweden/$image:latest"
+                 fi
+               done
+             done
