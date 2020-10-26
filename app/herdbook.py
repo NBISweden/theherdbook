@@ -243,8 +243,8 @@ def individual(i_number):
     ind = da.get_individual(i_number, user_id)
 
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(ind['number'], ind['genebank_id']) * 100)
-        ind["MK"] = "%.2f" % (get_ind_mean_kinship(ind['number'], ind['genebank_id']) * 100)
+        ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
+        ind["MK"] = "%.2f" % (get_ind_mean_kinship(i_number, ind['genebank_id']) * 100)
     return jsonify(ind)
 
 
