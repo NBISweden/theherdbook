@@ -21,6 +21,7 @@ from utils.database import (
     HerdTracking,
     Individual,
     User,
+    Weight,
 )
 
 def add_user(form, user_uuid=None):
@@ -371,11 +372,39 @@ def update_individual(form, user_uuid):
             individual = form_to_individual(form)
         except ValueError as e:
             return {"status": "error", "message": e}
-        logging.warning('Weights, herd tracking, and bodyfat not updated.')
+        update_weights(individual, form['weights'])
+
+        logging.warning('Herd tracking, and bodyfat not updated.')
         individual.save()
         return  {"status": "success", "message": "Individual Updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
+
+def update_weights(individual, weights):
+    """
+    Updates the weight measurements of `individual` to match those in `weights`.
+
+    `weights` should be a list formatted like:
+    [{weight: <float>, date: 'yyyy-mm-dd'}, [...]]
+    """
+    with DATABASE.atomic():
+        current_weights = Weight.select() \
+                                .where(Weight.individual == individual.id)
+        current_list = [(w.weight_date.strftime('%Y-%m-%d'), w.weight) for w in current_weights]
+        new_list = [(w['date'], w['weight']) for w in weights]
+
+        # check for current measurements to delete
+        for weight in current_list:
+            if weight not in new_list:
+                Weight.delete().where(Weight.individual == individual, \
+                                      Weight.weight_date == weight[0], \
+                                      Weight.weight == weight[1]).execute()
+
+        # check for new measurements to add
+        for weight in new_list:
+            if weight not in current_list:
+                Weight(individual=individual, weight_date=weight[0], weight=weight[1]).save()
+
 
 def get_users(user_uuid=None):
     """
