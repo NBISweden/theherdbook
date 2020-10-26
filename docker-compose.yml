@@ -11,12 +11,6 @@ services:
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
-    api:
-        image: herdbook_api
-        build:
-            context: ./
-            dockerfile: .docker/api
-        container_name: herdbook-api
     herdbook-frontend-devel:
         image: herdbook_frontend:latest
         build:
