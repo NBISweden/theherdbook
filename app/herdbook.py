@@ -256,7 +256,7 @@ def get_ind_inbreeding(i_number, g_id):
     coefficients = get_inbreeding(id)
     if i_number in coefficients:
         return coefficients[i_number]
-    return None
+    return 0
 
 
 @APP.route("/api/<int:g_id>/inbreeding/")
