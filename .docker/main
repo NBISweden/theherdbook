@@ -1,13 +1,11 @@
-FROM python:3.8-buster as herdbook_api
+FROM python:3.8-buster
 
-RUN mkdir -p code
+RUN mkdir -p /code
 
 COPY app/ /code/
 WORKDIR /code
 
 RUN pip3 install -r /code/requirements-pydigree.txt && pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
-
-FROM herdbook_api:latest
 
 RUN apt-get update && apt-get -y upgrade &&\
     apt-get install -y supervisor nginx inotify-tools rsync
