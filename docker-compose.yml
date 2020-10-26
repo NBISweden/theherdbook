@@ -12,10 +12,12 @@ services:
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
     herdbook-frontend-devel:
-        image: herdbook_frontend:latest
+        image: herdbook_frontend
         build:
             context: ./
             dockerfile: .docker/frontend
+            cache_from:
+              - ghcr.io/nbisweden/herdbook_frontend
         volumes:
             - ./frontend:/app
             - /app/node_modules
@@ -24,6 +26,8 @@ services:
         build:
             context: ./
             dockerfile: .docker/main
+            cache_from:
+              - ghcr.io/nbisweden/herdbook_main
         container_name: herdbook-main
         env_file:
             - ./.docker/database-variables.env
@@ -46,6 +50,8 @@ services:
         build:
             context: ./
             dockerfile: .docker/r-api
+            cache_from:
+              - ghcr.io/nbisweden/herdbook_r-api
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env

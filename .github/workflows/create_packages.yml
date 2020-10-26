@@ -16,6 +16,8 @@ jobs:
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GHCR_USER: ${{ secrets.GHCR_USER }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
              echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
 
