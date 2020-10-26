@@ -19,9 +19,11 @@ jobs:
         run: |
              echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
 
+             branch=${GITHUB_REF##*/}
+             
              for image in r-api herdbook_main herdbook_frontend; do
                docker pull ghcr.io/nbisweden/${image}:latest || true
-               docker pull "ghcr.io/nbisweden${image}:${GITHUB_REF}" || true
+               docker pull "ghcr.io/nbisweden${image}:$branch" || true
              done
              
              for p in .docker/*.default ; do
@@ -30,15 +32,15 @@ jobs:
 
              docker-compose build
              
-             docker tag r-api:latest ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
-             docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}"
-             docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"${GITHUB_REF}"
+             docker tag r-api:latest ghcr.io/nbisweden/r-api:"$branch"
+             docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"$branch"
+             docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"$branch"
 
-             docker push ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
-             docker push ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}" 
-             docker push ghcr.io/nbisweden/herdbook_frontend:"${GITHUB_REF}" 
+             docker push ghcr.io/nbisweden/r-api:"$branch"
+             docker push ghcr.io/nbisweden/herdbook_main:"$branch" 
+             docker push ghcr.io/nbisweden/herdbook_frontend:"$branch" 
 
-             if [ master = "${GITHUB_REF}" ]; then
+             if [ master = "$branch" ]; then
                docker tag r-api:latest ghcr.io/nbisweden/r-api:latest
                docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:latest
                docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"latest
