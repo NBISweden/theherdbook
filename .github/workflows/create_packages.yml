@@ -24,7 +24,12 @@ jobs:
                docker pull "ghcr.io/nbisweden${image}:${GITHUB_REF}" || true
              done
              
+             for p in .docker/*.default ; do
+               mv "$p" "${p%.default}"
+             done
+
              docker-compose build
+             
              docker tag r-api:latest ghcr.io/nbisweden/r-api:"${GITHUB_REF}"
              docker tag herdbook_main:latest ghcr.io/nbisweden/herdbook_main:"${GITHUB_REF}"
              docker tag herdbook_frontend:latest ghcr.io/nbisweden/herdbook_frontend:"${GITHUB_REF}"
