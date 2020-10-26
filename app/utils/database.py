@@ -142,7 +142,7 @@ class Genebank(BaseModel):
             "herds": [
                 h.short_info()
                 for h in Herd.select()
-                             .where(Herd.genebank == self)
+                .where(Herd.genebank == self)
             ],
         }
 
@@ -357,13 +357,18 @@ class Individual(BaseModel):
         the weight, colour, and bodyfat tables.
         """
         data = super().as_dict()
-        data["origin_herd"] = {"id": self.origin_herd.id, "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
-        data["herd"] = {"id": self.current_herd.id, "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
+        data["genebank_id"] = self.current_herd.genebank.id
+        data["origin_herd"] = {"id": self.origin_herd.id,
+                               "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
+        data["herd"] = {"id": self.current_herd.id,
+                        "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
         data["mother"] = (
-            {"id": self.mother.id, "name": self.mother.name, "number": self.mother.number} if self.mother else None
+            {"id": self.mother.id, "name": self.mother.name,
+                "number": self.mother.number} if self.mother else None
         )
         data["father"] = (
-            {"id": self.father.id, "name": self.father.name, "number": self.father.number} if self.father else None
+            {"id": self.father.id, "name": self.father.name,
+                "number": self.father.number} if self.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
@@ -412,8 +417,10 @@ class Individual(BaseModel):
             - father
             - mother
         """
-        father = {"id": self.father.id, "number": self.father.number} if self.father else None
-        mother = {"id": self.mother.id, "number": self.mother.number} if self.mother else None
+        father = {"id": self.father.id,
+                  "number": self.father.number} if self.father else None
+        mother = {"id": self.mother.id,
+                  "number": self.mother.number} if self.mother else None
         return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
 
     class Meta:  # pylint: disable=too-few-public-methods
@@ -646,7 +653,6 @@ class User(BaseModel, UserMixin):
             "is_owner": self.is_owner
         }
 
-
     def get_genebanks(self):
         """
         Returns a list of all genebanks that the user has access to.
@@ -741,7 +747,8 @@ def insert_data(filename="default_data.json"):
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
-            logging.error("Unknown data table '%s' in file '%s'", table, filename)
+            logging.error("Unknown data table '%s' in file '%s'",
+                          table, filename)
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
         logging.info("Inserting %s data from %s", model.__name__, filename)

@@ -22,20 +22,10 @@ then
 	exit 1
 fi
 
-if [ ! -d venv ]
-then
-	printf 'Creating python3 virtual environment in ./venv   '
-	python3 -m venv venv >/dev/null
-	echo DONE
-	. venv/bin/activate
-	printf 'Installing app dependencies                      '
-	pip3 install -r app/requirements-pydigree.txt >/dev/null
-	pip3 install -r app/requirements.txt >/dev/null
-	echo DONE
-fi
+printf 'Installing app dependencies'
+pip3 install -r app/requirements.txt >/dev/null
 
 printf 'Initializing database                            '
-. venv/bin/activate
 cd app/
 python3 -c 'import utils.database as db; db.init()'
 echo DONE
