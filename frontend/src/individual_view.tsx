@@ -4,12 +4,15 @@
  */
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { Button } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useMessageContext } from '@app/message_context'
 import { get } from '@app/communication'
 import { Individual, herdLabel, DateValue, individualLabel } from '@app/data_context_global'
 import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
+import { useUserContext } from '@app/user_context'
+import { IndividualEdit } from './individual_edit'
 
 const useStyles = makeStyles({
   body: {
@@ -49,6 +52,9 @@ const useStyles = makeStyles({
     display: 'inline-block',
     width: '20px',
     textAlign: 'center',
+  },
+  editButton: {
+    marginTop: '15px',
   }
 });
 
@@ -58,8 +64,9 @@ const useStyles = makeStyles({
 export function IndividualView({id} : {id: string}) {
   const style  = useStyles()
   const { genebanks } = useDataContext()
+  const { user } = useUserContext()
   const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
-  const {userMessage} = useMessageContext()
+  const {userMessage, popup} = useMessageContext()
 
   const children: Individual[] = React.useMemo(() => {
     if (!individual || !genebanks || genebanks.some(g => g.individuals == null)) {
@@ -132,6 +139,15 @@ export function IndividualView({id} : {id: string}) {
               <dt>Anteckningar</dt><dd>{individual?.notes ?? '-'}</dd>
             </dl>
           </div>
+          {user?.canEdit(id) &&
+            <Button className={style.editButton}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => popup(<IndividualEdit id={id} />)}
+              >
+              Redigera individ
+            </Button>
+          }
           <div>
             <h3>Besättningshistoria</h3>
             <ul className={style.herdList}>
