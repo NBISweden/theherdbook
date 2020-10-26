@@ -1,3 +1,12 @@
+FROM python:3.8-buster as herdbook_api
+
+RUN mkdir -p code
+
+COPY app/ /code/
+WORKDIR /code
+
+RUN pip3 install -r /code/requirements-pydigree.txt && pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
+
 FROM herdbook_api:latest
 
 RUN apt-get update && apt-get -y upgrade &&\
