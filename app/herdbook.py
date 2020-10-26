@@ -252,10 +252,10 @@ def get_ind_inbreeding(i_number, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_number`.
     """
-    id = str(i_number)
-    coefficients = get_inbreeding(g_id)
-    if id in coefficients:
-        return coefficients[id]
+    id = str(g_id)
+    coefficients = get_inbreeding(id)
+    if i_number in coefficients:
+        return coefficients[i_number]
     return None
 
 
@@ -302,12 +302,13 @@ def get_kinship(g_id):
 def get_ind_mean_kinship(i_number, g_id):
     """
     Returns the mean kinship coefficient of the individual given by `i_number`.
+    In case the individual is not active, we return 0.
     """
     id = str(i_number)
     mean_kinship = get_mean_kinship(g_id)
-    if id in mean_kinship:
-        return mean_kinship[id]
-    return None
+    if i_number in mean_kinship:
+        return mean_kinship[i_number]
+    return 0
 
 
 @APP.route("/api/<int:g_id>/kinship/")
