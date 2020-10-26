@@ -252,8 +252,7 @@ def get_ind_inbreeding(i_number, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_number`.
     """
-    id = str(g_id)
-    coefficients = get_inbreeding(id)
+    coefficients = get_inbreeding(g_id)
     if i_number in coefficients:
         return coefficients[i_number]
     return 0
@@ -304,7 +303,6 @@ def get_ind_mean_kinship(i_number, g_id):
     Returns the mean kinship coefficient of the individual given by `i_number`.
     In case the individual is not active, we return 0.
     """
-    id = str(i_number)
     mean_kinship = get_mean_kinship(g_id)
     if i_number in mean_kinship:
         return mean_kinship[i_number]
