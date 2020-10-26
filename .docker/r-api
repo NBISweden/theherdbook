@@ -20,17 +20,18 @@ RUN apt update \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","optiSel","plumber","jsonlite","nprcgenekeepr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
+RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","readr", "optiSel","plumber","jsonlite","nprcgenekeepr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
 
 FROM rocker/r-ver:4.0.2
 
 COPY --from=R-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
 
 RUN apt-get update \
-        && apt-get install -y --no-install-recommends \
-        libglu1-mesa \
-        pandoc \
-        && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends \
+  libpq5 \
+  libglu1-mesa \
+  pandoc \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/local/r-api
 

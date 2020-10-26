@@ -20,10 +20,13 @@ from flask import (
 from werkzeug.urls import url_parse
 import utils.database as db
 import utils.data_access as da
-import utils.inbreeding as ibc
+import utils.settings as settings
+import utils.csvparser as csvparser
 import logging
 from flask_caching import Cache
 from flask_login import login_required, login_user, logout_user, current_user, LoginManager
+import requests
+import os
 
 
 APP = Flask(__name__, static_folder="/static")
@@ -230,41 +233,103 @@ def herd(h_id):
     return jsonify(data)
 
 
-@APP.route("/api/individual/<i_id>")
+@APP.route("/api/individual/<i_number>")
 @login_required
-def individual(i_id):
+def individual(i_number):
     """
-    Returns information on the individual given by `i_id`.
+    Returns information on the individual given by `i_number`.
     """
     user_id = session.get("user_id", None)
-    ind = da.get_individual(i_id, user_id)
+    ind = da.get_individual(i_number, user_id)
+
     if ind:
-        ind["inbreeding"] = "%.2f" % (get_inbreeding(ind['id']) * 100)
+        ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
+        ind["MK"] = "%.2f" % (get_ind_mean_kinship(i_number, ind['genebank_id']) * 100)
     return jsonify(ind)
 
-def get_inbreeding(i_id):
+
+def get_ind_inbreeding(i_number, g_id):
     """
-    Returns  the inbreeding coefficient of the individual given by `i_id`.
+    Returns  the inbreeding coefficient of the individual given by `i_number`.
     """
-    id = str(i_id)
-    coefficients = load_inbreeding()
-    if id in coefficients:
-        return coefficients[id]
-    return None
+    id = str(g_id)
+    coefficients = get_inbreeding(id)
+    if i_number in coefficients:
+        return coefficients[i_number]
+    return 0
 
 
-@APP.route("/api/inbreeding/")
-def all_inbreeding():
-    coefficients = load_inbreeding()
-    return jsonify({"coefficients": coefficients})
+@APP.route("/api/<int:g_id>/inbreeding/")
+def inbreeding(g_id):
+    id = str(g_id)
+    inb_coeffcient = get_inbreeding(id)
+    return jsonify(inb_coeffcient)
 
 
-@APP.before_first_request
-@cache.cached(timeout=3600, key_prefix="all_inbreeding")
-def load_inbreeding():
-    collections = ibc.get_pedigree_collections()
-    coefficients = ibc.calculate_inbreeding(collections)
-    return coefficients
+def get_inbreeding(g_id):
+    response = requests.get('http://{}:{}/inbreeding/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
+                             params={})
+
+    if response.status_code == 200:
+        return csvparser.parse_csv(response.content)
+
+    else:
+        APP.logger.error("Could not fetch inbreeding data.")
+        APP.logger.error("Error {}".format(response))
+        return {}
+
+
+@APP.route("/api/<int:g_id>/kinship/")
+def kinship(g_id):
+    id = str(g_id)
+    kinship = get_kinship(id)
+    return jsonify(kinship)
+
+
+def get_kinship(g_id):
+    response = requests.get('http://{}:{}/kinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
+                             params={})
+
+    if response.status_code == 200:
+        return csvparser.parse_kinship(response.content)
+
+    else:
+        APP.logger.error("Could not fetch kinship data.")
+        APP.logger.error("Error {}".format(response))
+        return {}
+
+
+def get_ind_mean_kinship(i_number, g_id):
+    """
+    Returns the mean kinship coefficient of the individual given by `i_number`.
+    In case the individual is not active, we return 0.
+    """
+    id = str(i_number)
+    mean_kinship = get_mean_kinship(g_id)
+    if i_number in mean_kinship:
+        return mean_kinship[i_number]
+    return 0
+
+
+@APP.route("/api/<int:g_id>/kinship/")
+def mean_kinship(g_id):
+    id = str(g_id)
+    mean_kinship = get_mean_kinship(id)
+    return jsonify(mean_kinship)
+
+
+@APP.route("/api/<int:g_id>/meankinship/")
+def get_mean_kinship(g_id):
+    response = requests.get('http://{}:{}/meankinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
+                             params={})
+
+    if response.status_code == 200:
+        return csvparser.parse_csv(response.content)
+
+    else:
+        APP.logger.error("Could not fetch mean kinship data.")
+        APP.logger.error("Error {}".format(response))
+        return {}
 
 
 @APP.route("/", defaults={"path": ""})
