@@ -233,14 +233,14 @@ def herd(h_id):
     return jsonify(data)
 
 
-@APP.route("/api/individual/<i_id>")
+@APP.route("/api/individual/<i_number>")
 @login_required
-def individual(i_id):
+def individual(i_number):
     """
-    Returns information on the individual given by `i_id`.
+    Returns information on the individual given by `i_number`.
     """
     user_id = session.get("user_id", None)
-    ind = da.get_individual(i_id, user_id)
+    ind = da.get_individual(i_number, user_id)
 
     if ind:
         ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(ind['number'], ind['genebank_id']) * 100)
@@ -248,11 +248,11 @@ def individual(i_id):
     return jsonify(ind)
 
 
-def get_ind_inbreeding(i_id, g_id):
+def get_ind_inbreeding(i_number, g_id):
     """
-    Returns  the inbreeding coefficient of the individual given by `i_id`.
+    Returns  the inbreeding coefficient of the individual given by `i_number`.
     """
-    id = str(i_id)
+    id = str(i_number)
     coefficients = get_inbreeding(g_id)
     if id in coefficients:
         return coefficients[id]
@@ -299,14 +299,14 @@ def get_kinship(g_id):
         return {}
 
 
-def get_ind_mean_kinship(i_id, g_id):
+def get_ind_mean_kinship(i_number, g_id):
     """
-    Returns the mean kinship coefficient of the individual given by `i_id`.
+    Returns the mean kinship coefficient of the individual given by `i_number`.
     """
-    id = str(i_id)
-    coefficients = get_mean_kinship(g_id)
-    if id in coefficients:
-        return coefficients[id]
+    id = str(i_number)
+    mean_kinship = get_mean_kinship(g_id)
+    if id in mean_kinship:
+        return mean_kinship[id]
     return None
 
 
