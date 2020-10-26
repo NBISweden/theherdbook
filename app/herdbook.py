@@ -323,7 +323,7 @@ def get_mean_kinship(g_id):
                              params={})
 
     if response.status_code == 200:
-        return csvparser.parse_csv(response)
+        return csvparser.parse_csv(response.content)
 
     else:
         APP.logger.error("Could not fetch mean kinship data.")
