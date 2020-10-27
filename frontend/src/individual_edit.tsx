@@ -241,7 +241,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 onChange={(event) => {updateField('number', event.currentTarget.value)}}
               />
               <TextField
-                disabled
+                disabled={!user?.canEdit(individual.genebank)}
                 label="Certifikat"
                 className={style.control}
                 variant={inputVariant}
