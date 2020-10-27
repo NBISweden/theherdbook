@@ -32,7 +32,7 @@ jobs:
                mv "$p" "${p%.default}"
              done
 
-             docker-compose build
+             docker-compose build --build-arg BUILDKIT_INLINE_CACHE=1
 
              for image in herdbook_r-api herdbook_main herdbook_frontend; do
                docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
