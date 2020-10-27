@@ -167,6 +167,14 @@ def manage_herd():
     return jsonify(status)
 
 
+@APP.route("/api/colors")
+@login_required
+def colors():
+    """
+    Returns all the legal colors for all genebanks.
+    """
+    return jsonify(da.get_colors())
+
 @APP.route("/api/login", methods=["POST"])
 def loginHandler():
     """
