@@ -10,7 +10,7 @@ import { BodyFat, DateBodyfat, DateWeight, Individual, individualLabel,
          LimitedIndividual, OptionType, ServerMessage,
         } from '@app/data_context_global';
 import { useMessageContext } from '@app/message_context';
-import { Button, CircularProgress, TextField,
+import { Button, CircularProgress, InputAdornment, TextField,
         } from '@material-ui/core';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
@@ -229,7 +229,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
             </div>
             <div className={style.adminPane}>
               <div className={style.paneTitle}>
-                Admin Fields
+                Kan endast ändras av genbanksansvarig
               </div>
 
               <TextField
@@ -352,10 +352,13 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 }}
                 onChange={(e: any) => {setWeightDate(e.target.value)}}
                 />
-              <TextField label='Mätningsdatum' className={style.control}
+              <TextField label='Vikt' className={style.control}
                 value={weight}
                 type='number'
                 variant={inputVariant}
+                InputProps={{
+                  endAdornment: <InputAdornment position='end'>Kg</InputAdornment>
+                }}
                 InputLabelProps={{
                   shrink: true,
                 }}
