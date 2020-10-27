@@ -104,7 +104,7 @@ type ContactField = {field: keyof Herd, label: string};
  * load herd data for the id `id` if it's a number, or for a new herd if `id` is
  * `undefined` or `'new'`.
  */
-export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'form' | 'info'}) {
+export function HerdForm({id, view = 'form', change = true}: {id: string | undefined, view: 'form' | 'info', change: boolean}) {
   const {genebanks, setGenebanks} = useDataContext()
   const { user } = useUserContext()
   const {userMessage} = useMessageContext()
@@ -255,7 +255,7 @@ export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'fo
   return <>
     {loading && <h2>Loading...</h2> ||
       <>
-        {user?.canEdit(herd.herd) && <div className={classes.editButton}>
+        {change && user?.canEdit(herd.herd) && <div className={classes.editButton}>
             [ <a className={classes.editLink}
                  onClick={() => setCurrentView(currentView == 'form' ? 'info' : 'form')}>
                 {currentView == 'info' ? 'Edit' : 'Stop Editing'}
