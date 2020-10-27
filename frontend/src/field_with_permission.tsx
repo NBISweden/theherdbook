@@ -5,8 +5,8 @@
 import React from 'react'
 import { TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import Select from 'react-select';
-import { PrivacyLevel } from '~data_context_global';
+import { Autocomplete } from '@material-ui/lab';
+import { OptionType, PrivacyLevel } from '@app/data_context_global';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -19,6 +19,8 @@ const useStyles = makeStyles({
   },
   permissionField: {
     width: "200px",
+    marginTop: 0,
+    marginLeft: '5px',
   }
 });
 
@@ -33,6 +35,10 @@ export function FieldWithPermission({field, label, value, permission, setValue}:
     {field: string, label: string, value: string | null, permission: PrivacyLevel | undefined, setValue: Function}) {
   const classes = useStyles();
 
+  const options = [{value: 'private', label: 'Endast Manager'},
+                   {value: 'authenticated', label: 'Endast Inloggade'},
+                   {value: 'public', label: 'Alla kan se'}];
+
   return <>
     <div className={classes.permissionGroup}>
       <TextField label={label} className={classes.simpleField}
@@ -40,13 +46,15 @@ export function FieldWithPermission({field, label, value, permission, setValue}:
         onChange={(e: any) => {setValue(field, e.target.value)}}
         />
       {permission !== undefined &&
-        <Select className={classes.permissionField}
-          value={{value: permission, label: permission}}
-          options={[{value: 'private', label: 'private'},
-                    {value: 'authenticated', label: 'authenticated'},
-                    {value: 'public', label: 'public'}]}
-          onChange={(v: any) => {setValue(`${field}_privacy`, v.value)}}
-          />
+        <Autocomplete
+          options={options}
+          value={options.find(option => option.value == permission) ?? options[0]}
+          getOptionLabel={(option: OptionType) => option.label}
+          renderInput={(params) => <TextField {...params} label="Synlighet" className={classes.permissionField} margin="normal" />}
+          onChange={(event: any, newValue: OptionType | null) => {
+            setValue(`${field}_privacy`, newValue?.value)
+          }}
+        />
       }
     </div>
   </>
