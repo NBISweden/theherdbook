@@ -2,7 +2,7 @@ import * as React from 'react'
 
 import {get} from './communication'
 
-import {Colour, DataContext, Genebank, NameID} from "@app/data_context_global"
+import {Color, DataContext, Genebank, NameID} from "@app/data_context_global"
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -21,7 +21,7 @@ export function useDataContext(): DataContext {
 export function WithDataContext(props: {children: React.ReactNode}) {
   const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>)
   const [users, setUsers] = React.useState([] as Array<NameID>)
-  const [colors, setColors] = React.useState({} as {[genebank: string]:Colour[]})
+  const [colors, setColors] = React.useState({} as {[genebank: string]:Color[]})
 
   async function fetchAndSet(url: string, set: Function, field: string | undefined = undefined) {
     return await get(url).then(

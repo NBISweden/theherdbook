@@ -88,7 +88,7 @@ export interface Herd {
     individuals?: Individual[]
 }
 
-export interface Colour {
+export interface Color {
     id: number,
     name: string,
 }
@@ -127,7 +127,7 @@ export interface Genebank {
 export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
-    colors: {[genebank: string]:Colour[]}
+    colors: {[genebank: string]:Color[]}
     setGenebanks(data: Genebank[]): void,
     setUsers(data: NameID[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
