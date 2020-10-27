@@ -41,7 +41,7 @@ export function WithMessageContext(props: {children: React.ReactNode}) {
 
   function userMessage(message: string, severity: MessageLevel) {
       // print json format if the message isn't a string.
-      setMessage(typeof message == "string" ? message : JSON.stringify(message));
+      setMessage(typeof message == "string" ? message : JSON.stringify(message, undefined, 2));
       setSeverity(severity);
       setShowMessage(true);
   }
