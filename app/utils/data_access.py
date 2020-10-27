@@ -6,6 +6,8 @@ database.
 import uuid
 import logging
 
+from datetime import datetime
+
 from peewee import DoesNotExist, IntegrityError
 from werkzeug.security import (
     check_password_hash,
@@ -14,10 +16,13 @@ from werkzeug.security import (
 
 from utils.database import (
     DB_PROXY as DATABASE,
+    Bodyfat,
+    Colour,
     Herd,
     HerdTracking,
     Individual,
     User,
+    Weight,
 )
 
 def add_user(form, user_uuid=None):
@@ -104,6 +109,23 @@ def fetch_user_info(user_id):
     except DoesNotExist:
         return None
 
+def get_colors():
+    """
+    Returns all legal colors for all genebanks, like:
+
+    {<genebank>: [{id: <color-id>, name: <color-description>}, [...]],
+     [...]
+    }
+    """
+    with DATABASE.atomic():
+        #TODO: colors should be connected to genebanks in the database, not in
+        #      this function.
+        gotlandsColors = Colour.select().where(Colour.id < 100)
+        mellerudColors = Colour.select().where(Colour.id >= 100)
+        return {'Gotlandskanin': [{'id': c.id, 'name': c.name} for c in gotlandsColors],
+                'Mellerudskanin': [{'id': c.id, 'name': c.name} for c in mellerudColors]
+                }
+
 def get_genebank(genebank_id, user_uuid=None):
     """
     Returns the information about the genebank given by `genebank_id` that is
@@ -172,7 +194,7 @@ def add_herd(form, user_uuid):
     """
     Adds a new herd, defined by `form`, into the database, if the given `user`
     has sufficient permissions to insert herds.
-    Rhe response will be on the format:
+    The response will be on the format:
         JSON: {
                 status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
                 message?: string,
@@ -242,6 +264,185 @@ def get_individual(individual_id, user_uuid=None):
         return None
     except DoesNotExist:
         return None
+
+def form_to_individual(form, user = None):
+    """
+    Individual data is split over a number of tables; Individual, HerdTracking,
+    Colour, Weight, and Bodyfat. This function takes a `form` dict (as returned
+    by Individual.as_dict(), and as used in the frontend), verifies the data
+    (where possible) and either creates a new Individual object or fetches an
+    existing individual from the database and updates it with the information in
+    the form.
+
+    The function returns an Individual object with values from `form` or throws
+    a ValueError if there's any detected problems with the data.
+    """
+
+    # check if the individual exists in the datbase
+    with DATABASE.atomic():
+        try:
+            individual = Individual.get(Individual.number == form["number"])
+        except DoesNotExist:
+            individual = Individual()
+
+    # If the form has an id - make sure that it points to the same individual as
+    # the number.
+    if 'id' in form and form['id'] != individual.id:
+        raise ValueError(f"Number can not be updated in the current version")
+
+    if 'certificate' in form and form['certificate'] != individual.certificate:
+        if not user or not (user.is_admin or user.is_manager and individual.current_herd.genebank_id in user.is_manager):
+            raise ValueError(f"Only managers can update certificate numbers")
+
+    # Colour is stored as name in the form, but needs to be converted to id
+    try:
+        with DATABASE.atomic():
+            form['colour'] = Colour.get(Colour.name == form['colour'])
+    except DoesNotExist:
+        raise ValueError(f"Unknown color: '{form['colour']}''")
+
+    # fetch the origin herd
+    try:
+        with DATABASE.atomic():
+            form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
+    except DoesNotExist:
+        raise ValueError(f"Unknown origin herd: '{form['origin_herd']['herd']}''")
+
+    # parents
+    try:
+        with DATABASE.atomic():
+            form['mother'] = Individual.get(Individual.number == form['mother']['number'])
+            form['father'] = Individual.get(Individual.number == form['father']['number'])
+    except DoesNotExist:
+        raise ValueError("Invalid parents")
+
+    # Update individual fields by looping through all fields on an Individual
+    # object.
+    for key in vars(Individual).keys():
+        if key in form:
+            if key.startswith('_'):
+                continue
+            if key and key.endswith('date'):
+                try:
+                    date = datetime.strptime(form[key], '%Y-%m-%d').date()
+                    setattr(individual, key, date)
+                except TypeError:
+                    setattr(individual, key, form[key])
+            else:
+                setattr(individual, key, form[key])
+
+    return individual
+
+def add_individual(form, user_uuid):
+    """
+    Adds a new individual, defined by `form`, into the database, if the given
+    `user` has sufficient permissions to insert individuals into the herd
+    specified in the form data.
+    The response will be on the format:
+        JSON: {
+                status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+                message?: string,
+                data: any
+            }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+    try:
+        with DATABASE.atomic():
+            herd = Herd.get(Herd.herd == form['herd'])
+    except DoesNotExist:
+        return {"status": "error", "message": "Individual must have a valid herd"}
+
+    if not user.can_edit(herd.herd):
+        return {"status": "error", "message": "Forbidden"}
+
+    return {"status": "error", "message": "Not implemented"}
+
+def update_individual(form, user_uuid):
+    """
+    Updates an individual, identified by `form.number`, by the values in `form`,
+    if the user identified by `user_uuid` has sufficient permissions to do so.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    if not user.can_edit(form['number']):
+        return {"status": "error", "message": "Forbidden"}
+
+    if isinstance(form['herd'], dict) and form['herd']:
+        form['herd'] = form['herd'].get('herd', None)
+    if not Herd.select().where(Herd.herd == form['herd']).exists():
+        return {"status": "error", "message": "Individual must have a valid herd"}
+
+    try:
+        try:
+            individual = form_to_individual(form, user)
+        except ValueError as e:
+            return {"status": "error", "message": f'{e}'}
+        update_weights(individual, form['weights'])
+        update_bodyfat(individual, form['bodyfat'])
+
+        logging.warning('Herd tracking not updated.')
+        individual.save()
+        return  {"status": "success", "message": "Individual Updated"}
+    except DoesNotExist:
+        return {"status": "error", "message": "Unknown herd"}
+
+def update_weights(individual, weights):
+    """
+    Updates the weight measurements of `individual` to match those in `weights`.
+
+    `weights` should be a list formatted like:
+    [{weight: <float>, date: 'yyyy-mm-dd'}, [...]]
+    """
+    with DATABASE.atomic():
+        current_weights = Weight.select() \
+                                .where(Weight.individual == individual.id)
+        current_list = [(w.weight_date.strftime('%Y-%m-%d'), w.weight) for w in current_weights]
+        new_list = [(w['date'], w['weight']) for w in weights]
+
+        # check for current measurements to delete
+        for weight in current_list:
+            if weight not in new_list:
+                Weight.delete().where(Weight.individual == individual, \
+                                      Weight.weight_date == weight[0], \
+                                      Weight.weight == weight[1]).execute()
+
+        # check for new measurements to add
+        for weight in new_list:
+            if weight not in current_list:
+                Weight(individual=individual, weight_date=weight[0], weight=weight[1]).save()
+
+def update_bodyfat(individual, bodyfat):
+    """
+    Updates the bodufat measurements of `individual` to match those in `bodyfat`.
+
+    `bodyfat` should be a list formatted like:
+    [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
+    """
+    with DATABASE.atomic():
+        logging.warning('bodyfat: %s', bodyfat)
+        current_bodyfat = Bodyfat.select() \
+                                 .where(Bodyfat.individual == individual.id)
+        current_list = [(b.bodyfat_date.strftime('%Y-%m-%d'), b.bodyfat) for b in current_bodyfat]
+        new_list = [(b['date'], b['bodyfat']) for b in bodyfat]
+
+        # check for current measurements to delete
+        for measure in current_list:
+            if measure not in new_list:
+                Bodyfat.delete().where(Bodyfat.individual == individual, \
+                                       Bodyfat.bodyfat_date == measure[0], \
+                                       Bodyfat.bodyfat == measure[1]).execute()
+
+        # check for new measurements to add
+        for measure in new_list:
+            if measure not in current_list:
+                if measure[1] not in ['low', 'normal', 'high']:
+                    logging.error('Unknown bodyfat level: %s', measure[1])
+                else:
+                    Bodyfat(individual=individual, bodyfat_date=measure[0], bodyfat=measure[1]).save()
 
 def get_users(user_uuid=None):
     """
@@ -459,6 +660,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     m.individual_id, m.name, m.number,
                     c.colour_id, c.name,
                     h.herd_id, h.herd, h.herd_name,
+                    g.name,
                     (h.is_active OR h.is_active IS NULL) AS herd_active,
                     ( (ih.herd_tracking_date > current_date - interval '1 year')
                       AND (h.is_active OR h.is_active IS NULL)
@@ -481,6 +683,7 @@ def get_individuals(genebank_id, user_uuid=None):
                         ORDER BY individual_id, herd_tracking_date DESC
                     ) AS ih ON (ih.individual_id = i.individual_id)
         JOIN        herd h ON (ih.herd_id = h.herd_id)
+        JOIN        genebank g ON (h.genebank_id = g.genebank_id)
         WHERE       h.genebank_id = %s;
         ;"""
         with DATABASE.atomic():
@@ -502,7 +705,8 @@ def get_individuals(genebank_id, user_uuid=None):
                 "mother": {"id": i[14], "name": i[15], "number": i[16]},
                 "color": {"id": i[17], "name": i[18]},
                 "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
-                "herd_active": i[22], "active": i[23], "alive": i[24],
+                "genebank": i[22],
+                "herd_active": i[23], "active": i[24], "alive": i[25],
             }
             for i in cursor.fetchall()
         ]

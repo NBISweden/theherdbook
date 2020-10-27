@@ -2,7 +2,7 @@ import * as React from 'react'
 
 import {get} from './communication'
 
-import {DataContext, Genebank, NameID} from "./data_context_global"
+import {Color, DataContext, Genebank, NameID} from "@app/data_context_global"
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -21,6 +21,7 @@ export function useDataContext(): DataContext {
 export function WithDataContext(props: {children: React.ReactNode}) {
   const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>)
   const [users, setUsers] = React.useState([] as Array<NameID>)
+  const [colors, setColors] = React.useState({} as {[genebank: string]:Color[]})
 
   async function fetchAndSet(url: string, set: Function, field: string | undefined = undefined) {
     return await get(url).then(
@@ -88,7 +89,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
         }
         // note that individuals aren't loaded, and send a request to load them
         const genebankData = data['genebanks'].map((g: Genebank) => {
-          g.individuals = null
+          g.individuals = []
           return g
         })
         setGenebanks(genebankData)
@@ -115,6 +116,12 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   async function getUsers() {
     return fetchAndSet('/api/manage/users', setUsers, 'users')
   }
+  /**
+   * Fetches all legal colors for all genebanks.
+   */
+  async function getColors() {
+    return fetchAndSet('/api/colors', setColors)
+  }
 
   /**
    * Loads data from the backend into the data context. Returns `true` if all
@@ -135,6 +142,9 @@ export function WithDataContext(props: {children: React.ReactNode}) {
     if (data == 'all' || data.includes('users')) {
       updates.push(getUsers())
     }
+    if (data == 'all' || data.includes('colors')) {
+      updates.push(getColors())
+    }
 
     return await Promise.all(updates).then(statuses => {
       return statuses.reduce((a,b) => a && b, true)
@@ -146,7 +156,7 @@ export function WithDataContext(props: {children: React.ReactNode}) {
   }, [])
 
   return (
-    <DataContext.Provider value={{genebanks, users, setGenebanks, setUsers, loadData}}>
+    <DataContext.Provider value={{genebanks, users, colors, setGenebanks, setUsers, loadData}}>
       {props.children}
     </DataContext.Provider>
   )

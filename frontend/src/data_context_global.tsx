@@ -18,6 +18,18 @@ export interface DateValue {
     id?: number
 }
 
+export interface DateWeight {
+    date: string
+    weight: number
+}
+
+export type BodyFat = 'low' | 'normal' | 'high'
+
+export interface DateBodyfat {
+    date: string
+    bodyfat: BodyFat
+}
+
 export interface LimitedIndividual {
     id: number,
     name: string | null,
@@ -27,6 +39,8 @@ export interface LimitedIndividual {
 
 export interface Individual extends LimitedIndividual{
     herd: HerdNameID
+    origin_herd?: HerdNameID
+    genebank: string
     certificate: string | null
     birth_date: string | null
     mother: LimitedIndividual | null
@@ -37,8 +51,8 @@ export interface Individual extends LimitedIndividual{
     death_note: string | null
     litter: number | null
     notes: string | null
-    weights: Array<DateValue> | null
-    bodyfat: Array<DateValue> | null
+    weights: Array<DateWeight> | null
+    bodyfat: Array<DateBodyfat> | null
     herd_tracking: Array<DateValue> | null
     herd_active: boolean
     active: boolean
@@ -72,6 +86,11 @@ export interface Herd {
     longitude: string | null
     coordinates_privacy?: string | null
     individuals?: Individual[]
+}
+
+export interface Color {
+    id: number,
+    name: string,
 }
 
 export function individualLabel(individual: LimitedIndividual): string {
@@ -108,6 +127,7 @@ export interface Genebank {
 export interface DataContext {
     genebanks: Array<Genebank>
     users: Array<NameID>
+    colors: {[genebank: string]:Color[]}
     setGenebanks(data: Genebank[]): void,
     setUsers(data: NameID[]): void,
     loadData(data: string | Array<string>): Promise<boolean>
@@ -119,9 +139,12 @@ export type ServerMessage = {
     data?: any
 }
 
+export type OptionType = {value: string, label: string};
+
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
+  colors: {},
   setGenebanks() {},
   setUsers() {},
   async loadData() {return false},

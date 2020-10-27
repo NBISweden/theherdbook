@@ -5,7 +5,7 @@
  */
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { AppBar, Box, Paper, Tab, Tabs } from '@material-ui/core';
+import { AppBar, Box, CircularProgress, Paper, Tab, Tabs } from '@material-ui/core';
 import { get } from '@app/communication';
 import { Herd, Individual } from '@app/data_context_global';
 import { HerdForm } from '@app/herdForm';
@@ -14,7 +14,9 @@ import { useDataContext } from '@app/data_context';
 import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from '@app/pedigree_plot';
 import { FilterTable } from '@app/filter_table';
-import { IndividualView } from './individual_view';
+import { IndividualView } from '@app/individual_view';
+import { IndividualEdit } from '@app/individual_edit';
+import { useUserContext } from '@app/user_context';
 
 const useStyles = makeStyles({
   container: {
@@ -29,6 +31,12 @@ const useStyles = makeStyles({
     '&:hover': {
       color: 'blue',
     }
+  },
+  loading: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
@@ -69,6 +77,7 @@ export function HerdView({id}: {id: string | undefined}) {
   const [herdIndividuals, setHerdIndividuals] = React.useState([] as Individual[])
   const [activeTab, setActiveTab] = React.useState('list' as TabValue)
   const {userMessage, popup} = useMessageContext()
+  const { user } = useUserContext()
   const { genebanks } = useDataContext()
   const [algo, set_algo] = React.useState('Martin' as 'Martin' | 'Dan')
   const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [genebanks, id, algo])
@@ -123,8 +132,17 @@ export function HerdView({id}: {id: string | undefined}) {
             title={'Individer i besättningen'}
             filters={[{field: 'alive', label: 'Dölj döda'},
                       {field: 'active', label: 'Dölj inaktiva djur'}]}
+            action={user?.canEdit(id)
+                      ? (event: any, rowData: any) => {
+                          popup(<IndividualEdit id={rowData.number} />)
+                        }
+                      : undefined}
             />
-          : 'Loading Herd'
+          :
+          <div className={style.loading}>
+            <h2>Loading Individuals</h2>
+            <CircularProgress />
+          </div>
         }
       </TabPanel>
       <TabPanel value={activeTab} index='pedigree'>

@@ -3,6 +3,7 @@
 Database handler for 'the herdbook'.
 """
 
+import re
 import json
 import logging
 from flask_login import UserMixin
@@ -358,6 +359,7 @@ class Individual(BaseModel):
         """
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
+        data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {"id": self.origin_herd.id,
                                "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id,
@@ -372,7 +374,7 @@ class Individual(BaseModel):
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
-            {"weight": w.weight, "date": w.weight_date} for w in self.weight_set
+            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} for w in self.weight_set
         ]  # pylint: disable=no-member
         data["bodyfat"] = [
             {"bodyfat": b.bodyfat, "date": b.bodyfat_date} for b in self.bodyfat_set
@@ -684,6 +686,54 @@ class User(BaseModel, UserMixin):
         genebank = genebank.as_dict()
         genebank["herds"] = herds
         return genebank
+
+    def can_edit(self, identifier):
+        """
+        Returns `true` if the user is allowed to edit the database item
+        identified by `identifier`. `identifier` can be an `Individual.number`,
+        a `Herd.herd` or a `Genebank.name`.
+
+        `identifier` will be parsed as:
+
+        `^([a-zA-Z][0-9]+-[0-9]+)$`: individual
+        `^([a-zA-Z][0-9]+)$`: herd
+        and genebank otherwise.
+        """
+        # admins can edit anything
+        if self.is_admin:
+            return True
+
+        if re.match('^([a-zA-Z][0-9]+-[0-9]+)$', identifier):
+            try:
+                with DATABASE.atomic():
+                    individual = Individual.get(Individual.number == identifier)
+                    if self.is_owner and individual.current_herd.herd in self.is_owner:
+                        return True
+                    if self.is_manager and individual.current_herd.genebank_id in self.is_manager:
+                        return True
+            except DoesNotExist:
+                return False
+
+        if re.match('^([a-zA-Z][0-9]+)$', identifier):
+            try:
+                with DATABASE.atomic():
+                    herd = Herd.get(Herd.herd == identifier)
+                    if self.is_owner and herd.herd in self.is_owner:
+                        return True
+                    if self.is_manager and herd.genebank_id in self.is_manager:
+                        return True
+            except DoesNotExist:
+                return False
+
+        try:
+            with DATABASE.atomic():
+                genebank = Genebank.get(Genebank.name == identifier)
+                if self.is_manager and genebank.id in self.is_manager:
+                    return True
+        except DoesNotExist:
+                return False
+
+        return False
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
