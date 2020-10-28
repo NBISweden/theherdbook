@@ -200,7 +200,7 @@ export function Manage() {
         </Route>
         <Route path="/manage/">
           <Paper className={styles.inputForm}>
-            <HerdForm id={selected?.value}/>
+            <HerdForm id={selected?.value} view={'form'} change={false}/>
           </Paper>
         </Route>
       </Switch>

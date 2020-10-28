@@ -13,6 +13,7 @@ import { useUserContext } from '@app/user_context';
 import { useMessageContext } from '@app/message_context';
 import { Herd, herdLabel, Genebank, ServerMessage } from '@app/data_context_global';
 import { get, updateHerd, createHerd } from '@app/communication';
+import { FieldWithPermission } from '@app/field_with_permission';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -57,6 +58,13 @@ const useStyles = makeStyles({
   },
   contactInfo: {
     marginBottom: '30px',
+  },
+  permissionGroup: {
+    display: "flex",
+    flexDirection: "row",
+  },
+  permissionField: {
+    width: "200px",
   }
 });
 
@@ -89,12 +97,14 @@ const defaultValues: Herd = {
   individuals: []
 }
 
+type ContactField = {field: keyof Herd, label: string};
+
 /**
  * Provides herd management forms for setting herd metadata. The form will
  * load herd data for the id `id` if it's a number, or for a new herd if `id` is
  * `undefined` or `'new'`.
  */
-export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'form' | 'info'}) {
+export function HerdForm({id, view = 'form', change = true}: {id: string | undefined, view: 'form' | 'info', change: boolean}) {
   const {genebanks, setGenebanks} = useDataContext()
   const { user } = useUserContext()
   const {userMessage} = useMessageContext()
@@ -106,6 +116,15 @@ export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'fo
   const [isNew, setNew] = React.useState(false)
   const history = useHistory()
   const classes = useStyles();
+
+  const contactFields: ContactField[] = [
+    {field: 'name', label: 'Namn'},
+    {field: 'email', label: 'E-mail'},
+    {field: 'mobile_phone', label: 'Mobiltelefon'},
+    {field: 'wire_phone', label: 'Fast telefon'},
+    {field: 'www', label: 'Hemsida'},
+    {field: 'physical_address', label: 'Gatuadress'}
+  ]
 
   /**
    * Loads herd data for herd `id`. If data is returned, the form is set to use
@@ -236,7 +255,7 @@ export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'fo
   return <>
     {loading && <h2>Loading...</h2> ||
       <>
-        {user?.canEdit(herd.herd) && <div className={classes.editButton}>
+        {change && user?.canEdit(herd.herd) && <div className={classes.editButton}>
             [ <a className={classes.editLink}
                  onClick={() => setCurrentView(currentView == 'form' ? 'info' : 'form')}>
                 {currentView == 'info' ? 'Edit' : 'Stop Editing'}
@@ -252,30 +271,16 @@ export function HerdForm({id, view = 'form'}: {id: string | undefined, view: 'fo
                 Kontaktperson
               </Typography>
 
-              <TextField label='Namn' className={classes.simpleField}
-                value={herd.name}
-                onChange={(e: any) => {setFormField('name', e.target.value)}}
-                />
-              <TextField label='E-mail' className={classes.simpleField}
-                value={herd.email}
-                onChange={(e: any) => {setFormField('email', e.target.value)}}
-                />
-              <TextField label='Mobiltelefon' className={classes.simpleField}
-                value={herd.mobile_phone}
-                onChange={(e: any) => {setFormField('mobile_phone', e.target.value)}}
-                />
-              <TextField label='Fast Telefon' className={classes.simpleField}
-                value={herd.wire_phone}
-                onChange={(e: any) => {setFormField('wire_phone', e.target.value)}}
-                />
-              <TextField label='Hemsida' className={classes.simpleField}
-                value={herd.www}
-                onChange={(e: any) => {setFormField('www', e.target.value)}}
-                />
-              <TextField label='Gatuadress' className={classes.simpleField}
-                value={herd.physical_address}
-                onChange={(e: any) => {setFormField('physical_address', e.target.value)}}
-                />
+              {contactFields.map(field =>
+                  <FieldWithPermission
+                    field={field.field}
+                    label={field.label}
+                    value={herd[field.field]}
+                    permission={herd[`${field.field}_privacy` as keyof Herd] ?? null}
+                    setValue={setFormField}
+                  />
+                )
+              }
               <TextField label='Postnummer'
                 value={postalcode}
                 onChange={(e: any) => {setPostalcode(e.target.value)}}

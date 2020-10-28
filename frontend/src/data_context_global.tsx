@@ -59,6 +59,9 @@ export interface Individual extends LimitedIndividual{
     alive: boolean
 }
 
+export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;
+
+
 export interface Herd {
     id: number
     genebank: number
@@ -68,23 +71,23 @@ export interface Herd {
     is_active: boolean | null
     start_date: string | null
     name: string | null
-    name_privacy?: string | null
+    name_privacy?: PrivacyLevel
     physical_address: string | null
-    physical_address_privacy?: string | null
+    physical_address_privacy?: PrivacyLevel
     location: string | null
-    location_privacy?: string | null
+    location_privacy?: PrivacyLevel
     email: string | null
-    email_privacy?: string | null
+    email_privacy?: PrivacyLevel
     email_verified: boolean | null
     www: string | null
-    www_privacy?: string | null
+    www_privacy?: PrivacyLevel
     mobile_phone: string | null
-    mobile_phone_privacy?: string | null
+    mobile_phone_privacy?: PrivacyLevel
     wire_phone: string | null
-    wire_phone_privacy?: string | null
+    wire_phone_privacy?: PrivacyLevel
     latitude: string | null
     longitude: string | null
-    coordinates_privacy?: string | null
+    coordinates_privacy?: PrivacyLevel
     individuals?: Individual[]
 }
 
