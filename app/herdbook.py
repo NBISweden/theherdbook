@@ -256,6 +256,26 @@ def individual(i_number):
     return jsonify(ind)
 
 
+@APP.route("/api/individual", methods=["UPDATE", "POST"])
+@login_required
+def edit_user():
+    """
+    Updates an individual on `UPDATE`, or creates a new individual on `POST`.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string,
+        }
+    """
+    form = request.json
+    if request.method == "UPDATE":
+        retval = da.update_individual(form, session.get("user_id", None))
+    if request.method == "POST":
+        retval = da.add_individual(form, session.get("user_id", None))
+    return jsonify(retval)
+
+
 def get_ind_inbreeding(i_number, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_number`.
