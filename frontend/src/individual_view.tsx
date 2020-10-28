@@ -4,7 +4,7 @@
  */
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Button } from '@material-ui/core'
+import { Button, Tooltip} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useMessageContext } from '@app/message_context'
 import { get } from '@app/communication'
@@ -112,6 +112,8 @@ export function IndividualView({id} : {id: string}) {
               <dt>Nummer:</dt><dd>{individual?.number}</dd>
               <dt>Certifikat:</dt><dd>{individual?.certificate}</dd>
               <dt>Kön:</dt><dd>{individual?.sex}</dd>
+              <dt><Tooltip title="Inavelskoefficient"><span>F:</span></Tooltip></dt><dd>{individual?.inbreeding}%</dd>
+              <dt><Tooltip title="Genomsnittligt släktskap/ Mean Kinship"><span>MK:</span></Tooltip></dt><dd>{individual?.MK}%</dd>
               <dt>Färg:</dt><dd>
                 {individual?.colour}<br />
                 {individual?.colour_note}
