@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
 import {useHistory, useLocation} from 'react-router-dom'
 
+import { CircularProgress, makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
@@ -11,14 +12,24 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 
 import {useUserContext} from '@app/user_context'
 
+const useStyles = makeStyles({
+  loading: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+  }
+});
+
 /**
  * Shows login and logout in a form, submits it to the user context callbacks
  */
 export function Login() {
   const [open, setOpen] = React.useState(true);
-  const {login} = useUserContext()
+  const {user, login} = useUserContext()
   const [username, set_username] = useState('')
   const [password, set_password] = useState('')
+  const styles = useStyles()
   const history = useHistory()
   const location = useLocation();
   const { from } = location.state || { from: { pathname: "/" } };
@@ -29,14 +40,14 @@ export function Login() {
   }
 
   const submitLogin = () => {
-    login(username, password).then(
-      status => {
-        if (status == 'logged_in') {
-          history.replace(from);
-        }
-      }
-    )
+    login(username, password)
   }
+
+  React.useEffect(() => {
+    if (user) {
+      history.replace(from)
+    }
+  }, [user])
 
   const keydown = (e: React.KeyboardEvent<any>) => {
     // Cannot get TextField to trigger onSubmit so listen for keydown instead
@@ -45,46 +56,49 @@ export function Login() {
     }
   }
 
-  return <>
-    <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
-      <DialogTitle>Logga in</DialogTitle>
-      <form onSubmit={submitLogin} onKeyDown={keydown}>
-        <DialogContent>
-          <DialogContentText>
-            Logga in med ditt användarnamn eller e-postadress och ditt lösenord.
-          </DialogContentText>
-          <TextField
-            id="username"
-            variant="outlined"
-            autoFocus
-            margin="dense"
-            label="Användarnamn eller E-postadress"
-            type="email"
-            value={username}
-            onChange={e => set_username(e.target.value)}
-            onSubmit={submitLogin}
-            fullWidth
-          />
-          <TextField
-            id="password"
-            variant="outlined"
-            margin="dense"
-            label="Lösenord"
-            type="password"
-            value={password}
-            onChange={e => set_password(e.target.value)}
-            fullWidth
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={close} color="primary">
-            Avbryt
-          </Button>
-          <Button onClick={submitLogin} color="primary" aria-label="Logga in">
-            Logga in
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
-  </>
+  return user === null
+    ? <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
+        <DialogTitle>Logga in</DialogTitle>
+        <form onSubmit={submitLogin} onKeyDown={keydown}>
+          <DialogContent>
+            <DialogContentText>
+              Logga in med ditt användarnamn eller e-postadress och ditt lösenord.
+            </DialogContentText>
+            <TextField
+              id="username"
+              variant="outlined"
+              autoFocus
+              margin="dense"
+              label="Användarnamn eller E-postadress"
+              type="email"
+              value={username}
+              onChange={e => set_username(e.target.value)}
+              onSubmit={submitLogin}
+              fullWidth
+            />
+            <TextField
+              id="password"
+              variant="outlined"
+              margin="dense"
+              label="Lösenord"
+              type="password"
+              value={password}
+              onChange={e => set_password(e.target.value)}
+              fullWidth
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={close} color="primary">
+              Avbryt
+            </Button>
+            <Button onClick={submitLogin} color="primary" aria-label="Logga in">
+              Logga in
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    : <div className={styles.loading}>
+        <CircularProgress />
+      </div>
+
 }

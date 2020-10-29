@@ -16,15 +16,23 @@ export interface User {
 
 export type Result = 'logged_in' | 'logged_out' | 'error'
 
+/**
+ * The user state is either a user object or `undefined` (waiting for login) or
+ * `null` (anonymous/logged out). This is convienent since we can identify the
+ * state of the user login check if needed, but we can also easily find if a
+ * user object is available by boolean checking.
+ */
+export type UserState = User | undefined | null
+
 /** The currently logged in user, if any, and functionality to log in and log out */
 export interface UserContext {
-  user: User | undefined
+  user: UserState
   login(username: string, password: string): Promise<Result>
   logout(): Promise<Result>
 }
 
 const dummy_user_context: UserContext = {
-  user: undefined,
+  user: null,
   async login() { return 'error' },
   async logout() { return 'error' }
 }
@@ -49,26 +57,27 @@ export function useUserContext(): UserContext {
 
 */
 export function WithUserContext(props: {children: React.ReactNode}) {
-  const [user, set_state] = React.useState(undefined as undefined | User)
+  const [user, setUser] = React.useState(null as UserState)
   const {loadData} = useDataContext()
   const {genebanks} = useDataContext()
 
-  async function handle_promise(promise: Promise<User | null>): Promise<Result> {
+  async function handleLogin(promise: Promise<User | null>): Promise<Result> {
     return await promise.then(
       data => {
         console.log(data)
-        set_state(data ?? undefined)
+        setUser(data ?? null)
         return data ? 'logged_in' : 'logged_out'
       },
       error => {
         console.error(error)
-        set_state(undefined)
+        setUser(null)
         return 'error'
       })
   }
 
   async function login(username: string, password: string) {
-    return await handle_promise(post('/api/login', {username, password})).then(
+    setUser(undefined)
+    return await handleLogin(post('/api/login', {username, password})).then(
       success => {
         if (success == 'logged_in') {
           loadData('all')
@@ -118,13 +127,13 @@ export function WithUserContext(props: {children: React.ReactNode}) {
   }
 
   function logout() {
-    let status = handle_promise(get('/api/logout'))
+    let status = handleLogin(get('/api/logout'))
     loadData('none')
     return status
   }
 
   function on_mount() {
-    handle_promise(get('/api/user'))
+    handleLogin(get('/api/user'))
   }
 
   React.useEffect(on_mount, [])
