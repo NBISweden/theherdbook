@@ -1,0 +1,47 @@
+name: Create packages
+on:
+  push:
+    branches:
+
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build container
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: |
+             echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+
+             branch=${GITHUB_REF##*/}
+             
+             for image in herdbook_r-api herdbook_main herdbook_frontend; do
+               docker pull "ghcr.io/nbisweden/$image:latest" || true
+               docker pull "ghcr.io/nbisweden/$image:$branch" || true
+             done
+             
+             for p in .docker/*.default ; do
+               mv "$p" "${p%.default}"
+             done
+
+             docker-compose build --build-arg BUILDKIT_INLINE_CACHE=1
+
+             for image in herdbook_r-api herdbook_main herdbook_frontend; do
+               docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
+               docker push "ghcr.io/nbisweden/$image:$branch"
+
+               for mb in main master develop; do
+                 if [ "$mb" = "$branch" ]; then
+                   docker tag "$image:latest" "ghcr.io/nbisweden/$image:latest"
+                   docker push "ghcr.io/nbisweden/$image:latest"
+                 fi
+               done
+             done
