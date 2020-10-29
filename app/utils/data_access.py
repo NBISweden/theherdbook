@@ -292,14 +292,8 @@ def form_to_individual(form, user = None):
 
     canManage = user and (user.is_admin or user.is_manager and individual.current_herd.genebank_id in user.is_manager)
 
-    # certificate is different from the other restricted fields in that it can
-    # never be set by owners, while the other fields can be set for new animals.
-    if 'certificate' in form and form['certificate'] != individual.certificate:
-        if not canManage:
-            raise ValueError(f"Only managers can update certificate numbers")
-
     if individual.id and not canManage: # we're updating (not creating new)
-        for admin_field in ['name', 'sex', 'birth_date', 'colour_note', 'mother', 'father', 'colour', ]:
+        for admin_field in ['certificate', 'name', 'sex', 'birth_date', 'colour_note', 'mother', 'father', 'colour', ]:
             if 'number' in form[admin_field]: # parents
                 changed = form[admin_field]['number'] != getattr(individual, admin_field).number
             elif admin_field == 'colour':

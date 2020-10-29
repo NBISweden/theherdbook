@@ -248,7 +248,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 onChange={(event) => {updateField('number', event.currentTarget.value)}}
               />
               <TextField
-                disabled={!canManage}
+                disabled={!(isNew || canManage)}
                 label="Certifikat"
                 className={style.control}
                 variant={inputVariant}
