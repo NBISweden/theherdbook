@@ -112,6 +112,7 @@ const useStyles = makeStyles({
  */
 export function IndividualEdit({id}: {id: string | undefined}) {
   const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
+  const [isNew, setIsNew] = React.useState(!!id as boolean)
   const [bodyfat, setBodyfat] = React.useState('normal')
   const [weight, setWeight] = React.useState(3.0)
   const [hullDate, setHullDate] = React.useState(new Date().toLocaleDateString('sv'))
@@ -119,6 +120,9 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   const { user } = useUserContext()
   const { genebanks, colors } = useDataContext()
   const {userMessage} = useMessageContext()
+  const canManage: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.genebank)
+  }, [user, individual])
   const style  = useStyles()
   const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
 
@@ -178,7 +182,10 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   React.useEffect(() => {
     user && user.canEdit(id) ?
       get(`/api/individual/${id}`).then(
-        (data: Individual) => setIndividual(data),
+        (data: Individual) => {
+          setIndividual(data)
+          setIsNew(false)
+        },
         error => {
           console.error(error);
           userMessage(error, 'error')
@@ -241,7 +248,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 onChange={(event) => {updateField('number', event.currentTarget.value)}}
               />
               <TextField
-                disabled={!user?.canEdit(individual.genebank)}
+                disabled={!(isNew || canManage)}
                 label="Certifikat"
                 className={style.control}
                 variant={inputVariant}
@@ -250,6 +257,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               />
             </div>
             <TextField
+              disabled={!(isNew || canManage)}
               label="Namn"
               className={style.control}
               variant={inputVariant}
@@ -258,6 +266,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
             />
             <div className={style.flexRow}>
               <Autocomplete
+                disabled={!(isNew || canManage)}
                 options={sexOptions}
                 value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
                 getOptionLabel={(option: OptionType) => option.label}
@@ -267,6 +276,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 }}
               />
               <TextField label='Födelsedatum' className={style.control}
+                disabled={!(isNew || canManage)}
                 value={individual.birth_date ?? ''}
                 type='date'
                 variant={inputVariant}
@@ -278,6 +288,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
             </div>
             <div className={style.flexRow}>
               <Autocomplete
+                disabled={!(isNew || canManage)}
                 options={motherOptions}
                 value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
                 getOptionLabel={(option: OptionType) => option.label}
@@ -287,6 +298,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 }}
               />
               <Autocomplete
+                disabled={!(isNew || canManage)}
                 options={fatherOptions}
                 value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
                 getOptionLabel={(option: OptionType) => option.label}
@@ -298,6 +310,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
             </div>
             <div className={style.flexRow}>
               <Autocomplete
+                disabled={!(isNew || canManage)}
                 options={colorOptions}
                 value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
                 getOptionLabel={(option: OptionType) => option.label}
@@ -307,6 +320,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 }}
               />
               <TextField
+                disabled={!(isNew || canManage)}
                 label="Färgantecking"
                 variant={inputVariant}
                 className={style.control}
