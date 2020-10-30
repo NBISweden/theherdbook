@@ -1,0 +1,43 @@
+---
+version: "3.4"
+services:
+    database:
+        restart: always
+        image: postgres:12
+        container_name: herdbook-db
+        env_file:
+            - ./.docker/database-variables.env
+        environment:
+            - POSTGRES_HOST_AUTH_METHOD=trust
+        volumes:
+            - ./postgres-data:/var/lib/postgresql/data
+    herdbook-frontend-devel:
+        image: ghcr.io/nbisweden/herdbook_frontend:${TAG}
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
+    main:
+        image:  ghcr.io/nbisweden/herdbook_main:${TAG}
+        container_name: herdbook-main
+        env_file:
+            - ./.docker/database-variables.env
+            - ./.docker/r-api-variables.env
+        ports:
+            - 8080:8080
+            - 8443:8443
+        volumes:
+            - type: bind
+              source: ./app
+              target: /api_src
+            - type: bind
+              source: ./config
+              target: /config
+        depends_on:
+            - database
+            - herdbook-frontend-devel
+    r-api:
+        container_name: r-api
+        env_file:
+            - ./.docker/database-variables.env
+            - ./.docker/r-api-variables.env
+        image: ghcr.io/nbisweden/herdbook_r-api:${TAG}
