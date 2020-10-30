@@ -57,6 +57,8 @@ export interface Individual extends LimitedIndividual{
     herd_active: boolean
     active: boolean
     alive: boolean
+    inbreeding?: number
+    MK?: number
 }
 
 export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;
