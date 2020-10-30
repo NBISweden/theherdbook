@@ -8,7 +8,7 @@ import { Button, Tooltip} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useMessageContext } from '@app/message_context'
 import { get } from '@app/communication'
-import { Individual, herdLabel, DateValue, individualLabel } from '@app/data_context_global'
+import { Individual, herdLabel, DateValue, individualLabel, locale } from '@app/data_context_global'
 import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 import { useUserContext } from '@app/user_context'
@@ -119,8 +119,14 @@ export function IndividualView({id} : {id: string}) {
                 {individual?.colour_note}
               </dd>
               <dt>Född:</dt><dd>
-                {individual?.birth_date}
-                {individual && individual?.death_date && ` - Död: ${individual?.death_date}`}
+                {individual?.birth_date
+                 ? new Date(individual.birth_date).toLocaleDateString(locale)
+                 : '-'
+                 }
+                {individual?.death_date
+                 ? ` - Död: ${new Date(individual.death_date).toLocaleDateString(locale)}`
+                 : ''
+                 }
               </dd>
               <dt>Kullstorlek:</dt><dd>{individual?.litter}</dd>
               <dt>Vikt:</dt>
@@ -157,7 +163,7 @@ export function IndividualView({id} : {id: string}) {
               {individual && individual.herd_tracking && individual.herd_tracking.map((herdTrack: any, i) => {
                 if (herdTrack.herd) {
                   return <Link to={`/herd/${herdTrack.herd}`} key={i}>
-                            <li>{herdTrack.date}: {herdLabel(herdTrack)}</li>
+                            <li>{new Date(herdTrack.date).toLocaleDateString(locale)}: {herdLabel(herdTrack)}</li>
                           </Link>
                 } else {
                   return <li key={i}>{herdTrack.date}: Utanför genbanken</li>
