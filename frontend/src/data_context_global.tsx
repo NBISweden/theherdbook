@@ -63,14 +63,16 @@ export interface Individual extends LimitedIndividual{
 
 export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;
 
-
-export interface Herd {
+export interface LimitedHerd {
     id: number
     genebank: number
     herd: string
     herd_name: string | null
-    has_details: boolean
     is_active: boolean | null
+}
+
+export interface Herd extends LimitedHerd{
+    has_details: boolean
     start_date: string | null
     name: string | null
     name_privacy?: PrivacyLevel
@@ -125,7 +127,7 @@ export function userLabel(user: NameID): string {
 export interface Genebank {
     id: number
     name: string
-    herds: Array<Herd>
+    herds: Array<LimitedHerd>
     individuals: Array<Individual>
 }
 
