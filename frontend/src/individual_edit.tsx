@@ -6,8 +6,8 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { get, update } from '@app/communication';
-import { BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
-         individualLabel, LimitedIndividual, locale, OptionType, ServerMessage,
+import { asLocale, BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
+         individualLabel, LimitedIndividual, OptionType, ServerMessage,
         } from '@app/data_context_global';
 import { useMessageContext } from '@app/message_context';
 import { Button, CircularProgress, InputAdornment, TextField,
@@ -118,8 +118,8 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   const [isNew, setIsNew] = React.useState(!!id as boolean)
   const [bodyfat, setBodyfat] = React.useState('normal')
   const [weight, setWeight] = React.useState(3.0)
-  const [hullDate, setHullDate] = React.useState(new Date().toLocaleDateString('sv'))
-  const [weightDate, setWeightDate] = React.useState(new Date().toLocaleDateString('sv'))
+  const [hullDate, setHullDate] = React.useState(asLocale())
+  const [weightDate, setWeightDate] = React.useState(asLocale())
   const { user } = useUserContext()
   const { genebanks, colors } = useDataContext()
   const {userMessage} = useMessageContext()
@@ -357,7 +357,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               <ul>
                 {individual.weights && individual.weights.map((w: DateWeight, i: number) =>
                   <li key={i} className={style.measureList}>
-                    {`${new Date(w.date).toLocaleDateString('sv')} - ${w.weight} kg`}
+                    {`${asLocale(w.date)} - ${w.weight} kg`}
                     <span className={style.listButton}>
                       [<a className={style.scriptLink} onClick={() => removeMeasure('weights', i)}>
                         Delete
@@ -402,7 +402,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               <ul>
                 {individual.bodyfat && individual.bodyfat.map((b: DateBodyfat, i: number) =>
                   <li key={i} className={style.measureList}>
-                    {`${new Date(b.date).toLocaleDateString(locale)} - ${b.bodyfat}`}
+                    {`${asLocale(b.date)} - ${b.bodyfat}`}
                     <span className={style.listButton}>
                       [<a className={style.scriptLink} onClick={() => removeMeasure('bodyfat', i)}>
                         Delete

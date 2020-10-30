@@ -12,7 +12,7 @@ import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     Search, ViewColumn } from '@material-ui/icons'
 import { CircularProgress, Checkbox,  makeStyles, FormControlLabel } from '@material-ui/core';
 
-import { Individual, locale } from '@app/data_context_global';
+import { asLocale, Individual } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
 import { HerdView } from './herd_view'
 import { useMessageContext } from '@app/message_context';
@@ -111,20 +111,10 @@ export function FilterTable({individuals, title = '', filters = [],
     },
     {field: 'sex', title: 'Kön', hidden: false},
     {field: 'birth_date', title: 'Födelsedatum', hidden: false,
-      render: (rowData:any) => {
-        if (rowData['birth_date']) {
-          return new Date(rowData['birth_date']).toLocaleDateString(locale)
-        }
-        return ''
-      }
+      render: (rowData:any) => asLocale(rowData['birth_date'])
     },
     {field: 'death_date', title: 'Dödsdatum', hidden: false,
-      render: (rowData:any) => {
-        if (rowData['death_date']) {
-          return new Date(rowData['death_date']).toLocaleDateString(locale)
-        }
-        return ''
-      }
+      render: (rowData:any) => asLocale(rowData['death_date'])
     },
     {field: 'death_note', title: 'Dödsanteckning', hidden: false},
     {field: 'mother', title: 'Moder', hidden: false,
