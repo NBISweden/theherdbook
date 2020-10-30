@@ -144,6 +144,9 @@ export type ServerMessage = {
 
 export type OptionType = {value: string, label: string};
 
+export const dateFormat = 'yyyy-MM-dd'
+export const locale = 'SE-sv'
+
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],

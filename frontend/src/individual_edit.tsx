@@ -6,12 +6,15 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { get, update } from '@app/communication';
-import { BodyFat, DateBodyfat, DateWeight, Individual, individualLabel,
-         LimitedIndividual, OptionType, ServerMessage,
+import { BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
+         individualLabel, LimitedIndividual, locale, OptionType, ServerMessage,
         } from '@app/data_context_global';
 import { useMessageContext } from '@app/message_context';
 import { Button, CircularProgress, InputAdornment, TextField,
         } from '@material-ui/core';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers'
+import DateFnsUtils from '@date-io/date-fns'
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
 import { Autocomplete } from '@material-ui/lab';
@@ -229,208 +232,223 @@ export function IndividualEdit({id}: {id: string | undefined}) {
   return <>
   {individual
     ? <div className={style.form}>
-        <div className={style.flexRowOrColumn}>
-          <div className={style.formPane}>
-            <div className={style.titleText}>
-              Redigera Individ
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <div className={style.flexRowOrColumn}>
+            <div className={style.formPane}>
+              <div className={style.titleText}>
+                Redigera Individ
+              </div>
+              <div className={style.adminPane}>
+                <div className={style.paneTitle}>
+                  Kan endast ändras av genbanksansvarig
+                </div>
+
+                <TextField
+                  disabled
+                  label="Nummer"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={individual.number ?? ''}
+                  onChange={(event) => {updateField('number', event.currentTarget.value)}}
+                />
+                <TextField
+                  disabled={!(isNew || canManage)}
+                  label="Certifikat"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={individual.certificate ?? ''}
+                  onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
+                />
+              </div>
+              <TextField
+                disabled={!(isNew || canManage)}
+                label="Namn"
+                className={style.control}
+                variant={inputVariant}
+                value={individual.name ?? ''}
+                onChange={(event) => {updateField('name', event.currentTarget.value)}}
+              />
+              <div className={style.flexRow}>
+                <Autocomplete
+                  disabled={!(isNew || canManage)}
+                  options={sexOptions}
+                  value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  renderInput={(params) => <TextField {...params} label="Kön" className={style.control} variant={inputVariant} margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    updateField('sex', newValue?.value ?? '')
+                  }}
+                />
+
+                <KeyboardDatePicker
+                  disabled={!(isNew || canManage)}
+                  autoOk
+                  variant="inline"
+                  className={style.control}
+                  inputVariant={inputVariant}
+                  label="Födelsedatum"
+                  format={dateFormat}
+                  value={individual.birth_date ?? ''}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(date, value) => {value && updateField('birth_date', value)}}
+                />
+              </div>
+              <div className={style.flexRow}>
+                <Autocomplete
+                  disabled={!(isNew || canManage)}
+                  options={motherOptions}
+                  value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  renderInput={(params) => <TextField {...params} label="Mor" className={style.control} variant={inputVariant} margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    updateField('mother', asIndividual(newValue?.value))
+                  }}
+                />
+                <Autocomplete
+                  disabled={!(isNew || canManage)}
+                  options={fatherOptions}
+                  value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  renderInput={(params) => <TextField {...params} label="Far" className={style.control} variant={inputVariant} margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    updateField('father', asIndividual(newValue?.value))
+                  }}
+                />
+              </div>
+              <div className={style.flexRow}>
+                <Autocomplete
+                  disabled={!(isNew || canManage)}
+                  options={colorOptions}
+                  value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  renderInput={(params) => <TextField {...params} label="Färg" className={style.control} variant={inputVariant} margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    updateField('colour', newValue?.value ?? '')
+                  }}
+                />
+                <TextField
+                  disabled={!(isNew || canManage)}
+                  label="Färgantecking"
+                  variant={inputVariant}
+                  className={style.control}
+                  multiline
+                  rows={3}
+                  value={individual.colour_note ?? ''}
+                  onChange={(event) => {updateField('colour_note', event.currentTarget.value)}}
+                />
+              </div>
+              <TextField
+                label="Anteckningar"
+                variant={inputVariant}
+                className={style.wideControl}
+                multiline
+                rows={4}
+                value={individual.notes ?? ''}
+                onChange={(event) => {updateField('notes', event.currentTarget.value)}}
+              />
             </div>
-            <div className={style.adminPane}>
-              <div className={style.paneTitle}>
-                Kan endast ändras av genbanksansvarig
+            <div className={style.formPane}>
+              <div className={style.titleText}>
+                Mått
+              </div>
+              <h3>Vikter</h3>
+              <ul>
+                {individual.weights && individual.weights.map((w: DateWeight, i: number) =>
+                  <li key={i} className={style.measureList}>
+                    {`${new Date(w.date).toLocaleDateString('sv')} - ${w.weight} kg`}
+                    <span className={style.listButton}>
+                      [<a className={style.scriptLink} onClick={() => removeMeasure('weights', i)}>
+                        Delete
+                      </a>]
+                    </span>
+                  </li>)}
+              </ul>
+              <div className={style.flexRow}>
+                <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    className={style.control}
+                    inputVariant={inputVariant}
+                    label="Mätningsdatum"
+                    format={dateFormat}
+                    value={weightDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {value && setWeightDate(value)}}
+                  />
+                <TextField label='Vikt' className={style.control}
+                  value={weight}
+                  type='number'
+                  variant={inputVariant}
+                  InputProps={{
+                    endAdornment: <InputAdornment position='end'>Kg</InputAdornment>
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(e: any) => {setWeight(e.target.value)}}
+                  />
               </div>
 
-              <TextField
-                disabled
-                label="Nummer"
-                className={style.control}
-                variant={inputVariant}
-                value={individual.number ?? ''}
-                onChange={(event) => {updateField('number', event.currentTarget.value)}}
-              />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Certifikat"
-                className={style.control}
-                variant={inputVariant}
-                value={individual.certificate ?? ''}
-                onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
-              />
-            </div>
-            <TextField
-              disabled={!(isNew || canManage)}
-              label="Namn"
-              className={style.control}
-              variant={inputVariant}
-              value={individual.name ?? ''}
-              onChange={(event) => {updateField('name', event.currentTarget.value)}}
-            />
-            <div className={style.flexRow}>
-              <Autocomplete
-                disabled={!(isNew || canManage)}
-                options={sexOptions}
-                value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
-                getOptionLabel={(option: OptionType) => option.label}
-                renderInput={(params) => <TextField {...params} label="Kön" className={style.control} variant={inputVariant} margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  updateField('sex', newValue?.value ?? '')
-                }}
-              />
-              <TextField label='Födelsedatum' className={style.control}
-                disabled={!(isNew || canManage)}
-                value={individual.birth_date ?? ''}
-                type='date'
-                variant={inputVariant}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {updateField('birth_date', e.target.value)}}
+              <Button variant="contained"
+                      color="primary"
+                      onClick={() => {updateField('weights', [...individual.weights, {date: weightDate, weight: weight}])}}>
+                {'Lägg till viktmätning'}
+              </Button>
+              <h3>Hull</h3>
+              <ul>
+                {individual.bodyfat && individual.bodyfat.map((b: DateBodyfat, i: number) =>
+                  <li key={i} className={style.measureList}>
+                    {`${new Date(b.date).toLocaleDateString(locale)} - ${b.bodyfat}`}
+                    <span className={style.listButton}>
+                      [<a className={style.scriptLink} onClick={() => removeMeasure('bodyfat', i)}>
+                        Delete
+                      </a>]
+                    </span>
+                  </li>)}
+              </ul>
+              <div className={style.flexRow}>
+                <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    className={style.control}
+                    inputVariant={inputVariant}
+                    label="Mätningsdatum"
+                    format={dateFormat}
+                    value={hullDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {value && setHullDate(value)}}
+                  />
+                <Autocomplete
+                  options={bodyfatOptions}
+                  value={bodyfatOptions.find(option => option.value == bodyfat) ?? sexOptions[1]}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  renderInput={(params) => <TextField {...params} label="Hull" className={style.control} variant={inputVariant} margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    setBodyfat(newValue?.value ?? 'normal')
+                  }}
                 />
+              </div>
+              <Button variant="contained"
+                      color="primary"
+                      onClick={() => {updateField('bodyfat', [...individual.bodyfat, {date: hullDate, bodyfat: bodyfat as BodyFat}])}}>
+                {'Lägg till hullmätning'}
+              </Button>
             </div>
-            <div className={style.flexRow}>
-              <Autocomplete
-                disabled={!(isNew || canManage)}
-                options={motherOptions}
-                value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
-                getOptionLabel={(option: OptionType) => option.label}
-                renderInput={(params) => <TextField {...params} label="Mor" className={style.control} variant={inputVariant} margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  updateField('mother', asIndividual(newValue?.value))
-                }}
-              />
-              <Autocomplete
-                disabled={!(isNew || canManage)}
-                options={fatherOptions}
-                value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
-                getOptionLabel={(option: OptionType) => option.label}
-                renderInput={(params) => <TextField {...params} label="Far" className={style.control} variant={inputVariant} margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  updateField('father', asIndividual(newValue?.value))
-                }}
-              />
-            </div>
-            <div className={style.flexRow}>
-              <Autocomplete
-                disabled={!(isNew || canManage)}
-                options={colorOptions}
-                value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
-                getOptionLabel={(option: OptionType) => option.label}
-                renderInput={(params) => <TextField {...params} label="Färg" className={style.control} variant={inputVariant} margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  updateField('colour', newValue?.value ?? '')
-                }}
-              />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Färgantecking"
-                variant={inputVariant}
-                className={style.control}
-                multiline
-                rows={3}
-                value={individual.colour_note ?? ''}
-                onChange={(event) => {updateField('colour_note', event.currentTarget.value)}}
-              />
-            </div>
-            <TextField
-              label="Anteckningar"
-              variant={inputVariant}
-              className={style.wideControl}
-              multiline
-              rows={4}
-              value={individual.notes ?? ''}
-              onChange={(event) => {updateField('notes', event.currentTarget.value)}}
-            />
           </div>
-          <div className={style.formPane}>
-            <div className={style.titleText}>
-              Mått
-            </div>
-            <h3>Vikter</h3>
-            <ul>
-              {individual.weights && individual.weights.map((w: DateWeight, i: number) =>
-                <li key={i} className={style.measureList}>
-                  {`${new Date(w.date).toLocaleDateString('sv')} - ${w.weight} kg`}
-                  <span className={style.listButton}>
-                    [<a className={style.scriptLink} onClick={() => removeMeasure('weights', i)}>
-                      Delete
-                    </a>]
-                  </span>
-                </li>)}
-            </ul>
-            <div className={style.flexRow}>
-              <TextField label='Mätningsdatum' className={style.control}
-                value={weightDate}
-                type='date'
-                variant={inputVariant}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {setWeightDate(e.target.value)}}
-                />
-              <TextField label='Vikt' className={style.control}
-                value={weight}
-                type='number'
-                variant={inputVariant}
-                InputProps={{
-                  endAdornment: <InputAdornment position='end'>Kg</InputAdornment>
-                }}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {setWeight(e.target.value)}}
-                />
-            </div>
-
+          <div className={style.paneControls}>
             <Button variant="contained"
                     color="primary"
-                    onClick={() => {updateField('weights', [...individual.weights, {date: weightDate, weight: weight}])}}>
-              {'Lägg till viktmätning'}
-            </Button>
-            <h3>Hull</h3>
-            <ul>
-              {individual.bodyfat && individual.bodyfat.map((b: DateBodyfat, i: number) =>
-                <li key={i} className={style.measureList}>
-                  {`${new Date(b.date).toLocaleDateString('sv')} - ${b.bodyfat}`}
-                  <span className={style.listButton}>
-                    [<a className={style.scriptLink} onClick={() => removeMeasure('bodyfat', i)}>
-                      Delete
-                    </a>]
-                  </span>
-                </li>)}
-            </ul>
-            <div className={style.flexRow}>
-              <TextField label='Mätningsdatum' className={style.control}
-                value={hullDate}
-                type='date'
-                variant={inputVariant}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {setHullDate(e.target.value)}}
-                />
-              <Autocomplete
-                options={bodyfatOptions}
-                value={bodyfatOptions.find(option => option.value == bodyfat) ?? sexOptions[1]}
-                getOptionLabel={(option: OptionType) => option.label}
-                renderInput={(params) => <TextField {...params} label="Hull" className={style.control} variant={inputVariant} margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  setBodyfat(newValue?.value ?? 'normal')
-                }}
-              />
-            </div>
-            <Button variant="contained"
-                    color="primary"
-                    onClick={() => {updateField('bodyfat', [...individual.bodyfat, {date: hullDate, bodyfat: bodyfat as BodyFat}])}}>
-              {'Lägg till hullmätning'}
+                    onClick={() => save(individual)}>
+              {'Spara'}
             </Button>
           </div>
-        </div>
-        <div className={style.paneControls}>
-          <Button variant="contained"
-                  color="primary"
-                  onClick={() => save(individual)}>
-            {'Spara'}
-          </Button>
-        </div>
+        </MuiPickersUtilsProvider>
       </div>
     : <div className={style.loading}>
         <h2>Loading data</h2>
