@@ -68,3 +68,9 @@ To be able to login in the website and play with it you will need to create an u
 ./register_user.sh 'user@domain.com', 'userpassword'
 ```
 
+If you just want to test a PR or a branche that is pushed to Github we now have a Github Action that will build the images
+So to just pull and test the prebuilt images use the script
+
+```
+./test-current-branch.sh
+```
