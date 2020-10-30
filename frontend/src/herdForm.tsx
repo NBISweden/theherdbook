@@ -7,11 +7,14 @@ import { unstable_batchedUpdates } from 'react-dom';
 import { useHistory } from "react-router-dom";
 import Select from 'react-select';
 import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@material-ui/core';
+import { MuiPickersUtilsProvider, KeyboardDatePicker
+        } from '@material-ui/pickers'
+import DateFnsUtils from '@date-io/date-fns'
 import { makeStyles } from '@material-ui/core/styles';
 import { useDataContext } from '@app/data_context'
 import { useUserContext } from '@app/user_context';
 import { useMessageContext } from '@app/message_context';
-import { Herd, herdLabel, Genebank, ServerMessage } from '@app/data_context_global';
+import { Herd, herdLabel, Genebank, ServerMessage, dateFormat } from '@app/data_context_global';
 import { get, updateHerd, createHerd } from '@app/communication';
 import { FieldWithPermission } from '@app/field_with_permission';
 
@@ -266,74 +269,79 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
         <h1 className={classes.title}>{herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}</h1>
         {(currentView == 'form' && user && user.canEdit(herd.herd)) && <>
           <form className={classes.form}>
-            <div className={classes.formCard}>
-              <Typography className={classes.title} color="primary" gutterBottom>
-                Kontaktperson
-              </Typography>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <div className={classes.formCard}>
+                <Typography className={classes.title} color="primary" gutterBottom>
+                  Kontaktperson
+                </Typography>
 
-              {contactFields.map(field =>
-                  <FieldWithPermission
-                    field={field.field}
-                    label={field.label}
-                    value={herd[field.field]}
-                    permission={herd[`${field.field}_privacy` as keyof Herd] ?? null}
-                    setValue={setFormField}
+                {contactFields.map(field =>
+                    <FieldWithPermission
+                      key={field.field}
+                      field={field.field}
+                      label={field.label}
+                      value={herd[field.field]}
+                      permission={herd[`${field.field}_privacy` as keyof Herd] ?? null}
+                      setValue={setFormField}
+                    />
+                  )
+                }
+                <TextField label='Postnummer'
+                  value={postalcode}
+                  onChange={(e: any) => {setPostalcode(e.target.value)}}
                   />
-                )
-              }
-              <TextField label='Postnummer'
-                value={postalcode}
-                onChange={(e: any) => {setPostalcode(e.target.value)}}
-                />
-              <TextField label='Postort'
-                value={postalcity}
-                onChange={(e: any) => {setPostalcity(e.target.value)}}
-                />
-            </div>
+                <TextField label='Postort'
+                  value={postalcity}
+                  onChange={(e: any) => {setPostalcity(e.target.value)}}
+                  />
+              </div>
 
-            <div className={classes.formCard}>
-              <Typography className={classes.title} color="primary" gutterBottom>
-                Besättningsinformation
-              </Typography>
+              <div className={classes.formCard}>
+                <Typography className={classes.title} color="primary" gutterBottom>
+                  Besättningsinformation
+                </Typography>
 
-              <TextField label='Besättningsnamn' className={classes.simpleField}
-                value={herd.herd_name}
-                onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
-                />
-              <FormControlLabel label="Aktiv" labelPlacement="end"
-                control={<Checkbox color="primary" checked={herd.is_active == null ? false : !!herd.is_active} />}
-                value={herd.is_active}
-                onChange={(e: any) => {setFormField('is_active', e.target.checked)}}
-                />
-              <TextField label='Startdatum' className={classes.simpleField}
-                value={herd.start_date}
-                type='date'
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {setFormField('start_date', e.target.value)}}
-                />
+                <TextField label='Besättningsnamn' className={classes.simpleField}
+                  value={herd.herd_name}
+                  onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
+                  />
+                <FormControlLabel label="Aktiv" labelPlacement="end"
+                  control={<Checkbox color="primary" checked={herd.is_active == null ? false : !!herd.is_active} />}
+                  value={herd.is_active}
+                  onChange={(e: any) => {setFormField('is_active', e.target.checked)}}
+                  />
+                <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    className={classes.simpleField}
+                    label="Startdatum"
+                    format={dateFormat}
+                    value={herd.start_date ?? ''}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {value && setFormField('start_date', value)}}
+                  />
+                <TextField label='Besättnings-ID' className={classes.simpleField}
+                  disabled={!isNew}
+                  value={herd.herd}
+                  onChange={(e: any) => {setFormField('herd', e.target.value)}}
+                  />
 
-              <TextField label='Besättnings-ID' className={classes.simpleField}
-                disabled={!isNew}
-                value={herd.herd}
-                onChange={(e: any) => {setFormField('herd', e.target.value)}}
-                />
+                <Typography className={classes.subheading} color="textSecondary">
+                  Genbank
+                </Typography>
+                <Select label='Genbank' isDisabled={!isNew}
+                  value={genebankOption(herd.genebank)}
+                  options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
+                  onChange={(e: any) => setFormField('genebank', e.value)}
+                  />
 
-              <Typography className={classes.subheading} color="textSecondary">
-                Genbank
-              </Typography>
-              <Select label='Genbank' isDisabled={!isNew}
-                value={genebankOption(herd.genebank)}
-                options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
-                onChange={(e: any) => setFormField('genebank', e.value)}
-                />
-
-              <Typography className={classes.subheading} color="textSecondary">
-                Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer
-              </Typography>
-            </div>
-
+                <Typography className={classes.subheading} color="textSecondary">
+                  Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer
+                </Typography>
+              </div>
+            </MuiPickersUtilsProvider>
           </form>
           <Button variant="contained"
                   color="primary"
