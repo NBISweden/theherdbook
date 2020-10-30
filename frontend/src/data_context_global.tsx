@@ -57,6 +57,8 @@ export interface Individual extends LimitedIndividual{
     herd_active: boolean
     active: boolean
     alive: boolean
+    inbreeding?: number
+    MK?: number
 }
 
 export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;
@@ -143,6 +145,20 @@ export type ServerMessage = {
 }
 
 export type OptionType = {value: string, label: string};
+
+export const dateFormat = 'yyyy-MM-dd'
+export const locale = 'SE-sv'
+
+/**
+ * Formats the given `dateString` according to the currently defined `locale`.
+ * If no `dateString` is given the current date is used.
+ *
+ * @param dateString (optional) datestring in javascript understandable format.
+ */
+export function asLocale(dateString?: string) {
+    const date = dateString ? new Date(dateString) : new Date()
+    return date.toLocaleDateString(locale);
+}
 
 const emptyContext: DataContext = {
   genebanks: [],

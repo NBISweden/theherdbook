@@ -8,7 +8,7 @@ import { Button, Tooltip} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { useMessageContext } from '@app/message_context'
 import { get } from '@app/communication'
-import { Individual, herdLabel, DateValue, individualLabel } from '@app/data_context_global'
+import { Individual, herdLabel, DateValue, individualLabel, asLocale } from '@app/data_context_global'
 import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 import { useUserContext } from '@app/user_context'
@@ -119,8 +119,14 @@ export function IndividualView({id} : {id: string}) {
                 {individual?.colour_note}
               </dd>
               <dt>Född:</dt><dd>
-                {individual?.birth_date}
-                {individual && individual?.death_date && ` - Död: ${individual?.death_date}`}
+                {individual?.birth_date
+                 ? asLocale(individual.birth_date)
+                 : '-'
+                 }
+                {individual?.death_date
+                 ? ` - Död: ${asLocale(individual.death_date)}`
+                 : ''
+                 }
               </dd>
               <dt>Kullstorlek:</dt><dd>{individual?.litter}</dd>
               <dt>Vikt:</dt>
@@ -131,7 +137,7 @@ export function IndividualView({id} : {id: string}) {
                                               new Date(a.date).getTime() - new Date(b.date).getTime())
                                       .map((w: any, i) => {
                                         return <li key={i}>
-                                          {`${new Date(w.date).toLocaleDateString()}: ${w.weight} kg`}
+                                          {`${asLocale(w.date)}: ${w.weight} kg`}
                                         </li>
                                       })
                     }
@@ -157,7 +163,7 @@ export function IndividualView({id} : {id: string}) {
               {individual && individual.herd_tracking && individual.herd_tracking.map((herdTrack: any, i) => {
                 if (herdTrack.herd) {
                   return <Link to={`/herd/${herdTrack.herd}`} key={i}>
-                            <li>{herdTrack.date}: {herdLabel(herdTrack)}</li>
+                            <li>{asLocale(herdTrack.date)}: {herdLabel(herdTrack)}</li>
                           </Link>
                 } else {
                   return <li key={i}>{herdTrack.date}: Utanför genbanken</li>
