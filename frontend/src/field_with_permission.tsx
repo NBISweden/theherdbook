@@ -47,7 +47,7 @@ export function FieldWithPermission({field, label, value, permission, setValue}:
         />
       {permission !== undefined &&
         <Autocomplete
-          options={options}
+          options={options ?? []}
           value={options.find(option => option.value == permission) ?? options[0]}
           getOptionLabel={(option: OptionType) => option.label}
           renderInput={(params) => <TextField {...params} label="Synlighet" className={classes.permissionField} margin="normal" />}
