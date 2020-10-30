@@ -9,10 +9,12 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel, userLabel } from '@app/data_context_global';
-import { Button } from '@material-ui/core';
+import { Genebank, NameID, Herd, herdLabel, userLabel, OptionType
+        } from '@app/data_context_global';
+import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
 import { UserForm } from '@app/userForm';
+import { Autocomplete } from '@material-ui/lab';
 
 const useStyles = makeStyles({
   main: {
@@ -58,12 +60,15 @@ export function Manage() {
   const [target, setTarget] = useState(undefined as string | undefined)
   const [options, setOptions] = useState([] as any[])
   const [selected, setSelected] = useState(undefined as any)
+  const [showInactive, setShowInactive] = useState(false)
 
   /**
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
+    const userOptions: OptionType[] = users.map((u: NameID) => {
+      return {value: `u.id`, label: userLabel(u)}
+    });
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
@@ -118,6 +123,20 @@ export function Manage() {
       }
     }
     setSelected(targetOption)
+  }
+
+  const filtered = (options: OptionType[]) => {
+    if (showInactive || topic == 'user') {
+      return options;
+    }
+    const genebank = genebanks.find(g => g.name == topic)
+    if (!genebank) {
+      return options;
+    }
+    return options.filter(option => {
+      const herd = genebank.herds.find(h => h.herd == option.value)
+      return herd?.is_active;
+    })
   }
 
   /**
@@ -184,10 +203,25 @@ export function Manage() {
           </div>
         </div>
 
-        <Select
-          options={options}
-          onChange={(current: any) => history.push(`/manage/${topic}/${current.value}`)}
+        <Autocomplete
+          options={filtered(options) ?? []}
           value={selected}
+          getOptionLabel={(option: OptionType) => option.label}
+          renderInput={(params) => <TextField {...params} label={topic == 'user' ? 'Användare' : 'Besättning'} margin="normal" />}
+          onChange={(event: any, newValue: OptionType | null) => {
+            newValue && history.push(`/manage/${topic}/${newValue.value}`)
+          }}
+        />
+        <FormControlLabel
+          disabled={topic == 'user'}
+          control={
+            <Checkbox
+              checked={showInactive}
+              onChange={(event) => setShowInactive(event.currentTarget.checked)}
+              color="primary"
+              />
+          }
+          label="Visa inaktiva"
           />
       </Paper>
 
