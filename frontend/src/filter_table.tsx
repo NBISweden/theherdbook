@@ -5,14 +5,15 @@
  */
 import React, {forwardRef} from 'react'
 import { default as MaterialTable, Icons } from 'material-table'
-import Select from 'react-select'
 
 import {AddBox, ArrowDownward, Check, ChevronLeft, ChevronRight, Clear,
     DeleteOutline, Edit, FilterList, FirstPage, LastPage, Remove, SaveAlt,
     Search, ViewColumn } from '@material-ui/icons'
-import { CircularProgress, Checkbox,  makeStyles, FormControlLabel } from '@material-ui/core';
+import { CircularProgress, Checkbox,  makeStyles, FormControlLabel, TextField
+        } from '@material-ui/core';
+import { Autocomplete } from '@material-ui/lab';
 
-import { asLocale, Individual } from '@app/data_context_global';
+import { asLocale, Individual, OptionType } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
 import { HerdView } from './herd_view'
 import { useMessageContext } from '@app/message_context';
@@ -172,19 +173,17 @@ export function FilterTable({individuals, title = '', filters = [],
 
   return <>
     <div>
-
-      <FormControlLabel
+      <Autocomplete
+        multiple
         className={styles.columnLabel}
-        label="Kolumner:"
-        labelPlacement="start"
-        control={
-          <Select className={styles.columnSelect}
-            isMulti
-            options={columns.map((v: any) => {return {value: v.field, label: v.title}})}
-            value={columns.filter((v: any) => !v.hidden).map((v: any) => {return {value: v.field, label: v.title}})}
-            onChange={updateColumns}
-            />
-        }
+        options={columns.map((v: any) => {return {value: v.field, label: v.title}})}
+        value={columns.filter((v: any) => !v.hidden).map((v: any) => {return {value: v.field, label: v.title}})}
+        getOptionLabel={(option: OptionType) => option.label}
+        getOptionSelected={(option: OptionType, value: OptionType) => option.value == value.value}
+        renderInput={(params) => <TextField {...params} label='Kolumner' margin="normal" />}
+        onChange={(event: any, newValues: OptionType[] | null) => {
+          newValues && updateColumns(newValues)
+        }}
       />
     </div>
     <div className={styles.table}>
