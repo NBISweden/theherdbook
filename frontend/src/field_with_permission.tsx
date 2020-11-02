@@ -6,7 +6,7 @@ import React from 'react'
 import { TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { Autocomplete } from '@material-ui/lab';
-import { OptionType, PrivacyLevel } from '@app/data_context_global';
+import { inputVariant, OptionType, PrivacyLevel } from '@app/data_context_global';
 
 // Define styles for the form
 const useStyles = makeStyles({
@@ -43,6 +43,7 @@ export function FieldWithPermission({field, label, value, permission, setValue}:
     <div className={classes.permissionGroup}>
       <TextField label={label} className={classes.simpleField}
         value={value}
+        variant={inputVariant}
         onChange={(e: any) => {setValue(field, e.target.value)}}
         />
       {permission !== undefined &&
@@ -50,7 +51,11 @@ export function FieldWithPermission({field, label, value, permission, setValue}:
           options={options ?? []}
           value={options.find(option => option.value == permission) ?? options[0]}
           getOptionLabel={(option: OptionType) => option.label}
-          renderInput={(params) => <TextField {...params} label="Synlighet" className={classes.permissionField} margin="normal" />}
+          renderInput={(params) => <TextField {...params}
+            label="Synlighet"
+            variant={inputVariant}
+            className={classes.permissionField}
+            margin="normal" />}
           onChange={(event: any, newValue: OptionType | null) => {
             setValue(`${field}_privacy`, newValue?.value)
           }}

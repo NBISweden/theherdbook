@@ -5,6 +5,7 @@ import { PedigreeNetwork } from "@app/pedigree_plot"
 import { useDataContext } from '@app/data_context';
 import { calcPedigree } from '@app/pedigree';
 import { TextField } from '@material-ui/core';
+import { inputVariant } from './data_context_global';
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component
@@ -20,6 +21,7 @@ export function IndividualPedigree({ id, generations }: { id: string, generation
       label="Antal Generationer"
       type="number"
       value={generations_input}
+      variant={inputVariant}
       onChange={event => setGenerations(+event.currentTarget.value)}
       InputLabelProps={{
         shrink: true,

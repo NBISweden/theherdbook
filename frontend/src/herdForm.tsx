@@ -14,7 +14,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useDataContext } from '@app/data_context'
 import { useUserContext } from '@app/user_context';
 import { useMessageContext } from '@app/message_context';
-import { Herd, herdLabel, Genebank, ServerMessage, dateFormat } from '@app/data_context_global';
+import { Herd, herdLabel, Genebank, ServerMessage, dateFormat, inputVariant } from '@app/data_context_global';
 import { get, updateHerd, createHerd } from '@app/communication';
 import { FieldWithPermission } from '@app/field_with_permission';
 
@@ -288,10 +288,12 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
                 }
                 <TextField label='Postnummer'
                   value={postalcode}
+                  variant={inputVariant}
                   onChange={(e: any) => {setPostalcode(e.target.value)}}
                   />
                 <TextField label='Postort'
                   value={postalcity}
+                  variant={inputVariant}
                   onChange={(e: any) => {setPostalcity(e.target.value)}}
                   />
               </div>
@@ -303,6 +305,7 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
 
                 <TextField label='Besättningsnamn' className={classes.simpleField}
                   value={herd.herd_name}
+                  variant={inputVariant}
                   onChange={(e: any) => {setFormField('herd_name', e.target.value)}}
                   />
                 <FormControlLabel label="Aktiv" labelPlacement="end"
@@ -313,6 +316,7 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
                 <KeyboardDatePicker
                     autoOk
                     variant="inline"
+                    inputVariant={inputVariant}
                     className={classes.simpleField}
                     label="Startdatum"
                     format={dateFormat}
@@ -325,6 +329,7 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
                 <TextField label='Besättnings-ID' className={classes.simpleField}
                   disabled={!isNew}
                   value={herd.herd}
+                  variant={inputVariant}
                   onChange={(e: any) => {setFormField('herd', e.target.value)}}
                   />
 

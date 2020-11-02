@@ -11,6 +11,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 import {useUserContext} from '@app/user_context'
+import { inputVariant } from './data_context_global';
 
 const useStyles = makeStyles({
   loading: {
@@ -66,7 +67,7 @@ export function Login() {
             </DialogContentText>
             <TextField
               id="username"
-              variant="outlined"
+              variant={inputVariant}
               autoFocus
               margin="dense"
               label="Användarnamn eller E-postadress"
@@ -78,7 +79,7 @@ export function Login() {
             />
             <TextField
               id="password"
-              variant="outlined"
+              variant={inputVariant}
               margin="dense"
               label="Lösenord"
               type="password"

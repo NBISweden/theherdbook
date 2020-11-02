@@ -13,7 +13,7 @@ import { CircularProgress, Checkbox,  makeStyles, FormControlLabel, TextField
         } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 
-import { asLocale, Individual, OptionType } from '@app/data_context_global';
+import { asLocale, Individual, inputVariant, OptionType } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
 import { HerdView } from './herd_view'
 import { useMessageContext } from '@app/message_context';
@@ -180,7 +180,10 @@ export function FilterTable({individuals, title = '', filters = [],
         value={columns.filter((v: any) => !v.hidden).map((v: any) => {return {value: v.field, label: v.title}})}
         getOptionLabel={(option: OptionType) => option.label}
         getOptionSelected={(option: OptionType, value: OptionType) => option.value == value.value}
-        renderInput={(params) => <TextField {...params} label='Kolumner' margin="normal" />}
+        renderInput={(params) => <TextField {...params}
+          label='Kolumner'
+          variant={inputVariant}
+          margin="normal" />}
         onChange={(event: any, newValues: OptionType[] | null) => {
           newValues && updateColumns(newValues)
         }}

@@ -10,7 +10,7 @@ import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd, Genebank, herdLabel, ServerMessage } from '@app/data_context_global';
+import { Herd, Genebank, herdLabel, ServerMessage, inputVariant } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';
 import { NameID } from '@app/data_context_global';
@@ -229,18 +229,21 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
       <form className={classes.form} noValidate autoComplete="off">
           <TextField label='E-mail'
                      type='email'
+                     variant={inputVariant}
                      className={classes.simpleField}
                      value={user.email ?? ''}
                      onChange={e => setUser({...user, email: e.target.value})}
             />
             <TextField label='Användarnamn'
                        type='username'
+                       variant={inputVariant}
                        className={classes.simpleField}
                        value={user.username ?? ''}
                        onChange={e => setUser({...user, username: e.target.value})}
               />
           {isNew ? <TextField label='Lösenord'
                       type='password'
+                      variant={inputVariant}
                       hidden={true}
                       className={classes.simpleField}
                       value={user.password ?? ''}

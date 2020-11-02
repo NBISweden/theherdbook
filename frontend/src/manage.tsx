@@ -9,7 +9,7 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, herdLabel, userLabel, OptionType,
+import { Genebank, NameID, herdLabel, userLabel, OptionType, inputVariant
         } from '@app/data_context_global';
 import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
@@ -212,7 +212,10 @@ export function Manage() {
           options={filtered(options) ?? []}
           value={selected}
           getOptionLabel={(option: OptionType) => option.label}
-          renderInput={(params) => <TextField {...params} label={topic == 'user' ? 'Användare' : 'Besättning'} margin="normal" />}
+          renderInput={(params) => <TextField {...params}
+            label={topic == 'user' ? 'Användare' : 'Besättning'}
+            variant={inputVariant}
+            margin="normal" />}
           onChange={(event: any, newValue: OptionType | null) => {
             newValue && history.push(`/manage/${topic}/${newValue.value}`)
           }}
