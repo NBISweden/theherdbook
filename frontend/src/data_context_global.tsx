@@ -59,6 +59,7 @@ export interface Individual extends LimitedIndividual{
     alive: boolean
     inbreeding?: number
     MK?: number
+    children?: number
 }
 
 export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;

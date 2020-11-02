@@ -117,6 +117,7 @@ export function FilterTable({individuals, title = '', filters = [],
       render: (rowData:any) => asLocale(rowData['death_date'])
     },
     {field: 'death_note', title: 'Dödsanteckning', hidden: false},
+    {field: 'children', title: 'Ungar', hidden: false},
     {field: 'mother', title: 'Moder', hidden: false,
       render: (rowData:any) =>
       <a className={styles.functionLink}
