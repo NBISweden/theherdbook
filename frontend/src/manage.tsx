@@ -133,9 +133,14 @@ export function Manage() {
     if (!genebank) {
       return options;
     }
+    // make index just in case:
+    let activeIndex: {[herd: string]: boolean | null | undefined} = {}
+    genebank.herds.forEach(h => {
+      activeIndex[h.herd] = h.is_active
+    })
+
     return options.filter(option => {
-      const herd = genebank.herds.find(h => h.herd == option.value)
-      return herd?.is_active;
+      return activeIndex[option.value]
     })
   }
 
