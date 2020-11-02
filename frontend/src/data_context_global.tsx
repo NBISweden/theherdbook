@@ -108,7 +108,7 @@ export function individualLabel(individual: LimitedIndividual): string {
     return label
 }
 
-export function herdLabel(herd: Herd): string {
+export function herdLabel(herd: LimitedHerd): string {
     let label = `${herd.herd}`
     if (herd.herd_name) {
         label += ` - ${herd.herd_name}`

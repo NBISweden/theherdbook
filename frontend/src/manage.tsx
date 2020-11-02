@@ -9,7 +9,7 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel, userLabel, OptionType
+import { Genebank, NameID, herdLabel, userLabel, OptionType,
         } from '@app/data_context_global';
 import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
@@ -67,7 +67,7 @@ export function Manage() {
    */
   const setUserOptions = () => {
     const userOptions: OptionType[] = users.map((u: NameID) => {
-      return {value: `u.id`, label: userLabel(u)}
+      return {value: '' + u.id, label: userLabel(u)}
     });
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
@@ -82,7 +82,7 @@ export function Manage() {
   const setHerdOptions = (name: string) => {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
-      const herdOptions: any[] = dataset.herds.map((h: Herd) => {
+      const herdOptions: any[] = dataset.herds.map(h => {
         return {value: h.herd, label: herdLabel(h)}
       })
       herdOptions.push({value: 'new', label: 'New Herd'})
@@ -116,7 +116,7 @@ export function Manage() {
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
       if (dataset) {
-        const targetHerd = dataset.herds.find((h: Herd) => h.herd == path)
+        const targetHerd = dataset.herds.find(h => h.herd == path)
         if (targetHerd) {
           targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
         }
