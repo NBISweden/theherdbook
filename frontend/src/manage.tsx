@@ -8,9 +8,8 @@ import Paper from '@material-ui/core/Paper';
 import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
-import Select from 'react-select';
-import { Genebank, NameID, herdLabel, userLabel, OptionType, inputVariant
-        } from '@app/data_context_global';
+import { Genebank, NameID, herdLabel, userLabel, OptionType, inputVariant,
+        LimitedHerd } from '@app/data_context_global';
 import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
 import { UserForm } from '@app/userForm';
@@ -59,8 +58,18 @@ export function Manage() {
   const [genebank, setGenebank] = useState(undefined as string | undefined)
   const [target, setTarget] = useState(undefined as string | undefined)
   const [options, setOptions] = useState([] as any[])
-  const [selected, setSelected] = useState(undefined as any)
+  const [selected, setSelected] = useState(null as any)
   const [showInactive, setShowInactive] = useState(false)
+  const genebankValue = React.useMemo(() => {
+    if (topic == 'user' || !genebanks) {
+      return null
+    }
+    const genebank = genebanks.find(g => g.name == topic)
+    if (genebank) {
+      return {value: genebank.name, label: genebank.name}
+    }
+    return null
+  }, [genebanks, topic])
 
   /**
    * Set the options of the main select box to the list of current users.
@@ -82,7 +91,7 @@ export function Manage() {
   const setHerdOptions = (name: string) => {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
-      const herdOptions: any[] = dataset.herds.map(h => {
+      const herdOptions: OptionType[] = dataset.herds.map((h: LimitedHerd) => {
         return {value: h.herd, label: herdLabel(h)}
       })
       herdOptions.push({value: 'new', label: 'New Herd'})
@@ -116,7 +125,7 @@ export function Manage() {
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
       if (dataset) {
-        const targetHerd = dataset.herds.find(h => h.herd == path)
+        const targetHerd = dataset.herds.find((h: LimitedHerd) => h.herd == path)
         if (targetHerd) {
           targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
         }
@@ -140,6 +149,10 @@ export function Manage() {
     })
 
     return options.filter(option => {
+      // Add special case for new herds
+      if (option.value == 'new') {
+        return true
+      }
       return activeIndex[option.value]
     })
   }
@@ -185,11 +198,21 @@ export function Manage() {
         <div>
           <div className={styles.rightControls}>
             <div className={topic == 'user' ? styles.hidden : undefined}>
-              <Select
-                options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.name, label: g.name}}) : []}
-                onChange={(current: any) => history.push(`/manage/${current.value}/${target ? target : ''}`)}
-                value={{value: topic == 'user' ? '' : topic, label: topic == 'user' ? '' : topic}}
-                />
+              <Autocomplete
+                options={genebanks ? genebanks.map((g: Genebank) => {
+                  return {value: g.name, label: g.name}}) : []
+                }
+                value={genebankValue}
+                getOptionLabel={(option: OptionType) => option.label}
+                getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
+                renderInput={(params) => <TextField {...params}
+                  label="Genbank"
+                  variant={inputVariant}
+                  margin="normal" />}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  newValue && history.push(`/manage/${newValue.value}/${target ? target : ''}`)
+                }}
+              />
             </div>
           </div>
           <div className={styles.leftControls}>
@@ -212,6 +235,7 @@ export function Manage() {
           options={filtered(options) ?? []}
           value={selected}
           getOptionLabel={(option: OptionType) => option.label}
+          getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
           renderInput={(params) => <TextField {...params}
             label={topic == 'user' ? 'Användare' : 'Besättning'}
             variant={inputVariant}

@@ -5,8 +5,8 @@
 import React from 'react'
 import { unstable_batchedUpdates } from 'react-dom';
 import { useHistory } from "react-router-dom";
-import Select from 'react-select';
 import { FormControlLabel, TextField, Button, Typography, Checkbox } from '@material-ui/core';
+import { Autocomplete } from '@material-ui/lab';
 import { MuiPickersUtilsProvider, KeyboardDatePicker
         } from '@material-ui/pickers'
 import DateFnsUtils from '@date-io/date-fns'
@@ -14,7 +14,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useDataContext } from '@app/data_context'
 import { useUserContext } from '@app/user_context';
 import { useMessageContext } from '@app/message_context';
-import { Herd, herdLabel, Genebank, ServerMessage, dateFormat, inputVariant } from '@app/data_context_global';
+import { Herd, herdLabel, Genebank, ServerMessage, dateFormat, inputVariant, OptionType } from '@app/data_context_global';
 import { get, updateHerd, createHerd } from '@app/communication';
 import { FieldWithPermission } from '@app/field_with_permission';
 
@@ -177,7 +177,7 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
   }
 
   /**
-   * Returns a genebank, identified by `genebankId`, as a React-Select option.
+   * Returns a genebank, identified by `genebankId`, as OptionType.
    * @param genebankId
    */
   const genebankOption = (genebankId: number) => {
@@ -186,7 +186,7 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
     }
     const genebank = genebanks.find((g: Genebank) => g.id == herd.genebank)
     if (genebank) {
-      return {value: genebank.id, label: genebank.name}
+      return {value: '' + genebank.id, label: genebank.name}
     }
     return null
   }
@@ -332,15 +332,20 @@ export function HerdForm({id, view = 'form', change = true}: {id: string | undef
                   variant={inputVariant}
                   onChange={(e: any) => {setFormField('herd', e.target.value)}}
                   />
-
-                <Typography className={classes.subheading} color="textSecondary">
-                  Genbank
-                </Typography>
-                <Select label='Genbank' isDisabled={!isNew}
+                <Autocomplete
+                  options={genebanks ? genebanks.map((g: Genebank) => {return {value: '' + g.id, label: g.name}}) : []}
                   value={genebankOption(herd.genebank)}
-                  options={genebanks ? genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}}) : []}
-                  onChange={(e: any) => setFormField('genebank', e.value)}
-                  />
+                  getOptionLabel={(option: OptionType) => option.label}
+                  getOptionSelected={(option: OptionType, value: OptionType) => option.value == value.value}
+                  renderInput={(params) => <TextField {...params}
+                    label="Genbank"
+                    variant={inputVariant}
+                    className={classes.permissionField}
+                    margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    newValue && setFormField('genebank', +newValue?.value)
+                  }}
+                />
 
                 <Typography className={classes.subheading} color="textSecondary">
                   Besättningen har {herd?.individuals ? herd.individuals.length : 0} individer

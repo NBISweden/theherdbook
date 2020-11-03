@@ -6,14 +6,14 @@ import React from 'react'
 import { unstable_batchedUpdates } from 'react-dom'
 import { TextField, Checkbox, FormControlLabel,
          Button, TableContainer, Paper, Table, TableBody, TableRow, TableCell, TableHead } from '@material-ui/core';
-import Select from 'react-select';
 import { makeStyles } from '@material-ui/core/styles';
 import { get, post, update } from './communication';
 import { useDataContext } from './data_context'
-import { Herd, Genebank, herdLabel, ServerMessage, inputVariant } from '@app/data_context_global';
+import { Herd, Genebank, herdLabel, ServerMessage, inputVariant, OptionType } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';
 import { NameID } from '@app/data_context_global';
+import { Autocomplete } from '@material-ui/lab';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -71,8 +71,8 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   const {userMessage} = useMessageContext()
   const [user, setUser] = React.useState({...defaultValues} as ManagedUser)
   const [isNew, setNew] = React.useState(false)
-  const [level, setLevel] = React.useState(PermissionLevels[0])
-  const [genebank, setGenebank] = React.useState(genebanks.length > 0 ? {value: genebanks[0].id, label: genebanks[0].name} : null)
+  const [level, setLevel] = React.useState(PermissionLevels[0] as OptionType)
+  const [genebank, setGenebank] = React.useState(genebanks.length > 0 ? {value: '' + genebanks[0].id, label: genebanks[0].name} : null as OptionType | null)
   const [herd, setHerd] = React.useState(null as any)
   const history = useHistory()
   const classes = useStyles();
@@ -156,17 +156,17 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
    *
    * @param genebankId Id of the genebank to get herds from.
    */
-  const genebankHerds = (genebankId: number | undefined) => {
+  const genebankHerds = (genebankId: string | undefined): OptionType[] => {
     if (genebankId === undefined || genebank === null) {
       return []
     }
 
-    const currentGenebank = genebanks.find((g: Genebank) => g.id == genebank.value);
+    const currentGenebank = genebanks.find((g: Genebank) => '' + g.id == genebank.value);
     if (currentGenebank === undefined) {
       return []
     }
-    return currentGenebank.herds.map((h: Herd) => {
-      return {value: h.id, label: herdLabel(h)}
+    return currentGenebank.herds.map(h => {
+      return {value: '' + h.id, label: herdLabel(h)}
     })
   }
 
@@ -192,11 +192,11 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
    * @param operation an object describing an update operation.
    */
   type Operation = {action: 'remove' | 'add',
-                    user: number}
+                    user: number | 'new'}
   type HerdOperation = Operation & {role: 'owner',
                                     herd: number}
   type GenebankOperation = Operation & {role: 'manager' | 'specialist',
-                                       genebank: number}
+                                       genebank: number | undefined}
   const updateRole = (operation: HerdOperation | GenebankOperation) => {
     update('/api/manage/role', operation).then(
       (data: ServerMessage) => {
@@ -307,35 +307,54 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
       <h3>Lägg till behörighet</h3>
 
         <Table className={classes.permissionTable}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Behörighet</TableCell>
-              <TableCell>Genbank</TableCell>
-              <TableCell>Besättning</TableCell>
-            </TableRow>
-          </TableHead>
           <TableBody>
             <TableRow>
               <TableCell>
-                <Select options={PermissionLevels}
-                        onChange={setLevel}
-                        value={level}
-                        />
+                <Autocomplete
+                  options={PermissionLevels}
+                  value={level}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
+                  renderInput={(params) => <TextField {...params}
+                    label="Behörighet"
+                    variant={inputVariant}
+                    margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    newValue && setLevel(newValue)
+                  }}
+                />
               </TableCell>
               <TableCell>
-                <Select options={genebanks.map((g: Genebank) => {return {value: g.id, label: g.name}})}
-                        onChange={(current: any) => {setGenebank(current); setHerd(null)}}
-                        value={genebank}
-                        />
+                <Autocomplete
+                  options={genebanks.map((g: Genebank) => {return {value: '' + g.id, label: g.name}})}
+                  value={genebank}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
+                  renderInput={(params) => <TextField {...params}
+                    label="Genbank"
+                    variant={inputVariant}
+                    margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    newValue && setGenebank(newValue); setHerd(null)
+                  }}
+                />
               </TableCell>
               <TableCell>
-                <Select options={genebankHerds(genebank?.value)}
-                        onChange={setHerd}
-                        className={level.value != 'owner' ? classes.hidden : null}
-                        isDisabled={level.value != 'owner'}
-                        value={herd}
-                        />
-
+                <Autocomplete
+                  options={genebankHerds(genebank?.value) ?? []}
+                  value={herd}
+                  className={level.value != 'owner' ? classes.hidden : undefined}
+                  disabled={level.value != 'owner'}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
+                  renderInput={(params) => <TextField {...params}
+                    label="Besättning"
+                    variant={inputVariant}
+                    margin="normal" />}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    newValue && setHerd(newValue)
+                  }}
+                />
               </TableCell>
             </TableRow>
           </TableBody>
@@ -343,11 +362,11 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
 
         <Button variant="contained"
                 color="primary"
-                onClick={() => updateRole({action: 'add',
-                                          role: level.value,
-                                          user: user ? user.id : -1,
-                                          genebank: level.value != 'owner' ? genebank?.value : undefined,
-                                          herd: level.value == 'owner' ? herd?.value : undefined}
+                onClick={() => updateRole({ action: 'add',
+                                            role: level.value,
+                                            user: user ? user.id : -1,
+                                            genebank: level.value != 'owner' ? +(genebank?.value ?? -1) : undefined,
+                                            herd: level.value == 'owner' ? +(herd?.value ?? -1) : undefined}
                         )}>
           Lägg till
         </Button>
