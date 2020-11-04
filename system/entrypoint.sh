@@ -12,10 +12,6 @@ for p in {cert,key,ca}; do
   fi
 done
 
-if [ -r /config/database.ini ]; then
-    cp /config/database.ini /tmp/database.ini
-fi
-
 if [ -r /config/dhparam.pem ]; then
     cp /config/dhparam.pem /code/
 else
@@ -24,8 +20,6 @@ else
 fi
 
 chown www-data.www-data /code/*.pem
-chown www-data.www-data /tmp/database.ini
-chmod u+r /tmp/database.ini
 
 if getent hosts herdbook-frontend-devel >/dev/null; then
     # Development mode
