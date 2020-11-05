@@ -52,6 +52,9 @@ const useStyles = makeStyles({
     top: 20,
     width: 1,
   },
+  search: {
+    float: 'right',
+  }
 });
 
 interface Column {
@@ -85,6 +88,7 @@ export function FilterTable({individuals, title = '', filters = [],
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [order, setOrder] = React.useState('desc' as Order);
   const [orderBy, setOrderBy] = React.useState('birth_date' as keyof Individual);
+  const [search, setSearch] = React.useState('' as string)
 
   const allColumns: Column[] = [
     {field: 'herd', label: 'Besättning', sortAs: 'number', sortBy: 'herd',
@@ -170,9 +174,29 @@ export function FilterTable({individuals, title = '', filters = [],
           return false;
         }
       }
+
+      if (search) {
+        // simplest possible search for now - filter everything that doesn't
+        // have an active field that matches the search term
+        let searchResult = false
+        const searchRegExp = new RegExp(search, 'i')
+        for (let column of visibleColumns) {
+          if (!i[column.field]) {
+            continue
+          }
+          const value = column.sortBy ? `${i[column.field][column.sortBy]}`
+                                      : `${i[column.field]}`
+          if (value.match(searchRegExp)) {
+            searchResult = true
+            break
+          }
+        }
+        return searchResult
+      }
+
       return true
     })
-  }, [filters, individuals])
+  }, [filters, individuals, search])
 
   /**
    * Memoized list of individuals sorted by `orderBy` and `order`, as well as
@@ -312,6 +336,12 @@ export function FilterTable({individuals, title = '', filters = [],
                 label={filter.label}
               />
             )}
+
+            <TextField
+              className={styles.search}
+              label="Sök"
+              variant={inputVariant}
+              onChange={(e) => setSearch(e.currentTarget.value)}/>
             <TableContainer>
               <Table
                 aria-labelledby="tableTitle"
