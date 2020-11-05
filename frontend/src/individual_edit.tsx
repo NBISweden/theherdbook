@@ -271,7 +271,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               <div className={style.flexRow}>
                 <Autocomplete
                   disabled={!(isNew || canManage)}
-                  options={sexOptions}
+                  options={sexOptions ?? []}
                   value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params} label="Kön" className={style.control} variant={inputVariant} margin="normal" />}
@@ -298,7 +298,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               <div className={style.flexRow}>
                 <Autocomplete
                   disabled={!(isNew || canManage)}
-                  options={motherOptions}
+                  options={motherOptions ?? []}
                   value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params} label="Mor" className={style.control} variant={inputVariant} margin="normal" />}
@@ -308,7 +308,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 />
                 <Autocomplete
                   disabled={!(isNew || canManage)}
-                  options={fatherOptions}
+                  options={fatherOptions ?? []}
                   value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params} label="Far" className={style.control} variant={inputVariant} margin="normal" />}
@@ -320,7 +320,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
               <div className={style.flexRow}>
                 <Autocomplete
                   disabled={!(isNew || canManage)}
-                  options={colorOptions}
+                  options={colorOptions ?? []}
                   value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params} label="Färg" className={style.control} variant={inputVariant} margin="normal" />}
@@ -425,7 +425,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                     onChange={(date, value) => {value && setHullDate(value)}}
                   />
                 <Autocomplete
-                  options={bodyfatOptions}
+                  options={bodyfatOptions ?? []}
                   value={bodyfatOptions.find(option => option.value == bodyfat) ?? sexOptions[1]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params} label="Hull" className={style.control} variant={inputVariant} margin="normal" />}

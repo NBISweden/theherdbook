@@ -211,6 +211,7 @@ class Herd(BaseModel):
             "herd": self.herd,
             "genebank": self.__dict__['__data__']['genebank'],
             "herd_name": self.herd_name,
+            "is_active": self.is_active,
         }
 
     def filtered_dict(self, user=None):

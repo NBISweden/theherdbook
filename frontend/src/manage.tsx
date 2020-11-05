@@ -9,10 +9,12 @@ import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
 import { useDataContext } from './data_context'
 import Select from 'react-select';
-import { Genebank, NameID, Herd, herdLabel, userLabel } from '@app/data_context_global';
-import { Button } from '@material-ui/core';
+import { Genebank, NameID, herdLabel, userLabel, OptionType,
+        } from '@app/data_context_global';
+import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import { HerdForm } from '@app/herdForm';
 import { UserForm } from '@app/userForm';
+import { Autocomplete } from '@material-ui/lab';
 
 const useStyles = makeStyles({
   main: {
@@ -58,12 +60,15 @@ export function Manage() {
   const [target, setTarget] = useState(undefined as string | undefined)
   const [options, setOptions] = useState([] as any[])
   const [selected, setSelected] = useState(undefined as any)
+  const [showInactive, setShowInactive] = useState(false)
 
   /**
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
-    const userOptions: NameID[] = users.map((u: NameID) => {return {value: u.id, label: userLabel(u)}});
+    const userOptions: OptionType[] = users.map((u: NameID) => {
+      return {value: '' + u.id, label: userLabel(u)}
+    });
     userOptions.push({value: 'new', label: 'New User'})
     setOptions(userOptions);
   }
@@ -77,7 +82,7 @@ export function Manage() {
   const setHerdOptions = (name: string) => {
     const dataset = genebanks.find((g: Genebank) => g.name == name)
     if (dataset) {
-      const herdOptions: any[] = dataset.herds.map((h: Herd) => {
+      const herdOptions: any[] = dataset.herds.map(h => {
         return {value: h.herd, label: herdLabel(h)}
       })
       herdOptions.push({value: 'new', label: 'New Herd'})
@@ -111,13 +116,32 @@ export function Manage() {
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
       const dataset = genebanks.find((g: Genebank) => g.name == category)
       if (dataset) {
-        const targetHerd = dataset.herds.find((h: Herd) => h.herd == path)
+        const targetHerd = dataset.herds.find(h => h.herd == path)
         if (targetHerd) {
           targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
         }
       }
     }
     setSelected(targetOption)
+  }
+
+  const filtered = (options: OptionType[]) => {
+    if (showInactive || topic == 'user') {
+      return options;
+    }
+    const genebank = genebanks.find(g => g.name == topic)
+    if (!genebank) {
+      return options;
+    }
+    // make index just in case:
+    let activeIndex: {[herd: string]: boolean | null | undefined} = {}
+    genebank.herds.forEach(h => {
+      activeIndex[h.herd] = h.is_active
+    })
+
+    return options.filter(option => {
+      return activeIndex[option.value]
+    })
   }
 
   /**
@@ -184,10 +208,25 @@ export function Manage() {
           </div>
         </div>
 
-        <Select
-          options={options}
-          onChange={(current: any) => history.push(`/manage/${topic}/${current.value}`)}
+        <Autocomplete
+          options={filtered(options) ?? []}
           value={selected}
+          getOptionLabel={(option: OptionType) => option.label}
+          renderInput={(params) => <TextField {...params} label={topic == 'user' ? 'Användare' : 'Besättning'} margin="normal" />}
+          onChange={(event: any, newValue: OptionType | null) => {
+            newValue && history.push(`/manage/${topic}/${newValue.value}`)
+          }}
+        />
+        <FormControlLabel
+          disabled={topic == 'user'}
+          control={
+            <Checkbox
+              checked={showInactive}
+              onChange={(event) => setShowInactive(event.currentTarget.checked)}
+              color="primary"
+              />
+          }
+          label="Visa inaktiva"
           />
       </Paper>
 
