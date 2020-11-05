@@ -332,7 +332,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 <Autocomplete
                   disabled={!(isNew || canManage)}
                   options={colorOptions ?? []}
-                  value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
+                  value={colorOptions.find(option => option.value == individual.color) ?? colorOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params}
                     label="Färg"
@@ -340,7 +340,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                     variant={inputVariant}
                     margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateField('colour', newValue?.value ?? '')
+                    updateField('color', newValue?.value ?? '')
                   }}
                 />
                 <TextField
@@ -350,8 +350,8 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   className={style.control}
                   multiline
                   rows={3}
-                  value={individual.colour_note ?? ''}
-                  onChange={(event) => {updateField('colour_note', event.currentTarget.value)}}
+                  value={individual.color_note ?? ''}
+                  onChange={(event) => {updateField('color_note', event.currentTarget.value)}}
                 />
               </div>
               <TextField

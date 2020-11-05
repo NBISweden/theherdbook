@@ -45,8 +45,8 @@ export interface Individual extends LimitedIndividual{
     birth_date: string | null
     mother: LimitedIndividual | null
     father: LimitedIndividual | null
-    colour: string | null
-    colour_note: string | null
+    color: string | null
+    color_note: string | null
     death_date: string | null
     death_note: string | null
     litter: number | null
