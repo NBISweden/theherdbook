@@ -89,6 +89,7 @@ export function FilterTable({individuals, title = '', filters = [],
   const [order, setOrder] = React.useState('desc' as Order);
   const [orderBy, setOrderBy] = React.useState('birth_date' as keyof Individual);
   const [search, setSearch] = React.useState('' as string)
+  const [currentFilters, setFilters] = React.useState(filters)
 
   const allColumns: Column[] = [
     {field: 'herd', label: 'Besättning', sortAs: 'number', sortBy: 'herd',
@@ -146,7 +147,6 @@ export function FilterTable({individuals, title = '', filters = [],
       return columns.filter(c => !c.hidden)
     }, [columns]
   )
-  const [currentFilters, setFilters] = React.useState(filters)
 
   const updateColumns = (values: any[]) => {
     const newColumns = [...columns];
@@ -196,7 +196,7 @@ export function FilterTable({individuals, title = '', filters = [],
 
       return true
     })
-  }, [filters, individuals, search])
+  }, [currentFilters, individuals, search])
 
   /**
    * Memoized list of individuals sorted by `orderBy` and `order`, as well as
@@ -327,7 +327,7 @@ export function FilterTable({individuals, title = '', filters = [],
               <FormControlLabel key={filter.field}
                 control={<Checkbox
                           name={filter.field}
-                          checked={filter.active}
+                          checked={filter.active ?? false}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             filter.active = e.target.checked
                             setFilters([...currentFilters])
