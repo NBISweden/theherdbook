@@ -38,6 +38,15 @@ Remember to update your secrets before going in production
 .docker/r-api-variables.env
 ```
 
+It is also recommended to speed up startup by generating persistent forward-secrecy
+parameters:
+
+```console
+
+openssl dhparam -out config/dhparam.pem 2048
+
+```
+
 To set up the developer environment, you should be able to run
 
 ```console
