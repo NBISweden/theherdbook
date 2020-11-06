@@ -161,6 +161,31 @@ function individualSort(a: Individual, b: Individual,  column: Column,
 }
 
 /**
+ * simplest possible search for now - filter everything that doesn't have an
+ * active field that matches the search term.
+ *
+ * @param individual Individual to check for filtering
+ * @param search search term to compare against
+ * @param columns which columns to consider when filtering
+ */
+function searchFilter(individual: Individual, search: string, columns: Column[]) {
+  let searchResult = false
+  const searchRegExp = new RegExp(search, 'i')
+  for (let column of columns) {
+    if (!individual[column.field]) {
+      continue
+    }
+    const value = column.sortBy ? `${individual[column.field][column.sortBy]}`
+                                : `${individual[column.field]}`
+    if (value.match(searchRegExp)) {
+      searchResult = true
+      break
+    }
+  }
+  return searchResult
+}
+
+/**
  * Shows a table of individual information for the given list of `individuals`.
  * Optionally `filters` or `action` (along with `actionIcon` and `actionLabel`)
  * can be set to further customize the table.
@@ -264,22 +289,7 @@ export function FilterTable({individuals, title = '', filters = [],
       }
 
       if (search) {
-        // simplest possible search for now - filter everything that doesn't
-        // have an active field that matches the search term
-        let searchResult = false
-        const searchRegExp = new RegExp(search, 'i')
-        for (let column of visibleColumns) {
-          if (!i[column.field]) {
-            continue
-          }
-          const value = column.sortBy ? `${i[column.field][column.sortBy]}`
-                                      : `${i[column.field]}`
-          if (value.match(searchRegExp)) {
-            searchResult = true
-            break
-          }
-        }
-        return searchResult
+        return searchFilter(i, search, visibleColumns)
       }
 
       return true
