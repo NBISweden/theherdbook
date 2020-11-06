@@ -7,7 +7,7 @@ import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { get, update } from '@app/communication';
 import { asLocale, BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
-         individualLabel, LimitedIndividual, OptionType, ServerMessage,
+         individualLabel, inputVariant, LimitedIndividual, OptionType, ServerMessage,
         } from '@app/data_context_global';
 import { useMessageContext } from '@app/message_context';
 import { Button, CircularProgress, InputAdornment, TextField,
@@ -127,7 +127,6 @@ export function IndividualEdit({id}: {id: string | undefined}) {
     return user?.canEdit(individual?.genebank)
   }, [user, individual])
   const style  = useStyles()
-  const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
 
   const sexOptions = [{value: 'female', label: 'Hona'},
                       {value: 'male', label: 'Hane'},
@@ -274,7 +273,11 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   options={sexOptions ?? []}
                   value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
                   getOptionLabel={(option: OptionType) => option.label}
-                  renderInput={(params) => <TextField {...params} label="Kön" className={style.control} variant={inputVariant} margin="normal" />}
+                  renderInput={(params) => <TextField {...params}
+                    label="Kön"
+                    className={style.control}
+                    variant={inputVariant}
+                    margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
                     updateField('sex', newValue?.value ?? '')
                   }}
@@ -301,7 +304,11 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   options={motherOptions ?? []}
                   value={motherOptions.find(option => option.value == individual?.mother?.number) ?? motherOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
-                  renderInput={(params) => <TextField {...params} label="Mor" className={style.control} variant={inputVariant} margin="normal" />}
+                  renderInput={(params) => <TextField {...params}
+                    label="Mor"
+                    className={style.control}
+                    variant={inputVariant}
+                    margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
                     updateField('mother', asIndividual(newValue?.value))
                   }}
@@ -311,7 +318,11 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   options={fatherOptions ?? []}
                   value={fatherOptions.find(option => option.value == individual?.father?.number) ?? fatherOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
-                  renderInput={(params) => <TextField {...params} label="Far" className={style.control} variant={inputVariant} margin="normal" />}
+                  renderInput={(params) => <TextField {...params}
+                    label="Far"
+                    className={style.control}
+                    variant={inputVariant}
+                    margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
                     updateField('father', asIndividual(newValue?.value))
                   }}
@@ -321,11 +332,15 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                 <Autocomplete
                   disabled={!(isNew || canManage)}
                   options={colorOptions ?? []}
-                  value={colorOptions.find(option => option.value == individual.colour) ?? colorOptions[0]}
+                  value={colorOptions.find(option => option.value == individual.color) ?? colorOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
-                  renderInput={(params) => <TextField {...params} label="Färg" className={style.control} variant={inputVariant} margin="normal" />}
+                  renderInput={(params) => <TextField {...params}
+                    label="Färg"
+                    className={style.control}
+                    variant={inputVariant}
+                    margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateField('colour', newValue?.value ?? '')
+                    updateField('color', newValue?.value ?? '')
                   }}
                 />
                 <TextField
@@ -335,8 +350,8 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   className={style.control}
                   multiline
                   rows={3}
-                  value={individual.colour_note ?? ''}
-                  onChange={(event) => {updateField('colour_note', event.currentTarget.value)}}
+                  value={individual.color_note ?? ''}
+                  onChange={(event) => {updateField('color_note', event.currentTarget.value)}}
                 />
               </div>
               <TextField
@@ -428,7 +443,11 @@ export function IndividualEdit({id}: {id: string | undefined}) {
                   options={bodyfatOptions ?? []}
                   value={bodyfatOptions.find(option => option.value == bodyfat) ?? sexOptions[1]}
                   getOptionLabel={(option: OptionType) => option.label}
-                  renderInput={(params) => <TextField {...params} label="Hull" className={style.control} variant={inputVariant} margin="normal" />}
+                  renderInput={(params) => <TextField {...params}
+                    label="Hull"
+                    className={style.control}
+                    variant={inputVariant}
+                    margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
                     setBodyfat(newValue?.value ?? 'normal')
                   }}

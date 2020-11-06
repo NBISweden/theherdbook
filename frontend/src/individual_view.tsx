@@ -115,8 +115,8 @@ export function IndividualView({id} : {id: string}) {
               <dt><Tooltip title="Inavelskoefficient"><span>F:</span></Tooltip></dt><dd>{individual?.inbreeding}%</dd>
               <dt><Tooltip title="Genomsnittligt släktskap/ Mean Kinship"><span>MK:</span></Tooltip></dt><dd>{individual?.MK}%</dd>
               <dt>Färg:</dt><dd>
-                {individual?.colour}<br />
-                {individual?.colour_note}
+                {individual?.color}<br />
+                {individual?.color_note}
               </dd>
               <dt>Född:</dt><dd>
                 {individual?.birth_date

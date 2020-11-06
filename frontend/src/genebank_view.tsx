@@ -41,9 +41,6 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
   React.useEffect(() => {
     if (genebank) {
       setIndividuals(genebank.individuals)
-      // BUG: commented due to a material-table bug
-      // TODO: fix default column selection, or replace material-table
-      // updateColumns(defaultSelection);
     }
   }, [genebank])
 

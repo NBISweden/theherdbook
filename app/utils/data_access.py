@@ -679,7 +679,11 @@ def get_individuals(genebank_id, user_uuid=None):
                     ) AS active,
                     ( i.death_date IS NULL
                       AND (i.death_note = '' OR i.death_note IS NULL)
-                    ) AS alive
+                    ) AS alive,
+                    (SELECT COUNT(*) FROM individual AS ic
+                      WHERE ic.mother_id = i.individual_id
+                         OR ic.father_id = i.individual_id
+                    ) AS children
         FROM        individual i
         LEFT JOIN   individual f ON (i.father_id = f.individual_id)
         LEFT JOIN   individual m ON (i.mother_id = m.individual_id)
@@ -717,6 +721,7 @@ def get_individuals(genebank_id, user_uuid=None):
                 "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
                 "genebank": i[22],
                 "herd_active": i[23], "active": i[24], "alive": i[25],
+                "children": i[26],
             }
             for i in cursor.fetchall()
         ]

@@ -45,8 +45,8 @@ export interface Individual extends LimitedIndividual{
     birth_date: string | null
     mother: LimitedIndividual | null
     father: LimitedIndividual | null
-    colour: string | null
-    colour_note: string | null
+    color: string | null
+    color_note: string | null
     death_date: string | null
     death_note: string | null
     litter: number | null
@@ -59,6 +59,7 @@ export interface Individual extends LimitedIndividual{
     alive: boolean
     inbreeding?: number
     MK?: number
+    children?: number
 }
 
 export type PrivacyLevel = 'private' | 'authenticated' | 'public' | null;
@@ -149,7 +150,8 @@ export type ServerMessage = {
 export type OptionType = {value: string, label: string};
 
 export const dateFormat = 'yyyy-MM-dd'
-export const locale = 'SE-sv'
+export const locale = 'sv'
+export const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
 
 /**
  * Formats the given `dateString` according to the currently defined `locale`.
@@ -158,6 +160,9 @@ export const locale = 'SE-sv'
  * @param dateString (optional) datestring in javascript understandable format.
  */
 export function asLocale(dateString?: string) {
+    if (!dateString) {
+        return ''
+    }
     const date = dateString ? new Date(dateString) : new Date()
     return date.toLocaleDateString(locale);
 }
