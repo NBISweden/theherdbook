@@ -57,20 +57,108 @@ const useStyles = makeStyles({
   }
 });
 
+/**
+ * Column definition with sorting information. `sortBy` is used to tell the
+ * sorting function which sub-field to sort by if the column value is an object,
+ * and `sortAs` is used to coerce the value to a new type.
+ */
 interface Column {
   field: keyof Individual;
   label: string;
   sortBy?: string;
-  sortAs?: string;
+  sortAs?: 'number' | 'numbers' | 'date' | undefined;
   hidden?: boolean;
   numeric?: boolean;
-  action?: Function;
   render?: Function;
 }
-
+type Order = 'asc' | 'desc'
 type Filter = {field: keyof(Individual), label: string, active?: boolean}
 type Action = ((event: any, rowData: Individual | Individual[]) => {})
-type Order = 'asc' | 'desc'
+
+/**
+ * Sorts a list of individuals by the `orderBy` field and `order` direction, as
+ * well as the `column` definition information `sortBy` and `sortAs`.
+ * When the value of a field is an object, `sortBy` is used to select which
+ * subfield to use for sorting. `sortAs` can be `number`, `numbers` or `date`
+ * to force a column to be sorted as a particular type.
+ * - `date` fields will be cast as dates using `new Date(<value)`
+ * - `number` fields will be cast as numbers by removing all non-numerical
+ *   characters. ex. `G111-222` -> `111222`
+ * - `numbers` fields are cast as numbers, but using the first set of numbers
+ *   as the integer part, and the remaning as decimals.
+ *   ex. `G111-222-333` -> `111.222333`.
+ *
+ * @param a First individual
+ * @param b Second individual
+ * @param column Column definition of the table to be sorted
+ * @param orderBy sub-field to order by for object values
+ * @param order `asc` or `desc` for ascending or descending ordering
+ */
+function individualSort(a: Individual, b: Individual,  column: Column,
+    orderBy: keyof Individual, order: Order ) {
+  {
+    // check direction
+    const direction = order == 'asc' ? 1 : -1
+
+    // handle null and undefined objects as "directionless" (they sort last)
+    // regardless of ordering
+    if (a == undefined || b == undefined) {
+      // sort undefined as less than defined
+      return a == b ? 0 : b == undefined ? -1 : 1;
+    }
+    let aVal = a[orderBy]
+    let bVal = b[orderBy]
+
+    // handle null or undefined fields
+    if (aVal == undefined || bVal == undefined) {
+      return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+    }
+
+    // check if we need to sort some special way
+    if (column?.sortBy) {
+      if (Object.keys(aVal).includes(column.sortBy)) {
+        aVal = aVal[column?.sortBy]
+      }
+      if (Object.keys(bVal).includes(column.sortBy)) {
+        bVal = bVal[column?.sortBy]
+      }
+      // handle null or undefined fields again
+      if (aVal == undefined || bVal == undefined) {
+        return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+      }
+    }
+
+    if (column?.sortAs) {
+      // concatenate all numbers in the string
+      if (column.sortAs == 'number') {
+        aVal = +aVal.replace(/[^0-9]/g, '')
+        bVal = +bVal.replace(/[^0-9]/g, '')
+      }
+      // use first number as integer, all others as decimals
+      else if (column.sortAs == 'numbers') {
+        const f = (n: string) => {
+          const m = n.match(/([0-9]+)/g)
+          return m ? +`${m[0]}.${m.slice(1,).join('')}` : 0
+        }
+        aVal = f(aVal)
+        bVal = f(bVal)
+      }
+      else if (column.sortAs == 'date') {
+        aVal = new Date(aVal)
+        bVal = new Date(bVal)
+      }
+    }
+
+    if (aVal > bVal) {
+      return direction
+    }
+    if (aVal < bVal) {
+      return -direction
+    }
+
+    return 0
+  }
+}
 
 /**
  * Shows a table of individual information for the given list of `individuals`.
@@ -199,85 +287,17 @@ export function FilterTable({individuals, title = '', filters = [],
   }, [currentFilters, individuals, search])
 
   /**
-   * Memoized list of individuals sorted by `orderBy` and `order`, as well as
-   * the column definition information `sortBy` and `sortAs`. `orderBy` must be
-   * a field in `allColumnns`.
-   * When the value of a field is an object, `sortBy` is used to select which
-   * subfield to use for sorting. `sortAs` can be `number`, `numbers` or `date`
-   * to force a column to be sorted as a particular type.
-   * - `date` fields will be cast as dates using `new Date(<value)`
-   * - `number` fields will be cast as numbers by removing all non-numerical
-   *   characters. ex. `G111-222` -> `111222`
-   * - `numbers` fields are cast as numbers, but using the first set of numbers
-   *   as the integer part, and the remaning as decimals.
-   *   ex. `G111-222-333` -> `111.222333`.
+   * Memoized list of individuals sorted by the individualSort function
    */
   const sortedIndividuals = React.useMemo(() => {
     // store column for reference
     const column = allColumns.find(c => c.field == orderBy)
-
-    return filteredIndividuals.sort((a, b) => {
-      // check direction
-      const direction = order == 'asc' ? 1 : -1
-
-      // handle null and undefined objects as "directionless" (they sort last)
-      // regardless of ordering
-      if (a == undefined || b == undefined) {
-        // sort undefined as less than defined
-        return a == b ? 0 : b == undefined ? -1 : 1;
-      }
-      let aVal = a[orderBy]
-      let bVal = b[orderBy]
-
-      // handle null or undefined fields
-      if (aVal == undefined || bVal == undefined) {
-        return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
-      }
-
-      // check if we need to sort some special way
-      if (column?.sortBy) {
-        if (Object.keys(aVal).includes(column.sortBy)) {
-          aVal = aVal[column?.sortBy]
-        }
-        if (Object.keys(bVal).includes(column.sortBy)) {
-          bVal = bVal[column?.sortBy]
-        }
-        // handle null or undefined fields again
-        if (aVal == undefined || bVal == undefined) {
-          return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
-        }
-      }
-
-      if (column?.sortAs) {
-        // concatenate all numbers in the string
-        if (column.sortAs == 'number') {
-          aVal = +aVal.replace(/[^0-9]/g, '')
-          bVal = +bVal.replace(/[^0-9]/g, '')
-        }
-        // use first number as integer, all others as decimals
-        else if (column.sortAs == 'numbers') {
-          const f = (n: string) => {
-            const m = n.match(/([0-9]+)/g)
-            return m ? +`${m[0]}.${m.slice(1,).join('')}` : 0
-          }
-          aVal = f(aVal)
-          bVal = f(bVal)
-        }
-        else if (column.sortAs == 'date') {
-          aVal = new Date(aVal)
-          bVal = new Date(bVal)
-        }
-      }
-
-      if (aVal > bVal) {
-        return direction
-      }
-      if (aVal < bVal) {
-        return -direction
-      }
-
-      return 0
-    })
+    if (column) {
+      return filteredIndividuals.sort((a, b) =>
+        individualSort(a, b, column, orderBy, order)
+      )
+    }
+    return []
   }, [filteredIndividuals, orderBy, order])
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -315,7 +335,7 @@ export function FilterTable({individuals, title = '', filters = [],
           label='Kolumner'
           variant={inputVariant}
           margin="normal" />}
-        onChange={(event: any, newValues: OptionType[] | null) => {
+          onChange={(event: any, newValues: OptionType[] | null) => {
           newValues && updateColumns(newValues)
         }}
       />
