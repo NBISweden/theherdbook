@@ -77,3 +77,8 @@ To be able to login in the website and play with it you will need to create an u
 ./register_user.sh 'user@domain.com', 'userpassword'
 ```
 
+All branches that are pushed to github has prebuilt images. To use the prebuilt images instead of building locally, use:
+
+```
+./run-with-prebuilt-images.sh
+```
