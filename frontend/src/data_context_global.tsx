@@ -160,6 +160,9 @@ export const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
  * @param dateString (optional) datestring in javascript understandable format.
  */
 export function asLocale(dateString?: string) {
+    if (!dateString) {
+        return ''
+    }
     const date = dateString ? new Date(dateString) : new Date()
     return date.toLocaleDateString(locale);
 }

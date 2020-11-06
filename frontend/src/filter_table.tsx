@@ -144,8 +144,8 @@ function individualSort(a: Individual, b: Individual,  column: Column,
         bVal = f(bVal)
       }
       else if (column.sortAs == 'date') {
-        aVal = new Date(aVal)
-        bVal = new Date(bVal)
+        aVal = aVal ? new Date(aVal) : 0
+        bVal = bVal ? new Date(bVal) : 0
       }
     }
 
