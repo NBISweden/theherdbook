@@ -150,7 +150,7 @@ export type ServerMessage = {
 export type OptionType = {value: string, label: string};
 
 export const dateFormat = 'yyyy-MM-dd'
-export const locale = 'SE-sv'
+export const locale = 'sv'
 export const inputVariant = 'standard' as 'filled' | 'outlined' | 'standard'
 
 /**
