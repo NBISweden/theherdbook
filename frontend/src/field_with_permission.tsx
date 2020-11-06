@@ -29,6 +29,36 @@ const useStyles = makeStyles({
 });
 
 /**
+ * Regexp validation of the supported types, email, tel, url, and text, where
+ * empty values are always valid, and any text value is valid.
+ *
+ * @param fieldType
+ * @param value
+ */
+function validateType(fieldType: LimitedInputType, value: string | null): boolean {
+  if (!value) {
+    return true
+  }
+  switch (fieldType) {
+    case 'email':
+      // Validation with RFC5322
+      return !!value.match(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/);
+    case 'url':
+      // validation from urlregex.com
+      return !!value.match(/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/)
+    case 'tel':
+      // very general match - basically allow anything that starts with
+      // `+<num>(0)` or `0`, followed by any combination of numbers, whitespace
+      // and dashes.
+      return !!value.match(/^(\+?[0-9]{1,3}\(0\)|0)[\s0-9\-]+$/)
+  }
+  return true
+}
+
+
+export type LimitedInputType = 'text' | 'tel' | 'url' | 'email';
+
+/**
  * The FieldWithPermission function provides an input field, with the input tag
  * `field`, having the input label `label`, with the value `value`. If
  * permission is not `null`, then a permission field will be attached with the
@@ -41,12 +71,14 @@ export function FieldWithPermission({
   value,
   permission,
   setValue,
+  fieldType = 'text'
 }: {
   field: string;
   label: string;
   value: string | null;
   permission: PrivacyLevel | undefined;
   setValue: Function;
+  fieldType: LimitedInputType
 }) {
   const classes = useStyles();
 
@@ -62,12 +94,14 @@ export function FieldWithPermission({
         <TextField
           label={label}
           className={classes.simpleField}
+          error={!validateType(fieldType, value)}
           value={value}
+          type={fieldType ?? 'text'}
           variant={inputVariant}
           onChange={(e: any) => {
-            setValue(field, e.target.value);
+            setValue(field, e.target.value)
           }}
-        />
+          />
         {permission !== undefined && (
           <Autocomplete
             options={options ?? []}
