@@ -41,7 +41,7 @@ const useStyles = makeStyles({
     textDecoration: 'underline',
     cursor: 'pointer',
   },
-  hidden: {
+  sorted: {
     border: 0,
     clip: 'rect(0 0 0 0)',
     height: 1,
@@ -387,7 +387,7 @@ export function FilterTable({individuals, title = '', filters = [],
                         >
                           {column.label}
                           {orderBy === column.field ? (
-                            <span className={styles.hidden}>
+                            <span className={styles.sorted}>
                               {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                             </span>
                           ) : null}
