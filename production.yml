@@ -11,11 +11,7 @@ services:
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
-    herdbook-frontend-devel:
-        image: ghcr.io/nbisweden/herdbook_frontend:${TAG:?TAG-not-set}
-        volumes:
-            - ./frontend:/app
-            - /app/node_modules
+        restart: always
     main:
         image:  ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
         container_name: herdbook-main
@@ -25,6 +21,7 @@ services:
         ports:
             - 8080:8080
             - 8443:8443
+            - 9090:9090
         volumes:
             - type: bind
               source: ./app
@@ -34,10 +31,13 @@ services:
               target: /config
         depends_on:
             - database
-            - herdbook-frontend-devel
+            - r-api
+        restart: always
+
     r-api:
+        image: ghcr.io/nbisweden/herdbook_r-api:${TAG:?TAG-not-set}
         container_name: r-api
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
-        image: ghcr.io/nbisweden/herdbook_r-api:${TAG:?TAG-not-set}
+        restart: always
