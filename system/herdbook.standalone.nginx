@@ -9,7 +9,7 @@
         root /app/dist/;
 
         location / {
-            try_files $uri $uri/ @wsgi =404;
+            try_files $uri $uri/ /;
         }
 
         location /api/ {
