@@ -18,6 +18,8 @@ from peewee import (
     BooleanField,
     CharField,
     DateField,
+    DateTimeField,
+    DeferredForeignKey,
     ForeignKeyField,
     FloatField,
     IntegerField,
@@ -317,6 +319,20 @@ class Colour(BaseModel):
     comment = CharField(50, null=True)
 
 
+class Breeding(BaseModel):
+    """
+    Table for breeding and birth.
+    """
+    id = AutoField(primary_key=True, column_name="breeding_id")
+    breed_date = DateField()
+    breed_notes = TextField()
+    father = DeferredForeignKey("Individual", null=False)
+    mother = DeferredForeignKey("Individual", null=False)
+    birth_date = DateField(null=False)
+    birth_notes = TextField()
+    litter_size = IntegerField(null=False)
+
+
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -330,7 +346,6 @@ class Individual(BaseModel):
     certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
-    birth_date = DateField(null=True)
     mother = ForeignKeyField("self", null=True)
     father = ForeignKeyField("self", null=True)
     colour = ForeignKeyField(Colour, null=True)
@@ -338,7 +353,14 @@ class Individual(BaseModel):
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
     litter = IntegerField(null=True)
+    litter_number = IntegerField(null=True)
     notes = CharField(100, null=True)
+    breeding = ForeignKeyField(Breeding)
+    eye_color = CharField()
+    claw_color = CharField()
+    belly_color = CharField()
+    hair_notes = CharField()
+    is_active = BooleanField()
 
     @property
     def current_herd(self):
@@ -434,6 +456,17 @@ class Individual(BaseModel):
         indexes = ((("number", "origin_herd"), True),)
 
 
+class IndividualFile(BaseModel):
+    """
+    Table for referencing files connected to individuals
+    """
+    id = AutoField(primary_key=True, column_name="breeding_id")
+    individual = ForeignKeyField(Individual)
+    filename = CharField(128)
+    path = CharField(32)
+    notes  = TextField()
+
+
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
@@ -455,28 +488,6 @@ class Bodyfat(BaseModel):
     individual = ForeignKeyField(Individual)
     bodyfat = CharField(6, null=True)
     bodyfat_date = DateField()
-
-
-class HerdTracking(BaseModel):
-    """
-    The herd_tracking table represents documented instances of an
-    individual belonging to a particular herd.  It connects the two
-    tables individual and herd in a N:M fashion.
-    """
-
-    id = AutoField(primary_key=True, column_name="herd_tracking_id")
-    herd = ForeignKeyField(Herd)
-    individual = ForeignKeyField(Individual)
-    herd_tracking_date = DateField()
-
-    class Meta:  # pylint: disable=too-few-public-methods
-        """
-        The Meta class is read automatically for Model information, and is used
-        here to set the table name, as the table name is in snake case, which
-        didn't fit the camel case class names.
-        """
-
-        table_name = "herd_tracking"
 
 
 class User(BaseModel, UserMixin):
@@ -746,6 +757,43 @@ class User(BaseModel, UserMixin):
         table_name = "hbuser"
 
 
+class UserMessage(BaseModel):
+    """
+    Table storing messages to be displayed to users.
+    """
+    id = AutoField(primary_key=True, column_name="user_message_id")
+    sender = ForeignKeyField(User, null=True)
+    receiver = ForeignKeyField(User, null=False)
+    level = CharField(12)
+    message= TextField()
+    send_time = DateTimeField()
+    recieve_time = DateTimeField()
+
+
+class HerdTracking(BaseModel):
+    """
+    The herd_tracking table represents documented instances of an
+    individual belonging to a particular herd.  It connects the two
+    tables individual and herd in a N:M fashion.
+    """
+
+    id = AutoField(primary_key=True, column_name="herd_tracking_id")
+    from_herd = ForeignKeyField(Herd, null=True, default=None)
+    herd = ForeignKeyField(Herd, null=True, default=None)
+    signature = ForeignKeyField(User, null=True, default=None)
+    individual = ForeignKeyField(Individual)
+    herd_tracking_date = DateField()
+
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        The Meta class is read automatically for Model information, and is used
+        here to set the table name, as the table name is in snake case, which
+        didn't fit the camel case class names.
+        """
+
+        table_name = "herd_tracking"
+
+
 class Authenticators(BaseModel):
     """
     Authentication information for a user.
@@ -761,11 +809,14 @@ MODELS = [
     Genebank,
     Herd,
     Colour,
+    Breeding,
     Individual,
+    IndividualFile,
     Weight,
     Bodyfat,
-    HerdTracking,
     User,
+    UserMessage,
+    HerdTracking,
     Authenticators,
 ]
 
@@ -812,11 +863,24 @@ def insert_data(filename="default_data.json"):
 def init():
     """
     Initializes all tables in the database, if they're not already available.
+
+    We keep a special eye on the Breeding table, as i uses deferred foreign keys
+    which need to be created once the individual table has been created.
     """
+
+    # need to keep track of the breeding table
+    logging.info("Initializing database")
+    created_breeding = False
     for model in MODELS:
         if not model.table_exists():
             logging.info("Creating database table %s", model.__name__)
+            if model.__name__ == 'Breeding':
+                created_breeding = True
             model.create_table()
+    if created_breeding:
+        logging.info("Creating foreign keys for breeding table")
+        Breeding._schema.create_foreign_key(Breeding.mother)
+        Breeding._schema.create_foreign_key(Breeding.father)
 
     logging.info("Inserting default data")
     insert_data("default_data.json")
