@@ -352,8 +352,6 @@ class Individual(BaseModel):
     colour_note = CharField(100, null=True)
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
-    litter = IntegerField(null=True)
-    litter_number = IntegerField(null=True)
     notes = CharField(100, null=True)
     breeding = ForeignKeyField(Breeding)
     eye_color = CharField()
