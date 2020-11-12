@@ -460,8 +460,8 @@ class IndividualFile(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="breeding_id")
     individual = ForeignKeyField(Individual)
-    filename = CharField(128)
-    path = CharField(32)
+    filepath = CharField(32)
+    upload_name = CharField(128)
     notes  = TextField()
 
 
