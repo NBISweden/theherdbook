@@ -359,6 +359,7 @@ class Individual(BaseModel):
     belly_color = CharField()
     hair_notes = CharField()
     is_active = BooleanField()
+    castrated = BooleanField(default=False)
 
     @property
     def current_herd(self):
