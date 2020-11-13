@@ -467,6 +467,28 @@ class IndividualFile(BaseModel):
     notes  = TextField()
 
 
+class Disease(BaseModel):
+    """
+    Lists user defined diseases, and keeps track of wheather they should be
+    included in the yearly report.
+    """
+    id = AutoField(primary_key=True, column_name="disease_id")
+    name = CharField()
+    include_in_reports = BooleanField(default=False)
+
+
+class IndividualDisease(BaseModel):
+    """
+    Kepps track of disease periods for individuals.
+    """
+    id = AutoField(primary_key=True, column_name="individual_disease_id")
+    individual = ForeignKeyField(Individual)
+    disease = ForeignKeyField(Disease)
+    diagnosis_date = DateField()
+    healthy_date = DateField()
+    notes = TextField()
+
+
 class Weight(BaseModel):
     """
     Table for tracking animal weights.
@@ -812,6 +834,8 @@ MODELS = [
     Breeding,
     Individual,
     IndividualFile,
+    Disease,
+    IndividualDisease,
     Weight,
     Bodyfat,
     User,
