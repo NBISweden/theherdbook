@@ -811,6 +811,20 @@ class YearlyHerdReport(BaseModel):
     publish_address = BooleanField()
 
 
+class GenebankReport(BaseModel):
+    """
+    Stores yearly reports for genebanks.
+
+    The data field stores the report data in json format, but we refrained from
+    storing it in a JSONField so that we could still use sqlite for testing.
+    """
+    genebank = ForeignKeyField(Genebank)
+    generated_by = ForeignKeyField(User)
+    report_date = DateField()
+    name = CharField()
+    data = TextField()
+
+
 class HerdTracking(BaseModel):
     """
     The herd_tracking table represents documented instances of an
@@ -860,6 +874,7 @@ MODELS = [
     User,
     UserMessage,
     YearlyHerdReport,
+    GenebankReport,
     HerdTracking,
     Authenticators,
 ]
