@@ -792,6 +792,25 @@ class UserMessage(BaseModel):
     recieve_time = DateTimeField()
 
 
+class YearlyHerdReport(BaseModel):
+    """
+    Stores yearly reports for herds.
+
+    The data field stores the report data in json format, but we refrained from
+    storing it in a JSONField so that we could still use sqlite for testing.
+    """
+    id = AutoField(primary_key=True, column_name="disease_id")
+    herd = ForeignKeyField(Herd)
+    report_date = DateField()
+    generated_by = ForeignKeyField(User)
+    name = CharField()
+    data = TextField()
+    publish = BooleanField()
+    publish_tel = BooleanField()
+    publish_email = BooleanField()
+    publish_address = BooleanField()
+
+
 class HerdTracking(BaseModel):
     """
     The herd_tracking table represents documented instances of an
@@ -840,6 +859,7 @@ MODELS = [
     Bodyfat,
     User,
     UserMessage,
+    YearlyHerdReport,
     HerdTracking,
     Authenticators,
 ]
