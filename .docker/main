@@ -1,22 +1,32 @@
-FROM python:3.8-buster
+FROM python:3.8-buster as main-base
 
-RUN mkdir -p /code
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -y \
+    supervisor \
+    nginx \
+    inotify-tools \
+    rsync && \
+    apt autoremove -y && \
+    rm -rf /var/lib/apt/lists/* 
 
-COPY app/ /code/
+COPY app/requirements.txt /code/requirements.txt
+
 WORKDIR /code
 
-RUN pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
+RUN pip3 --no-cache-dir install -r /code/requirements.txt uwsgi && \
+    chown -R www-data:www-data /code/
 
-RUN apt-get update && apt-get -y upgrade &&\
-    apt-get install -y supervisor nginx inotify-tools rsync
+FROM main-base as main-backend
 
-RUN pip3 install uwsgi
+COPY app/ /code/
 
-# Mountpoint for backend
-RUN mkdir -p /api_src
+FROM main-backend as main-frontend
 
 COPY --from=herdbook_frontend:latest --chown=www-data:www-data /app/dist/ /app/dist/
 RUN cd /app/dist && ln -s . static
+
+FROM main-frontend
 
 COPY system/supervisord.conf /etc/
 COPY system/nginx.conf /etc/nginx/
