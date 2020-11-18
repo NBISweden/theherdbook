@@ -22,10 +22,10 @@ then
 	exit 1
 fi
 
-printf 'Installing app dependencies'
+echo 'Installing app dependencies...'
 pip3 install -r app/requirements.txt >/dev/null
 
-printf 'Initializing database                            '
+echo 'Initializing database...'
 cd app/
 python3 -c 'import utils.database as db; db.init()'
 echo DONE
