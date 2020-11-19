@@ -77,10 +77,17 @@ class DatabaseTest(unittest.TestCase):
         for herd in self.herds:
             herd.save()
 
+        self.breeding = [
+            db.Breeding.get_or_create(breed_date="2020-01-01", litter_size=2)[0],
+            db.Breeding.get_or_create(breed_date="2020-01-01", litter_size=1)[0],
+        ]
+        for breeding in self.breeding:
+            breeding.save()
+
         self.individuals = [
-            db.Individual.get_or_create(origin_herd=self.herds[0], number="H1-1")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[1], number="H2-2")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[2], number="H3-3")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[0], number="H1-1")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=self.breeding[0], number="H2-2")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[2], breeding=self.breeding[1], number="H3-3")[0],
         ]
         for individual in self.individuals:
             individual.save()
