@@ -325,12 +325,12 @@ class Breeding(BaseModel):
     """
     id = AutoField(primary_key=True, column_name="breeding_id")
     breed_date = DateField()
-    breed_notes = TextField()
-    father = DeferredForeignKey("Individual", null=False)
-    mother = DeferredForeignKey("Individual", null=False)
-    birth_date = DateField(null=False)
-    birth_notes = TextField()
-    litter_size = IntegerField(null=False)
+    breed_notes = TextField(null=True)
+    father = DeferredForeignKey("Individual", null=True)
+    mother = DeferredForeignKey("Individual", null=True)
+    birth_date = DateField(null=True)
+    birth_notes = TextField(null=True)
+    litter_size = IntegerField(null=True)
 
 
 class Individual(BaseModel):
@@ -354,13 +354,13 @@ class Individual(BaseModel):
     death_note = CharField(50, null=True)
     notes = CharField(100, null=True)
     breeding = ForeignKeyField(Breeding)
-    eye_color = CharField()
-    claw_color = CharField()
-    belly_color = CharField()
-    hair_notes = CharField()
-    is_active = BooleanField()
+    eye_color = CharField(null=True)
+    claw_color = CharField(null=True)
+    belly_color = CharField(null=True)
+    hair_notes = CharField(null=True)
+    is_active = BooleanField(default=True)
     butchered = BooleanField(default=False)
-    castration_date = DateField(default=None)
+    castration_date = DateField(null=True, default=None)
 
     @property
     def current_herd(self):
@@ -936,7 +936,8 @@ def init():
             if model.__name__ == 'Breeding':
                 created_breeding = True
             model.create_table()
-    if created_breeding:
+    # sqlite can't add constraints after creation
+    if created_breeding and not isinstance(DATABASE, SqliteDatabase):
         logging.info("Creating foreign keys for breeding table")
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
