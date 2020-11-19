@@ -346,8 +346,6 @@ class Individual(BaseModel):
     certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
-    mother = ForeignKeyField("self", null=True)
-    father = ForeignKeyField("self", null=True)
     colour = ForeignKeyField(Colour, null=True)
     colour_note = CharField(100, null=True)
     death_date = DateField(null=True)
