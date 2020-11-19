@@ -317,6 +317,7 @@ class Colour(BaseModel):
     id = AutoField(primary_key=True, column_name="colour_id")
     name = CharField(50)
     comment = CharField(50, null=True)
+    genebank = ForeignKeyField(Genebank)
 
 
 class Breeding(BaseModel):
@@ -939,10 +940,6 @@ def init():
         logging.info("Creating foreign keys for breeding table")
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
-
-    logging.info("Inserting default data")
-    insert_data("default_data.json")
-
 
 def verify(try_init=True):
     """

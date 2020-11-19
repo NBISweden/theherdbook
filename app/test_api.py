@@ -69,6 +69,14 @@ class DatabaseTest(unittest.TestCase):
         for genebank in self.genebanks:
             genebank.save()
 
+        self.colors = [
+            db.Colour.get_or_create(name="bleighe", genebank=self.genebanks[0])[0],
+            db.Colour.get_or_create(name="stgröhn", genebank=self.genebanks[0])[0],
+            db.Colour.get_or_create(name="bläåh", genebank=self.genebanks[1])[0],
+        ]
+        for color in self.colors:
+            color.save()
+
         self.herds = [
             db.Herd.get_or_create(genebank=self.genebanks[0], herd='H1', name="herd1")[0],
             db.Herd.get_or_create(genebank=self.genebanks[0], herd='H2', name="herd2")[0],
@@ -390,6 +398,24 @@ class TestPermissions(DatabaseTest):
         self.assertEqual(self.owner.can_edit(self.individuals[0].number), True)
         self.assertEqual(self.owner.can_edit(self.individuals[1].number), False)
         self.assertEqual(self.owner.can_edit(self.individuals[2].number), False)
+
+class TestDataAccess(DatabaseTest):
+    """
+    Checks that data access functions return the correct data.
+    """
+
+    def test_get_colors(self):
+        """
+        Checks that `utils.data_access.get_colors` return the correct
+        information.
+        """
+        expected = {g.name: [{'id': c.id, 'name': c.name}
+                             for c in self.colors if c.genebank == g]
+                    for g in self.genebanks}
+
+        colors = da.get_colors()
+        self.assertDictEqual(colors, expected)
+
 
 class FlaskTest(DatabaseTest):
     """

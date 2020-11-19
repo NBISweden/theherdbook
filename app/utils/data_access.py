@@ -18,6 +18,7 @@ from utils.database import (
     DB_PROXY as DATABASE,
     Bodyfat,
     Colour,
+    Genebank,
     Herd,
     HerdTracking,
     Individual,
@@ -118,13 +119,10 @@ def get_colors():
     }
     """
     with DATABASE.atomic():
-        #TODO: colors should be connected to genebanks in the database, not in
-        #      this function.
-        gotlandsColors = Colour.select().where(Colour.id < 100)
-        mellerudColors = Colour.select().where(Colour.id >= 100)
-        return {'Gotlandskanin': [{'id': c.id, 'name': c.name} for c in gotlandsColors],
-                'Mellerudskanin': [{'id': c.id, 'name': c.name} for c in mellerudColors]
-                }
+        return {genebank.name: [{'id': color.id, 'name': color.name}
+                                for color
+                                in Colour.select().where(Colour.genebank == genebank)]
+                for genebank in Genebank.select()}
 
 def get_genebank(genebank_id, user_uuid=None):
     """
