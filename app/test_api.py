@@ -78,9 +78,21 @@ class DatabaseTest(unittest.TestCase):
             color.save()
 
         self.herds = [
-            db.Herd.get_or_create(genebank=self.genebanks[0], herd='H1', name="herd1")[0],
-            db.Herd.get_or_create(genebank=self.genebanks[0], herd='H2', name="herd2")[0],
-            db.Herd.get_or_create(genebank=self.genebanks[1], herd='H3', name="herd3")[0],
+            db.Herd.get_or_create(genebank=self.genebanks[0],
+                                  herd='H1', herd_name="herd1",
+                                  name='o1', name_privacy = 'private',
+                                  email = 'o@h1', email_privacy = 'authenticated',
+                                  www = 'www1', www_privacy = 'public')[0],
+            db.Herd.get_or_create(genebank=self.genebanks[0],
+                                  herd='H2', herd_name="herd2",
+                                  name='o2', name_privacy = 'authenticated',
+                                  email = 'o@h2', email_privacy = 'public',
+                                  www = 'www2', www_privacy = 'private')[0],
+            db.Herd.get_or_create(genebank=self.genebanks[1],
+                                  herd='H3', herd_name="herd3",
+                                  name='o3', name_privacy = 'public',
+                                  email = 'o@h3', email_privacy = 'private',
+                                  www = 'www3', www_privacy = 'authenticated')[0],
         ]
         for herd in self.herds:
             herd.save()
@@ -398,6 +410,122 @@ class TestPermissions(DatabaseTest):
         self.assertEqual(self.owner.can_edit(self.individuals[0].number), True)
         self.assertEqual(self.owner.can_edit(self.individuals[1].number), False)
         self.assertEqual(self.owner.can_edit(self.individuals[2].number), False)
+
+
+class TestDatabase(DatabaseTest):
+    """
+    Checks that the functions and classes in database.py are working as
+    intended.
+    """
+
+    def test_genebank(self):
+        """
+        Checks the database.Genebank class.
+        """
+        # .short_info()
+        gb0_info = self.genebanks[0].short_info()
+        gb0_expected = {'id': self.genebanks[0].id,
+                        'name': self.genebanks[0].name,
+                        'herds': [
+                            {'id': self.herds[0].id,
+                             'herd': self.herds[0].herd,
+                             'genebank': self.genebanks[0].id,
+                             'herd_name': self.herds[0].herd_name,
+                             'is_active': self.herds[0].is_active},
+                            {'id': self.herds[1].id,
+                             'herd': self.herds[1].herd,
+                             'genebank': self.genebanks[0].id,
+                             'herd_name': self.herds[1].herd_name,
+                             'is_active': self.herds[1].is_active},
+                        ]}
+        self.assertDictEqual(gb0_info, gb0_expected)
+
+        gb1_info = self.genebanks[1].short_info()
+        gb1_expected = {'id': self.genebanks[1].id,
+                        'name': self.genebanks[1].name,
+                        'herds': [
+                            {'id': self.herds[2].id,
+                             'herd': self.herds[2].herd,
+                             'genebank': self.genebanks[1].id,
+                             'herd_name': self.herds[2].herd_name,
+                             'is_active': self.herds[2].is_active},
+                        ]}
+        self.assertDictEqual(gb1_info, gb1_expected)
+
+        # .get_herds()
+        # This function is permission dependent, so it needs to be tested for
+        # each user. We just test this with genebank0 for now, as I'm lazy.
+
+        def all_herd_fields(index):
+            """
+            Returns a dict with all herd fields except 'email_validated'.
+            We can't use the as_dict() function here, as it doesn't return
+            fields where the value is None.
+            """
+            return {'id': self.herds[index].id,
+                    'genebank': self.herds[index].__dict__['__data__']['genebank'],
+                    'herd': self.herds[index].herd,
+                    'herd_name': self.herds[index].herd_name,
+                    'is_active': self.herds[index].is_active,
+                    'start_date': self.herds[index].start_date,
+                    'name': self.herds[index].name,
+                    'name_privacy': self.herds[index].name_privacy,
+                    'physical_address': self.herds[index].physical_address,
+                    'physical_address_privacy': self.herds[index].physical_address_privacy,
+                    'location': self.herds[index].location,
+                    'location_privacy': self.herds[index].location_privacy,
+                    'email': self.herds[index].email,
+                    'email_privacy': self.herds[index].email_privacy,
+                    'www': self.herds[index].www,
+                    'www_privacy': self.herds[index].www_privacy,
+                    'mobile_phone': self.herds[index].mobile_phone,
+                    'mobile_phone_privacy': self.herds[index].mobile_phone_privacy,
+                    'wire_phone': self.herds[index].wire_phone,
+                    'wire_phone_privacy': self.herds[index].wire_phone_privacy,
+                    'latitude': self.herds[index].latitude,
+                    'longitude': self.herds[index].longitude,
+                    'coordinates_privacy': self.herds[index].coordinates_privacy
+                    }
+
+        # admin
+        gb0_herds = self.genebanks[0].get_herds(self.admin)
+        gb0_expected = [all_herd_fields(0), all_herd_fields(1)]
+
+        self.assertDictEqual(gb0_herds[0], gb0_expected[0])
+        self.assertDictEqual(gb0_herds[1], gb0_expected[1])
+
+        # manager
+        gb0_herds = self.genebanks[0].get_herds(self.manager)
+        self.assertDictEqual(gb0_herds[0], gb0_expected[0])
+        self.assertDictEqual(gb0_herds[1], gb0_expected[1])
+
+        # specialist
+        gb0_herds = self.genebanks[0].get_herds(self.specialist)
+        self.assertDictEqual(gb0_herds[0], gb0_expected[0])
+        self.assertDictEqual(gb0_herds[1], gb0_expected[1])
+
+        # owner / authenticated
+        gb0_herds = self.genebanks[0].get_herds(self.owner)
+
+        del gb0_expected[1]['name_privacy']
+        del gb0_expected[1]['physical_address']
+        del gb0_expected[1]['physical_address_privacy']
+        del gb0_expected[1]['location']
+        del gb0_expected[1]['location_privacy']
+        del gb0_expected[1]['www']
+        del gb0_expected[1]['www_privacy']
+        del gb0_expected[1]['mobile_phone']
+        del gb0_expected[1]['mobile_phone_privacy']
+        del gb0_expected[1]['wire_phone']
+        del gb0_expected[1]['wire_phone_privacy']
+        del gb0_expected[1]['latitude']
+        del gb0_expected[1]['longitude']
+        del gb0_expected[1]['coordinates_privacy']
+        del gb0_expected[1]['email_privacy']
+
+        self.assertDictEqual(gb0_herds[0], gb0_expected[0])
+        self.assertDictEqual(gb0_herds[1], gb0_expected[1])
+
 
 class TestDataAccess(DatabaseTest):
     """

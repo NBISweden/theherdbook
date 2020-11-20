@@ -151,7 +151,7 @@ class Genebank(BaseModel):
 
     def get_herds(self, user):
         """
-        Returns all herds that the user identified by `user_id` has access to,
+        Returns all herds that the user identified by `user` has access to,
         with restricted fields filtered by access level.
         """
         if self.id not in user.accessible_genebanks:
