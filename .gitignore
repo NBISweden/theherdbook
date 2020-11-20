@@ -15,7 +15,10 @@ venv.bak/
 .vscode
 .tox/
 .docker/database-variables.env
-.docker/r-api-variables.env 
+.docker/r-api-variables.env
+
+# test coverage report
+.coverage
 
 # frontend files that shouldn't be committed
 frontend/dist/
