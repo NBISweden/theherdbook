@@ -526,6 +526,92 @@ class TestDatabase(DatabaseTest):
         self.assertDictEqual(gb0_herds[0], gb0_expected[0])
         self.assertDictEqual(gb0_herds[1], gb0_expected[1])
 
+    def test_herd(self):
+        """
+        Checks the database.Herd class.
+        """
+        # .short_info()
+        for herd in self.herds:
+            expected = {"id": herd.id,
+                        "herd": herd.herd,
+                        "genebank": herd.__dict__['__data__']['genebank'],
+                        "herd_name": herd.herd_name,
+                        "is_active": herd.is_active,
+                        }
+            self.assertDictEqual(herd.short_info(), expected)
+
+        # .filtered_dict()
+
+        def all_herd_fields(index):
+            """
+            Returns a dict with all herd fields except 'email_validated'.
+            We can't use the as_dict() function here, as it doesn't return
+            fields where the value is None.
+            """
+            return {'id': self.herds[index].id,
+                    'genebank': self.herds[index].__dict__['__data__']['genebank'],
+                    'herd': self.herds[index].herd,
+                    'herd_name': self.herds[index].herd_name,
+                    'is_active': self.herds[index].is_active,
+                    'start_date': self.herds[index].start_date,
+                    'name': self.herds[index].name,
+                    'name_privacy': self.herds[index].name_privacy,
+                    'physical_address': self.herds[index].physical_address,
+                    'physical_address_privacy': self.herds[index].physical_address_privacy,
+                    'location': self.herds[index].location,
+                    'location_privacy': self.herds[index].location_privacy,
+                    'email': self.herds[index].email,
+                    'email_privacy': self.herds[index].email_privacy,
+                    'www': self.herds[index].www,
+                    'www_privacy': self.herds[index].www_privacy,
+                    'mobile_phone': self.herds[index].mobile_phone,
+                    'mobile_phone_privacy': self.herds[index].mobile_phone_privacy,
+                    'wire_phone': self.herds[index].wire_phone,
+                    'wire_phone_privacy': self.herds[index].wire_phone_privacy,
+                    'latitude': self.herds[index].latitude,
+                    'longitude': self.herds[index].longitude,
+                    'coordinates_privacy': self.herds[index].coordinates_privacy
+                    }
+
+        # admin
+        h0_result = self.herds[0].filtered_dict(self.admin)
+        h1_result = self.herds[1].filtered_dict(self.admin)
+        h0_expected = self.herds[0].as_dict()
+        h1_expected = self.herds[1].as_dict()
+
+        self.assertDictEqual(h0_result, h0_expected)
+        self.assertDictEqual(h1_result, h1_expected)
+
+        # manager
+        h0_result = self.herds[0].filtered_dict(self.manager)
+        h1_result = self.herds[1].filtered_dict(self.manager)
+        self.assertDictEqual(h0_result, h0_expected)
+        self.assertDictEqual(h1_result, h1_expected)
+
+        # specialist
+        h0_result = self.herds[0].filtered_dict(self.specialist)
+        h1_result = self.herds[1].filtered_dict(self.specialist)
+        self.assertDictEqual(h0_result, h0_expected)
+        self.assertDictEqual(h1_result, h1_expected)
+
+        # owner / authenticated
+        h0_result = self.herds[0].filtered_dict(self.owner)
+        h1_result = self.herds[1].filtered_dict(self.owner)
+
+        filtered_fields = ['name_privacy', 'physical_address',
+                           'physical_address_privacy', 'location',
+                           'location_privacy', 'www', 'www_privacy',
+                           'mobile_phone', 'mobile_phone_privacy', 'wire_phone',
+                           'wire_phone_privacy', 'latitude', 'longitude',
+                           'coordinates_privacy', 'email_privacy']
+
+        # remove fields that non-owners can't access
+        for field in filtered_fields:
+            if field in h1_expected:
+                del h1_expected[field]
+
+        self.assertDictEqual(h0_result, h0_expected)
+        self.assertDictEqual(h1_result, h1_expected)
 
 class TestDataAccess(DatabaseTest):
     """

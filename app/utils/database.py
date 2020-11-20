@@ -206,7 +206,8 @@ class Herd(BaseModel):
 
     def short_info(self):
         """
-        Returns the `id`, `herd`, `genebank`, and `herd_name` fields as a dict.
+        Returns the `id`, `herd`, `genebank`, `herd_name`, and `is_active`
+        fields as a dict.
         """
         return {
             "id": self.id,
@@ -238,7 +239,8 @@ class Herd(BaseModel):
 
         data = self.as_dict()
 
-        del data["email_verified"]
+        if 'email_verified' in data:
+            del data["email_verified"]
 
         return remove_fields_by_privacy(data, access_level)
 
