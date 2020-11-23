@@ -360,7 +360,7 @@ class Individual(BaseModel):
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
     notes = CharField(100, null=True)
-    breeding = ForeignKeyField(Breeding)
+    breeding = ForeignKeyField(Breeding, null=True)
     eye_color = CharField(null=True)
     claw_color = CharField(null=True)
     belly_color = CharField(null=True)
