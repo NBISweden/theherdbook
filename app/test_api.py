@@ -10,6 +10,7 @@ import flask
 
 import utils.database as db
 import utils.data_access as da
+from datetime import datetime, timedelta
 from herdbook import APP
 
 HOST = "http://localhost:4200"
@@ -97,20 +98,41 @@ class DatabaseTest(unittest.TestCase):
         for herd in self.herds:
             herd.save()
 
+        parent_breeding = db.Breeding.get_or_create(breed_date="2019-01-01", litter_size=2)[0]
+
+        self.parents = [
+            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P1')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P2')[0],
+        ]
+        for parent in self.parents:
+            parent.save()
+
         self.breeding = [
-            db.Breeding.get_or_create(breed_date="2020-01-01", litter_size=2)[0],
-            db.Breeding.get_or_create(breed_date="2020-01-01", litter_size=1)[0],
+            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[0], father=self.parents[1], litter_size=2)[0],
+            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[0], father=self.parents[1], litter_size=1)[0],
         ]
         for breeding in self.breeding:
             breeding.save()
 
         self.individuals = [
-            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[0], number="H1-1")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[0], colour=self.colors[0], number="H1-1")[0],
             db.Individual.get_or_create(origin_herd=self.herds[1], breeding=self.breeding[0], number="H2-2")[0],
             db.Individual.get_or_create(origin_herd=self.herds[2], breeding=self.breeding[1], number="H3-3")[0],
         ]
         for individual in self.individuals:
             individual.save()
+
+        self.weights = [
+            db.Weight.get_or_create(individual=self.individuals[0], weight=2.1, weight_date=datetime(2020,2,2))[0],
+        ]
+        for weight in self.weights:
+            weight.save()
+
+        self.bodyfat = [
+            db.Bodyfat.get_or_create(individual=self.individuals[0], bodyfat='low', bodyfat_date=datetime(2020,2,2))[0],
+        ]
+        for bodyfat in self.bodyfat:
+            bodyfat.save()
 
         self.admin = da.register_user("admin", "pass")
         self.specialist = da.register_user("spec", "pass")
@@ -121,6 +143,12 @@ class DatabaseTest(unittest.TestCase):
         self.manager.add_role("manager", self.genebanks[0].id)
         self.owner.add_role("owner", self.herds[0].id)
 
+        self.herd_tracking = [
+            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[0], herd_tracking_date=datetime.now())[0],
+            db.HerdTracking.get_or_create(herd=self.herds[1], signature=self.manager, individual=self.individuals[1], herd_tracking_date=datetime.now())[0],
+            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now() - timedelta(days=1))[0],
+            db.HerdTracking.get_or_create(from_herd=self.herds[0], herd=self.herds[2], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now())[0],
+        ]
 
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -599,6 +627,76 @@ class TestDatabase(DatabaseTest):
         verifying the table.
         """
         self.assertTrue(db.Breeding.table_exists())
+
+    def test_individual(self):
+        """
+        Checks the database.Individual class.
+        """
+        self.assertTrue(db.Individual.table_exists())
+
+        # .current_herd
+        self.assertEqual(self.individuals[0].current_herd.id, self.herds[0].id)
+        self.assertEqual(self.individuals[1].current_herd.id, self.herds[1].id)
+        self.assertEqual(self.individuals[2].current_herd.id, self.herds[2].id)
+
+        # .as_dict()
+        mother = {"id": self.parents[0].id, "name": self.parents[0].name, "number": self.parents[0].number}
+        father = {"id": self.parents[1].id, "name": self.parents[1].name, "number": self.parents[1].number}
+        data = super(db.Individual, self.individuals[0]).as_dict()
+        data["genebank_id"] = self.genebanks[0].id
+        data["genebank"] = self.genebanks[0].name
+        data["origin_herd"] = {"id": self.herds[0].id,
+                               "herd":  self.herds[0].herd,
+                               "herd_name": self.herds[0].herd_name}
+        data["herd"] = {"id": self.herds[0].id,
+                        "herd":  self.herds[0].herd,
+                        "herd_name": self.herds[0].herd_name}
+
+        data["birth_date"] = self.breeding[0].birth_date
+        data["litter"] = self.breeding[0].litter_size
+
+        data["mother"] = mother
+        data["father"] = father
+        data["colour"] = self.colors[0].name
+        data["weights"] = [
+             {"weight": self.weights[0].weight,
+              "date": self.weights[0].weight_date.strftime('%Y-%m-%d')
+              }
+        ]
+        data["bodyfat"] = [
+            {"bodyfat": self.bodyfat[0].bodyfat,
+             "date": self.bodyfat[0].bodyfat_date.strftime('%Y-%m-%d')
+             }
+        ]
+        data["herd_tracking"] = [
+            {
+                "herd_id": self.herd_tracking[0].herd.id,
+                "herd": self.herd_tracking[0].herd.herd,
+                "herd_name": self.herd_tracking[0].herd.herd_name,
+                "date": self.herd_tracking[0].herd_tracking_date.strftime("%Y-%m-%d")
+            }
+        ]
+
+        self.assertDictEqual(self.individuals[0].as_dict(), data)
+
+
+        # .list_info()
+        for individual in self.individuals:
+            self.assertDictEqual(individual.list_info(),
+                                 super(db.Individual, individual).as_dict())
+
+        # .short_info()
+        for individual in self.individuals:
+
+            mother = {"id": self.parents[0].id, "number": self.parents[0].number}
+            father = {"id": self.parents[1].id, "number": self.parents[1].number}
+            self.assertDictEqual(individual.short_info(),
+                                 {"id": individual.id,
+                                  "name": individual.name,
+                                  "number": individual.number,
+                                  "sex": individual.sex,
+                                  "father": father,
+                                  "mother": mother})
 
     def test_individual_file(self):
         """

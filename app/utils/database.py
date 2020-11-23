@@ -388,20 +388,24 @@ class Individual(BaseModel):
                                "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id,
                         "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
+
+        data["birth_date"] = self.breeding.birth_date
+        data["litter"] = self.breeding.litter_size
+
         data["mother"] = (
-            {"id": self.mother.id, "name": self.mother.name,
-                "number": self.mother.number} if self.mother else None
+            {"id": self.breeding.mother.id, "name": self.breeding.mother.name,
+                "number": self.breeding.mother.number} if self.breeding.mother else None
         )
         data["father"] = (
-            {"id": self.father.id, "name": self.father.name,
-                "number": self.father.number} if self.father else None
+            {"id": self.breeding.father.id, "name": self.breeding.father.name,
+                "number": self.breeding.father.number} if self.breeding.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
             {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} for w in self.weight_set
         ]  # pylint: disable=no-member
         data["bodyfat"] = [
-            {"bodyfat": b.bodyfat, "date": b.bodyfat_date} for b in self.bodyfat_set
+            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime('%Y-%m-%d')} for b in self.bodyfat_set
         ]  # pylint: disable=no-member
         data["herd_tracking"] = [
             {
@@ -423,12 +427,6 @@ class Individual(BaseModel):
         table.
         """
         data = super().as_dict()
-        # data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
-        # data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
-        #     if self.mother else None
-        # data['father'] = {'id': self.father.id, 'name': self.father.name} \
-        #     if self.father else None
-        # data['colour'] = self.colour.name if self.colour else None
         return data
 
     def short_info(self):
@@ -443,10 +441,10 @@ class Individual(BaseModel):
             - father
             - mother
         """
-        father = {"id": self.father.id,
-                  "number": self.father.number} if self.father else None
-        mother = {"id": self.mother.id,
-                  "number": self.mother.number} if self.mother else None
+        father = {"id": self.breeding.father.id,
+                  "number": self.breeding.father.number} if self.breeding.father else None
+        mother = {"id": self.breeding.mother.id,
+                  "number": self.breeding.mother.number} if self.breeding.mother else None
         return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
 
     class Meta:  # pylint: disable=too-few-public-methods
