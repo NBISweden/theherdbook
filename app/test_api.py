@@ -582,6 +582,25 @@ class TestDatabase(DatabaseTest):
         self.assertDictEqual(h0_result, h0_expected)
         self.assertDictEqual(h1_result, h1_expected)
 
+    def test_colour(self):
+        """
+        Checks the database.Colour class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.Colour.table_exists())
+
+    def test_breeding(self):
+        """
+        Checks the database.Breeding class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.Breeding.table_exists())
+
+
 class TestDataAccess(DatabaseTest):
     """
     Checks that data access functions return the correct data.
