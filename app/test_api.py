@@ -600,6 +600,87 @@ class TestDatabase(DatabaseTest):
         """
         self.assertTrue(db.Breeding.table_exists())
 
+    def test_individual_file(self):
+        """
+        Checks the database.IndividualFile class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.IndividualFile.table_exists())
+
+    def test_disease(self):
+        """
+        Checks the database.Disease class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.Disease.table_exists())
+
+    def test_individual_disease(self):
+        """
+        Checks the database.IndividualDisease class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.IndividualDisease.table_exists())
+
+    def test_weight(self):
+        """
+        Checks the database.Weight class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.Weight.table_exists())
+
+    def test_bodyfat(self):
+        """
+        Checks the database.Bodyfat class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.Bodyfat.table_exists())
+
+    def test_user_message(self):
+        """
+        Checks the database.UserMessage class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.UserMessage.table_exists())
+
+    def test_yearly_herd_report(self):
+        """
+        Checks the database.YearlyHerdReport class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.YearlyHerdReport.table_exists())
+
+    def test_genebank_report(self):
+        """
+        Checks the database.GenebankReport class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.GenebankReport.table_exists())
+
+    def test_herd_tracking(self):
+        """
+        Checks the database.HerdTracking class.
+
+        Currently there are no functions on this class to test, so we stick to
+        verifying the table.
+        """
+        self.assertTrue(db.HerdTracking.table_exists())
+
 
 class TestDataAccess(DatabaseTest):
     """
