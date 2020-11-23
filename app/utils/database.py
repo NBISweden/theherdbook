@@ -335,6 +335,12 @@ class Breeding(BaseModel):
     birth_notes = TextField(null=True)
     litter_size = IntegerField(null=True)
 
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        Add a unique index to mother+father+birth_date
+        """
+
+        indexes = ((("mother", "father", "birth_date"), True),)
 
 class Individual(BaseModel):
     """
