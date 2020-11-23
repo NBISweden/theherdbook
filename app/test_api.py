@@ -542,37 +542,6 @@ class TestDatabase(DatabaseTest):
 
         # .filtered_dict()
 
-        def all_herd_fields(index):
-            """
-            Returns a dict with all herd fields except 'email_validated'.
-            We can't use the as_dict() function here, as it doesn't return
-            fields where the value is None.
-            """
-            return {'id': self.herds[index].id,
-                    'genebank': self.herds[index].__dict__['__data__']['genebank'],
-                    'herd': self.herds[index].herd,
-                    'herd_name': self.herds[index].herd_name,
-                    'is_active': self.herds[index].is_active,
-                    'start_date': self.herds[index].start_date,
-                    'name': self.herds[index].name,
-                    'name_privacy': self.herds[index].name_privacy,
-                    'physical_address': self.herds[index].physical_address,
-                    'physical_address_privacy': self.herds[index].physical_address_privacy,
-                    'location': self.herds[index].location,
-                    'location_privacy': self.herds[index].location_privacy,
-                    'email': self.herds[index].email,
-                    'email_privacy': self.herds[index].email_privacy,
-                    'www': self.herds[index].www,
-                    'www_privacy': self.herds[index].www_privacy,
-                    'mobile_phone': self.herds[index].mobile_phone,
-                    'mobile_phone_privacy': self.herds[index].mobile_phone_privacy,
-                    'wire_phone': self.herds[index].wire_phone,
-                    'wire_phone_privacy': self.herds[index].wire_phone_privacy,
-                    'latitude': self.herds[index].latitude,
-                    'longitude': self.herds[index].longitude,
-                    'coordinates_privacy': self.herds[index].coordinates_privacy
-                    }
-
         # admin
         h0_result = self.herds[0].filtered_dict(self.admin)
         h1_result = self.herds[1].filtered_dict(self.admin)
