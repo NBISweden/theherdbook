@@ -743,6 +743,226 @@ class TestDatabase(DatabaseTest):
         """
         self.assertTrue(db.Bodyfat.table_exists())
 
+    def test_user(self):
+        """
+        Tests the functions of the database.User class.
+        """
+        # .privileges (getter and setter is tested through other functions)
+        self.assertListEqual(self.admin.privileges, [{'level': 'admin'}])
+        self.assertListEqual(self.manager.privileges, [{'level': 'manager', 'genebank': self.genebanks[0].id}])
+        self.assertListEqual(self.specialist.privileges, [{'level': 'specialist', 'genebank': self.genebanks[0].id}])
+        self.assertListEqual(self.owner.privileges, [{'level': 'owner', 'herd': self.herds[0].id}])
+
+        # .has_role()
+        self.assertEqual(self.admin.has_role('admin'), True)
+        self.assertEqual(self.manager.has_role('admin'), False)
+        self.assertEqual(self.specialist.has_role('admin'), False)
+        self.assertEqual(self.owner.has_role('admin'), False)
+
+        self.assertEqual(self.admin.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(self.manager.has_role('manager', self.genebanks[0].id), True)
+        self.assertEqual(self.specialist.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(self.owner.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(self.admin.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(self.manager.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(self.specialist.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(self.owner.has_role('manager', self.genebanks[1].id), False)
+
+        self.assertEqual(self.admin.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(self.manager.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(self.specialist.has_role('specialist', self.genebanks[0].id), True)
+        self.assertEqual(self.owner.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(self.admin.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(self.manager.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(self.specialist.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(self.owner.has_role('specialist', self.genebanks[1].id), False)
+
+        self.assertEqual(self.admin.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(self.manager.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(self.specialist.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(self.owner.has_role('owner', self.herds[0].id), True)
+        self.assertEqual(self.admin.has_role('owner', self.herds[1].id), False)
+        self.assertEqual(self.manager.has_role('owner', self.herds[1].id), False)
+        self.assertEqual(self.specialist.has_role('owner', self.herds[1].id), False)
+        self.assertEqual(self.owner.has_role('owner', self.herds[1].id), False)
+
+        # .add_role
+        user = da.register_user("test", "pass")
+        user.add_role('admin')
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+
+        user.add_role('manager', self.genebanks[0].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+
+        user.add_role('specialist', self.genebanks[1].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), True)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+
+        user.add_role('owner', self.herds[1].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), True)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), True)
+
+        # remove roles
+        user.remove_role('owner', self.herds[1].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), True)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+        user.remove_role('manager', self.genebanks[0].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), True)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+        user.remove_role('specialist', self.genebanks[1].id)
+        self.assertEqual(user.has_role('admin'), True)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+        user.remove_role('admin')
+        self.assertEqual(user.has_role('admin'), False)
+        self.assertEqual(user.has_role('manager', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('manager', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[0].id), False)
+        self.assertEqual(user.has_role('specialist', self.genebanks[1].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[0].id), False)
+        self.assertEqual(user.has_role('owner', self.herds[1].id), False)
+
+        # is_admin
+        self.assertEqual(self.admin.is_admin, True)
+        self.assertEqual(self.manager.is_admin, False)
+        self.assertEqual(self.specialist.is_admin, False)
+        self.assertEqual(self.owner.is_admin, False)
+
+        # is_manager
+        self.assertEqual(self.admin.is_manager, None)
+        self.assertEqual(self.manager.is_manager, [self.genebanks[0].id])
+        self.assertEqual(self.specialist.is_manager, None)
+        self.assertEqual(self.owner.is_manager, None)
+
+        # is_owner
+        self.assertEqual(self.admin.is_owner, None)
+        self.assertEqual(self.manager.is_owner, None)
+        self.assertEqual(self.specialist.is_owner, None)
+        self.assertEqual(self.owner.is_owner, [self.herds[0].herd])
+
+        # accessible_genebanks
+        self.assertEqual(self.admin.accessible_genebanks, [self.genebanks[0].id, self.genebanks[1].id])
+        self.assertEqual(self.manager.accessible_genebanks, [self.genebanks[0].id])
+        self.assertEqual(self.specialist.accessible_genebanks, [self.genebanks[0].id])
+        self.assertEqual(self.owner.accessible_genebanks, [self.genebanks[0].id])
+
+        # frontend_data
+        self.assertDictEqual(self.admin.frontend_data(),
+                             {'email': 'admin', 'username': None,
+                              'validated': False, 'is_admin': True,
+                              'is_manager': None, 'is_owner': None})
+        self.assertDictEqual(self.manager.frontend_data(),
+                             {'email': 'man', 'username': None,
+                              'validated': False, 'is_admin': False,
+                              'is_manager': [self.genebanks[0].id], 'is_owner': None})
+        self.assertDictEqual(self.specialist.frontend_data(),
+                             {'email': 'spec', 'username': None,
+                              'validated': False, 'is_admin': False,
+                              'is_manager': None, 'is_owner': None})
+        self.assertDictEqual(self.owner.frontend_data(),
+                             {'email': 'owner', 'username': None,
+                              'validated': False, 'is_admin': False,
+                              'is_manager': None, 'is_owner': [self.herds[0].herd]})
+
+        # get_genebanks
+
+        # object reference comparison is intentional here
+        self.assertListEqual(self.admin.get_genebanks(), self.genebanks)
+        self.assertListEqual(self.manager.get_genebanks(), [self.genebanks[0]])
+        self.assertListEqual(self.specialist.get_genebanks(), [self.genebanks[0]])
+        self.assertListEqual(self.owner.get_genebanks(), [self.genebanks[0]])
+
+        # get_genebank
+        g0 = self.genebanks[0].as_dict()
+        g1 = self.genebanks[1].as_dict()
+        # we trust genebank.get_herds() as we tested it
+        g0['herds'] = self.genebanks[0].get_herds(self.admin)
+        g1['herds'] = self.genebanks[1].get_herds(self.admin)
+        self.assertDictEqual(self.admin.get_genebank(self.genebanks[0].id), g0)
+        self.assertDictEqual(self.admin.get_genebank(self.genebanks[1].id), g1)
+        g0['herds'] = self.genebanks[0].get_herds(self.manager)
+        self.assertDictEqual(self.manager.get_genebank(self.genebanks[0].id), g0)
+        self.assertEqual(self.manager.get_genebank(self.genebanks[1].id), None)
+        g0['herds'] = self.genebanks[0].get_herds(self.specialist)
+        self.assertDictEqual(self.specialist.get_genebank(self.genebanks[0].id), g0)
+        self.assertEqual(self.specialist.get_genebank(self.genebanks[1].id), None)
+        g0['herds'] = self.genebanks[0].get_herds(self.owner)
+        self.assertDictEqual(self.owner.get_genebank(self.genebanks[0].id), g0)
+        self.assertEqual(self.owner.get_genebank(self.genebanks[1].id), None)
+
+        # can_edit
+        self.assertEqual(self.admin.can_edit('genebank1'), True)
+        self.assertEqual(self.admin.can_edit('genebank2'), True)
+        self.assertEqual(self.admin.can_edit('H1'), True)
+        self.assertEqual(self.admin.can_edit('H2'), True)
+        self.assertEqual(self.admin.can_edit('H3'), True)
+        self.assertEqual(self.admin.can_edit('H1-1'), True)
+        self.assertEqual(self.admin.can_edit('H2-2'), True)
+        self.assertEqual(self.admin.can_edit('H3-3'), True)
+
+        self.assertEqual(self.manager.can_edit('genebank1'), True)
+        self.assertEqual(self.manager.can_edit('genebank2'), False)
+        self.assertEqual(self.manager.can_edit('H1'), True)
+        self.assertEqual(self.manager.can_edit('H2'), True)
+        self.assertEqual(self.manager.can_edit('H3'), False)
+        self.assertEqual(self.manager.can_edit('H1-1'), True)
+        self.assertEqual(self.manager.can_edit('H2-2'), True)
+        self.assertEqual(self.manager.can_edit('H3-3'), False)
+
+        self.assertEqual(self.specialist.can_edit('genebank1'), False)
+        self.assertEqual(self.specialist.can_edit('genebank2'), False)
+        self.assertEqual(self.specialist.can_edit('H1'), False)
+        self.assertEqual(self.specialist.can_edit('H2'), False)
+        self.assertEqual(self.specialist.can_edit('H3'), False)
+        self.assertEqual(self.specialist.can_edit('H1-1'), False)
+        self.assertEqual(self.specialist.can_edit('H2-2'), False)
+        self.assertEqual(self.specialist.can_edit('H3-3'), False)
+
+        self.assertEqual(self.owner.can_edit('genebank1'), False)
+        self.assertEqual(self.owner.can_edit('genebank2'), False)
+        self.assertEqual(self.owner.can_edit('H1'), True)
+        self.assertEqual(self.owner.can_edit('H2'), False)
+        self.assertEqual(self.owner.can_edit('H3'), False)
+        self.assertEqual(self.owner.can_edit('H1-1'), True)
+        self.assertEqual(self.owner.can_edit('H2-2'), False)
+        self.assertEqual(self.owner.can_edit('H3-3'), False)
+
     def test_user_message(self):
         """
         Checks the database.UserMessage class.
