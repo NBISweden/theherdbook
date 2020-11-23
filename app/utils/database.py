@@ -327,7 +327,7 @@ class Breeding(BaseModel):
     Table for breeding and birth.
     """
     id = AutoField(primary_key=True, column_name="breeding_id")
-    breed_date = DateField()
+    breed_date = DateField(null=True)
     breed_notes = TextField(null=True)
     father = DeferredForeignKey("Individual", null=True)
     mother = DeferredForeignKey("Individual", null=True)
