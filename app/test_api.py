@@ -1057,6 +1057,18 @@ class TestDataAccess(DatabaseTest):
         self.assertEqual(user.validated, validated)
         self.assertEqual(user.privileges, privileges)
 
+    def test_authenticate_user(self):
+        """
+        Checks that `utils.data_access.authenticate_user` is working as intended.
+        """
+        email = 'test_authenticate'
+        password = 'pass'
+
+        da.register_user(email, password)
+        self.assertIsNone(da.authenticate_user(email, "!%s!" % password))
+        user = da.authenticate_user(email, password)
+        self.assertEqual(user.email, email)
+
     def test_get_colors(self):
         """
         Checks that `utils.data_access.get_colors` return the correct
