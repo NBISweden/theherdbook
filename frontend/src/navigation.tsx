@@ -26,12 +26,23 @@ import * as ui from "@app/ui_utils";
 
 // Define styles for tab menu
 const useStyles = makeStyles({
-  root: {
-    flexGrow: 1,
+  menu: {
+    position: 'fixed',
+    zIndex: 100,
+    left: 0,
+    top: 0,
+    width: '100%',
   },
   main: {
-    height: "calc(100% - 72px)",
-  },
+    margin: '80vh 0 5px 0',
+    padding: '10px',
+    height: '100%',
+    minHeight: 'calc(100vh - 80px)',
+    ['@media (min-width:660px)']: {
+      margin: '80vh 20px 20px 20px',
+      minHeight: 'calc(100vh - 100px)',
+    },
+  }
 });
 
 function Restricted(props: { children: React.ReactElement }) {
@@ -150,54 +161,38 @@ export function Navigation() {
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
-  return (
-    <>
-      {/* Insert the tab menu */}
-      <Paper className={classes.root}>
-        <Tabs centered />
-      </Paper>
+  return <>
+    {/* Insert the tab menu */}
+    <Paper className={classes.menu}>
+      <Tabs centered/>
+    </Paper>
 
       {/* Declare routes, and what component should be rendered for each
        * route.
        */}
 
-      <div className={classes.main}>
-        <Switch>
-          {TabbedRoutes}
-          <ui.Routed path="/herd/:id">
-            {(params) => (
-              <Restricted>
-                <HerdView id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/individual/:id">
-            {(params) => (
-              <Restricted>
-                <IndividualView id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/individual-pedigree/:id/:generations?">
-            {(params) => (
-              <Restricted>
-                <IndividualPedigree
-                  id={params.id}
-                  generations={params.generations ? +params.generations : 5}
-                />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/herd-pedigree/:id">
-            {(params) => (
-              <Restricted>
-                <HerdPedigree id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <Route path="/">Welcome!</Route>
-        </Switch>
-      </div>
-    </>
-  );
+    <Paper className={classes.main}>
+      <Switch>
+        {TabbedRoutes}
+        <ui.Routed path="/herd/:id">
+          {params => <Restricted><HerdView id={params.id}/></Restricted>}
+        </ui.Routed>
+        <ui.Routed path="/individual/:id">
+          {params => <Restricted><IndividualView id={params.id} /></Restricted>}
+        </ui.Routed>
+        <ui.Routed path="/individual-pedigree/:id/:generations?">
+          {params =>
+            <Restricted>
+              <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>
+            </Restricted>}
+        </ui.Routed>
+        <ui.Routed path="/herd-pedigree/:id">
+          {params => <Restricted><HerdPedigree id={params.id}/></Restricted>}
+        </ui.Routed>
+        <Route path="/">
+          Welcome!
+        </Route>
+      </Switch>
+    </Paper>
+  </>
 }
