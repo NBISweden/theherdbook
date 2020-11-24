@@ -12,6 +12,7 @@ import utils.database as db
 import utils.data_access as da
 from copy import copy
 from datetime import datetime, timedelta
+from werkzeug.security import check_password_hash
 from herdbook import APP
 
 HOST = "http://localhost:4200"
@@ -1037,6 +1038,24 @@ class TestDataAccess(DatabaseTest):
 
         self.assertDictEqual(da.add_user(valid_form, self.admin.uuid),
                              {"status": "error", "message": "already exists"})
+
+    def test_register_user(self):
+        """
+        Checks that `utils.data_access.register_user` is working as intended.
+        """
+        email = 'test_user@site'
+        password = 'pass'
+        username = 'test user'
+        validated = True
+        privileges = [{'level': 'owner', 'herd': self.herds[0].herd}]
+
+        user = da.register_user(email, password, username, validated, privileges)
+
+        self.assertEqual(user.email, email)
+        self.assertTrue(check_password_hash(user.password_hash, password))
+        self.assertEqual(user.username, username)
+        self.assertEqual(user.validated, validated)
+        self.assertEqual(user.privileges, privileges)
 
     def test_get_colors(self):
         """
