@@ -1091,6 +1091,31 @@ class TestDataAccess(DatabaseTest):
         colors = da.get_colors()
         self.assertDictEqual(colors, expected)
 
+    def test_get_genebank(self):
+        """
+        Checks that `utils.data_access.get_genebank` return the correct
+        information.
+
+        The permission dependent behavior of this function is tested in the
+        database functions, so in the interest of time it's not tested here.
+        """
+        self.assertIsNone(da.get_genebank(self.genebanks[0].id, 'invalid-uuid'))
+        genebank = da.get_genebank(self.genebanks[0].id, self.admin.uuid)
+        self.assertEqual(genebank['id'], self.genebanks[0].id)
+
+    def test_get_genebanks(self):
+        """
+        Checks that `utils.data_access.get_genebanks` return the correct
+        information.
+
+        The permission dependent behavior of this function is tested in the
+        database functions, so in the interest of time it's not tested here.
+        """
+        self.assertIsNone(da.get_genebanks('invalid-uuid'))
+        genebanks = da.get_genebanks(self.admin.uuid)
+        self.assertListEqual([g['id'] for g in genebanks],
+                             [g.id for g in self.genebanks])
+
 
 class FlaskTest(DatabaseTest):
     """
