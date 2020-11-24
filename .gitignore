@@ -19,6 +19,7 @@ venv.bak/
 
 # test coverage report
 .coverage
+*,cover
 
 # frontend files that shouldn't be committed
 frontend/dist/
