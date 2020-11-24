@@ -1069,6 +1069,16 @@ class TestDataAccess(DatabaseTest):
         user = da.authenticate_user(email, password)
         self.assertEqual(user.email, email)
 
+    def test_fetch_user_info(self):
+        """
+        Checks that `utils.data_access.fetch_user_info` return the correct
+        information.
+        """
+        self.assertIsNone(da.fetch_user_info('invalid-uuid'))
+        user = da.fetch_user_info(self.admin.uuid)
+        self.assertEqual(user.email, self.admin.email)
+        self.assertEqual(user.id, self.admin.id)
+
     def test_get_colors(self):
         """
         Checks that `utils.data_access.get_colors` return the correct
