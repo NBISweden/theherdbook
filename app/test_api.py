@@ -10,6 +10,7 @@ import flask
 
 import utils.database as db
 import utils.data_access as da
+from copy import copy
 from datetime import datetime, timedelta
 from herdbook import APP
 
@@ -149,6 +150,7 @@ class DatabaseTest(unittest.TestCase):
             db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now() - timedelta(days=1))[0],
             db.HerdTracking.get_or_create(from_herd=self.herds[0], herd=self.herds[2], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now())[0],
         ]
+
 
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -1004,6 +1006,37 @@ class TestDataAccess(DatabaseTest):
     """
     Checks that data access functions return the correct data.
     """
+
+    def test_add_user(self):
+        """
+        Checks that `utils.data_access.get_colors` is working as intended.
+        """
+        valid_form = {'email': 'test@user.com',
+                      'username': 'test',
+                      'validated': True,
+                      'password': 'pass'}
+        no_email = copy(valid_form)
+        del no_email['email']
+        no_pass = copy(valid_form)
+        del no_pass['password']
+
+        self.assertDictEqual(da.add_user(valid_form, None),
+                             {"status": "error", "message": "forbidden"})
+        self.assertDictEqual(da.add_user(valid_form, self.owner.uuid),
+                             {"status": "error", "message": "forbidden"})
+        self.assertDictEqual(da.add_user(valid_form, self.specialist.uuid),
+                             {"status": "error", "message": "forbidden"})
+
+        self.assertDictEqual(da.add_user(no_email, self.admin.uuid),
+                             {"status": "error", "message": "missing data"})
+        self.assertDictEqual(da.add_user(no_pass, self.admin.uuid),
+                             {"status": "error", "message": "missing data"})
+
+        result = da.add_user(valid_form, self.manager.uuid)
+        self.assertEqual(result['status'], "created")
+
+        self.assertDictEqual(da.add_user(valid_form, self.admin.uuid),
+                             {"status": "error", "message": "already exists"})
 
     def test_get_colors(self):
         """
