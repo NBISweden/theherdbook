@@ -23,11 +23,22 @@ import * as ui from '@app/ui_utils'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
-  root: {
-    flexGrow: 1,
+  menu: {
+    position: 'fixed',
+    zIndex: 100,
+    left: 0,
+    top: 0,
+    width: '100%',
   },
   main: {
-    height: "calc(100% - 72px)",
+    margin: '80vh 0 5px 0',
+    padding: '10px',
+    height: '100%',
+    minHeight: 'calc(100vh - 80px)',
+    ['@media (min-width:660px)']: {
+      margin: '80vh 20px 20px 20px',
+      minHeight: 'calc(100vh - 100px)',
+    },
   }
 });
 
@@ -100,7 +111,7 @@ export function Navigation() {
 
   return <>
     {/* Insert the tab menu */}
-    <Paper className={classes.root}>
+    <Paper className={classes.menu}>
       <Tabs centered/>
     </Paper>
 
@@ -108,7 +119,7 @@ export function Navigation() {
       * route.
       */}
 
-    <div className={classes.main}>
+    <Paper className={classes.main}>
       <Switch>
         {TabbedRoutes}
         <ui.Routed path="/herd/:id">
@@ -130,6 +141,6 @@ export function Navigation() {
           Welcome!
         </Route>
       </Switch>
-    </div>
+    </Paper>
   </>
 }
