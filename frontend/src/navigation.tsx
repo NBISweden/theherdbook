@@ -10,19 +10,32 @@ import MeetingRoom from "@material-ui/icons/MeetingRoom";
 import GroupIcon from "@material-ui/icons/Group";
 import PostAddIcon from "@material-ui/icons/PostAdd";
 
-import { Login } from "@app/login";
-import { Genebanks } from "@app/genebanks";
-import { HerdView } from "@app/herd_view";
-import { Manage } from "@app/manage";
-import { Owner } from "@app/owner";
+import { makeStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import HomeIcon from '@material-ui/icons/Home';
+import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
+import ContactMail from '@material-ui/icons/ContactMail';
+import ForumIcon from '@material-ui/icons/Forum';
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
+import MeetingRoom from '@material-ui/icons/MeetingRoom';
+import GroupIcon from '@material-ui/icons/Group';
+
+import { Login } from '@app/login'
+import { Genebanks } from '@app/genebanks'
+import { HerdView } from '@app/herd_view'
+import { Manage } from '@app/manage'
+import { Owner } from '@app/owner';
 import { Settings } from "@app/settings";
-import { IndividualPedigree } from "@app/individual_pedigree";
-import { IndividualView } from "@app/individual_view";
-import { HerdPedigree } from "@app/herd_pedigree";
-import { useUserContext } from "@app/user_context";
+import { IndividualPedigree } from '@app/individual_pedigree'
+import { IndividualView } from '@app/individual_view'
+import { HerdPedigree } from '@app/herd_pedigree'
+import { useUserContext } from '@app/user_context'
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
-import * as ui from "@app/ui_utils";
+import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt
+        } from '@app/static_pages'
+import { Forum } from '@app/forum'
+import * as ui from '@app/ui_utils'
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -68,9 +81,33 @@ export function Navigation() {
       label: "Hem",
       path: "/",
       exact: true,
-      component: "Welcome!",
+      component: <About/>,
       visible: true,
       icon: <HomeIcon />,
+    },
+    {
+      label: "Gotlandskaninen",
+      path: "/gotlandskaninen",
+      exact: true,
+      component: <Gotlandskaninen/>,
+      visible: true,
+      icon: <HomeIcon />
+    },
+    {
+      label: "Mellerudskaninen",
+      path: "/mellerudskaninen",
+      exact: true,
+      component: <Mellerudskaninen/>,
+      visible: true,
+      icon: <HomeIcon />
+    },
+    {
+      label: "Forum",
+      path: "/forum",
+      exact: true,
+      component: <Forum/>,
+      visible: is_logged_in,
+      icon: <ForumIcon />
     },
     {
       label: "Genbanker",
@@ -143,6 +180,14 @@ export function Navigation() {
     },
 
     {
+      label: "Bli Medlem",
+      path: "/mellerudskaninen",
+      exact: true,
+      component: <Medlem/>,
+      visible: !is_logged_in,
+      icon: <HomeIcon />
+    },
+    {
       label: "Logga in",
       path: "/login",
       component: <Login />,
@@ -157,7 +202,15 @@ export function Navigation() {
       on_click: logout,
       icon: <VpnKeyIcon />,
     },
-  ];
+    {
+      label: "Kontakt",
+      path: "/kontakt",
+      exact: true,
+      component: <Kontakt/>,
+      visible: true,
+      icon: <ContactMail />
+    },
+  ]
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
