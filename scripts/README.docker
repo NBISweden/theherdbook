@@ -1,0 +1,68 @@
+README for the docker versions of loading scripts.
+
+The scripts are:
+
+	* load-docker-compose.sh
+		User-callable script that uses a second docker compose file
+		starts a small container with every tool needed installed 
+		also starts the herdbook db container.
+
+	* load-in-docker.sh 
+		Script called by load-docker-compose.sh is executed in main-load-db 
+		container.
+
+	* load-gotland.sh
+		Called by load-in-docker.sh to load the Gotlandskanin data set.
+
+	* load-mellerud.sh
+		Called by load-in-docker.sh to load the Mellerudskanin data set.
+
+
+Prerequisites:
+
+	The scripts assumes that you have the docker environment up and running 
+	otherwise it tries to start using the compose file ../dc-db-load.yml
+
+
+Mode of operation:
+
+	The main load-docker-compose.sh script takes the names of the Gotland and
+	Mellerud Excel or CSV files on its command line, as arguments
+	to the -g and -m command line options, respectively.  It
+	initializes the database (empties it completely by dropping it
+	and re-creating it), calls the two genebank-specific scripts,
+	and then dumps the resulting database to a date-stamped file.
+
+	The given input files, if they are Excel files, are converted to
+	CSV if the corresponding CSV files are missing or if they are
+	outdated.
+
+	The two genebank-specific scripts call csvsql to load the CSV
+	data into the table called "data" (it drops this table if it
+	exists).  Data is then moved from this table into the various
+	tables of the main database through a series of INSERT and
+	UPDATE statements.
+
+	In the case of the Gotlandskanin data, a separate auxiliary data
+	set containing herd data is loaded separately into the table
+	"data2" and incorporated from there.  This file must be named as
+	the argument to the -G command line option when running the main
+	load.sh script.
+
+	The "data" and "data2" tables containing the Excel data are
+	never dropped.
+
+	At the end, control is handed back to the main load.sh script
+	and it creates a database dump to a file named after the current
+	date.  Only the tables that were populated by the scripts are
+	dumped.
+
+
+Typical invocation:
+
+	./load-docker-compose.sh \
+	    -g kanindata-gotland-v11.xlxs herd-registry-gotland.xlsx \
+	    -m kanindata-mellerud-v5.xlxs
+
+
+See also: ./load-docker-compose.sh -h
