@@ -77,6 +77,20 @@ const useStyles = makeStyles({
       color: '#222',
     },
   },
+  hidden: {
+    visibility: 'hidden',
+  },
+  logoImageWrapper: {
+    position: 'fixed',
+    zIndex: -4,
+    width: '100%',
+    textAlign: 'center',
+    top: '10vh',
+  },
+  logoImage: {
+    width: '400px',
+    maxWidth: '90vw',
+  },
   menuButton: {
     height: '52px',
     fontSize: '1.0em',
@@ -333,10 +347,13 @@ export function Navigation() {
 
       {/* <Tabs centered/> */}
     </div>
-    <h1 className={classes.logo}>
+    <h1 className={`${classes.logo} ${classes.hidden}`}>
       Föreningen <br />
       Gotlandskaninen
     </h1>
+    <div className={classes.logoImageWrapper}>
+      <img src='/logo.png' alt="logo" className={classes.logoImage} />
+    </div>
 
       {/* Declare routes, and what component should be rendered for each
        * route.
