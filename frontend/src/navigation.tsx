@@ -41,6 +41,7 @@ const useStyles = makeStyles({
     left: 0,
     top: 0,
     width: '100%',
+    height: '51px',
     background: 'rgba(255,255,255,0.95)',
     borderBottom: '1px solid #aaa',
   },
@@ -73,7 +74,23 @@ const useStyles = makeStyles({
       fontSize: '4em',
       color: '#222',
     },
-  }
+  },
+  menuButton: {
+    height: '52px',
+    fontSize: '1.0em',
+    ['@media (min-width:660px)']: {
+      fontSize: '1.2em',
+    },
+  },
+  trigram: {
+    fontSize: '1.8em',
+    paddingRight: '7px',
+    marginTop: '-5px',
+    ['@media (min-width:660px)']: {
+      fontSize: '2.0em',
+      marginTop: '-7px',
+    },
+  },
 });
 
 
@@ -231,11 +248,10 @@ export function Navigation() {
       <Button
           aria-controls="customized-menu"
           aria-haspopup="true"
-          variant="contained"
-          color="primary"
+          className={classes.menuButton}
           onClick={handleClick}
         >
-        Menu
+        <span className={classes.trigram}>☰</span> Menu
       </Button>
 
       <StyledMenu
