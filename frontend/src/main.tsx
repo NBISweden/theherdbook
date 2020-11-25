@@ -22,7 +22,7 @@ const CSS = sc.createGlobalStyle`
     background: #ddd left / cover no-repeat url('/background.jpg') fixed;
     margin: 0;
     padding: 0 5px;
-    min-height: calc(100vh - 42px);
+    min-height: calc(100vh - 56px);
     width: 100%;
     @media (min-width:660px): {
       background: #ddd center / cover no-repeat url('/background.jpg') fixed;
