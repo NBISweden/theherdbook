@@ -1,14 +1,5 @@
 import * as React from "react";
-import { Switch, Route, useLocation, Redirect } from "react-router-dom";
-
-import { makeStyles } from "@material-ui/core/styles";
-import Paper from "@material-ui/core/Paper";
-import HomeIcon from "@material-ui/icons/Home";
-import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
-import VpnKeyIcon from "@material-ui/icons/VpnKey";
-import MeetingRoom from "@material-ui/icons/MeetingRoom";
-import GroupIcon from "@material-ui/icons/Group";
-import PostAddIcon from "@material-ui/icons/PostAdd";
+import {Switch, Route, useLocation, Redirect, Link} from 'react-router-dom'
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
@@ -19,6 +10,10 @@ import ForumIcon from '@material-ui/icons/Forum';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
+import PersonAddIcon from '@material-ui/icons/PersonAdd'
+import NaturePeopleIcon from '@material-ui/icons/NaturePeople'
+import EmojiNatureIcon from '@material-ui/icons/EmojiNature'
+import EcoIcon from '@material-ui/icons/Eco'
 
 import { Login } from '@app/login'
 import { Genebanks } from '@app/genebanks'
@@ -36,6 +31,9 @@ import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt
         } from '@app/static_pages'
 import { Forum } from '@app/forum'
 import * as ui from '@app/ui_utils'
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem, withStyles
+        } from '@material-ui/core';
+import { MenuProps } from '@material-ui/core/Menu';
 
 // Define styles for tab menu
 const useStyles = makeStyles({
@@ -45,6 +43,8 @@ const useStyles = makeStyles({
     left: 0,
     top: 0,
     width: '100%',
+    background: 'rgba(255,255,255,0.95)',
+    borderBottom: '1px solid #aaa',
   },
   main: {
     margin: '80vh 0 5px 0',
@@ -55,17 +55,65 @@ const useStyles = makeStyles({
       margin: '80vh 20px 20px 20px',
       minHeight: 'calc(100vh - 100px)',
     },
+  },
+  link: {
+    textDecoration: 'none',
+    fontFamily: 'Open Sans',
+    color: '#222',
+  },
+  logo: {
+    position: 'fixed',
+    zIndex: -3,
+    width: '100%',
+    textAlign: 'center',
+    top: '20vh',
+    justifyContent: 'center',
+    fontVariant: 'small-caps',
+    fontSize: '2.5em',
+    color: '#eee',
+    ['@media (min-width:660px)']: {
+      fontSize: '4em',
+      color: '#222',
+    },
   }
 });
 
-function Restricted(props: { children: React.ReactElement }) {
-  const { user } = useUserContext();
-  const location = useLocation();
-  return user ? (
-    props.children
-  ) : (
-    <Redirect to={{ pathname: "/login", state: { from: location } }} />
-  );
+
+const StyledMenu = withStyles({
+  paper: {
+    border: '1px solid #d3d4d5',
+  },
+})((props: MenuProps) => (
+  <Menu
+    elevation={0}
+    getContentAnchorEl={null}
+    anchorOrigin={{
+      vertical: 'bottom',
+      horizontal: 'center',
+    }}
+    transformOrigin={{
+      vertical: 'top',
+      horizontal: 'center',
+    }}
+    {...props}
+  />
+));
+
+const StyledMenuItem = withStyles((theme) => ({
+  root: {
+    '&:focus': {
+      backgroundColor: theme.palette.primary.main,
+      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+        color: theme.palette.common.white,
+      },
+    },
+  },
+}))(MenuItem);
+
+function Restricted(props: {children: React.ReactElement}) {
+  const {user} = useUserContext()
+  const location = useLocation()
+  return user ? props.children : <Redirect to={{ pathname: "/login", state: { from: location } }}/>
 }
 
 export function Navigation() {
@@ -91,7 +139,7 @@ export function Navigation() {
       exact: true,
       component: <Gotlandskaninen/>,
       visible: true,
-      icon: <HomeIcon />
+      icon: <EcoIcon />
     },
     {
       label: "Mellerudskaninen",
@@ -99,7 +147,7 @@ export function Navigation() {
       exact: true,
       component: <Mellerudskaninen/>,
       visible: true,
-      icon: <HomeIcon />
+      icon: <EmojiNatureIcon />
     },
     {
       label: "Forum",
@@ -143,7 +191,7 @@ export function Navigation() {
         </Restricted>
       ),
       visible: is_owner,
-      icon: <GroupIcon />,
+      icon: <NaturePeopleIcon />
     },
     {
       label: "Registrera",
@@ -185,7 +233,15 @@ export function Navigation() {
       exact: true,
       component: <Medlem/>,
       visible: !is_logged_in,
-      icon: <HomeIcon />
+      icon: <PersonAddIcon />
+    },
+    {
+      label: "Kontakt",
+      path: "/kontakt",
+      exact: true,
+      component: <Kontakt/>,
+      visible: true,
+      icon: <ContactMail />
     },
     {
       label: "Logga in",
@@ -211,14 +267,60 @@ export function Navigation() {
       icon: <ContactMail />
     },
   ]
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
   return <>
     {/* Insert the tab menu */}
-    <Paper className={classes.menu}>
-      <Tabs centered/>
-    </Paper>
+    <div className={classes.menu}>
+
+      <Button
+          aria-controls="customized-menu"
+          aria-haspopup="true"
+          variant="contained"
+          color="primary"
+          onClick={handleClick}
+        >
+        Menu
+      </Button>
+
+      <StyledMenu
+        id="customized-menu"
+        anchorEl={anchorEl}
+        keepMounted
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+      >
+        {tabs.map(tab =>
+          <Link to={tab.path ?? '/'}
+                className={classes.link}
+                style={{display: tab.visible === false ? 'none' : undefined}}
+                onClick={() => {tab.on_click && tab.on_click(); handleClose();}}>
+            <StyledMenuItem>
+              <ListItemIcon>
+                {tab.icon}
+              </ListItemIcon>
+              <ListItemText primary={tab.label} />
+            </StyledMenuItem>
+          </Link>
+        )}
+      </StyledMenu>
+
+      {/* <Tabs centered/> */}
+    </div>
+    <h1 className={classes.logo}>
+      Föreningen <br />
+      Gotlandskaninen
+    </h1>
 
       {/* Declare routes, and what component should be rendered for each
        * route.
