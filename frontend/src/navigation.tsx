@@ -51,10 +51,9 @@ const useStyles = makeStyles({
     margin: '80vh 0 5px 0',
     padding: '10px',
     height: '100%',
-    minHeight: 'calc(100vh - 80px)',
+    minHeight: 'calc(100vh - 61px)',
     ['@media (min-width:660px)']: {
       margin: '80vh 20px 20px 20px',
-      minHeight: 'calc(100vh - 100px)',
     },
   },
   link: {

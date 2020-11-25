@@ -3,11 +3,19 @@
  */
 
 import * as React from 'react'
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles({
+  main: {
+    padding: '.25em 1em .5em 1em',
+  },
+});
 
 export function About() {
-  return <>
-    <h1>Föreningen Gotlandskaninen</h1>
-    {/* <img src='/logo512.png' className="logo" alt="logo" /> */}
+  const styles = useStyles();
+
+  return <div className={styles.main}>
+    <h1>Föreningen</h1>
     <p>
       Gotlandskaninen är en rest av den gamla svenska lantraskaninen.
       På 1970-talet uppmärksammades att det fanns några gårdar på
@@ -30,13 +38,14 @@ export function About() {
       i form av genbanksbesättningar, där avel på Gotlands- respektive
       Mellerudskanin bedrivs.
     </p>
-  </>
+  </div>
 }
 
 
 export function Gotlandskaninen() {
+  const styles = useStyles();
 
-  return <>
+  return <div className={styles.main}>
     <h1>Gotlandskaninen</h1>
     <p>
       Gotlandskaninen är en rest av den gamla svenska lantraskaninen. På
@@ -74,13 +83,14 @@ export function Gotlandskaninen() {
         gotlandskanin@gotlandskaninen.se
       </a>.
     </p>
-  </>
+  </div>
 }
 
 
 export function Mellerudskaninen() {
+  const styles = useStyles();
 
-  return <>
+  return <div className={styles.main}>
     <h1>Mellerudskaninen</h1>
     <p>
       Mellerudskaninen är en rest av den gamla svenska lantraskaninen. Den
@@ -123,12 +133,13 @@ export function Mellerudskaninen() {
         mellerudskanin@gotlandskaninen.se
       </a>.
     </p>
-  </>
+  </div>
 }
 
 export function Medlem() {
+  const styles = useStyles();
 
-  return <>
+  return <div className={styles.main}>
     <h1>Bli Medlem</h1>
     <p>
         Vill du bli medlem i föreningen? Då kan du antingen kontakta föreningen
@@ -140,12 +151,13 @@ export function Medlem() {
         som innehåller information till medlemmarna, artiklar och reportage,
         annonser samt kontaktuppgifter.
     </p>
-  </>
+  </div>
 }
 
 export function Kontakt() {
+  const styles = useStyles();
 
-  return <>
+  return <div className={styles.main}>
     <h1>
         Kontakta oss
     </h1>
@@ -165,5 +177,5 @@ export function Kontakt() {
         ordforande@gotlandskaninen.se
         Ordförande
     </p>
-  </>
+  </div>
 }
