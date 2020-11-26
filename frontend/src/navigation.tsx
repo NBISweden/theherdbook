@@ -31,7 +31,7 @@ import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt
         } from '@app/static_pages'
 import { Forum } from '@app/forum'
 import * as ui from '@app/ui_utils'
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem, withStyles
+import { Button, Checkbox, FormControlLabel, ListItemIcon, ListItemText, Menu, MenuItem, withStyles
         } from '@material-ui/core';
 import { MenuProps } from '@material-ui/core/Menu';
 
@@ -106,6 +106,27 @@ const useStyles = makeStyles({
       marginTop: '-7px',
     },
   },
+  cssIcon: {
+    display: 'block',
+    fontSize: '3em',
+    margin: '-24px 0 -18px 0',
+  },
+  cssSelector: {
+    position: 'fixed',
+    top: '60px',
+    left: 0,
+    padding: '2px',
+    height: '42px',
+    background: 'white',
+    borderRadius: '0 5px 5px 0',
+    border: '1px solid black',
+    '&:hover': {
+      background: 'lightgrey',
+    }
+  },
+  listItem: {
+    display: 'block',
+  }
 });
 
 
@@ -148,11 +169,13 @@ function Restricted(props: {children: React.ReactElement}) {
 
 export function Navigation() {
   const classes = useStyles();
-  const { logout } = useUserContext();
-  const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
-  const is_logged_in = !!user;
+  const {logout} = useUserContext();
+  const {user} = useUserContext();
+  const [showLogo, setShowLogo] = React.useState(true)
+  const [showLogoText, setShowLogoText] = React.useState(false)
+  const is_admin = !!(user?.is_manager || user?.is_admin)
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0)
+  const is_logged_in = !!user
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -298,6 +321,7 @@ export function Navigation() {
     },
   ]
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [cssList, setCssList] = React.useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -310,6 +334,32 @@ export function Navigation() {
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
   return <>
+    {/* temporary css selector */}
+    <Button className={classes.cssSelector}
+            onClick={(event) => setCssList(event.currentTarget)}>
+      <span className={classes.cssIcon}>⚙</span>
+      Stil
+    </Button>
+
+    <StyledMenu
+        anchorEl={cssList}
+        keepMounted
+        open={Boolean(cssList)}
+        onClose={() => {setCssList(null)}}
+      >
+        <FormControlLabel className={classes.listItem}
+          labelPlacement="end" label="Logga"
+          control={<Checkbox checked={showLogo} color="primary" />}
+          onChange={(event) => setShowLogo(event.target.checked)}
+        />
+        <FormControlLabel className={classes.listItem}
+          labelPlacement="end" label="Text"
+          control={<Checkbox checked={showLogoText} color="primary" />}
+          onChange={(event) => setShowLogoText(event.target.checked)}
+        />
+      </StyledMenu>
+
+
     {/* Insert the tab menu */}
     <div className={classes.menu}>
 
@@ -346,11 +396,11 @@ export function Navigation() {
 
       {/* <Tabs centered/> */}
     </div>
-    <h1 className={`${classes.logo} ${classes.hidden}`}>
+    <h1 className={`${classes.logo} ${!showLogoText && classes.hidden}`}>
       Föreningen <br />
       Gotlandskaninen
     </h1>
-    <div className={classes.logoImageWrapper}>
+    <div className={`${classes.logoImageWrapper} ${!showLogo && classes.hidden}`}>
       <img src='/logo.png' alt="logo" className={classes.logoImage} />
     </div>
 
