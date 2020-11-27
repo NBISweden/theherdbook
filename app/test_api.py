@@ -1134,6 +1134,28 @@ class TestDataAccess(DatabaseTest):
         self.assertListEqual([g['id'] for g in genebanks],
                              [g.id for g in self.genebanks])
 
+    def test_get_herd(self):
+        """
+        Checks that `utils.data_access.get_herd` return the correct
+        information.
+        """
+        self.maxDiff = None
+        self.assertIsNone(da.get_genebanks('invalid-uuid'))
+
+        for user in [self.admin, self.manager, self.specialist, self.owner]:
+            for herd in self.herds:
+                value = da.get_herd(herd.herd, user.uuid)
+                target = db.Herd.get(db.Herd.herd == herd.herd).filtered_dict(user)
+                if target['genebank'] not in user.accessible_genebanks:
+                    target = None
+                else:
+                    target["individuals"] = [i.short_info() for i in herd.individuals]
+
+                if value is None or target is None:
+                    self.assertEqual(value, target)
+                else:
+                    self.assertDictEqual(value, target)
+
 
 class FlaskTest(DatabaseTest):
     """
