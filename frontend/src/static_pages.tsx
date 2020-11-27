@@ -7,8 +7,19 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles({
   main: {
+    minHeight: 'calc(100vh - 76px)',
+    height: '100%',
     padding: '.25em 1em .5em 1em',
+    display: 'flex',
+    flexDirection: 'column',
   },
+  euLogo: {
+    marginTop: 'auto',
+    textAlign: 'center',
+    '& img': {
+      width: '200px',
+    }
+  }
 });
 
 export function About() {
@@ -38,6 +49,9 @@ export function About() {
       i form av genbanksbesättningar, där avel på Gotlands- respektive
       Mellerudskanin bedrivs.
     </p>
+    <div className={styles.euLogo}>
+      <img src='EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
+    </div>
   </div>
 }
 
