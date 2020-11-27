@@ -162,31 +162,18 @@ def get_herd(herd_id, user_uuid=None):
     if user is None:
         return None
     try:
+        data = None
         with DATABASE.atomic():
             herd = Herd.select().where(Herd.herd == herd_id).get()
             data = herd.filtered_dict(user)
+            data["individuals"] = []
             if data["genebank"] not in user.accessible_genebanks:
                 return None
 
-            # This turned out to be really hard to write in peewee
-            query = Individual.raw("""
-                SELECT  i.*
-                FROM    individual i
-                JOIN    herd_tracking ht ON (i.individual_id = ht.individual_id)
-                JOIN    herd h ON (ht.herd_id = h.herd_id)
-                WHERE   h.herd = %s
-                AND     i.death_date IS NULL
-                AND     ht.herd_tracking_date = (
-                        SELECT  MAX(herd_tracking_date)
-                        FROM    herd_tracking
-                        WHERE   individual_id = ht.individual_id
-                )
-            """, herd_id)
-
-            data["individuals"] = [i.short_info() for i in query.execute()]
+            data["individuals"] = [i.short_info() for i in herd.individuals]
             return data
     except DoesNotExist:
-        return None
+        return data
 
 def add_herd(form, user_uuid):
     """

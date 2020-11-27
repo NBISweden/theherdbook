@@ -561,6 +561,14 @@ class TestDatabase(DatabaseTest):
         """
         Checks the database.Herd class.
         """
+        # .individuals()
+        h0_expected = [self.individuals[0]]
+        h1_expected = [self.individuals[1]]
+        h2_expected = [self.individuals[2]]
+        self.assertListEqual(self.herds[0].individuals, h0_expected)
+        self.assertListEqual(self.herds[1].individuals, h1_expected)
+        self.assertListEqual(self.herds[2].individuals, h2_expected)
+
         # .short_info()
         for herd in self.herds:
             expected = {"id": herd.id,

@@ -10,6 +10,7 @@ from flask_login import UserMixin
 
 from peewee import (
     PostgresqlDatabase,
+    fn,
     SqliteDatabase,
     Proxy,
     Model,
@@ -203,6 +204,32 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+
+    @property
+    def individuals(self):
+        """
+        Returns a list of all individuals in the herd.
+        """
+
+        # Rank all herdtracking values by individual and date
+        current_herd = \
+            HerdTracking.select(HerdTracking.herd.alias('herd'),
+                                HerdTracking.individual.alias('i_id'),
+                                fn.RANK().over(
+                                    order_by=[HerdTracking.herd_tracking_date \
+                                              .desc()],
+                                    partition_by=[HerdTracking.individual]
+                                ).alias('rank'))
+
+        # Select all the individuals in the current herd
+        i_query = Individual.select() \
+                            .join(current_herd,
+                                  on=(Individual.id == current_herd.c.i_id)) \
+                            .where(current_herd.c.rank == 1) \
+                            .where(current_herd.c.herd == self.id)
+
+        # return as a list
+        return [i for i in i_query]
 
     def short_info(self):
         """
