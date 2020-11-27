@@ -6,6 +6,7 @@ Database handler for 'the herdbook'.
 import re
 import json
 import logging
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 
 from peewee import (
@@ -475,10 +476,21 @@ class Individual(BaseModel):
             - mother
         """
         father = {"id": self.breeding.father.id,
-                  "number": self.breeding.father.number} if self.breeding.father else None
+                  "number": self.breeding.father.number} \
+                  if self.breeding and self.breeding.father else None
         mother = {"id": self.breeding.mother.id,
-                  "number": self.breeding.mother.number} if self.breeding.mother else None
-        return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
+                  "number": self.breeding.mother.number} \
+                  if self.breeding and self.breeding.mother else None
+        is_active = self.is_active \
+                    and not self.death_date \
+                    and not self.death_note \
+                    and self.herdtracking_set.select() \
+                            .where(HerdTracking.herd_tracking_date >
+                                datetime.now() - timedelta(days=366)
+                                ).count() > 0
+        return {"id": self.id, "name": self.name, "number": self.number,
+                "sex": self.sex, "father": father, "mother": mother,
+                "is_active": is_active}
 
     class Meta:  # pylint: disable=too-few-public-methods
         """

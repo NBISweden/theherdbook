@@ -701,9 +701,19 @@ class TestDatabase(DatabaseTest):
 
             mother = {"id": self.parents[0].id, "number": self.parents[0].number}
             father = {"id": self.parents[1].id, "number": self.parents[1].number}
+
+            is_active = individual.is_active \
+                        and not individual.death_date \
+                        and not individual.death_note \
+                        and individual.herdtracking_set.select() \
+                                .where(db.HerdTracking.herd_tracking_date >
+                                    datetime.now() - timedelta(days=366)
+                                    ).count() > 0
+
             self.assertDictEqual(individual.short_info(),
                                  {"id": individual.id,
                                   "name": individual.name,
+                                  "is_active": is_active,
                                   "number": individual.number,
                                   "sex": individual.sex,
                                   "father": father,
