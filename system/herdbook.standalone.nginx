@@ -8,11 +8,16 @@
         ssl_dhparam /code/dhparam.pem;
         root /app/dist/;
 
+        location ~ ..*/[^/]*$ {
+	    # Redirect any subdirectory request to /
+            rewrite ^.*$ / redirect; 
+        }
+
         location / {
             try_files $uri $uri/ /;
         }
 
-        location /api/ {
+        location ^~ /api/ {
                 # There were issues using the wsgi transport for uwsgi, 
                 # use its built in http server. 
                 proxy_pass http://127.0.0.1:9090/api/;
