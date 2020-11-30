@@ -57,6 +57,51 @@ psql --quiet <<-'END_SQL'
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Gotlandskanin');
 
+	-- FIXME: The following is broken.
+	-- Gotland colours
+	WITH id AS (
+		SELECT	genebank_id
+		FROM	genebank
+		WHERE	name = 'Gotlandskanin'
+	)
+	INSERT INTO colour (colour_id, name, comment, genebank_id) VALUES
+		(11, 'Svart', 'Kaninen ska vara helsvart', id),
+		(12, 'Vit albino', 'Ska ha röda ögon', id),
+		(13, 'Brun', 'Kan ha svarta inslag', id),
+		(14, 'Blå', 'Även buken ska vara blå', id),
+		(15, 'Gulbrun med blågrå mask (Isabella)', 'Även gul siames räknas hit', id),
+		(16, 'Brun med mörk mask (Madagaskar)', 'Även Thyringer räknas hit', id),
+		(17, 'Ljusbeige med mörk mask (Sallander)', 'Även siames räkans hit', id),
+		(18, 'Vit med blå eller bruna ögon', 'Kan ha mörkare öron', id),
+		(19, 'Svartbrun med vita stänk', NULL, id),
+		(21, 'Järngrå', 'Även järnblå och grafitgrå räknas hit', id),
+		(22, 'Hargrå / viltfärgad', 'Varierar, kan vara ljus till mörk', id),
+		(23, 'Snöhare', 'Vit med svart slöja', id),
+		(24, 'Rödgul eller orange', 'Inte klart åtskild från 25', id),
+		(25, 'Gul (äv. gul mage) och viltgul (ljus mage)', 'Inte klart åtskild från 24', id),
+		(26, 'Viltblå (blå med ljus mage) och Pearl egern', 'Gråbrun med blått skimmer', id),
+		(27, 'Gråmelerad (Chinchilla)', 'Även grå och blå chinchilla räknas hit', id),
+		(31, 'Svartbrokig (vit med svarta tecken)', 'Även med järngrå tecken räknas hit', id),
+		(32, 'Blåbrokig (vit med blå tecken)', NULL, id),
+		(33, 'Viltbrokig (vit med hargrå tecken)', NULL, id),
+		(34, 'Gulbrokig (vit med gula tecken)', 'Även orange eller röda tecken', id),
+		(35, 'Madagaskarbrokig', 'Alltså madagaskartecknad bottenfärg', id),
+		(36, 'Trefärgad (Tricolor)', 'Oftast vit med svarta och gula tecken', id),
+		(37, 'Chinchillabrokig (vit med chinchillatecken)', 'Även blå chinchilla eller grå färg', id),
+		(38, 'Brunbrokig (vit med (mörk-)bruna tecken)', NULL, id),
+		(39, 'Färgad med enstaka vita tecken (Wiener)', 'Ofta vit bläs eller vit tass', id),
+		(41, 'Gul-blå tigrerad (Japan)', NULL, id),
+		(42, 'Gul-svart tigrerad (Japan)', NULL, id),
+		(43, 'Vit-svart tigrerad (Japan)', NULL, id),
+		(44, 'Svart med vita stickelhår (Svensk päls)', 'Även med grå eller ljusbruna s-hår', id),
+		(45, 'Blå med vi buk på särskilt sätt', 'Blue & White, även otter', id),
+		(46, 'Vit-blå tigrerad (Japan)', NULL, id),
+		(49, 'Japanteckning av annat slag', 'Även Japanteckning av okänt slag', id),
+		(51, 'Rexpälsade att alla färger och teckningar', NULL, id),
+		(52, 'Svart med brun buk på särskilt sätt', 'Black & tan, även otter', id),
+		(53, 'Svart med vit buk på särskilt sätt', 'Black & White, även otter', id),
+		(99, 'Allt annat', NULL, id);
+
 	-- Dummy herd for individuals sold outside of the genebank
 	INSERT INTO herd (genebank_id, herd, herd_name)
 	SELECT	DISTINCT gb.genebank_id, 'GX1', 'Externa djur (Gotland)'
