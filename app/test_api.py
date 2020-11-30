@@ -241,28 +241,24 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(da.get_genebank(self.genebanks[0].id, self.owner.uuid))
         self.assertFalse(da.get_genebank(self.genebanks[1].id, self.owner.uuid))
 
-    # Test disabled as the current query doesn't work in sqlite
-    # def test_get_herd(self):
-    #     """
-    #     Checks that `utils.data_access.get_herd` returns the correct information
-    #     for all test users.
-    #     """
-    #     # admin
-    #     self.assertTrue(da.get_herd(self.herds[0].id, self.admin.uuid))
-    #     self.assertTrue(da.get_herd(self.herds[1].id, self.admin.uuid))
-    #     self.assertTrue(da.get_herd(self.herds[2].id, self.admin.uuid))
-    #     # specialist
-    #     self.assertTrue(da.get_herd(self.herds[0].id, self.specialist.uuid))
-    #     self.assertTrue(da.get_herd(self.herds[1].id, self.specialist.uuid))
-    #     self.assertFalse(da.get_herd(self.herds[2].id, self.specialist.uuid))
-    #     # manager
-    #     self.assertTrue(da.get_herd(self.herds[0].id, self.manager.uuid))
-    #     self.assertTrue(da.get_herd(self.herds[1].id, self.manager.uuid))
-    #     self.assertFalse(da.get_herd(self.herds[2].id, self.manager.uuid))
-    #     # owner
-    #     self.assertTrue(da.get_herd(self.herds[0].id, self.owner.uuid))
-    #     self.assertTrue(da.get_herd(self.herds[1].id, self.owner.uuid))
-    #     self.assertFalse(da.get_herd(self.herds[2].id, self.owner.uuid))
+    def test_get_herd(self):
+        """
+        Checks that `utils.data_access.get_herd` returns the correct information
+        for all test users.
+        """
+
+        for user in [self.admin, self.manager, self.specialist, self.owner]:
+            for herd in db.Herd.select():
+
+                value = da.get_herd(herd.herd, user.uuid)
+
+                expected = herd.filtered_dict(user)
+                if expected['genebank'] not in user.accessible_genebanks:
+                    self.assertIsNone(value)
+                else:
+                    expected['individuals'] = \
+                        [i.short_info() for i in herd.individuals]
+                    self.assertDictEqual(expected, value)
 
     def test_add_herd(self):
         """
@@ -1148,7 +1144,6 @@ class TestDataAccess(DatabaseTest):
         Checks that `utils.data_access.get_herd` return the correct
         information.
         """
-        self.maxDiff = None
         self.assertIsNone(da.get_genebanks('invalid-uuid'))
 
         for user in [self.admin, self.manager, self.specialist, self.owner]:
