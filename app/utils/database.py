@@ -393,8 +393,8 @@ class Individual(BaseModel):
     claw_color = CharField(null=True)
     belly_color = CharField(null=True)
     hair_notes = CharField(null=True)
-    is_active = BooleanField(default=True)
-    butchered = BooleanField(default=False)
+    is_active = BooleanField(null=True, default=True)
+    butchered = BooleanField(null=True, default=False)
     castration_date = DateField(null=True, default=None)
 
     @property
