@@ -9,8 +9,8 @@
         root /app/dist/;
 
         location ~ ..*/[^/]*$ {
-	    # Redirect any subdirectory request to /
-            rewrite ^.*$ / redirect; 
+            # Redirect any subdirectory request to /
+            rewrite ^.*/([^/]*)$ /$1 last; 
         }
 
         location / {
