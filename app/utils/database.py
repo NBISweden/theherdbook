@@ -370,6 +370,7 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
+
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -409,6 +410,17 @@ class Individual(BaseModel):
                    .order_by(HerdTracking.herd_tracking_date.desc()) \
                    .first() \
                    .herd
+
+    @property
+    def children(self):
+        """
+        Returns a list of the individuals registered children.
+        """
+        return [i for i in Individual.select() \
+                                     .join(Breeding) \
+                                     .where((Breeding.mother == self) |
+                                             (Breeding.father == self))
+                ]
 
     def as_dict(self):
         """

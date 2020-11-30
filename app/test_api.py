@@ -105,13 +105,15 @@ class DatabaseTest(unittest.TestCase):
         self.parents = [
             db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P1')[0],
             db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P2')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=parent_breeding, number='P3')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=parent_breeding, number='P4')[0],
         ]
         for parent in self.parents:
             parent.save()
 
         self.breeding = [
             db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[0], father=self.parents[1], litter_size=2)[0],
-            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[0], father=self.parents[1], litter_size=1)[0],
+            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[2], father=self.parents[3], litter_size=1)[0],
         ]
         for breeding in self.breeding:
             breeding.save()
@@ -119,7 +121,7 @@ class DatabaseTest(unittest.TestCase):
         self.individuals = [
             db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[0], colour=self.colors[0], number="H1-1")[0],
             db.Individual.get_or_create(origin_herd=self.herds[1], breeding=self.breeding[0], number="H2-2")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[2], breeding=self.breeding[1], number="H3-3")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[1], number="H3-3")[0],
         ]
         for individual in self.individuals:
             individual.save()
@@ -650,6 +652,12 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(self.individuals[1].current_herd.id, self.herds[1].id)
         self.assertEqual(self.individuals[2].current_herd.id, self.herds[2].id)
 
+        # .children
+        self.assertListEqual(self.parents[0].children, [self.individuals[0], self.individuals[1]])
+        self.assertListEqual(self.parents[1].children, [self.individuals[0], self.individuals[1]])
+        self.assertListEqual(self.parents[2].children, [self.individuals[2]])
+        self.assertListEqual(self.parents[3].children, [self.individuals[2]])
+
         # .as_dict()
         mother = {"id": self.parents[0].id, "name": self.parents[0].name, "number": self.parents[0].number}
         father = {"id": self.parents[1].id, "name": self.parents[1].name, "number": self.parents[1].number}
@@ -699,8 +707,10 @@ class TestDatabase(DatabaseTest):
         # .short_info()
         for individual in self.individuals:
 
-            mother = {"id": self.parents[0].id, "number": self.parents[0].number}
-            father = {"id": self.parents[1].id, "number": self.parents[1].number}
+            mother = {"id": individual.breeding.mother.id,
+                      "number": individual.breeding.mother.number}
+            father = {"id": individual.breeding.father.id,
+                      "number": individual.breeding.father.number}
 
             is_active = individual.is_active \
                         and not individual.death_date \
