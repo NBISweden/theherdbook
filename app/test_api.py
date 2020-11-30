@@ -201,28 +201,27 @@ class TestPermissions(DatabaseTest):
         self.assertFalse(self.owner.is_admin)
         self.assertEqual(self.owner.accessible_genebanks, [1])
 
-    # Test disabled as the current query doesn't work in sqlite
-    # def test_get_genebanks(self):
-    #     """
-    #     Checks that `utils.data_access.get_genebanks` returns the correct
-    #     information for all test users.
-    #     """
-    #     # admin
-    #     genebank_ids = [g["id"] for g in da.get_genebanks(self.admin.uuid)]
-    #     self.assertTrue(self.genebanks[0].id in genebank_ids)
-    #     self.assertTrue(self.genebanks[1].id in genebank_ids)
-    #     # specialist
-    #     genebank_ids = [g["id"] for g in da.get_genebanks(self.specialist.uuid)]
-    #     self.assertTrue(self.genebanks[0].id in genebank_ids)
-    #     self.assertTrue(self.genebanks[1].id not in genebank_ids)
-    #     # manager
-    #     genebank_ids = [g["id"] for g in da.get_genebanks(self.manager.uuid)]
-    #     self.assertTrue(self.genebanks[0].id in genebank_ids)
-    #     self.assertTrue(self.genebanks[1].id not in genebank_ids)
-    #     # owner
-    #     genebank_ids = [g["id"] for g in da.get_genebanks(self.owner.uuid)]
-    #     self.assertTrue(self.genebanks[0].id in genebank_ids)
-    #     self.assertTrue(self.genebanks[1].id not in genebank_ids)
+    def test_get_genebanks(self):
+        """
+        Checks that `utils.data_access.get_genebanks` returns the correct
+        information for all test users.
+        """
+        # admin
+        genebank_ids = [g["id"] for g in da.get_genebanks(self.admin.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id in genebank_ids)
+        # specialist
+        genebank_ids = [g["id"] for g in da.get_genebanks(self.specialist.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
+        # manager
+        genebank_ids = [g["id"] for g in da.get_genebanks(self.manager.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
+        # owner
+        genebank_ids = [g["id"] for g in da.get_genebanks(self.owner.uuid)]
+        self.assertTrue(self.genebanks[0].id in genebank_ids)
+        self.assertTrue(self.genebanks[1].id not in genebank_ids)
 
     def test_get_genebank(self):
         """
