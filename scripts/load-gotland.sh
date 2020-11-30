@@ -40,6 +40,16 @@ psql --quiet <<-'END_SQL'
 	UPDATE data SET "Färgnr" = NULL WHERE "Färgnr" = '0';
 	ALTER TABLE data ALTER "Färgnr" TYPE INTEGER USING "Färgnr"::integer;
 
+	-- TODO: Use these columns to hold data temporarily, then move
+	-- that data into the breeding table.
+	-- Add "mother_id", "father_id", "birth_date", "litter"
+	-- to the "individual" table, temporarily.
+	-- ALTER TABLE individual
+	-- ADD COLUMN mother_id INTEGER,
+	-- ADD COLUMN father_id INTEGER,
+	-- ADD COLUMN birth_date DATE,
+	-- ADD COLUMN litter INTEGER;
+
 	------------------------------------------------------------
 	-- Insert
 	------------------------------------------------------------
