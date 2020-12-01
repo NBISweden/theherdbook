@@ -6,9 +6,9 @@ database.
 import uuid
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from peewee import DoesNotExist, IntegrityError
+from peewee import DoesNotExist, IntegrityError, fn, JOIN
 from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
@@ -17,6 +17,7 @@ from werkzeug.security import (
 from utils.database import (
     DB_PROXY as DATABASE,
     Bodyfat,
+    Breeding,
     Colour,
     Genebank,
     Herd,
@@ -164,7 +165,7 @@ def get_herd(herd_id, user_uuid=None):
     try:
         data = None
         with DATABASE.atomic():
-            herd = Herd.select().where(Herd.herd == herd_id).get()
+            herd = Herd.get(Herd.herd == herd_id)
             data = herd.filtered_dict(user)
             data["individuals"] = []
             if data["genebank"] not in user.accessible_genebanks:
@@ -639,77 +640,123 @@ def get_individuals(genebank_id, user_uuid=None):
     by `user_uuid` has access to.
     """
     user = fetch_user_info(user_uuid)
-    if user is None:
+    if user is None or genebank_id not in user.accessible_genebanks:
         return None  # not logged in
     try:
-        # TODO: rewrite this in peewee
-        # We currently don't have a real good way of defining when an individual
-        # is "genetically dead" (either dead, or no longer part of breeding) so
-        # we check a combination of death_date, death_note and that the latest
-        # herd_tracking value can't be more than a year old.
-        query = f"""
-        SELECT      i.individual_id, i.name, i.certificate, i.number, i.sex,
-                    i.birth_date, i.death_date, i.death_note, i.litter, i.notes,
-                    i.colour_note,
-                    f.individual_id, f.name, f.number,
-                    m.individual_id, m.name, m.number,
-                    c.colour_id, c.name,
-                    h.herd_id, h.herd, h.herd_name,
-                    g.name,
-                    (h.is_active OR h.is_active IS NULL) AS herd_active,
-                    ( (ih.herd_tracking_date > current_date - interval '1 year')
-                      AND (h.is_active OR h.is_active IS NULL)
-                      AND i.death_date IS NULL
-                      AND (i.death_note = '' OR i.death_note IS NULL)
-                    ) AS active,
-                    ( i.death_date IS NULL
-                      AND (i.death_note = '' OR i.death_note IS NULL)
-                    ) AS alive,
-                    (SELECT COUNT(*) FROM individual AS ic
-                      WHERE ic.mother_id = i.individual_id
-                         OR ic.father_id = i.individual_id
-                    ) AS children
-        FROM        individual i
-        LEFT JOIN   individual f ON (i.father_id = f.individual_id)
-        LEFT JOIN   individual m ON (i.mother_id = m.individual_id)
-        JOIN        colour c ON (i.colour_id = c.colour_id)
-        JOIN        (
-                        SELECT DISTINCT ON (individual_id)
-                                 individual_id,
-                                 herd_id,
-                                 herd_tracking_date
-                        FROM     herd_tracking
-                        ORDER BY individual_id, herd_tracking_date DESC
-                    ) AS ih ON (ih.individual_id = i.individual_id)
-        JOIN        herd h ON (ih.herd_id = h.herd_id)
-        JOIN        genebank g ON (h.genebank_id = g.genebank_id)
-        WHERE       h.genebank_id = %s;
-        ;"""
+        # Rank all herdtracking values by individual and date
+        current_herd = \
+            HerdTracking.select(HerdTracking.herd.alias('herd'),
+                                HerdTracking.herd_tracking_date.alias('ht_date'),
+                                HerdTracking.individual.alias('i_id'),
+                                fn.RANK().over(
+                                    order_by=[HerdTracking.herd_tracking_date \
+                                              .desc()],
+                                    partition_by=[HerdTracking.individual]
+                                ).alias('rank'))
+        # count children for individuals. This can be done in two ways - total
+        # number of children, or number of children that is available in the
+        # database.
+        total_children = Breeding.select(fn.SUM(Breeding.litter_size)) \
+                                 .where((Breeding.father == Individual.id) |
+                                        (Breeding.mother == Individual.id))
+
+        Children = Individual.alias()
+        children_in_db = Children.select(fn.COUNT(Children.id)) \
+                                 .join(Breeding) \
+                                 .where((Breeding.father == Individual.id) |
+                                        (Breeding.mother == Individual.id))
+
+        # use the children in the database for the result
+        children = children_in_db
+
+        Father = Individual.alias()
+        Mother = Individual.alias()
+        # Join all the needed tables
+        g_query = Individual.select(Individual,
+                                    Breeding,
+                                    Colour.id.alias('color_id'),
+                                    Colour.name.alias('color_name'),
+                                    Father.id.alias('father_id'),
+                                    Father.name.alias('father_name'),
+                                    Father.number.alias('father_number'),
+                                    Mother.id.alias('mother_id'),
+                                    Mother.name.alias('mother_name'),
+                                    Mother.number.alias('mother_number'),
+                                    current_herd.c.ht_date,
+                                    Herd.id.alias('herd_id'),
+                                    Herd.herd,
+                                    Herd.herd_name,
+                                    Herd.is_active.alias('herd_active'),
+                                    Genebank.name.alias('genebank_name'),
+                                    children.alias('children'),
+                                    ) \
+                            .join(Breeding) \
+                            .join(Father, JOIN.LEFT_OUTER,
+                                  on=(Father.id == Breeding.father_id)
+                                  ) \
+                            .join(Mother, JOIN.LEFT_OUTER,
+                                  on=(Mother.id == Breeding.mother_id)
+                                  ) \
+                            .join(Colour, JOIN.LEFT_OUTER,
+                                  on=(Individual.colour_id == Colour.id)) \
+                            .join(current_herd,
+                                  on=(Individual.id == current_herd.c.i_id)) \
+                            .join(Herd, on=(Herd.id == current_herd.c.herd)) \
+                            .join(Genebank, on=(Herd.genebank == Genebank.id)) \
+                            .where(current_herd.c.rank == 1) \
+                            .where(Genebank.id == genebank_id)
+
+        # individuals are considered invalid if they don't have a herd tracking
+        # value newer than one year ago.
+        max_report_time = datetime.now() - timedelta(days=366)
+
+        def as_date(value):
+            """
+            Function to coerce a value to datetime.date as sqlite returns
+            string and postgresql returns datetime.
+            """
+            if isinstance(value, datetime):
+                return value
+            return datetime.strptime(value, '%Y-%m-%d')
+
         with DATABASE.atomic():
-            cursor = DATABASE.execute_sql(query, (genebank_id,))
-        return [
-            {
-                "id": i[0],
-                "name": i[1],
-                "certificate": i[2],
-                "number": i[3],
-                "sex": i[4],
-                "birth_date": i[5].strftime("%Y-%m-%d") if i[5] else None,
-                "death_date": i[6].strftime("%Y-%m-%d") if i[6] else None,
-                "death_note": i[7],
-                "litter": i[8],
-                "notes": i[9],
-                "color_note": i[10],
-                "father": {"id": i[11], "name": i[12], "number": i[13]},
-                "mother": {"id": i[14], "name": i[15], "number": i[16]},
-                "color": {"id": i[17], "name": i[18]},
-                "herd": {"id": i[19], "herd": i[20], "herd_name": i[21]},
-                "genebank": i[22],
-                "herd_active": i[23], "active": i[24], "alive": i[25],
-                "children": i[26],
-            }
-            for i in cursor.fetchall()
-        ]
+            # return as a list of certain fields
+            return [
+                {
+                    "id": i['id'],
+                    "name": i['name'],
+                    "certificate": i['certificate'],
+                    "number": i['number'],
+                    "sex": i['sex'],
+                    "birth_date": i['birth_date'].strftime("%Y-%m-%d") \
+                                if i['birth_date'] else None,
+                    "death_date": i['death_date'].strftime("%Y-%m-%d") \
+                                if i['death_date'] else None,
+                    "death_note": i['death_note'],
+                    "litter": i['litter_size'],
+                    "notes": i['notes'],
+                    "color_note": i['colour_note'],
+                    "father": {"id": i["father_id"],
+                               "name": i["father_name"],
+                               "number": i["father_number"]},
+                    "mother": {"id": i["mother_id"],
+                               "name": i["mother_name"],
+                               "number": i["mother_number"]},
+                    "color": {"id": i["color_id"], "name": i["color_name"]},
+                    "herd": {"id": i['herd_id'],
+                            "herd": i['herd'],
+                            "herd_name": i['herd_name']},
+                    "genebank": i['genebank_name'],
+                    "herd_active": i['herd_active'] or i['herd_active'] is None,
+                    "active": as_date(i['ht_date']) > max_report_time
+                            and (i['herd_active'] or i['herd_active'] is None)
+                            and i['death_date'] is None
+                            and not i['death_note'],
+                    "alive": i['death_date'] is None and not i['death_note'],
+                    "children": i['children'],
+                }
+                for i in g_query.dicts()
+            ]
     except DoesNotExist:
         return []
 

@@ -100,7 +100,7 @@ class DatabaseTest(unittest.TestCase):
         for herd in self.herds:
             herd.save()
 
-        parent_breeding = db.Breeding.get_or_create(breed_date="2019-01-01", litter_size=2)[0]
+        parent_breeding = db.Breeding.get_or_create(breed_date=datetime(2019,1,1), litter_size=2)[0]
 
         self.parents = [
             db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P1')[0],
@@ -112,8 +112,8 @@ class DatabaseTest(unittest.TestCase):
             parent.save()
 
         self.breeding = [
-            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[0], father=self.parents[1], litter_size=2)[0],
-            db.Breeding.get_or_create(breed_date="2020-01-01", mother=self.parents[2], father=self.parents[3], litter_size=1)[0],
+            db.Breeding.get_or_create(breed_date=datetime(2020,1,1), mother=self.parents[0], father=self.parents[1], litter_size=2)[0],
+            db.Breeding.get_or_create(breed_date=datetime(2020,1,1), mother=self.parents[2], father=self.parents[3], litter_size=1)[0],
         ]
         for breeding in self.breeding:
             breeding.save()
@@ -148,9 +148,9 @@ class DatabaseTest(unittest.TestCase):
         self.owner.add_role("owner", self.herds[0].id)
 
         self.herd_tracking = [
-            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[0], herd_tracking_date=datetime.now())[0],
-            db.HerdTracking.get_or_create(herd=self.herds[1], signature=self.manager, individual=self.individuals[1], herd_tracking_date=datetime.now())[0],
-            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now() - timedelta(days=1))[0],
+            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[0], herd_tracking_date=datetime(2020,10,10))[0],
+            db.HerdTracking.get_or_create(herd=self.herds[1], signature=self.manager, individual=self.individuals[1], herd_tracking_date=datetime(2019,1,1))[0],
+            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime(2019,12,31))[0],
             db.HerdTracking.get_or_create(from_herd=self.herds[0], herd=self.herds[2], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now())[0],
         ]
 
@@ -1159,6 +1159,67 @@ class TestDataAccess(DatabaseTest):
                     self.assertEqual(value, target)
                 else:
                     self.assertDictEqual(value, target)
+
+    def test_get_individuals(self):
+        """
+        Checks that `utils.data_access.get_individuals` return the correct
+        information.
+        """
+        self.assertIsNone(da.get_individuals('invalid-uuid'))
+
+        def dateformat(date):
+            """
+            Returns dates in the chosen string format, or None.
+            """
+            return date.strftime("%Y-%m-%d") if date else None
+
+        def parent(data):
+            """
+            Returns parent information or None.
+            """
+            if not data:
+                return None
+            return {"id": data.id, "name": data.name, "number": data.number}
+
+        # herds 0 and 1 are in genebank 0
+        gb0_expected = []
+        for ind in [self.individuals[0],
+                    self.individuals[1]]:
+
+            herd_tracking = ind.herdtracking_set[-1]
+            active = herd_tracking.herd_tracking_date > datetime.date(datetime.now() - timedelta(days=366)) \
+                    and (ind.current_herd.is_active or ind.current_herd.is_active is None) \
+                    and ind.death_date is None \
+                    and not ind.death_note
+            ind_info = {"id": ind.id,
+                        "name": ind.name,
+                        "certificate": ind.certificate,
+                        "number": ind.number,
+                        "sex": ind.sex,
+                        "birth_date": dateformat(ind.breeding.birth_date),
+                        "death_note": ind.death_note,
+                        "death_date": dateformat(ind.death_date),
+                        "litter": ind.breeding.litter_size,
+                        "notes": ind.notes,
+                        "color_note": ind.colour_note,
+                        "father": parent(ind.breeding.father),
+                        "mother": parent(ind.breeding.mother),
+                        "color": {"id": ind.colour.id if ind.colour else None,
+                                  "name": ind.colour.name if ind.colour else None},
+                        "herd": {"id": ind.current_herd.id,
+                                 "herd": ind.current_herd.herd,
+                                 "herd_name": ind.current_herd.herd_name},
+                        "genebank": self.genebanks[0].name,
+                        "herd_active": ind.current_herd.is_active or \
+                                       ind.current_herd.is_active is None,
+                        "active": active,
+                        "alive": ind.death_date is None and not ind.death_note,
+                        "children": len(ind.children),
+                        }
+            gb0_expected += [ind_info]
+
+        gb0_value = da.get_individuals(self.genebanks[0].id, self.admin.uuid)
+        self.assertListEqual(gb0_expected, gb0_value)
 
 
 class FlaskTest(DatabaseTest):
