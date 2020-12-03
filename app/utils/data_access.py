@@ -197,7 +197,7 @@ def add_herd(form, user_uuid):
         try:
             Herd.select().where(Herd.herd == form['herd']).get()
             return {"status": "error", "message": "herd ID already exists"}
-        except DoesNotExist:
+        except (DoesNotExist, KeyError):
             pass
         if 'id' in form:
             del form['id']

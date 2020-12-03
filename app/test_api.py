@@ -1160,6 +1160,38 @@ class TestDataAccess(DatabaseTest):
                 else:
                     self.assertDictEqual(value, target)
 
+    def test_add_herd(self):
+        """
+        Checks that `utils.data_access.add_herd` works as intended.
+        """
+        forms = {
+            'valid': {'genebank': self.genebanks[0].id,
+                      'herd': 'N001'},
+            'invalid': {'genebank': self.genebanks[0].id,
+                        'herd_name': 'N002'}
+        }
+
+        invalid_user = da.add_herd(forms['valid'], 'invalid-uuid')
+        self.assertDictEqual(invalid_user,
+                             {"status": "error", "message": "Not logged in"})
+
+        not_permitted = da.add_herd(forms['valid'], self.owner.uuid)
+        self.assertDictEqual(not_permitted,
+                             {"status": "error", "message": "Forbidden"})
+
+        missing_data = da.add_herd(forms['invalid'], self.admin.uuid)
+        self.assertDictEqual(missing_data,
+                             {"status": "error", "message": "missing data"})
+
+        valid = da.add_herd(forms['valid'], self.admin.uuid)
+        self.assertDictEqual(valid, {"status": "success"})
+        self.assertIsNotNone(db.Herd.get(db.Herd.herd == forms['valid']['herd']))
+
+        exists = da.add_herd(forms['valid'], self.manager.uuid)
+        self.assertDictEqual(exists,
+                             {"status": "error",
+                              "message": "herd ID already exists"})
+
     def test_get_individuals(self):
         """
         Checks that `utils.data_access.get_individuals` return the correct
