@@ -1221,6 +1221,29 @@ class TestDataAccess(DatabaseTest):
         gb0_value = da.get_individuals(self.genebanks[0].id, self.admin.uuid)
         self.assertListEqual(gb0_expected, gb0_value)
 
+    def test_get_all_individuals(self):
+        """
+        Checks that `utils.data_access.get_all_individuals` return the correct
+        information.
+        """
+        value = da.get_all_individuals()
+        expected = []
+        for individual in self.individuals + self.parents:
+            has_parents = individual.breeding and \
+                          individual.breeding.father is not None and \
+                          individual.breeding.mother is not None
+            expected += [{
+                "id": str(individual.id),
+                "father": str(individual.breeding.father_id) if has_parents else "0",
+                "mother": str(individual.breeding.mother_id) if has_parents else "0",
+                "sex": "M" if individual.sex == "male" else "F",
+                "phenotype": str(individual.colour.id) if individual.colour else "0",
+            }]
+
+        # sort both lists, as order isn't important
+        self.assertListEqual(sorted(value, key=lambda x: x['id']),
+                             sorted(expected, key=lambda x: x['id']))
+
 
 class FlaskTest(DatabaseTest):
     """

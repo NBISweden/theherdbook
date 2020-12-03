@@ -770,7 +770,7 @@ def get_all_individuals():
     try:
         individuals_dict = []
         with DATABASE.atomic():
-            for data in Individual.select().join(Breeding).dicts():
+            for data in Individual.select(Individual, Breeding).join(Breeding).dicts():
                 ind = dict()
                 ind["id"] = str(data["id"])
                 ind["father"] = (
