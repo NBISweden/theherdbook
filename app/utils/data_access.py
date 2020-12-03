@@ -6,7 +6,7 @@ database.
 import uuid
 import logging
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from peewee import DoesNotExist, IntegrityError, fn, JOIN
 from werkzeug.security import (
@@ -708,16 +708,16 @@ def get_individuals(genebank_id, user_uuid=None):
 
         # individuals are considered invalid if they don't have a herd tracking
         # value newer than one year ago.
-        max_report_time = datetime.now() - timedelta(days=366)
+        max_report_time = (datetime.now() - timedelta(days=366)).date()
 
         def as_date(value):
             """
             Function to coerce a value to datetime.date as sqlite returns
             string and postgresql returns datetime.
             """
-            if isinstance(value, datetime):
+            if isinstance(value, date):
                 return value
-            return datetime.strptime(value, '%Y-%m-%d')
+            return datetime.strptime(value, '%Y-%m-%d').date()
 
         with DATABASE.atomic():
             # return as a list of certain fields
