@@ -31,6 +31,7 @@ __pycache__/
 
 # database files
 postgres-data/
+db_dumps/
 
 # config files
 config.ini

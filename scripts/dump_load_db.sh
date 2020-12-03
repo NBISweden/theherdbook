@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/bin/bash -e
+
+cd $(dirname $0)
 
 # some config variables
-OUTPUT_DIR="db_dumps"
+OUTPUT_DIR="$(realpath ${2:-../db_dumps})"
 BASE="db-dump"
 TIMESTAMP=$(date +"%Y-%m-%d_%H%M")
 ENV_FILE=../.docker/database-variables.env
@@ -16,8 +18,11 @@ USAGE: ./dump_load_db.sh [load [filename] | dump [directory]]
 Viable options are:
 
       load <file> --clean       load database dump <file>. Optional flag --clean
+                                will drop database objects before recreating them
 
-      dump <directory>          create a dump and place it in <directory>
+      dump <directory>          create a dump file. If a directory is given as an
+                                argument the dump file will be placed there, else
+                                in projectroot/db_dumps/
 
 HELP
   exit 0
@@ -35,8 +40,12 @@ if [ ! -e "${ENV_FILE}" ]
     echo "Couldn't find env file '$ENV_FILE'." >&2
     exit 1
   fi
-
 source ../.docker/database-variables.env
+if [[ -z "$POSTGRES_USER" || -z "$POSTGRES_DB" ]]
+then
+  echo "env file should contain variables POSTGRES_USER and POSTGRES_DB"
+  exit 1
+fi
 
 FLAGS="-U $POSTGRES_USER -d $POSTGRES_DB"
 
@@ -47,7 +56,7 @@ then
     echo "Please specify database dump file"
     exit 1
   fi
-  DUMP_FILE=$2
+  DUMP_FILE=$(realpath $2)
   if [ ! -e "${DUMP_FILE}" ]
   then
     echo "Couldn't find database dump file '$DUMP_FILE'." >&2
@@ -55,30 +64,15 @@ then
   fi
   if [[ "$3" == "--clean" ]]
   then
-    echo "NOTE flag --clean will drop database objects before recreating them. Do you want to continue?(yes/no)"
-    read input
-    if [ "$input" == "yes" ]
-    then
-      FLAGS="--clean $FLAGS"
+    FLAGS="--clean $FLAGS"
     fi
-  fi
-  echo "Restoring database from dump: ${DUMP_FILE}"
+  echo "Restoring database from dump file: ${DUMP_FILE}"
   cat "$DUMP_FILE" | docker exec -i "${CONTAINER}" pg_restore $FLAGS
 
 else
   if [[ "$1" == "dump" ]]
   then
-    if [[ -z "$2" ]]
-    then
-      echo "Please specify which directory to put dump file into"
-      exit 1
-    fi
-    OUTPUT_DIR=$2
-    if [ ! -e "$OUTPUT_DIR" ]
-    then
-      echo "Creating dump output directory"
-      mkdir $OUTPUT_DIR
-    fi
+    mkdir -p $OUTPUT_DIR
     FILE="$OUTPUT_DIR/${BASE}_${TIMESTAMP}.sql.$DUMP_FORMAT"
     echo "Creating database dump ${FILE}"
     docker exec -i "${CONTAINER}" pg_dump \
