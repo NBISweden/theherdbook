@@ -65,7 +65,7 @@ then
     echo "Please specify database dump file"
     exit 1
   fi
-  DUMP_FILE=$(realpath $2)
+  DUMP_FILE=$(path $2)
   if [ ! -e "${DUMP_FILE}" ]
   then
     echo "Couldn't find database dump file '$DUMP_FILE'." >&2
