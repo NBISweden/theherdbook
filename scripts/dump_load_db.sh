@@ -3,7 +3,16 @@
 cd $(dirname $0)
 
 # some config variables
-OUTPUT_DIR="$(realpath ${2:-../db_dumps})"
+function path {
+  if command -v realpath >/dev/null
+  then
+    realpath $1
+  else
+    echo "$1"
+  fi
+}
+
+OUTPUT_DIR="$(path ${2:-../db_dumps})"
 BASE="db-dump"
 TIMESTAMP=$(date +"%Y-%m-%d_%H%M")
 ENV_FILE=../.docker/database-variables.env
