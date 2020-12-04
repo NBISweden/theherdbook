@@ -382,7 +382,7 @@ def update_individual(form, user_uuid):
     if not user.can_edit(form['number']):
         return {"status": "error", "message": "Forbidden"}
 
-    if isinstance(form['herd'], dict) and form['herd']:
+    if form['herd'] and isinstance(form['herd'], dict):
         form['herd'] = form['herd'].get('herd', None)
     if not Herd.select().where(Herd.herd == form['herd']).exists():
         return {"status": "error", "message": "Individual must have a valid herd"}
@@ -392,10 +392,13 @@ def update_individual(form, user_uuid):
             individual = form_to_individual(form, user)
         except ValueError as exception:
             return {"status": "error", "message": f'{exception}'}
-        update_weights(individual, form['weights'])
-        update_bodyfat(individual, form['bodyfat'])
+        if 'weights' in form:
+            update_weights(individual, form['weights'])
+        if 'bodyfat' in form:
+            update_bodyfat(individual, form['bodyfat'])
 
-        logging.warning('Herd tracking not updated.')
+        # TODO: also update herd tracking
+
         individual.save()
         return  {"status": "success", "message": "Individual Updated"}
     except DoesNotExist:

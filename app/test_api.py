@@ -1365,6 +1365,35 @@ class TestDataAccess(DatabaseTest):
         updated = da.form_to_individual(forms['admin_update'], self.admin)
         self.assertEqual(updated, self.individuals[0])
 
+    def test_update_individual(self):
+        """
+        Checks that `utils.data_access.update_individual` works as intended.
+        """
+        forms = {
+            'unknown_herd': {'herd': 'does-not-exist'},
+            'valid': {'herd': self.herds[0].herd,
+                      'id': self.individuals[0].id,
+                      'number': self.individuals[0].number,
+                      'name': 'new name'},
+
+        }
+        self.assertEqual(da.add_individual(forms['valid'], 'invalid-uuid'),
+                         {"status": "error", "message": "Not logged in"})
+
+        self.assertEqual(da.add_individual(forms['valid'], self.specialist.uuid),
+                         {"status": "error", "message": "Forbidden"})
+
+        self.assertEqual(da.add_individual(forms['unknown_herd'], self.admin.uuid),
+                         {"status": "error", "message": "Individual must have a valid herd"})
+
+        self.individuals[0].name = 'original name'
+
+        status = da.update_individual(forms['valid'], self.admin.uuid)
+        self.assertEqual(status, {"status": "success", "message": "Individual Updated"})
+        self.assertEqual(db.Individual.get(self.individuals[0].id).name, 'new name')
+
+        # TODO: also validate weights and bodyfat
+
     def test_get_individuals(self):
         """
         Checks that `utils.data_access.get_individuals` return the correct
