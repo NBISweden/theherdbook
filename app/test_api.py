@@ -2,17 +2,23 @@
 """
 Unit tests for the herdbook.
 """
+# Fairly lax pylint settings as we want to test a lot of things
+
+#pylint: disable=too-many-lines
+#pylint: disable=too-many-public-methods
+#pylint: disable=too-many-statements
 
 import os
 import unittest
 
+from copy import copy
+from datetime import datetime, timedelta
+
 import flask
+from werkzeug.security import check_password_hash
 
 import utils.database as db
 import utils.data_access as da
-from copy import copy
-from datetime import datetime, timedelta
-from werkzeug.security import check_password_hash
 from herdbook import APP
 
 HOST = "http://localhost:4200"
@@ -39,6 +45,7 @@ class DatabaseTest(unittest.TestCase):
     """
     Database test wrapper that sets up the database connection.
     """
+    #pylint: disable=too-many-instance-attributes
 
     TEST_DATABASE = "test_database.sqlite3"
 
@@ -83,57 +90,83 @@ class DatabaseTest(unittest.TestCase):
         self.herds = [
             db.Herd.get_or_create(genebank=self.genebanks[0],
                                   herd='H1', herd_name="herd1",
-                                  name='o1', name_privacy = 'private',
-                                  email = 'o@h1', email_privacy = 'authenticated',
-                                  www = 'www1', www_privacy = 'public')[0],
+                                  name='o1', name_privacy='private',
+                                  email='o@h1', email_privacy='authenticated',
+                                  www='www1', www_privacy='public')[0],
             db.Herd.get_or_create(genebank=self.genebanks[0],
                                   herd='H2', herd_name="herd2",
-                                  name='o2', name_privacy = 'authenticated',
-                                  email = 'o@h2', email_privacy = 'public',
-                                  www = 'www2', www_privacy = 'private')[0],
+                                  name='o2', name_privacy='authenticated',
+                                  email='o@h2', email_privacy='public',
+                                  www='www2', www_privacy='private')[0],
             db.Herd.get_or_create(genebank=self.genebanks[1],
                                   herd='H3', herd_name="herd3",
-                                  name='o3', name_privacy = 'public',
-                                  email = 'o@h3', email_privacy = 'private',
-                                  www = 'www3', www_privacy = 'authenticated')[0],
+                                  name='o3', name_privacy='public',
+                                  email='o@h3', email_privacy='private',
+                                  www='www3', www_privacy='authenticated')[0],
         ]
         for herd in self.herds:
             herd.save()
 
-        parent_breeding = db.Breeding.get_or_create(breed_date=datetime(2019,1,1), litter_size=2)[0]
+        parent_breeding = db.Breeding.get_or_create(breed_date=datetime(2019, 1, 1),
+                                                    litter_size=2)[0]
 
         self.parents = [
-            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P1')[0],
-            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=parent_breeding, number='P2')[0],
-            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=parent_breeding, number='P3')[0],
-            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=parent_breeding, number='P4')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0],
+                                        breeding=parent_breeding,
+                                        number='P1')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0],
+                                        breeding=parent_breeding,
+                                        number='P2')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1],
+                                        breeding=parent_breeding,
+                                        number='P3')[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1],
+                                        breeding=parent_breeding,
+                                        number='P4')[0],
         ]
         for parent in self.parents:
             parent.save()
 
         self.breeding = [
-            db.Breeding.get_or_create(breed_date=datetime(2020,1,1), mother=self.parents[0], father=self.parents[1], litter_size=2)[0],
-            db.Breeding.get_or_create(breed_date=datetime(2020,1,1), mother=self.parents[2], father=self.parents[3], litter_size=1)[0],
+            db.Breeding.get_or_create(breed_date=datetime(2020, 1, 1),
+                                      mother=self.parents[0],
+                                      father=self.parents[1],
+                                      litter_size=2)[0],
+            db.Breeding.get_or_create(breed_date=datetime(2020, 1, 1),
+                                      mother=self.parents[2],
+                                      father=self.parents[3],
+                                      litter_size=1)[0],
         ]
         for breeding in self.breeding:
             breeding.save()
 
         self.individuals = [
-            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[0], colour=self.colors[0], number="H1-1")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[1], breeding=self.breeding[0], number="H2-2")[0],
-            db.Individual.get_or_create(origin_herd=self.herds[0], breeding=self.breeding[1], number="H3-3")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0],
+                                        breeding=self.breeding[0],
+                                        colour=self.colors[0],
+                                        number="H1-1")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[1],
+                                        breeding=self.breeding[0],
+                                        number="H2-2")[0],
+            db.Individual.get_or_create(origin_herd=self.herds[0],
+                                        breeding=self.breeding[1],
+                                        number="H3-3")[0],
         ]
         for individual in self.individuals:
             individual.save()
 
         self.weights = [
-            db.Weight.get_or_create(individual=self.individuals[0], weight=2.1, weight_date=datetime(2020,2,2))[0],
+            db.Weight.get_or_create(individual=self.individuals[0],
+                                    weight=2.1,
+                                    weight_date=datetime(2020, 2, 2))[0],
         ]
         for weight in self.weights:
             weight.save()
 
         self.bodyfat = [
-            db.Bodyfat.get_or_create(individual=self.individuals[0], bodyfat='low', bodyfat_date=datetime(2020,2,2))[0],
+            db.Bodyfat.get_or_create(individual=self.individuals[0],
+                                     bodyfat='low',
+                                     bodyfat_date=datetime(2020, 2, 2))[0],
         ]
         for bodyfat in self.bodyfat:
             bodyfat.save()
@@ -148,10 +181,23 @@ class DatabaseTest(unittest.TestCase):
         self.owner.add_role("owner", self.herds[0].id)
 
         self.herd_tracking = [
-            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[0], herd_tracking_date=datetime(2020,10,10))[0],
-            db.HerdTracking.get_or_create(herd=self.herds[1], signature=self.manager, individual=self.individuals[1], herd_tracking_date=datetime(2019,1,1))[0],
-            db.HerdTracking.get_or_create(herd=self.herds[0], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime(2019,12,31))[0],
-            db.HerdTracking.get_or_create(from_herd=self.herds[0], herd=self.herds[2], signature=self.manager, individual=self.individuals[2], herd_tracking_date=datetime.now())[0],
+            db.HerdTracking.get_or_create(herd=self.herds[0],
+                                          signature=self.manager,
+                                          individual=self.individuals[0],
+                                          herd_tracking_date=datetime(2020, 10, 10))[0],
+            db.HerdTracking.get_or_create(herd=self.herds[1],
+                                          signature=self.manager,
+                                          individual=self.individuals[1],
+                                          herd_tracking_date=datetime(2019, 1, 1))[0],
+            db.HerdTracking.get_or_create(herd=self.herds[0],
+                                          signature=self.manager,
+                                          individual=self.individuals[2],
+                                          herd_tracking_date=datetime(2019, 12, 31))[0],
+            db.HerdTracking.get_or_create(from_herd=self.herds[0],
+                                          herd=self.herds[2],
+                                          signature=self.manager,
+                                          individual=self.individuals[2],
+                                          herd_tracking_date=datetime.now())[0],
         ]
 
 
@@ -266,17 +312,33 @@ class TestPermissions(DatabaseTest):
         for all test users.
         """
         # admin
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test1'}, self.admin.uuid), {"status":"success"})
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test2'}, self.admin.uuid), {"status":"success"})
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test1'},
+                                     self.admin.uuid),
+                         {"status":"success"})
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test2'},
+                                     self.admin.uuid),
+                         {"status":"success"})
         # specialist
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test3'}, self.specialist.uuid), {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test4'}, self.specialist.uuid), {"status":"success"})
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test3'},
+                                        self.specialist.uuid),
+                            {"status":"success"})
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test4'},
+                                        self.specialist.uuid),
+                            {"status":"success"})
         # manager
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test5'}, self.manager.uuid), {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test6'}, self.manager.uuid), {"status":"success"})
+        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test5'},
+                                     self.manager.uuid),
+                         {"status":"success"})
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test6'},
+                                        self.manager.uuid),
+                            {"status":"success"})
         # owner
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test7'}, self.owner.uuid), {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test8'}, self.owner.uuid), {"status":"success"})
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test7'},
+                                        self.owner.uuid),
+                            {"status":"success"})
+        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test8'},
+                                        self.owner.uuid),
+                            {"status":"success"})
 
     def test_get_individual(self):
         """
@@ -654,8 +716,14 @@ class TestDatabase(DatabaseTest):
         self.assertListEqual(self.parents[3].children, [self.individuals[2]])
 
         # .as_dict()
-        mother = {"id": self.parents[0].id, "name": self.parents[0].name, "number": self.parents[0].number}
-        father = {"id": self.parents[1].id, "name": self.parents[1].name, "number": self.parents[1].number}
+        mother = {"id": self.parents[0].id,
+                  "name": self.parents[0].name,
+                  "number": self.parents[0].number}
+        father = {"id": self.parents[1].id,
+                  "name": self.parents[1].name,
+                  "number": self.parents[1].number}
+
+        #pylint: disable=bad-super-call
         data = super(db.Individual, self.individuals[0]).as_dict()
         data["genebank_id"] = self.genebanks[0].id
         data["genebank"] = self.genebanks[0].name
@@ -673,9 +741,9 @@ class TestDatabase(DatabaseTest):
         data["father"] = father
         data["colour"] = self.colors[0].name
         data["weights"] = [
-             {"weight": self.weights[0].weight,
-              "date": self.weights[0].weight_date.strftime('%Y-%m-%d')
-              }
+            {"weight": self.weights[0].weight,
+             "date": self.weights[0].weight_date.strftime('%Y-%m-%d')
+             }
         ]
         data["bodyfat"] = [
             {"bodyfat": self.bodyfat[0].bodyfat,
@@ -711,9 +779,9 @@ class TestDatabase(DatabaseTest):
                         and not individual.death_date \
                         and not individual.death_note \
                         and individual.herdtracking_set.select() \
-                                .where(db.HerdTracking.herd_tracking_date >
-                                    datetime.now() - timedelta(days=366)
-                                    ).count() > 0
+                                      .where(db.HerdTracking.herd_tracking_date >
+                                             datetime.now() - timedelta(days=366)
+                                             ).count() > 0
 
             self.assertDictEqual(individual.short_info(),
                                  {"id": individual.id,
@@ -769,17 +837,25 @@ class TestDatabase(DatabaseTest):
         """
         self.assertTrue(db.Bodyfat.table_exists())
 
-    def test_user(self):
+
+    # user has a lot of things to test, so it's split in several tests
+    def test_user_privileges(self):
         """
-        Tests the functions of the database.User class.
+        Tests the database.User.privileges function.
         """
         # .privileges (getter and setter is tested through other functions)
         self.assertListEqual(self.admin.privileges, [{'level': 'admin'}])
-        self.assertListEqual(self.manager.privileges, [{'level': 'manager', 'genebank': self.genebanks[0].id}])
-        self.assertListEqual(self.specialist.privileges, [{'level': 'specialist', 'genebank': self.genebanks[0].id}])
-        self.assertListEqual(self.owner.privileges, [{'level': 'owner', 'herd': self.herds[0].id}])
+        self.assertListEqual(self.manager.privileges,
+                             [{'level': 'manager', 'genebank': self.genebanks[0].id}])
+        self.assertListEqual(self.specialist.privileges,
+                             [{'level': 'specialist', 'genebank': self.genebanks[0].id}])
+        self.assertListEqual(self.owner.privileges,
+                             [{'level': 'owner', 'herd': self.herds[0].id}])
 
-        # .has_role()
+    def test_user_has_role(self):
+        """
+        Tests the database.User.has_role function.
+        """
         self.assertEqual(self.admin.has_role('admin'), True)
         self.assertEqual(self.manager.has_role('admin'), False)
         self.assertEqual(self.specialist.has_role('admin'), False)
@@ -812,7 +888,10 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(self.specialist.has_role('owner', self.herds[1].id), False)
         self.assertEqual(self.owner.has_role('owner', self.herds[1].id), False)
 
-        # .add_role
+    def test_user_change_roles(self):
+        """
+        Tests the database.User.add_role and remove_role functions.
+        """
         user = da.register_user("test", "pass")
         user.add_role('admin')
         self.assertEqual(user.has_role('admin'), True)
@@ -884,31 +963,47 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(user.has_role('owner', self.herds[0].id), False)
         self.assertEqual(user.has_role('owner', self.herds[1].id), False)
 
-        # is_admin
+    def test_user_is_admin(self):
+        """
+        Tests the database.User.is_admin property.
+        """
         self.assertEqual(self.admin.is_admin, True)
         self.assertEqual(self.manager.is_admin, False)
         self.assertEqual(self.specialist.is_admin, False)
         self.assertEqual(self.owner.is_admin, False)
 
-        # is_manager
+    def test_user_is_manager(self):
+        """
+        Tests the database.User.is_manager property.
+        """
         self.assertEqual(self.admin.is_manager, None)
         self.assertEqual(self.manager.is_manager, [self.genebanks[0].id])
         self.assertEqual(self.specialist.is_manager, None)
         self.assertEqual(self.owner.is_manager, None)
 
-        # is_owner
+    def test_user_is_owner(self):
+        """
+        Tests the database.User.is_owner property.
+        """
         self.assertEqual(self.admin.is_owner, None)
         self.assertEqual(self.manager.is_owner, None)
         self.assertEqual(self.specialist.is_owner, None)
         self.assertEqual(self.owner.is_owner, [self.herds[0].herd])
 
-        # accessible_genebanks
-        self.assertEqual(self.admin.accessible_genebanks, [self.genebanks[0].id, self.genebanks[1].id])
+    def test_user_accessible_genebanks(self):
+        """
+        Tests the database.User.accessible_genebanks property.
+        """
+        self.assertEqual(self.admin.accessible_genebanks, [self.genebanks[0].id,
+                                                           self.genebanks[1].id])
         self.assertEqual(self.manager.accessible_genebanks, [self.genebanks[0].id])
         self.assertEqual(self.specialist.accessible_genebanks, [self.genebanks[0].id])
         self.assertEqual(self.owner.accessible_genebanks, [self.genebanks[0].id])
 
-        # frontend_data
+    def test_user_frontend_data(self):
+        """
+        Tests the database.User.frontend_data function.
+        """
         self.assertDictEqual(self.admin.frontend_data(),
                              {'email': 'admin', 'username': None,
                               'validated': False, 'is_admin': True,
@@ -926,33 +1021,41 @@ class TestDatabase(DatabaseTest):
                               'validated': False, 'is_admin': False,
                               'is_manager': None, 'is_owner': [self.herds[0].herd]})
 
-        # get_genebanks
-
+    def test_user_get_genebanks(self):
+        """
+        Tests the database.User.get_genebanks function.
+        """
         # object reference comparison is intentional here
         self.assertListEqual(self.admin.get_genebanks(), self.genebanks)
         self.assertListEqual(self.manager.get_genebanks(), [self.genebanks[0]])
         self.assertListEqual(self.specialist.get_genebanks(), [self.genebanks[0]])
         self.assertListEqual(self.owner.get_genebanks(), [self.genebanks[0]])
 
-        # get_genebank
-        g0 = self.genebanks[0].as_dict()
-        g1 = self.genebanks[1].as_dict()
+    def test_user_get_genebank(self):
+        """
+        Tests the database.User.get_genebank function.
+        """
+        g_0 = self.genebanks[0].as_dict()
+        g_1 = self.genebanks[1].as_dict()
         # we trust genebank.get_herds() as we tested it
-        g0['herds'] = self.genebanks[0].get_herds(self.admin)
-        g1['herds'] = self.genebanks[1].get_herds(self.admin)
-        self.assertDictEqual(self.admin.get_genebank(self.genebanks[0].id), g0)
-        self.assertDictEqual(self.admin.get_genebank(self.genebanks[1].id), g1)
-        g0['herds'] = self.genebanks[0].get_herds(self.manager)
-        self.assertDictEqual(self.manager.get_genebank(self.genebanks[0].id), g0)
+        g_0['herds'] = self.genebanks[0].get_herds(self.admin)
+        g_1['herds'] = self.genebanks[1].get_herds(self.admin)
+        self.assertDictEqual(self.admin.get_genebank(self.genebanks[0].id), g_0)
+        self.assertDictEqual(self.admin.get_genebank(self.genebanks[1].id), g_1)
+        g_0['herds'] = self.genebanks[0].get_herds(self.manager)
+        self.assertDictEqual(self.manager.get_genebank(self.genebanks[0].id), g_0)
         self.assertEqual(self.manager.get_genebank(self.genebanks[1].id), None)
-        g0['herds'] = self.genebanks[0].get_herds(self.specialist)
-        self.assertDictEqual(self.specialist.get_genebank(self.genebanks[0].id), g0)
+        g_0['herds'] = self.genebanks[0].get_herds(self.specialist)
+        self.assertDictEqual(self.specialist.get_genebank(self.genebanks[0].id), g_0)
         self.assertEqual(self.specialist.get_genebank(self.genebanks[1].id), None)
-        g0['herds'] = self.genebanks[0].get_herds(self.owner)
-        self.assertDictEqual(self.owner.get_genebank(self.genebanks[0].id), g0)
+        g_0['herds'] = self.genebanks[0].get_herds(self.owner)
+        self.assertDictEqual(self.owner.get_genebank(self.genebanks[0].id), g_0)
         self.assertEqual(self.owner.get_genebank(self.genebanks[1].id), None)
 
-        # can_edit
+    def test_user_can_edit(self):
+        """
+        Tests the database.User.can_edit function.
+        """
         self.assertEqual(self.admin.can_edit('genebank1'), True)
         self.assertEqual(self.admin.can_edit('genebank2'), True)
         self.assertEqual(self.admin.can_edit('H1'), True)
@@ -1219,10 +1322,11 @@ class TestDataAccess(DatabaseTest):
                     self.individuals[1]]:
 
             herd_tracking = ind.herdtracking_set[-1]
-            active = herd_tracking.herd_tracking_date > datetime.date(datetime.now() - timedelta(days=366)) \
-                    and (ind.current_herd.is_active or ind.current_herd.is_active is None) \
-                    and ind.death_date is None \
-                    and not ind.death_note
+            active = herd_tracking.herd_tracking_date > \
+                     datetime.date(datetime.now() - timedelta(days=366)) \
+                     and (ind.current_herd.is_active or ind.current_herd.is_active is None) \
+                     and ind.death_date is None \
+                     and not ind.death_note
             ind_info = {"id": ind.id,
                         "name": ind.name,
                         "certificate": ind.certificate,
