@@ -45,10 +45,10 @@ fi
 
 # load database variables
 if [ ! -e "${ENV_FILE}" ]
-  then
-    echo "Couldn't find env file '$ENV_FILE'." >&2
-    exit 1
-  fi
+then
+  echo "Couldn't find env file '$ENV_FILE'." >&2
+  exit 1
+fi
 source ../.docker/database-variables.env
 if [[ -z "$POSTGRES_USER" || -z "$POSTGRES_DB" ]]
 then
@@ -74,7 +74,7 @@ then
   if [[ "$3" == "--clean" ]]
   then
     FLAGS="--clean $FLAGS"
-    fi
+  fi
   echo "Restoring database from dump file: ${DUMP_FILE}"
   cat "$DUMP_FILE" | docker exec -i "${CONTAINER}" pg_restore $FLAGS
 
