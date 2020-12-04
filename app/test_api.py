@@ -1340,6 +1340,30 @@ class TestDataAccess(DatabaseTest):
             expected = data.as_dict()
             self.assertDictEqual(value, expected)
 
+    def test_form_to_individual(self):
+        """
+        Checks that `utils.data_access.form_to_individual` works as intended.
+        """
+        forms = {
+            'invalid_number': {'number': self.individuals[0].number,
+                               'id': self.individuals[1].id},
+            'admin_update': {'number': self.individuals[0].number,
+                             'certificate': 'new-cert'},
+            'unknown_color': {'number': self.individuals[0].number,
+                              'colour': 'ultra-beige'},
+            'unknown_origin': {'number': self.individuals[0].number,
+                               'origin_herd': {'herd': 'does-not-exist'}},
+            'valid': {'number': self.individuals[0].number},
+
+        }
+        self.assertRaises(PermissionError, da.form_to_individual, forms['valid'], self.specialist)
+        self.assertRaises(ValueError, da.form_to_individual, forms['invalid_number'], self.admin)
+        self.assertRaises(ValueError, da.form_to_individual, forms['admin_update'], self.owner)
+        self.assertRaises(ValueError, da.form_to_individual, forms['unknown_color'], self.owner)
+        self.assertRaises(ValueError, da.form_to_individual, forms['unknown_origin'], self.owner)
+
+        updated = da.form_to_individual(forms['admin_update'], self.admin)
+        self.assertEqual(updated, self.individuals[0])
 
     def test_get_individuals(self):
         """

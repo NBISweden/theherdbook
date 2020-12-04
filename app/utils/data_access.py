@@ -266,6 +266,10 @@ def form_to_individual(form, user=None):
     a ValueError if there's any detected problems with the data.
     """
 
+    # check user permissions
+    if not user.can_edit(form['number']):
+        raise PermissionError
+
     # check if the individual exists in the datbase
     with DATABASE.atomic():
         try:
@@ -276,16 +280,18 @@ def form_to_individual(form, user=None):
     # If the form has an id - make sure that it points to the same individual as
     # the number.
     if 'id' in form and form['id'] != individual.id:
-        raise ValueError(f"Number can not be updated in the current version")
+        raise ValueError("Number can not be updated")
 
     can_manage = user and (user.is_admin or \
                           user.is_manager and \
                           individual.current_herd.genebank_id in user.is_manager)
 
-    fields = ['certificate', 'name', 'sex', 'birth_date', 'colour_note',
-              'mother', 'father', 'colour']
-    if individual.id and not can_manage: # we're updating (not creating new)
-        for admin_field in fields:
+    admin_fields = ['certificate', 'name', 'sex', 'birth_date', 'colour_note',
+                    'mother', 'father', 'colour']
+    # check if a non-manager-user tries to update restricted fields
+    # (owners can still set these values in new individuals)
+    if individual.id and not can_manage:
+        for admin_field in [field for field in admin_fields if field in form]:
             if 'number' in form[admin_field]: # parents
                 changed = form[admin_field]['number'] != getattr(individual, admin_field).number
             elif admin_field == 'colour':
@@ -293,30 +299,33 @@ def form_to_individual(form, user=None):
             else:
                 changed = f'{form[admin_field]}' != f'{getattr(individual, admin_field)}'
 
-            if admin_field in form and changed:
+            if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
     # Colour is stored as name in the form, but needs to be converted to id
-    try:
-        with DATABASE.atomic():
-            form['colour'] = Colour.get(Colour.name == form['colour'])
-    except DoesNotExist:
-        raise ValueError(f"Unknown color: '{form['colour']}''")
+    if 'colour' in form:
+        try:
+            with DATABASE.atomic():
+                form['colour'] = Colour.get(Colour.name == form['colour'])
+        except DoesNotExist:
+            raise ValueError(f"Unknown color: '{form['colour']}''")
 
     # fetch the origin herd
-    try:
-        with DATABASE.atomic():
-            form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
-    except DoesNotExist:
-        raise ValueError(f"Unknown origin herd: '{form['origin_herd']['herd']}''")
+    if 'origin_herd' in form:
+        try:
+            with DATABASE.atomic():
+                form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
+        except DoesNotExist:
+            raise ValueError(f"Unknown origin herd: '{form['origin_herd']['herd']}''")
 
     # parents
-    try:
-        with DATABASE.atomic():
-            form['mother'] = Individual.get(Individual.number == form['mother']['number'])
-            form['father'] = Individual.get(Individual.number == form['father']['number'])
-    except DoesNotExist:
-        raise ValueError("Invalid parents")
+    for parent in ['mother', 'father']:
+        if parent in form:
+            try:
+                with DATABASE.atomic():
+                    form[parent] = Individual.get(Individual.number == form[parent]['number'])
+            except DoesNotExist:
+                raise ValueError("Invalid parents")
 
     # Update individual fields by looping through all fields on an Individual
     # object.
