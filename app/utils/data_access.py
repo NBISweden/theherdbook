@@ -14,6 +14,7 @@ from werkzeug.security import (
     generate_password_hash,
 )
 
+#pylint: disable=import-error
 from utils.database import (
     DB_PROXY as DATABASE,
     Bodyfat,
@@ -63,11 +64,13 @@ def add_user(form, user_uuid=None):
     user = register_user(email, password, username, validated)
     return {"status": "created", "data": user.id}
 
-def register_user(email, password, username = None, validated=False, privileges=[]):
+def register_user(email, password, username=None, validated=False, privileges=None):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
     """
+    if privileges is None:
+        privileges = []
     user = User(
         email=email,
         uuid=uuid.uuid4().hex,
@@ -251,7 +254,10 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-def form_to_individual(form, user = None):
+
+# Feel free to clean this up!
+#pylint: disable=too-many-branches
+def form_to_individual(form, user=None):
     """
     Individual data is split over a number of tables; Individual, HerdTracking,
     Colour, Weight, and Bodyfat. This function takes a `form` dict (as returned
@@ -276,10 +282,14 @@ def form_to_individual(form, user = None):
     if 'id' in form and form['id'] != individual.id:
         raise ValueError(f"Number can not be updated in the current version")
 
-    canManage = user and (user.is_admin or user.is_manager and individual.current_herd.genebank_id in user.is_manager)
+    can_manage = user and (user.is_admin or \
+                          user.is_manager and \
+                          individual.current_herd.genebank_id in user.is_manager)
 
-    if individual.id and not canManage: # we're updating (not creating new)
-        for admin_field in ['certificate', 'name', 'sex', 'birth_date', 'colour_note', 'mother', 'father', 'colour', ]:
+    fields = ['certificate', 'name', 'sex', 'birth_date', 'colour_note',
+              'mother', 'father', 'colour']
+    if individual.id and not can_manage: # we're updating (not creating new)
+        for admin_field in fields:
             if 'number' in form[admin_field]: # parents
                 changed = form[admin_field]['number'] != getattr(individual, admin_field).number
             elif admin_field == 'colour':
@@ -320,8 +330,8 @@ def form_to_individual(form, user = None):
                 continue
             if key and key.endswith('date'):
                 try:
-                    date = datetime.strptime(form[key], '%Y-%m-%d').date()
-                    setattr(individual, key, date)
+                    date_val = datetime.strptime(form[key], '%Y-%m-%d').date()
+                    setattr(individual, key, date_val)
                 except TypeError:
                     setattr(individual, key, form[key])
             else:
@@ -375,8 +385,8 @@ def update_individual(form, user_uuid):
     try:
         try:
             individual = form_to_individual(form, user)
-        except ValueError as e:
-            return {"status": "error", "message": f'{e}'}
+        except ValueError as exception:
+            return {"status": "error", "message": f'{exception}'}
         update_weights(individual, form['weights'])
         update_bodyfat(individual, form['bodyfat'])
 
@@ -438,7 +448,9 @@ def update_bodyfat(individual, bodyfat):
                 if measure[1] not in ['low', 'normal', 'high']:
                     logging.error('Unknown bodyfat level: %s', measure[1])
                 else:
-                    Bodyfat(individual=individual, bodyfat_date=measure[0], bodyfat=measure[1]).save()
+                    Bodyfat(individual=individual,
+                            bodyfat_date=measure[0],
+                            bodyfat=measure[1]).save()
 
 def get_users(user_uuid=None):
     """
@@ -514,12 +526,11 @@ def update_user(form, user_uuid=None):
 
     logging.warning("a")
     # Check data
-    if (
-        not isinstance(form, dict)
-        or not form.get("id", None)
-        or not form.get("email", None)
-        or form.get("validated") not in [True, False]
-    ):
+    if (not isinstance(form, dict)
+            or not form.get("id", None)
+            or not form.get("email", None)
+            or form.get("validated") not in [True, False]
+       ):
         return {"status": "error", "message": f"malformed request: {form}"}
 
     # Check permissions
@@ -572,23 +583,19 @@ def update_role(operation, user_uuid=None):
     # Check data
     valid = True
     message = "malformed request"
-    if (
-        not isinstance(operation, dict)
-        or operation.get("action", {}) not in ["add", "remove"]
-        or (
-            not isinstance(operation.get("user", ""), int)
-            and not operation.get("user", "").isdigit()
-            )
-        ):
+    if (not isinstance(operation, dict)
+            or operation.get("action", {}) not in ["add", "remove"]
+            or (not isinstance(operation.get("user", ""), int)
+                and not operation.get("user", "").isdigit()
+                )
+       ):
         valid = False
-    elif (
-        operation.get("role", {}) not in ["owner", "manager", "specialist"]
-        or (
-            operation["role"] in ["manager", "specialist"]
-            and not operation.get("genebank")
-        )
-        or (operation["role"] in ["owner"] and not operation.get("herd"))
-    ):
+    elif (operation.get("role", {}) not in ["owner", "manager", "specialist"]
+          or (operation["role"] in ["manager", "specialist"]
+              and not operation.get("genebank")
+             )
+          or (operation["role"] in ["owner"] and not operation.get("herd"))
+         ):
         valid = False
 
     # Check permissions
@@ -656,10 +663,12 @@ def get_individuals(genebank_id, user_uuid=None):
         # count children for individuals. This can be done in two ways - total
         # number of children, or number of children that is available in the
         # database.
-        total_children = Breeding.select(fn.SUM(Breeding.litter_size)) \
-                                 .where((Breeding.father == Individual.id) |
-                                        (Breeding.mother == Individual.id))
 
+        # total_children = Breeding.select(fn.SUM(Breeding.litter_size)) \
+        #                          .where((Breeding.father == Individual.id) |
+        #                                 (Breeding.mother == Individual.id))
+
+        #pylint: disable=invalid-name
         Children = Individual.alias()
         children_in_db = Children.select(fn.COUNT(Children.id)) \
                                  .join(Breeding) \
@@ -669,6 +678,7 @@ def get_individuals(genebank_id, user_uuid=None):
         # use the children in the database for the result
         children = children_in_db
 
+        #pylint: disable=invalid-name
         Father = Individual.alias()
         Mother = Individual.alias()
         # Join all the needed tables
@@ -744,14 +754,14 @@ def get_individuals(genebank_id, user_uuid=None):
                                "number": i["mother_number"]},
                     "color": {"id": i["color_id"], "name": i["color_name"]},
                     "herd": {"id": i['herd_id'],
-                            "herd": i['herd'],
-                            "herd_name": i['herd_name']},
+                             "herd": i['herd'],
+                             "herd_name": i['herd_name']},
                     "genebank": i['genebank_name'],
                     "herd_active": i['herd_active'] or i['herd_active'] is None,
                     "active": as_date(i['ht_date']) > max_report_time
-                            and (i['herd_active'] or i['herd_active'] is None)
-                            and i['death_date'] is None
-                            and not i['death_note'],
+                              and (i['herd_active'] or i['herd_active'] is None)
+                              and i['death_date'] is None
+                              and not i['death_note'],
                     "alive": i['death_date'] is None and not i['death_note'],
                     "children": i['children'],
                 }
