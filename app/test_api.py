@@ -1365,6 +1365,31 @@ class TestDataAccess(DatabaseTest):
         updated = da.form_to_individual(forms['admin_update'], self.admin)
         self.assertEqual(updated, self.individuals[0])
 
+    def test_add_individual(self):
+        """
+        Checks that `utils.data_access.add_individual` works as intended.
+        """
+        forms = {
+            'unknown_herd': {'herd': 'does-not-exist'},
+            'valid': {'herd': self.herds[0].herd,
+                      'origin_herd': {'herd': self.herds[1].herd},
+                      'number': 'H1-4',},
+
+        }
+        self.assertEqual(da.add_individual(forms['valid'], 'invalid-uuid'),
+                         {"status": "error", "message": "Not logged in"})
+
+        self.assertEqual(da.add_individual(forms['unknown_herd'], self.admin.uuid),
+                         {"status": "error", "message": "Individual must have a valid herd"})
+
+        self.assertEqual(da.add_individual(forms['valid'], self.specialist.uuid),
+                         {"status": "error", "message": "Forbidden"})
+
+        status = da.add_individual(forms['valid'], self.admin.uuid)
+        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        self.assertIsNotNone(da.get_individual(forms['valid']['number'], self.admin.uuid))
+
+
     def test_update_individual(self):
         """
         Checks that `utils.data_access.update_individual` works as intended.

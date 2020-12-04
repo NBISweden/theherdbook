@@ -443,16 +443,18 @@ class Individual(BaseModel):
                         "herd": self.current_herd.herd,
                         "herd_name": self.current_herd.herd_name}
 
-        data["birth_date"] = self.breeding.birth_date
-        data["litter"] = self.breeding.litter_size
+        data["birth_date"] = self.breeding.birth_date if self.breeding else None
+        data["litter"] = self.breeding.litter_size if self.breeding else None
 
         data["mother"] = (
             {"id": self.breeding.mother.id, "name": self.breeding.mother.name,
-             "number": self.breeding.mother.number} if self.breeding.mother else None
+             "number": self.breeding.mother.number} \
+            if self.breeding and self.breeding.mother else None
         )
         data["father"] = (
             {"id": self.breeding.father.id, "name": self.breeding.father.name,
-             "number": self.breeding.father.number} if self.breeding.father else None
+             "number": self.breeding.father.number} \
+            if self.breeding and self.breeding.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [

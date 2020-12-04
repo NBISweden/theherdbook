@@ -368,7 +368,19 @@ def add_individual(form, user_uuid):
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}
 
-    return {"status": "error", "message": "Not implemented"}
+    try:
+        individual = form_to_individual(form, user)
+    except ValueError as exception:
+        return {"status": "error", "message": f'{exception}'}
+    if 'weights' in form:
+        update_weights(individual, form['weights'])
+    if 'bodyfat' in form:
+        update_bodyfat(individual, form['bodyfat'])
+
+    # TODO: also create herd tracking values
+
+    individual.save()
+    return  {"status": "success", "message": "Individual Created"}
 
 def update_individual(form, user_uuid):
     """
