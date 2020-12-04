@@ -1328,6 +1328,17 @@ class TestDataAccess(DatabaseTest):
         self.assertDictEqual(unknown,
                              {"status": "error", "message": "Unknown herd"})
 
+    def test_get_individual(self):
+        """
+        Checks that `utils.data_access.get_individual` works as intended.
+        """
+        self.assertIsNone(da.get_individual(self.individuals[0].number, 'invalid-uuid'))
+        self.assertIsNone(da.get_individual('does_not_exist', 'invalid-uuid'))
+        for individual in self.individuals:
+            value = da.get_individual(individual.number, self.admin.uuid)
+            data = db.Individual.get(individual.id)
+            expected = data.as_dict()
+            self.assertDictEqual(value, expected)
 
 
     def test_get_individuals(self):

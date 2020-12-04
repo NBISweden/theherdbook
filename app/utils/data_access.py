@@ -251,7 +251,6 @@ def get_individual(individual_id, user_uuid=None):
     except DoesNotExist:
         return None
 
-
 # Feel free to clean this up!
 #pylint: disable=too-many-branches
 def form_to_individual(form, user=None):
