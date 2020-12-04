@@ -2,6 +2,7 @@
 """
 Database handler for 'the herdbook'.
 """
+#pylint: disable=too-many-lines
 
 import re
 import json
@@ -57,6 +58,7 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
 
 try:
+    #pylint: disable=import-error
     import utils.settings as settings
 
     set_database(
@@ -230,6 +232,7 @@ class Herd(BaseModel):
                             .where(current_herd.c.herd == self.id)
 
         # return as a list
+        #pylint: disable=unnecessary-comprehension
         return [i for i in i_query]
 
     def short_info(self):
@@ -416,10 +419,13 @@ class Individual(BaseModel):
         """
         Returns a list of the individuals registered children.
         """
+        # use a list comprehension to execute the query and return the result
+        # as a list.
+        #pylint: disable=unnecessary-comprehension
         return [i for i in Individual.select() \
                                      .join(Breeding) \
                                      .where((Breeding.mother == self) |
-                                             (Breeding.father == self))
+                                            (Breeding.father == self))
                 ]
 
     def as_dict(self):
@@ -431,27 +437,31 @@ class Individual(BaseModel):
         data["genebank_id"] = self.current_herd.genebank.id
         data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {"id": self.origin_herd.id,
-                               "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
+                               "herd":  self.origin_herd.herd,
+                               "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id,
-                        "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
+                        "herd": self.current_herd.herd,
+                        "herd_name": self.current_herd.herd_name}
 
         data["birth_date"] = self.breeding.birth_date
         data["litter"] = self.breeding.litter_size
 
         data["mother"] = (
             {"id": self.breeding.mother.id, "name": self.breeding.mother.name,
-                "number": self.breeding.mother.number} if self.breeding.mother else None
+             "number": self.breeding.mother.number} if self.breeding.mother else None
         )
         data["father"] = (
             {"id": self.breeding.father.id, "name": self.breeding.father.name,
-                "number": self.breeding.father.number} if self.breeding.father else None
+             "number": self.breeding.father.number} if self.breeding.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
-            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} for w in self.weight_set
+            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} \
+            for w in self.weight_set
         ]  # pylint: disable=no-member
         data["bodyfat"] = [
-            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime('%Y-%m-%d')} for b in self.bodyfat_set
+            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime('%Y-%m-%d')} \
+            for b in self.bodyfat_set
         ]  # pylint: disable=no-member
         data["herd_tracking"] = [
             {
@@ -459,8 +469,8 @@ class Individual(BaseModel):
                 "herd": h.herd.herd,
                 "herd_name": h.herd.herd_name,
                 "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                if h.herd_tracking_date
-                else None,
+                        if h.herd_tracking_date
+                        else None,
             }
             for h in self.herdtracking_set  # pylint: disable=no-member
         ]
@@ -498,8 +508,8 @@ class Individual(BaseModel):
                     and not self.death_note \
                     and self.herdtracking_set.select() \
                             .where(HerdTracking.herd_tracking_date >
-                                datetime.now() - timedelta(days=366)
-                                ).count() > 0
+                                   datetime.now() - timedelta(days=366)
+                                   ).count() > 0
         return {"id": self.id, "name": self.name, "number": self.number,
                 "sex": self.sex, "father": father, "mother": mother,
                 "is_active": is_active}
@@ -520,7 +530,7 @@ class IndividualFile(BaseModel):
     individual = ForeignKeyField(Individual)
     filepath = CharField(32)
     upload_name = CharField(128)
-    notes  = TextField()
+    notes = TextField()
 
 
 class Disease(BaseModel):
@@ -797,31 +807,29 @@ class User(BaseModel, UserMixin):
             try:
                 with DATABASE.atomic():
                     individual = Individual.get(Individual.number == identifier)
-                    if self.is_owner and individual.current_herd.herd in self.is_owner:
-                        return True
-                    if self.is_manager and individual.current_herd.genebank_id in self.is_manager:
+                    if self.is_owner and individual.current_herd.herd in self.is_owner \
+                    or self.is_manager and individual.current_herd.genebank_id in self.is_manager:
                         return True
             except DoesNotExist:
-                return False
+                pass
 
-        if re.match('^([a-zA-Z][0-9]+)$', identifier):
+        elif re.match('^([a-zA-Z][0-9]+)$', identifier):
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(Herd.herd == identifier)
-                    if self.is_owner and herd.herd in self.is_owner:
-                        return True
-                    if self.is_manager and herd.genebank_id in self.is_manager:
+                    if self.is_owner and herd.herd in self.is_owner \
+                    or self.is_manager and herd.genebank_id in self.is_manager:
                         return True
             except DoesNotExist:
-                return False
-
-        try:
-            with DATABASE.atomic():
-                genebank = Genebank.get(Genebank.name == identifier)
-                if self.is_manager and genebank.id in self.is_manager:
-                    return True
-        except DoesNotExist:
-                return False
+                pass
+        else:
+            try:
+                with DATABASE.atomic():
+                    genebank = Genebank.get(Genebank.name == identifier)
+                    if self.is_manager and genebank.id in self.is_manager:
+                        return True
+            except DoesNotExist:
+                pass
 
         return False
 
@@ -843,7 +851,7 @@ class UserMessage(BaseModel):
     sender = ForeignKeyField(User, null=True)
     receiver = ForeignKeyField(User, null=False)
     level = CharField(12)
-    message= TextField()
+    message = TextField()
     send_time = DateTimeField()
     recieve_time = DateTimeField()
 
@@ -995,6 +1003,7 @@ def init():
     # sqlite can't add constraints after creation
     if created_breeding and not isinstance(DATABASE, SqliteDatabase):
         logging.info("Creating foreign keys for breeding table")
+        #pylint: disable=protected-access
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
 
