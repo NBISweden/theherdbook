@@ -1295,6 +1295,41 @@ class TestDataAccess(DatabaseTest):
                              {"status": "error",
                               "message": "herd ID already exists"})
 
+    def test_update_herd(self):
+        """
+        Checks that `utils.data_access.update_herd` works as intended.
+        """
+        forms = {
+            'valid': {'id': self.herds[0].id,
+                      'herd_name': 'test'
+                      },
+            'invalid': {'id': 'kaffe',
+                        'herd_name': 'test'}
+        }
+
+        invalid_user = da.update_herd(forms['valid'], 'invalid-uuid')
+        self.assertDictEqual(invalid_user,
+                             {"status": "error", "message": "Not logged in"})
+
+        not_permitted = da.update_herd(forms['valid'], self.specialist.uuid)
+        self.assertDictEqual(not_permitted,
+                             {"status": "error", "message": "Forbidden"})
+
+        valid_owner = da.update_herd(forms['valid'], self.owner.uuid)
+        self.assertDictEqual(valid_owner, {"status": "updated"})
+
+        valid_manager = da.update_herd(forms['valid'], self.manager.uuid)
+        self.assertDictEqual(valid_manager, {"status": "updated"})
+
+        valid_admin = da.update_herd(forms['valid'], self.admin.uuid)
+        self.assertDictEqual(valid_admin, {"status": "updated"})
+
+        unknown = da.update_herd(forms['invalid'], self.admin.uuid)
+        self.assertDictEqual(unknown,
+                             {"status": "error", "message": "Unknown herd"})
+
+
+
     def test_get_individuals(self):
         """
         Checks that `utils.data_access.get_individuals` return the correct

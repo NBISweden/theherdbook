@@ -222,12 +222,9 @@ def update_herd(form, user_uuid):
     try:
         with DATABASE.atomic():
             herd = Herd.get(form["id"])
-            # check permission to update herd
-            permission = user.is_admin \
-                        or user.has_role("owner", herd.id) \
-                        or (user.is_manager and herd.genebank in user.is_manager)
-            if not permission:
-                return {"status": "error", "message": "forbidden"}
+
+            if not user.can_edit(herd.herd):
+                return {"status": "error", "message": "Forbidden"}
 
             for key, value in form.items():
                 if hasattr(herd, key):
