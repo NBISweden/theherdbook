@@ -5,6 +5,7 @@ Unit tests for the herdbook.
 
 import os
 import unittest
+import requests
 
 import flask
 
@@ -12,6 +13,25 @@ import utils.database as db
 import utils.data_access as da
 from herdbook import APP
 
+HOST = "http://localhost:4200"
+
+class TestEndpoints(unittest.TestCase):
+    """
+    Checks that all endpoints are valid.
+    """
+
+    def test_main(self):
+        """
+        Checks that the main endpoint (/) is available.
+        """
+
+        try:
+            self.assertEqual(
+                requests.get(HOST + '/').status_code,
+                200
+                )
+        except requests.exceptions.ConnectionError:
+            self.skipTest("Server not running")
 
 class DatabaseTest(unittest.TestCase):
     """
