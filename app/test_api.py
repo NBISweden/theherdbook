@@ -10,6 +10,7 @@ Unit tests for the herdbook.
 
 import os
 import unittest
+import requests
 
 from copy import copy
 from datetime import datetime, timedelta

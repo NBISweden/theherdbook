@@ -16,4 +16,4 @@ source "$VENV/bin/activate"
 cd app
 
 echo "Running python unittests"
-coverage run --omit "../$VENV/*" -m unittest test.py && coverage report
+coverage run --omit "../$VENV/*" -m unittest test_api.py && coverage report
