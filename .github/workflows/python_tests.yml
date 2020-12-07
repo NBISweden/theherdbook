@@ -1,0 +1,31 @@
+name: Python tests
+
+on:
+  push:
+
+jobs:
+
+  build:
+    name: Check code
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install needed tools
+        run: sudo apt-get -y install python3-pip
+
+      - name: Install general prerequisities 
+        run: pip3 install wheel setuptools pytest
+        working-directory: app
+
+      - name: Install requirements
+        run: pip3 install -r requirements.txt
+        working-directory: app
+
+      - name: Run tests
+        run: PATH=$PATH:~/.local/bin pytest
+        working-directory: app
+
+
