@@ -26,6 +26,7 @@ from utils.database import (
     Individual,
     User,
     Weight,
+    Authenticators
 )
 
 # Helper functions
@@ -118,6 +119,50 @@ def authenticate_user(name, password):
         check_password_hash("This-always-fails", password)
     logging.info("Failed login attempt for %s", name)
     return None
+
+def authenticate_with_credentials(method, ident):
+    """
+    Authenticates a user through an external authentication service.
+    Returns the user info for the authenticated user on success, or None on
+    failure.
+    """
+    if not method or not ident:
+        return None
+    try:
+        with DATABASE.atomic():
+            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
+        if username:
+            user_info = User.select().where((User.username == username)).get()
+
+            logging.info("Login %s authenticated by %s", username, method)
+            return user_info
+    except DoesNotExist:
+        pass
+
+    logging.info("Failed login attempt for service %s persistent id %s", method, ident)
+    return None
+
+def link_account(username, method, ident):
+    """
+    Registers an account linked to an external authentication service. Returns 
+    something that evaluates as True on success.
+    """
+    if not method or not ident:
+        return None
+    try:
+        with DATABASE.atomic():
+            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.authdata == ident)).get()
+        if username:
+            user_info = User.select().where((User.username == username)).get()
+
+            logging.info("Login %s authenticated by %s", username, method)
+            return user_info
+    except DoesNotExist:
+        pass
+
+    logging.info("Failed login attempt for service %s persistent id %s", method, ident)
+    return None
+
 
 def fetch_user_info(user_id):
     """

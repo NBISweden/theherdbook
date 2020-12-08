@@ -15,7 +15,9 @@ from flask import (
     Flask,
     jsonify,
     request,
-    session
+    redirect,
+    session,
+    url_for
 )
 from flask_caching import Cache
 from flask_login import login_required, login_user, logout_user, current_user, LoginManager
@@ -25,6 +27,13 @@ import utils.database as db
 import utils.data_access as da
 import utils.settings as settings
 import utils.csvparser as csvparser
+import utils.external_auth
+import logging
+from flask_caching import Cache
+from flask_login import login_required, login_user, logout_user, current_user, LoginManager
+import flask_session
+import requests
+import os
 
 
 APP = Flask(__name__, static_folder="/static")
@@ -34,6 +43,7 @@ APP.config.update(
     #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
+    SESSION_TYPE='filesystem',
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE='filesystem',
     CACHE_DIR='/tmp',
@@ -43,9 +53,13 @@ APP.config.update(
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
 
-CACHE = Cache(APP)
-LOGIN = LoginManager(APP)
-LOGIN.login_view = '/login'
+utils.external_auth.setup(APP)
+
+flask_session.Session().init_app(APP)
+
+cache = Cache(APP)
+login = LoginManager(APP)
+login.login_view = '/login'
 
 
 @APP.after_request
@@ -250,6 +264,45 @@ def login_handler():
         login_user(user)
     return get_user()
 
+@APP.route("/api/login/<service>", methods=["GET","POST"])
+def externalLoginHandler(service):
+    """
+    Helper service to do external authentication.
+    """
+    if not session.get("link_account") and current_user.is_authenticated:
+        return get_user()
+
+    if not utils.external_auth.authorized(service):
+        return redirect(url_for("%s.login" % service))
+    
+    if session.get("link_account"):
+        return redirect("/api/link/%s" % service)
+
+    persistent_id = utils.external_auth.get_persistent(service)
+    if da.authenticate_with_credentials(service, persistent_id):
+        login_user(user)
+    return get_user()
+
+@APP.route("/api/link/<service>", methods=["GET","POST"])
+def externalLinkHandler(service):
+    """
+    Link user to selected account. Should be logged in to that service.
+    """
+    # Something odd
+    if current_user.is_authenticated:
+        return None
+
+    if not session.get("link_account"):
+        session["link_account"] = True
+        return redirect("/api/login/%s" % service)
+    
+    if not utils.external_auth.authorized(service):
+        # Still not authorized? Go back to auth
+        return redirect(url_for("/api/link/%s" % service))
+    
+    persistent = utils.external_auth.get_persistent(service)
+    return da.link_account(current_user, service, persistent)
+
 
 @APP.route("/api/logout")
 def logout():
@@ -444,6 +497,9 @@ def main(path):  # pylint: disable=unused-argument
     Serves the single-page webapp.
     """
     return APP.send_static_file("index.html")
+
+
+print(APP.url_map)
 
 
 if __name__ == "__main__":
