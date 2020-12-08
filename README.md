@@ -7,14 +7,14 @@ Mainly measure 5 “Keeping herd books and planning genetic conservation breedin
 The aim here is to set up a online web-service for keeping a herd
 book and spreading admin task to all local genebank holders.
 
-## Termology
+## Terminology
 
 ### Herd = Besättning/Genbanksbesättning
 
 A site participating in the preservation program. These will typically
 have signed an agreement and have efforts in place to make sure there
 is no accidental breeding with other races. Have a local pool of animals that is the actual
-*in situ* genebank. 
+*in situ* genebank.
 
 ### Genebank = Genbank (Herdbook)
 Several different Herds of the same race will form a Genebank
@@ -23,14 +23,14 @@ Several different Herds of the same race will form a Genebank
 
 A user tied to one or more herds. The owner or owners of a herd of animals
 
-### Genebank Manager = Genbanksansvarig 
+### Genebank Manager = Genbanksansvarig
 
 A user tasked with overall maintenance of the herd book and managing the
-breeding/preservation effort for a genebank. Usually responsible for a specific animal breed. 
+breeding/preservation effort for a genebank. Usually responsible for a specific animal breed.
 
 # Development setup
 
-First set up your secure environment variables by 
+First set up your secure environment variables by
 copy or rename the default .env files found in the .docker folder and name them
 Remember to update your secrets before going in production
 
@@ -66,11 +66,11 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 
 ```
 
-To access the local server deployed open this url https://localhost:8443 in your browser. You will need to 
-configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing 
-this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled. 
-In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser. 
-You can also use http://localhost:8080 to access the frontend. 
+To access the local server deployed open this url https://localhost:8443 in your browser. You will need to
+configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing
+this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled.
+In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
+You can also use http://localhost:8080 to access the frontend.
 
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
 
@@ -83,3 +83,12 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 ```
 ./run-with-prebuilt-images.sh
 ```
+
+## Testing
+
+There are a number of tests written, which can be run using `./run_tests.sh`.
+Currently the test coverage is lacking, and frontend testing is missing. Given
+time, this will be resolved before version 1.0 is finished.
+
+The tests will also run through `pytest` using github actions when pushing new
+code to github.

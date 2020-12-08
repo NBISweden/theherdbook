@@ -2,14 +2,17 @@
 """
 Database handler for 'the herdbook'.
 """
+#pylint: disable=too-many-lines
 
 import re
 import json
 import logging
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 
 from peewee import (
     PostgresqlDatabase,
+    fn,
     SqliteDatabase,
     Proxy,
     Model,
@@ -18,6 +21,8 @@ from peewee import (
     BooleanField,
     CharField,
     DateField,
+    DateTimeField,
+    DeferredForeignKey,
     ForeignKeyField,
     FloatField,
     IntegerField,
@@ -53,6 +58,7 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
 
 try:
+    #pylint: disable=import-error
     import utils.settings as settings
 
     set_database(
@@ -149,7 +155,7 @@ class Genebank(BaseModel):
 
     def get_herds(self, user):
         """
-        Returns all herds that the user identified by `user_id` has access to,
+        Returns all herds that the user identified by `user` has access to,
         with restricted fields filtered by access level.
         """
         if self.id not in user.accessible_genebanks:
@@ -202,9 +208,37 @@ class Herd(BaseModel):
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
 
+    @property
+    def individuals(self):
+        """
+        Returns a list of all individuals in the herd.
+        """
+
+        # Rank all herdtracking values by individual and date
+        current_herd = \
+            HerdTracking.select(HerdTracking.herd.alias('herd'),
+                                HerdTracking.individual.alias('i_id'),
+                                fn.RANK().over(
+                                    order_by=[HerdTracking.herd_tracking_date \
+                                              .desc()],
+                                    partition_by=[HerdTracking.individual]
+                                ).alias('rank'))
+
+        # Select all the individuals in the current herd
+        i_query = Individual.select() \
+                            .join(current_herd,
+                                  on=(Individual.id == current_herd.c.i_id)) \
+                            .where(current_herd.c.rank == 1) \
+                            .where(current_herd.c.herd == self.id)
+
+        # return as a list
+        #pylint: disable=unnecessary-comprehension
+        return [i for i in i_query]
+
     def short_info(self):
         """
-        Returns the `id`, `herd`, `genebank`, and `herd_name` fields as a dict.
+        Returns the `id`, `herd`, `genebank`, `herd_name`, and `is_active`
+        fields as a dict.
         """
         return {
             "id": self.id,
@@ -236,7 +270,8 @@ class Herd(BaseModel):
 
         data = self.as_dict()
 
-        del data["email_verified"]
+        if 'email_verified' in data:
+            del data["email_verified"]
 
         return remove_fields_by_privacy(data, access_level)
 
@@ -315,6 +350,28 @@ class Colour(BaseModel):
     id = AutoField(primary_key=True, column_name="colour_id")
     name = CharField(50)
     comment = CharField(50, null=True)
+    genebank = ForeignKeyField(Genebank)
+
+
+class Breeding(BaseModel):
+    """
+    Table for breeding and birth.
+    """
+    id = AutoField(primary_key=True, column_name="breeding_id")
+    breed_date = DateField(null=True)
+    breed_notes = TextField(null=True)
+    father = DeferredForeignKey("Individual", null=True)
+    mother = DeferredForeignKey("Individual", null=True)
+    birth_date = DateField(null=True)
+    birth_notes = TextField(null=True)
+    litter_size = IntegerField(null=True)
+
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        Add a unique index to mother+father+birth_date
+        """
+
+        indexes = ((("mother", "father", "birth_date"), True),)
 
 
 class Individual(BaseModel):
@@ -330,15 +387,19 @@ class Individual(BaseModel):
     certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
-    birth_date = DateField(null=True)
-    mother = ForeignKeyField("self", null=True)
-    father = ForeignKeyField("self", null=True)
     colour = ForeignKeyField(Colour, null=True)
     colour_note = CharField(100, null=True)
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
-    litter = IntegerField(null=True)
     notes = CharField(100, null=True)
+    breeding = ForeignKeyField(Breeding, null=True)
+    eye_color = CharField(null=True)
+    claw_color = CharField(null=True)
+    belly_color = CharField(null=True)
+    hair_notes = CharField(null=True)
+    is_active = BooleanField(null=True, default=True)
+    butchered = BooleanField(null=True, default=False)
+    castration_date = DateField(null=True, default=None)
 
     @property
     def current_herd(self):
@@ -353,6 +414,20 @@ class Individual(BaseModel):
                    .first() \
                    .herd
 
+    @property
+    def children(self):
+        """
+        Returns a list of the individuals registered children.
+        """
+        # use a list comprehension to execute the query and return the result
+        # as a list.
+        #pylint: disable=unnecessary-comprehension
+        return [i for i in Individual.select() \
+                                     .join(Breeding) \
+                                     .where((Breeding.mother == self) |
+                                            (Breeding.father == self))
+                ]
+
     def as_dict(self):
         """
         Returns the objects key/value pair as a dictionary, including data from
@@ -362,23 +437,33 @@ class Individual(BaseModel):
         data["genebank_id"] = self.current_herd.genebank.id
         data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {"id": self.origin_herd.id,
-                               "herd":  self.origin_herd.herd, "herd_name": self.origin_herd.herd_name}
+                               "herd":  self.origin_herd.herd,
+                               "herd_name": self.origin_herd.herd_name}
         data["herd"] = {"id": self.current_herd.id,
-                        "herd": self.current_herd.herd, "herd_name": self.current_herd.herd_name}
+                        "herd": self.current_herd.herd,
+                        "herd_name": self.current_herd.herd_name}
+
+        data["birth_date"] = self.breeding.birth_date if self.breeding else None
+        data["litter"] = self.breeding.litter_size if self.breeding else None
+
         data["mother"] = (
-            {"id": self.mother.id, "name": self.mother.name,
-                "number": self.mother.number} if self.mother else None
+            {"id": self.breeding.mother.id, "name": self.breeding.mother.name,
+             "number": self.breeding.mother.number} \
+            if self.breeding and self.breeding.mother else None
         )
         data["father"] = (
-            {"id": self.father.id, "name": self.father.name,
-                "number": self.father.number} if self.father else None
+            {"id": self.breeding.father.id, "name": self.breeding.father.name,
+             "number": self.breeding.father.number} \
+            if self.breeding and self.breeding.father else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
-            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} for w in self.weight_set
+            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} \
+            for w in self.weight_set
         ]  # pylint: disable=no-member
         data["bodyfat"] = [
-            {"bodyfat": b.bodyfat, "date": b.bodyfat_date} for b in self.bodyfat_set
+            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime('%Y-%m-%d')} \
+            for b in self.bodyfat_set
         ]  # pylint: disable=no-member
         data["herd_tracking"] = [
             {
@@ -386,8 +471,8 @@ class Individual(BaseModel):
                 "herd": h.herd.herd,
                 "herd_name": h.herd.herd_name,
                 "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                if h.herd_tracking_date
-                else None,
+                        if h.herd_tracking_date
+                        else None,
             }
             for h in self.herdtracking_set  # pylint: disable=no-member
         ]
@@ -400,12 +485,6 @@ class Individual(BaseModel):
         table.
         """
         data = super().as_dict()
-        # data['herd'] = {'id': self.herd.id, 'name':self.herd.herd_name}
-        # data['mother'] = {'id': self.mother.id, 'name': self.mother.name} \
-        #     if self.mother else None
-        # data['father'] = {'id': self.father.id, 'name': self.father.name} \
-        #     if self.father else None
-        # data['colour'] = self.colour.name if self.colour else None
         return data
 
     def short_info(self):
@@ -420,11 +499,22 @@ class Individual(BaseModel):
             - father
             - mother
         """
-        father = {"id": self.father.id,
-                  "number": self.father.number} if self.father else None
-        mother = {"id": self.mother.id,
-                  "number": self.mother.number} if self.mother else None
-        return {"id": self.id, "name": self.name, "number": self.number, "sex": self.sex, "father": father, "mother": mother}
+        father = {"id": self.breeding.father.id,
+                  "number": self.breeding.father.number} \
+                  if self.breeding and self.breeding.father else None
+        mother = {"id": self.breeding.mother.id,
+                  "number": self.breeding.mother.number} \
+                  if self.breeding and self.breeding.mother else None
+        is_active = self.is_active \
+                    and not self.death_date \
+                    and not self.death_note \
+                    and self.herdtracking_set.select() \
+                            .where(HerdTracking.herd_tracking_date >
+                                   datetime.now() - timedelta(days=366)
+                                   ).count() > 0
+        return {"id": self.id, "name": self.name, "number": self.number,
+                "sex": self.sex, "father": father, "mother": mother,
+                "is_active": is_active}
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
@@ -432,6 +522,39 @@ class Individual(BaseModel):
         """
 
         indexes = ((("number", "origin_herd"), True),)
+
+
+class IndividualFile(BaseModel):
+    """
+    Table for referencing files connected to individuals
+    """
+    id = AutoField(primary_key=True, column_name="breeding_id")
+    individual = ForeignKeyField(Individual)
+    filepath = CharField(32)
+    upload_name = CharField(128)
+    notes = TextField()
+
+
+class Disease(BaseModel):
+    """
+    Lists user defined diseases, and keeps track of wheather they should be
+    included in the yearly report.
+    """
+    id = AutoField(primary_key=True, column_name="disease_id")
+    name = CharField()
+    include_in_reports = BooleanField(default=False)
+
+
+class IndividualDisease(BaseModel):
+    """
+    Kepps track of disease periods for individuals.
+    """
+    id = AutoField(primary_key=True, column_name="individual_disease_id")
+    individual = ForeignKeyField(Individual)
+    disease = ForeignKeyField(Disease)
+    diagnosis_date = DateField()
+    healthy_date = DateField()
+    notes = TextField()
 
 
 class Weight(BaseModel):
@@ -455,28 +578,6 @@ class Bodyfat(BaseModel):
     individual = ForeignKeyField(Individual)
     bodyfat = CharField(6, null=True)
     bodyfat_date = DateField()
-
-
-class HerdTracking(BaseModel):
-    """
-    The herd_tracking table represents documented instances of an
-    individual belonging to a particular herd.  It connects the two
-    tables individual and herd in a N:M fashion.
-    """
-
-    id = AutoField(primary_key=True, column_name="herd_tracking_id")
-    herd = ForeignKeyField(Herd)
-    individual = ForeignKeyField(Individual)
-    herd_tracking_date = DateField()
-
-    class Meta:  # pylint: disable=too-few-public-methods
-        """
-        The Meta class is read automatically for Model information, and is used
-        here to set the table name, as the table name is in snake case, which
-        didn't fit the camel case class names.
-        """
-
-        table_name = "herd_tracking"
 
 
 class User(BaseModel, UserMixin):
@@ -708,31 +809,29 @@ class User(BaseModel, UserMixin):
             try:
                 with DATABASE.atomic():
                     individual = Individual.get(Individual.number == identifier)
-                    if self.is_owner and individual.current_herd.herd in self.is_owner:
-                        return True
-                    if self.is_manager and individual.current_herd.genebank_id in self.is_manager:
+                    if self.is_owner and individual.current_herd.herd in self.is_owner \
+                    or self.is_manager and individual.current_herd.genebank_id in self.is_manager:
                         return True
             except DoesNotExist:
-                return False
+                pass
 
-        if re.match('^([a-zA-Z][0-9]+)$', identifier):
+        elif re.match('^([a-zA-Z][0-9]+)$', identifier):
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(Herd.herd == identifier)
-                    if self.is_owner and herd.herd in self.is_owner:
-                        return True
-                    if self.is_manager and herd.genebank_id in self.is_manager:
+                    if self.is_owner and herd.herd in self.is_owner \
+                    or self.is_manager and herd.genebank_id in self.is_manager:
                         return True
             except DoesNotExist:
-                return False
-
-        try:
-            with DATABASE.atomic():
-                genebank = Genebank.get(Genebank.name == identifier)
-                if self.is_manager and genebank.id in self.is_manager:
-                    return True
-        except DoesNotExist:
-                return False
+                pass
+        else:
+            try:
+                with DATABASE.atomic():
+                    genebank = Genebank.get(Genebank.name == identifier)
+                    if self.is_manager and genebank.id in self.is_manager:
+                        return True
+            except DoesNotExist:
+                pass
 
         return False
 
@@ -744,6 +843,76 @@ class User(BaseModel, UserMixin):
         """
 
         table_name = "hbuser"
+
+
+class UserMessage(BaseModel):
+    """
+    Table storing messages to be displayed to users.
+    """
+    id = AutoField(primary_key=True, column_name="user_message_id")
+    sender = ForeignKeyField(User, null=True)
+    receiver = ForeignKeyField(User, null=False)
+    level = CharField(12)
+    message = TextField()
+    send_time = DateTimeField()
+    recieve_time = DateTimeField()
+
+
+class YearlyHerdReport(BaseModel):
+    """
+    Stores yearly reports for herds.
+
+    The data field stores the report data in json format, but we refrained from
+    storing it in a JSONField so that we could still use sqlite for testing.
+    """
+    id = AutoField(primary_key=True, column_name="disease_id")
+    herd = ForeignKeyField(Herd)
+    report_date = DateField()
+    generated_by = ForeignKeyField(User)
+    name = CharField()
+    data = TextField()
+    publish = BooleanField()
+    publish_tel = BooleanField()
+    publish_email = BooleanField()
+    publish_address = BooleanField()
+
+
+class GenebankReport(BaseModel):
+    """
+    Stores yearly reports for genebanks.
+
+    The data field stores the report data in json format, but we refrained from
+    storing it in a JSONField so that we could still use sqlite for testing.
+    """
+    genebank = ForeignKeyField(Genebank)
+    generated_by = ForeignKeyField(User)
+    report_date = DateField()
+    name = CharField()
+    data = TextField()
+
+
+class HerdTracking(BaseModel):
+    """
+    The herd_tracking table represents documented instances of an
+    individual belonging to a particular herd.  It connects the two
+    tables individual and herd in a N:M fashion.
+    """
+
+    id = AutoField(primary_key=True, column_name="herd_tracking_id")
+    from_herd = ForeignKeyField(Herd, null=True, default=None)
+    herd = ForeignKeyField(Herd, null=True, default=None)
+    signature = ForeignKeyField(User, null=True, default=None)
+    individual = ForeignKeyField(Individual)
+    herd_tracking_date = DateField()
+
+    class Meta:  # pylint: disable=too-few-public-methods
+        """
+        The Meta class is read automatically for Model information, and is used
+        here to set the table name, as the table name is in snake case, which
+        didn't fit the camel case class names.
+        """
+
+        table_name = "herd_tracking"
 
 
 class Authenticators(BaseModel):
@@ -761,11 +930,18 @@ MODELS = [
     Genebank,
     Herd,
     Colour,
+    Breeding,
     Individual,
+    IndividualFile,
+    Disease,
+    IndividualDisease,
     Weight,
     Bodyfat,
-    HerdTracking,
     User,
+    UserMessage,
+    YearlyHerdReport,
+    GenebankReport,
+    HerdTracking,
     Authenticators,
 ]
 
@@ -812,15 +988,26 @@ def insert_data(filename="default_data.json"):
 def init():
     """
     Initializes all tables in the database, if they're not already available.
+
+    We keep a special eye on the Breeding table, as i uses deferred foreign keys
+    which need to be created once the individual table has been created.
     """
+
+    # need to keep track of the breeding table
+    logging.info("Initializing database")
+    created_breeding = False
     for model in MODELS:
         if not model.table_exists():
             logging.info("Creating database table %s", model.__name__)
+            if model.__name__ == 'Breeding':
+                created_breeding = True
             model.create_table()
-
-    logging.info("Inserting default data")
-    insert_data("default_data.json")
-
+    # sqlite can't add constraints after creation
+    if created_breeding and not isinstance(DATABASE, SqliteDatabase):
+        logging.info("Creating foreign keys for breeding table")
+        #pylint: disable=protected-access
+        Breeding._schema.create_foreign_key(Breeding.mother)
+        Breeding._schema.create_foreign_key(Breeding.father)
 
 def verify(try_init=True):
     """

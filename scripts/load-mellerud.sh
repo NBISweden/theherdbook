@@ -2,8 +2,9 @@
 
 # Needs to be called by load.sh
 
+# read the csv into a temprary table called 'data'
 csvsql  --db "$1" \
-	--tables data \
+	--tables m_data \
 	--overwrite \
 	--insert "$2"
 
@@ -12,34 +13,34 @@ psql --quiet <<-'END_SQL'
 	-- Fixup data
 	------------------------------------------------------------
 
-	UPDATE data SET "Namn" = TRIM("Namn");
-	UPDATE data SET "Mor" = TRIM("Mor");
-	UPDATE data SET "Far" = TRIM("Far");
-	UPDATE data SET "Besättning" = TRIM("Besättning");
+	UPDATE m_data SET "Namn" = TRIM("Namn");
+	UPDATE m_data SET "Mor" = TRIM("Mor");
+	UPDATE m_data SET "Far" = TRIM("Far");
+	UPDATE m_data SET "Besättning" = TRIM("Besättning");
 
-	ALTER TABLE data ALTER "Genb" TYPE VARCHAR(10);
-	UPDATE data SET "Genb" = CONCAT('M', "Genb")
+	ALTER TABLE m_data ALTER "Genb" TYPE VARCHAR(9);
+	UPDATE m_data SET "Genb" = CONCAT('M', "Genb")
 	WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'M%';
 
-	ALTER TABLE data ALTER "Nummer" TYPE VARCHAR(20);
-	UPDATE data SET "Nummer" = CONCAT('M', "Nummer")
+	ALTER TABLE m_data ALTER "Nummer" TYPE VARCHAR(20);
+	UPDATE m_data SET "Nummer" = CONCAT('M', "Nummer")
 	WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'M%';
 
-	ALTER TABLE data ALTER "Mor nr" TYPE VARCHAR(20);
-	UPDATE data SET "Mor nr" = CONCAT('M', "Mor nr")
+	ALTER TABLE m_data ALTER "Mor nr" TYPE VARCHAR(20);
+	UPDATE m_data SET "Mor nr" = CONCAT('M', "Mor nr")
 	WHERE "Mor nr" IS NOT NULL AND "Mor nr" NOT LIKE 'M%';
 
-	ALTER TABLE data ALTER "Far nr" TYPE VARCHAR(20);
-	UPDATE data SET "Far nr" = CONCAT('M', "Far nr")
+	ALTER TABLE m_data ALTER "Far nr" TYPE VARCHAR(20);
+	UPDATE m_data SET "Far nr" = CONCAT('M', "Far nr")
 	WHERE "Far nr" IS NOT NULL AND "Far nr" NOT LIKE 'M%';
 
-	UPDATE data SET "Kön" = 'male' WHERE "Kön" = 'Hane';
-	UPDATE data SET "Kön" = 'female' WHERE "Kön" = 'Hona';
+	UPDATE m_data SET "Kön" = 'male' WHERE "Kön" = 'Hane';
+	UPDATE m_data SET "Kön" = 'female' WHERE "Kön" = 'Hona';
 
-	ALTER TABLE data ADD "Färgnr" INTEGER;
-	UPDATE data SET "Färgnr" = 101 WHERE "Färg" LIKE '%lbino%';
-	UPDATE data SET "Färgnr" = 100 WHERE "Färgnr" IS NULL AND "Färg" LIKE '%v%';
-	UPDATE data SET "Färg" = NULL WHERE "Färgnr" IS NULL;
+	ALTER TABLE m_data ADD "Färgnr" INTEGER;
+	UPDATE m_data SET "Färgnr" = 101 WHERE "Färg" LIKE '%lbino%';
+	UPDATE m_data SET "Färgnr" = 100 WHERE "Färgnr" IS NULL AND "Färg" LIKE '%v%';
+	UPDATE m_data SET "Färg" = NULL WHERE "Färgnr" IS NULL;
 
 	------------------------------------------------------------
 	-- Insert
@@ -47,6 +48,18 @@ psql --quiet <<-'END_SQL'
 
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
+
+  WITH genebank AS (
+    SELECT    genebank_id
+      FROM    genebank
+     WHERE    name = 'Mellerudskanin'
+  ), colour_data (c_id, name, comment) AS (
+      VALUES (100, 'Svart/vit', 'Svart/vit Melleruds-kanin'),
+             (101, 'Albino', 'Albino Melleruds-kanin')
+  )
+  INSERT INTO colour (colour_id, name, comment, genebank_id)
+    SELECT c.c_id, c.name, c.comment, g.genebank_id
+      FROM genebank g, colour_data c;
 
 	-- Dummy herd for individuals sold outside of the genebank
 	INSERT INTO herd (genebank_id, herd, herd_name)
@@ -58,47 +71,71 @@ psql --quiet <<-'END_SQL'
 	INSERT INTO herd (genebank_id, herd)
 	SELECT	DISTINCT gb.genebank_id, d."Genb"
 	FROM	genebank gb
-	JOIN	data d ON (TRUE)
+	JOIN	m_data d ON (TRUE)
 	WHERE	gb.name = 'Mellerudskanin'
 	ORDER BY d."Genb";
 
 	-- Stub individual data
 	INSERT INTO individual (origin_herd_id,
-		name, certificate, number, sex, birth_date,
-		colour_id, colour_note, death_note, litter, notes)
+		name, certificate, number, sex,
+		colour_id, colour_note, death_note, notes)
 	SELECT	h.herd_id,
-		d."Namn", d."Intyg", d."Nummer", d."Kön", d."Född",
-		d."Färgnr", d."Färg", d."Död", d."Kull", d."Övrigt"
+		d."Namn", d."Intyg", d."Nummer", d."Kön",
+		d."Färgnr", d."Färg", d."Död", d."Övrigt"
 	FROM	genebank gb
 	JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-	JOIN	data d ON (d."Genb" = h.herd)
+	JOIN	m_data d ON (d."Genb" = h.herd)
 	WHERE	gb.name = 'Mellerudskanin'
 	ORDER BY d."Nummer";
 
-	-- Set mothers
-	-- Assumes that individual.number is unique
-	UPDATE individual i
-	SET	mother_id = parent.individual_id
-	FROM	individual parent
-	JOIN	data d ON (d."Mor nr" = parent.number)
-	WHERE	d."Nummer" = i.number;
+  -- Create breeding values
+  INSERT INTO breeding (
+    father_id,
+    mother_id,
+    birth_date,
+    litter_size
+  ) SELECT
+        father.individual_id,
+        mother.individual_id,
+        d.birth_date,
+        d.litter_size
+      FROM (
+        SELECT
+          d."Far nr",
+          d."Mor nr",
+          d."Född" birth_date,
+          MAX(d."Kull") litter_size
+          FROM m_data d
+        GROUP BY (d."Far nr", d."Mor nr", d."Född")
+      ) d
+      JOIN individual father ON d."Far nr" = father.number
+      JOIN individual mother ON d."Mor nr" = mother.number;
 
-	-- Set fathers
-	-- Assumes that individual.number is unique
-	UPDATE individual i
-	SET	father_id = parent.individual_id
-	FROM	individual parent
-	JOIN	data d ON (d."Far nr" = parent.number)
-	WHERE	d."Nummer" = i.number;
+  -- Associate individuals and breeding values
+  WITH breeding_nums AS (
+    SELECT b.breeding_id, b.birth_date, f.number father, m.number mother
+      FROM breeding b
+      LEFT JOIN individual f ON b.father_id = f.individual_id
+      LEFT JOIN individual m ON b.mother_id = m.individual_id
+  ) UPDATE individual i SET breeding_id = (
+    SELECT b.breeding_id
+      FROM breeding_nums b
+      JOIN m_data d
+        ON d."Nummer" = i.number
+       AND d."Far nr" = b.father
+       AND d."Mor nr" = b.mother
+       AND d."Född" = b.birth_date
+  );
 
 	-- Initial herd tracking
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-	SELECT	i.origin_herd_id, i.individual_id, i.birth_date
-	FROM	genebank gb
-	JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-	JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-	WHERE	gb.name = 'Mellerudskanin'
-	ORDER BY i.individual_id;
+  SELECT	i.origin_herd_id, i.individual_id, b.birth_date
+    FROM	genebank gb
+    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
+   WHERE	gb.name = 'Mellerudskanin'
+   ORDER BY i.individual_id;
 END_SQL
 
 # Load tracking data for years 2000 through to 2020
@@ -106,17 +143,17 @@ year=2000
 while [ "$year" -le 2020 ]; do
 	cat <<-END_SQL
 		-- Fix column type etc.
-		ALTER TABLE data ALTER "$year" TYPE VARCHAR(10);
-		UPDATE data SET "$year" = NULL
+		ALTER TABLE m_data ALTER "$year" TYPE VARCHAR(12);
+		UPDATE m_data SET "$year" = NULL
 		WHERE "$year" LIKE 's%';
-		UPDATE data SET "$year" = CONCAT('M', "$year")
+		UPDATE m_data SET "$year" = CONCAT('M', "$year")
 		WHERE "$year" IS NOT NULL AND "$year" NOT LIKE 'M%';
 
 		-- Add missing herds
 		INSERT INTO herd (genebank_id, herd)
 		SELECT	DISTINCT gb.genebank_id, d."$year"
 		FROM	genebank gb
-		JOIN	data d ON (TRUE)
+		JOIN	m_data d ON (TRUE)
 		WHERE	gb.name = 'Mellerudskanin'
 		AND	d."$year" NOT IN (
 			SELECT herd
@@ -129,7 +166,7 @@ while [ "$year" -le 2020 ]; do
 		SELECT	h.herd_id, i.individual_id, '$year-12-31'
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-		JOIN	data d ON (d."$year" = h.herd)
+		JOIN	m_data d ON (d."$year" = h.herd)
 		JOIN	individual i ON (i.number = d."Nummer")
 		WHERE	gb.name = 'Mellerudskanin'
 		ORDER BY i.individual_id;
@@ -143,7 +180,7 @@ psql --quiet <<-'END_SQL'
 	UPDATE herd h
 	SET herd_name = (
 		SELECT MAX("Besättning")
-		FROM	data
+		FROM	m_data
 		WHERE	"Genb" = h.herd
 		LIMIT 1
 	)
