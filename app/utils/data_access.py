@@ -823,3 +823,68 @@ def get_all_individuals():
             return individuals_dict
     except DoesNotExist:
         return []
+
+# Breeding and birth functions
+
+def register_breeding(form, user_uuid):
+    """
+    Registers a breeding event between two rabbits, defined by `form`, into the
+    database (if the given `user` has sufficient permissions).
+
+    The form should be formatted like:
+    {
+        mother: <individual-number>,
+        father: <individual-number>,
+        date: <breeding-date, as %Y-%m-%d>,
+        notes: <text>,
+    }
+
+    The response will be on the format:
+    JSON:  {
+            status: 'success' | 'error',
+            message?: string
+           }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    # Check if the parents are valid
+    try:
+        mother = Individual.get(Individual.number == form.get('mother', None))
+    except DoesNotExist:
+        return {'status': 'error', 'message': 'Unknown mother'}
+    try:
+        father = Individual.get(Individual.number == form.get('father', None))
+    except DoesNotExist:
+        return {'status': 'error', 'message': 'Unknown father'}
+
+    # A user can insert a breeding event if they have permission to edit at
+    # least one of the parents.
+    if not (user.can_edit(mother.number) or user.can_edit(father.number)):
+        return {'status': 'error', 'message': 'Forbidden'}
+
+    # check if the breeding date is valid
+    breed_date = form.get('date', None)
+    if not breed_date:
+        return {'status': 'error', 'message': 'No breeding date'}
+    try:
+        breed_date = datetime.strptime(breed_date, '%Y-%m-%d')
+    except ValueError:
+        return {'status': 'error',
+                'message': 'Breeding date must be formatted as yyyy-mm-dd.'}
+
+    exists = Breeding.select().where(Breeding.father == father) \
+                                .where(Breeding.mother == mother) \
+                                .where(Breeding.breed_date == breed_date) \
+                                .count()
+    if exists:
+        return {'status': 'error', 'message': 'Breeding already registered'}
+
+    with DATABASE.atomic():
+        Breeding(father=father,
+                 mother=mother,
+                 breed_date=breed_date,
+                 breed_note=form.get('notes', None)).save()
+        return {'status': 'success'}
+
