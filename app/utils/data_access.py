@@ -28,6 +28,8 @@ from utils.database import (
     Weight,
 )
 
+# User functions
+
 def add_user(form, user_uuid=None):
     """
     if the user identified by `user_uuid` has admin or manager rights, the new
@@ -114,6 +116,197 @@ def fetch_user_info(user_id):
     except DoesNotExist:
         return None
 
+def get_users(user_uuid=None):
+    """
+    Returns all users that the logged in user has access to. This is all users
+    for admin, all users except admin users for managers, and None for regular
+    users.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return None
+    try:
+        if not user.is_admin and not user.is_manager:
+            return None
+        with DATABASE.atomic():
+            users = list(User.select())
+        if not user.is_admin:
+            users = [user for user in users if not user.is_admin]
+
+        return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
+    except DoesNotExist:
+        return None
+
+def get_user(user_id, user_uuid=None):
+    """
+    Returns the user identified by `user_id`, if the user identified by
+    `user_uuid` has admin or manager privileges. Note that the user does not
+    need manager privileges over any particular genebank or herd.
+    Returns:
+        JSON: {
+                status: 'success' | 'error',
+                message?: <error message>,
+                data?: <user-data>
+            }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+    if not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Forbidden"}
+    try:
+        with DATABASE.atomic():
+            target = User.get(int(user_id))
+    except DoesNotExist:
+        return {"status": "error", "message": "Unknown user"}
+
+    return {"status": "success",
+            "data": {
+                "id": target.id,
+                "email": target.email,
+                "username": target.username,
+                "validated": target.validated,
+                "privileges": target.privileges,
+                }
+            }
+
+def update_user(form, user_uuid=None):
+    """
+    Takes a role change description `form` and updates the user given by
+    `form.id` with the values in `form`, and returns a status message.
+
+    The input data should be formatted like:
+        {id: <number>, email: <string>, validated: <boolean>}
+
+    The return value will be formatted as:
+        JSON: {
+                status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+                message?: string,
+            }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "not logged in"}
+
+    logging.warning("a")
+    # Check data
+    if (not isinstance(form, dict)
+            or not form.get("id", None)
+            or not form.get("email", None)
+            or form.get("validated") not in [True, False]
+       ):
+        return {"status": "error", "message": f"malformed request: {form}"}
+
+    # Check permissions
+    if not (user.is_admin or user.is_manager):
+        return  {"status": "error", "message": "forbidden"}
+
+    # check target user
+    try:
+        with DATABASE.atomic():
+            target_user = User.get(form["id"])
+    except DoesNotExist:
+        return {"status": "error", "message": "unknown user"}
+
+    # update target user data if needed
+    updated = False
+    for field in ["email", "username", "validated"]:
+        if getattr(target_user, field) != form[field]:
+            setattr(target_user, field, form[field])
+            updated = True
+
+    if updated:
+        with DATABASE.atomic():
+            target_user.save()
+        return  {"status": "updated"}
+
+    return {"status": "unchanged"}
+
+def update_role(operation, user_uuid=None):
+    """
+    Takes a role change description `operation`, and returns a status message.
+
+    The input data should be formatted like:
+        {action: add | remove,
+         role: owner | manager | specialist,
+         user: <id>,
+         herd | genebank: <id>
+        }
+
+    The return value will be formatted like:
+        JSON: {
+            status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
+            message?: string,
+            data?: any
+        }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "not logged in"}
+
+    # Check data
+    valid = True
+    message = "malformed request"
+    if (not isinstance(operation, dict)
+            or operation.get("action", {}) not in ["add", "remove"]
+            or (not isinstance(operation.get("user", ""), int)
+                and not operation.get("user", "").isdigit()
+                )
+       ):
+        valid = False
+    elif (operation.get("role", {}) not in ["owner", "manager", "specialist"]
+          or (operation["role"] in ["manager", "specialist"]
+              and not operation.get("genebank")
+             )
+          or (operation["role"] in ["owner"] and not operation.get("herd"))
+         ):
+        valid = False
+
+    # Check permissions
+    permitted = True
+    if user.is_manager:
+        genebank = operation.get("genebank", None)
+        if genebank is None:
+            try:
+                with DATABASE.atomic():
+                    herd = Herd.get(operation["herd"])
+                genebank = herd.as_dict()["genebank"]
+            except DoesNotExist:
+                permitted = False  # unknown herd
+                message = "unknown herd"
+        if not (user.is_admin or genebank in user.is_manager):
+            permitted = False
+            message = "forbidden"
+    elif not user.is_admin:
+        permitted = False
+        message = "forbidden"
+
+    if not valid or not permitted:
+        return {"status": "error", "message": message}
+
+    # check target user
+    try:
+        with DATABASE.atomic():
+            target_user = User.get(int(operation["user"]))
+    except DoesNotExist:
+        return {"status": "error", "message": "unknown user"}
+
+    # update roles if needed
+    target = "herd" if operation["role"] == "owner" else "genebank"
+    has_role = target_user.has_role(operation["role"], operation[target])
+    updated = False
+
+    with DATABASE.atomic():
+        if has_role and operation["action"] == "remove":
+            target_user.remove_role(operation["role"], operation[target])
+            updated = True
+        elif not has_role and operation["action"] == "add":
+            target_user.add_role(operation["role"], operation[target])
+            updated = True
+    return {"status": "updated" if updated else "unchanged"}
+
+# Genebank functions
+
 def get_colors():
     """
     Returns all legal colors for all genebanks, like:
@@ -155,6 +348,8 @@ def get_genebanks(user_uuid=None):
             data += [genebank_data]
 
     return data
+
+# Herd functions
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -233,6 +428,8 @@ def update_herd(form, user_uuid):
         return  {"status": "updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
+
+# Individual functions
 
 def get_individual(individual_id, user_uuid=None):
     """
@@ -471,195 +668,6 @@ def update_bodyfat(individual, bodyfat):
                     Bodyfat(individual=individual,
                             bodyfat_date=measure[0],
                             bodyfat=measure[1]).save()
-
-def get_users(user_uuid=None):
-    """
-    Returns all users that the logged in user has access to. This is all users
-    for admin, all users except admin users for managers, and None for regular
-    users.
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return None
-    try:
-        if not user.is_admin and not user.is_manager:
-            return None
-        with DATABASE.atomic():
-            users = list(User.select())
-        if not user.is_admin:
-            users = [user for user in users if not user.is_admin]
-
-        return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
-    except DoesNotExist:
-        return None
-
-def get_user(user_id, user_uuid=None):
-    """
-    Returns the user identified by `user_id`, if the user identified by
-    `user_uuid` has admin or manager privileges. Note that the user does not
-    need manager privileges over any particular genebank or herd.
-    Returns:
-        JSON: {
-                status: 'success' | 'error',
-                message?: <error message>,
-                data?: <user-data>
-            }
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return {"status": "error", "message": "Not logged in"}
-    if not (user.is_admin or user.is_manager):
-        return {"status": "error", "message": "Forbidden"}
-    try:
-        with DATABASE.atomic():
-            target = User.get(int(user_id))
-    except DoesNotExist:
-        return {"status": "error", "message": "Unknown user"}
-
-    return {"status": "success",
-            "data": {
-                "id": target.id,
-                "email": target.email,
-                "username": target.username,
-                "validated": target.validated,
-                "privileges": target.privileges,
-                }
-            }
-
-def update_user(form, user_uuid=None):
-    """
-    Takes a role change description `form` and updates the user given by
-    `form.id` with the values in `form`, and returns a status message.
-
-    The input data should be formatted like:
-        {id: <number>, email: <string>, validated: <boolean>}
-
-    The return value will be formatted as:
-        JSON: {
-                status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
-                message?: string,
-            }
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return {"status": "error", "message": "not logged in"}
-
-    logging.warning("a")
-    # Check data
-    if (not isinstance(form, dict)
-            or not form.get("id", None)
-            or not form.get("email", None)
-            or form.get("validated") not in [True, False]
-       ):
-        return {"status": "error", "message": f"malformed request: {form}"}
-
-    # Check permissions
-    if not (user.is_admin or user.is_manager):
-        return  {"status": "error", "message": "forbidden"}
-
-    # check target user
-    try:
-        with DATABASE.atomic():
-            target_user = User.get(form["id"])
-    except DoesNotExist:
-        return {"status": "error", "message": "unknown user"}
-
-    # update target user data if needed
-    updated = False
-    for field in ["email", "username", "validated"]:
-        if getattr(target_user, field) != form[field]:
-            setattr(target_user, field, form[field])
-            updated = True
-
-    if updated:
-        with DATABASE.atomic():
-            target_user.save()
-        return  {"status": "updated"}
-
-    return {"status": "unchanged"}
-
-def update_role(operation, user_uuid=None):
-    """
-    Takes a role change description `operation`, and returns a status message.
-
-    The input data should be formatted like:
-        {action: add | remove,
-         role: owner | manager | specialist,
-         user: <id>,
-         herd | genebank: <id>
-        }
-
-    The return value will be formatted like:
-        JSON: {
-            status: 'unchanged' | 'updated' | 'created' | 'success' | 'error',
-            message?: string,
-            data?: any
-        }
-    """
-    user = fetch_user_info(user_uuid)
-    if user is None:
-        return {"status": "error", "message": "not logged in"}
-
-    # Check data
-    valid = True
-    message = "malformed request"
-    if (not isinstance(operation, dict)
-            or operation.get("action", {}) not in ["add", "remove"]
-            or (not isinstance(operation.get("user", ""), int)
-                and not operation.get("user", "").isdigit()
-                )
-       ):
-        valid = False
-    elif (operation.get("role", {}) not in ["owner", "manager", "specialist"]
-          or (operation["role"] in ["manager", "specialist"]
-              and not operation.get("genebank")
-             )
-          or (operation["role"] in ["owner"] and not operation.get("herd"))
-         ):
-        valid = False
-
-    # Check permissions
-    permitted = True
-    if user.is_manager:
-        genebank = operation.get("genebank", None)
-        if genebank is None:
-            try:
-                with DATABASE.atomic():
-                    herd = Herd.get(operation["herd"])
-                genebank = herd.as_dict()["genebank"]
-            except DoesNotExist:
-                permitted = False  # unknown herd
-                message = "unknown herd"
-        if not (user.is_admin or genebank in user.is_manager):
-            permitted = False
-            message = "forbidden"
-    elif not user.is_admin:
-        permitted = False
-        message = "forbidden"
-
-    if not valid or not permitted:
-        return {"status": "error", "message": message}
-
-    # check target user
-    try:
-        with DATABASE.atomic():
-            target_user = User.get(int(operation["user"]))
-    except DoesNotExist:
-        return {"status": "error", "message": "unknown user"}
-
-    # update roles if needed
-    target = "herd" if operation["role"] == "owner" else "genebank"
-    has_role = target_user.has_role(operation["role"], operation[target])
-    updated = False
-
-    with DATABASE.atomic():
-        if has_role and operation["action"] == "remove":
-            target_user.remove_role(operation["role"], operation[target])
-            updated = True
-        elif not has_role and operation["action"] == "add":
-            target_user.add_role(operation["role"], operation[target])
-            updated = True
-    return {"status": "updated" if updated else "unchanged"}
 
 def get_individuals(genebank_id, user_uuid=None):
     """
