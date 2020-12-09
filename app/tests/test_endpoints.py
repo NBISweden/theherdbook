@@ -10,6 +10,8 @@ Unit tests for the herdbook endpoints.
 import unittest
 import requests
 
+from datetime import datetime
+
 import flask
 
 #pylint: disable=import-error
@@ -112,6 +114,29 @@ class TestEndpoints(FlaskTest):
                     self.app.get("/api/manage/users").get_json(), {"users": None}
                 )
 
+    def test_register_breeding(self):
+        """
+        Checks that `herdbook.register_breeding` works as intended.
+
+        This will only do a subset of the checks that is done for the
+        data_access.register_breeding function, as to avoid too much redundancy.
+        """
+
+        valid_form = {'father': self.individuals[0].number,
+                      'mother': self.individuals[1].number,
+                      'date': datetime.today().strftime('%Y-%m-%d')}
+
+        # not logged in
+        self.assertEqual(self.app.get("/api/breeding").get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.post("/api/breeding", json=valid_form)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), {'status': 'success'})
 
 
 if __name__ == "__main__":

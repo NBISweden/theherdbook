@@ -167,6 +167,24 @@ def manage_herd():
     return jsonify(status)
 
 
+@APP.route("/api/breeding", methods=["POST"])
+@login_required
+def register_breeding():
+    """
+    Used to insert and update breeding events in the database.
+    Returns a message formatted like:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string
+        }
+    """
+    form = request.json
+    status = {"status": "error", "message": "Unknown request"}
+    if request.method == "POST":
+        status = da.register_breeding(form, session.get("user_id", None))
+    return jsonify(status)
+
+
 @APP.route("/api/colors")
 @login_required
 def colors():
