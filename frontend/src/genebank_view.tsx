@@ -50,9 +50,9 @@ export function GenebankView({genebank}: {genebank: Genebank}) {
         ? <FilterTable
             individuals={individuals}
             title={`Individer i ${genebank.name}`}
-            filters={[{field: 'alive', label: 'Dölj döda'},
-                      {field: 'herd_active', label: 'Dölj inaktiva besättningar', active: true},
-                      {field: 'active', label: 'Dölj inaktiva djur'}]}
+            filters={[{field: 'alive', label: 'Visa döda'},
+                      {field: 'herd_active', label: 'Visa inaktiva besättningar'},
+                      {field: 'active', label: 'Visa inaktiva djur'}]}
             />
         : <>
           <div className={styles.loading}>
