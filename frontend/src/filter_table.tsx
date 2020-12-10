@@ -283,7 +283,7 @@ export function FilterTable({individuals, title = '', filters = [],
     }
     return individuals.filter((i: Individual) => {
       for (let filter of currentFilters) {
-        if (filter.active && !i[filter.field]) {
+        if (!filter.active && !i[filter.field]) {
           return false;
         }
       }
