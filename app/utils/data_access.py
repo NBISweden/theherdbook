@@ -130,12 +130,13 @@ def authenticate_with_credentials(method, ident):
         return None
     try:
         with DATABASE.atomic():
-            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
-        if username:
-            user_info = User.select().where((User.username == username)).get()
+            authenticator = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
+        if authenticator:
+            user_info = User.select().where((User.id == authenticator.user)).get()
 
-            logging.info("Login %s authenticated by %s", username, method)
-            return user_info
+            if user_info:
+                logging.info("Login %s authenticated by %s", user_info.username, method)
+                return user_info
     except DoesNotExist:
         pass
 
@@ -151,7 +152,7 @@ def link_account(username, method, ident):
         return None
     try:
         with DATABASE.atomic():
-            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.authdata == ident)).get()
+            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
         if username:
             user_info = User.select().where((User.username == username)).get()
 

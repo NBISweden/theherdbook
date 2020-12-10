@@ -10,6 +10,9 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
+import { useMessageContext } from '@app/message_context';
+
+import {post, get} from './communication'
 import {useUserContext} from '@app/user_context'
 import { inputVariant } from '@app/data_context_global';
 
@@ -30,6 +33,8 @@ export function Login() {
   const {user, login} = useUserContext()
   const [username, set_username] = useState('')
   const [password, set_password] = useState('')
+  const {userMessage} = useMessageContext()
+
   const styles = useStyles()
   const history = useHistory()
   const location = useLocation();
@@ -57,8 +62,96 @@ export function Login() {
     }
   }
 
-  return user === null
-    ? <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
+  if (user != null) {
+      return <div className={styles.loading}>
+        <CircularProgress />
+      </div>
+  }
+
+  function waitForExternalLogin(w) {
+  // Wait for an external login window
+    try {
+      if (w.document.readyState == "complete") { 
+    
+        var returnedUser = w.document.body.innerText.trim()
+        if (returnedUser == "null") {
+          userMessage("Identity not linked to any known user", "error") 
+        } else {
+          userMessage("Logged in as "+returnedUser, "success")
+          document.location = '/'
+        }
+
+        w.close()
+        return
+      }
+    }
+    catch (err) {
+    } 
+    setTimeout( () => onTimeout(w), 100)
+  }
+  
+  function authenticateExternal(service) {
+   // Authenticate with external service service
+    const resp =fetch("/api/login/"+service, {
+      body: "",
+      method: 'POST',
+      credentials: 'same-origin',
+      redirect: 'manual',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+    }
+    );
+  
+    resp.then(
+      response => {
+        if (response.ok) {
+          response.json().then(
+            data => { if (data == null) { 
+              userMessage("Identity not linked to any known user", "error") 
+            }          else {
+              userMessage("Logged in as "+data['username'], "success")
+              document.location = '/'
+            }}
+            ) }
+          else {
+            var w = window.open('/api/login/'+service +"?redirect=true", "_blank")
+            setTimeout( () => waitForExternalLogin(w), 100)
+          }}
+      ,
+      err => {
+        userMessage("Unexpected error", "error")
+      }
+    )
+  }
+
+   async function available_authenticators(l) {
+    await post('/api/login/available').then(
+      data => { 
+        l.setState((a,b) => {
+          return {'authenticators':data}
+        })
+       },
+      error => {
+      })
+  }
+
+  class loginDialog extends React.Component {
+
+    constructor(props) {
+      super(props);
+  
+      var authenticators = []
+      authenticators.push('hej')
+      this.state = { authenticators }
+    }
+
+    componentDidMount() {
+  }
+
+  render() {
+        return <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
         <DialogTitle>Logga in</DialogTitle>
         <form onSubmit={submitLogin} onKeyDown={keydown}>
           <DialogContent>
@@ -87,6 +180,7 @@ export function Login() {
               onChange={e => set_password(e.target.value)}
               fullWidth
             />
+
           </DialogContent>
           <DialogActions>
             <Button onClick={close} color="primary">
@@ -95,11 +189,24 @@ export function Login() {
             <Button onClick={submitLogin} color="primary" aria-label="Logga in">
               Logga in
             </Button>
+            </DialogActions>
+            <DialogActions>
+            {                
+              this.state.authenticators.map((item) => (
+                <Button onClick={ () => authenticateExternal(item) } key={item} name={item}>
+                {item}
+                </Button>
+            ))
+          }
           </DialogActions>
         </form>
       </Dialog>
-    : <div className={styles.loading}>
-        <CircularProgress />
-      </div>
+     }
+    }
+
+    var l = new loginDialog()
+    available_authenticators(l)
+
+return l
 
 }

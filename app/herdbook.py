@@ -264,43 +264,67 @@ def login_handler():
         login_user(user)
     return get_user()
 
-@APP.route("/api/login/<service>", methods=["GET","POST"])
+@APP.route("/api/login/<string:service>", methods=["GET","POST"])
 def externalLoginHandler(service):
     """
-    Helper service to do external authentication.
+    Do an external authentication. The special sercvice 
+    available responds with a list of the enabled services.
     """
+
+    if service == 'available':
+        return jsonify(utils.external_auth.available_methods())
+    
     if not session.get("link_account") and current_user.is_authenticated:
         return get_user()
 
-    if not utils.external_auth.authorized(service):
+    if not utils.external_auth.authorized(APP, service):
         return redirect(url_for("%s.login" % service))
     
     if session.get("link_account"):
         return redirect("/api/link/%s" % service)
 
-    persistent_id = utils.external_auth.get_persistent(service)
-    if da.authenticate_with_credentials(service, persistent_id):
+    if request.args.get("redirect"):
+        return redirect(url_for("%s.login" % service))
+
+    persistent_id = utils.external_auth.get_persistent(APP, service)
+
+    user = da.authenticate_with_credentials(service, persistent_id)
+
+    if user:
+        APP.logger.info("Logging in user %s (#%d) by persistent id %s for service %s" % 
+                        (user.username, user.id, persistent_id, service))
+        session["user_id"] = user.uuid
+        session.modified = True
         login_user(user)
+    else:
+        APP.logger.info("No user linked to persistent id %s for service %s" % 
+                        (persistent_id, service))
+
     return get_user()
 
-@APP.route("/api/link/<service>", methods=["GET","POST"])
+@APP.route("/api/link/<string:service>", methods=["GET","POST"])
 def externalLinkHandler(service):
     """
     Link user to selected account. Should be logged in to that service.
     """
     # Something odd
-    if current_user.is_authenticated:
-        return None
+
+    if service == "reset":
+        del session['link_account']
+        return "reset"
+
+    if not current_user.is_authenticated:
+        return 'null'
 
     if not session.get("link_account"):
         session["link_account"] = True
         return redirect("/api/login/%s" % service)
     
-    if not utils.external_auth.authorized(service):
+    if not utils.external_auth.authorized(APP,service):
         # Still not authorized? Go back to auth
         return redirect(url_for("/api/link/%s" % service))
     
-    persistent = utils.external_auth.get_persistent(service)
+    persistent = utils.external_auth.get_persistent(APP,service)
     return da.link_account(current_user, service, persistent)
 
 

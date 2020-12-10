@@ -2,6 +2,7 @@
 
 import flask_dance.contrib.twitter
 import flask_dance.contrib.google
+import oauthlib
 
 import configparser
 import os
@@ -75,9 +76,8 @@ def setup_google(app, c):
     active.append('google')
 
 def google_authorized():
-    return flask_dance.contrib.google.google.authorized
-
-
+        return flask_dance.contrib.google.google.authorized
+    
 def google_persistent():
     userr = flask_dance.contrib.google.google.get("/oauth2/v2/userinfo")
     if not userr.ok or len(userr.json()) == 0:
@@ -89,8 +89,16 @@ pers = {'twitter': twitter_persistent,
 auth = {'twitter': twitter_authorized,
         'google': google_authorized}
 
-def authorized(method):
+def authorized(app, method):
+    try:
+       t = app.blueprints[method].token
+       if (('expires_in' in t and t['expires_in'] < 0) or 
+           ('expires_at') in t and t['expires_at']>time.time() ):
+          del app.blueprints[method].token  
+    except:
+       pass
+
     return auth[method]()
 
-def get_persistent(method):
+def get_persistent(app, method):
     return pers[method]()
