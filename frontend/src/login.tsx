@@ -1,9 +1,7 @@
 import React, {useState} from 'react'
 import {useHistory, useLocation} from 'react-router-dom'
 
-import { CircularProgress, makeStyles } from '@material-ui/core';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
+import { CircularProgress, makeStyles, Button, Container, TextField } from '@material-ui/core';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -91,8 +89,8 @@ export function Login() {
   }
   
   function authenticateExternal(service) {
-   // Authenticate with external service service
-    const resp =fetch("/api/login/"+service, {
+   // We are not doing account linking
+    fetch("/api/link/reset", {
       body: "",
       method: 'POST',
       credentials: 'same-origin',
@@ -102,9 +100,21 @@ export function Login() {
         'Content-Type': 'application/json'
       },
     }
-    );
-  
-    resp.then(
+    ).then( 
+      x => {
+   // Authenticate with external service service
+        
+      return fetch("/api/login/"+service, {
+      body: "",
+      method: 'POST',
+      credentials: 'same-origin',
+      redirect: 'manual',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+    }
+    )}).then(
       response => {
         if (response.ok) {
           response.json().then(
@@ -191,13 +201,14 @@ export function Login() {
             </Button>
             </DialogActions>
             <DialogActions>
+            <Container>              
             {                
               this.state.authenticators.map((item) => (
                 <Button onClick={ () => authenticateExternal(item) } key={item} name={item}>
                 {item}
                 </Button>
             ))
-          }
+          }</Container>
           </DialogActions>
         </form>
       </Dialog>

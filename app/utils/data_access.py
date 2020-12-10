@@ -168,27 +168,70 @@ def authenticate_with_credentials(method, ident):
     logging.info("Failed login attempt for service %s persistent id %s", method, ident)
     return None
 
-def link_account(username, method, ident):
+def link_account(user, method, ident):
     """
     Registers an account linked to an external authentication service. Returns 
     something that evaluates as True on success.
     """
-    if not method or not ident:
+    if not method or not ident or not user:
+        return None
+
+    # Allows at most one identity for each method to be linked to this account.
+    unlink_account(user, method)
+
+    try:
+        authenticator = Authenticators(
+            user = user.id,
+            auth = method,
+            auth_data = ident)
+        with DATABASE.atomic():
+            authenticator.save()
+        logging.info("Linked %s to %s persistent id %s", user.username, method, ident)
+        return user
+    except Exception as e:
+         logging.info("Error (%s) while linking %s to %s persistent id %s", e, 
+                        user.username, method, ident)
+
+    logging.info("Failed link attempt for user %s service %s persistent id %s", user.username, method, ident)
+    return None
+
+def unlink_account(user, method):
+    """
+    Removes any linked identities for method method.
+    """
+    if not method or not user:
         return None
     try:
         with DATABASE.atomic():
-            username = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
-        if username:
-            user_info = User.select().where((User.username == username)).get()
+            Authenticators.delete().where(
+                            (Authenticators.user == user.id) &
+                            (Authenticators.auth == method)).execute()
 
-            logging.info("Login %s authenticated by %s", username, method)
-            return user_info
+        return True
     except DoesNotExist:
-        pass
+        return
 
-    logging.info("Failed login attempt for service %s persistent id %s", method, ident)
+    logging.info("Failed to unlink idenities for service %s user %d", method, user.id)
     return None
 
+def linked_accounts(user):
+    """
+    Returns any linked methods for the given account.
+    """
+    if not user:
+        return None
+    try:
+        with DATABASE.atomic():
+            auths = Authenticators.select().where(
+                            (Authenticators.user == user.id) &
+                            (Authenticators.auth != 'password'))
+
+        return [x.auth for x in auths]
+    except DoesNotExist:
+        return None
+
+    logging.info("Failed to list linked idenities for user %d", user.id)
+    return None
 
 def fetch_user_info(user_id):
     """

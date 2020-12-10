@@ -14,6 +14,8 @@ import {Login} from '@app/login'
 import {Genebanks} from '@app/genebanks'
 import {HerdView} from '@app/herd_view'
 import {Manage} from '@app/manage'
+import {Settings} from '@app/settings'
+
 import { Owner } from '@app/owner';
 import {IndividualPedigree} from '@app/individual_pedigree'
 import { IndividualView } from '@app/individual_view'
@@ -71,13 +73,21 @@ export function Navigation() {
       visible: is_owner,
       icon: <GroupIcon />
     },
-    {
+     {
       label: "Administrera",
       path: "/manage",
       component: <Restricted><Manage/></Restricted>,
       visible: is_admin,
       icon: <GroupIcon />
     },
+    {
+      label: "Inställningar",
+      path: "/settings",
+      component: <Restricted><Settings/></Restricted>,
+      visible: is_logged_in,
+      icon: <GroupIcon />
+    },
+
     {
       label: "Logga in",
       path: "/login",

@@ -305,7 +305,7 @@ def externalLoginHandler(service):
 @APP.route("/api/link/<string:service>", methods=["GET","POST"])
 def externalLinkHandler(service):
     """
-    Link user to selected account. Should be logged in to that service.
+    Link user to selected account. Will be logged in to that service if not.
     """
     # Something odd
 
@@ -325,7 +325,40 @@ def externalLinkHandler(service):
         return redirect(url_for("/api/link/%s" % service))
     
     persistent = utils.external_auth.get_persistent(APP,service)
-    return da.link_account(current_user, service, persistent)
+    linked = da.link_account(current_user, service, persistent)
+
+    if not linked:
+        return "null"
+    return "%d" % current_user.id 
+
+@APP.route("/api/linked", methods=["GET","POST"])
+def externalLinkedAccountsHandler():
+    """
+    Return linked services for logged in user.
+    """
+    # Something odd
+
+    if not current_user.is_authenticated:
+        return 'null'
+
+    linked = da.linked_accounts(current_user)
+
+    if not linked:
+        return "null"
+    
+    return jsonify(linked) 
+
+@APP.route("/api/unlink/<string:service>", methods=["GET","POST"])
+def externalUnlinkHandler(service):
+    """
+    Link user to selected account. Should be logged in to that service.
+    """
+    # Something odd
+
+    if not current_user.is_authenticated:
+        return 'null'
+
+    return da.unlink_account(current_user, service)
 
 
 @APP.route("/api/logout")
