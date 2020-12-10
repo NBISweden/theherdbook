@@ -5,7 +5,7 @@ import { PedigreeNetwork } from "@app/pedigree_plot"
 import { useDataContext } from '@app/data_context';
 import { calcPedigree } from '@app/pedigree';
 import { TextField } from '@material-ui/core';
-import { inputVariant } from './data_context_global';
+import { inputVariant } from '@app/data_context_global';
 
 /**
  * Shows the information of a given individual and the pedigree graph built using the PedigreeNetwork component

@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import {useUserContext} from './user_context'
+import {useUserContext} from '@app/user_context'
 
 /** Component to write some info about the logged in user */
 export function UserInfo() {

@@ -7,7 +7,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper';
 import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
-import { useDataContext } from './data_context'
+import { useDataContext } from '@app/data_context'
 import { Genebank, NameID, herdLabel, userLabel, OptionType, inputVariant,
         LimitedHerd } from '@app/data_context_global';
 import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';

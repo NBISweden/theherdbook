@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { useUserContext } from '@app/user_context'
 import { Button, Paper } from '@material-ui/core'
-import { HerdView } from './herd_view';
+import { HerdView } from '@app/herd_view';
 
 const useStyles = makeStyles({
   container: {

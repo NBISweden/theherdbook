@@ -7,8 +7,8 @@ import { unstable_batchedUpdates } from 'react-dom'
 import { TextField, Checkbox, FormControlLabel,
          Button, TableContainer, Paper, Table, TableBody, TableRow, TableCell, TableHead } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { get, post, update } from './communication';
-import { useDataContext } from './data_context'
+import { get, post, update } from '@app/communication';
+import { useDataContext } from '@app/data_context'
 import { Herd, Genebank, herdLabel, ServerMessage, inputVariant, OptionType } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
 import { useMessageContext } from '@app/message_context';

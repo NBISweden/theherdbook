@@ -12,7 +12,7 @@ import { Individual, herdLabel, DateValue, individualLabel, asLocale } from '@ap
 import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 import { useUserContext } from '@app/user_context'
-import { IndividualEdit } from './individual_edit'
+import { IndividualEdit } from '@app/individual_edit'
 
 const useStyles = makeStyles({
   body: {
