@@ -185,6 +185,24 @@ def register_breeding():
     return jsonify(status)
 
 
+@APP.route("/api/birth", methods=["POST"])
+@login_required
+def register_birth():
+    """
+    Used to update breeding events in the database with birth information.
+    Returns a message formatted like:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string
+        }
+    """
+    form = request.json
+    status = {"status": "error", "message": "Unknown request"}
+    if request.method == "POST":
+        status = da.register_birth(form, session.get("user_id", None))
+    return jsonify(status)
+
+
 @APP.route("/api/colors")
 @login_required
 def colors():
