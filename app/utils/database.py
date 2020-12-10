@@ -614,7 +614,6 @@ class User(BaseModel, UserMixin):
     username = TextField(unique=True, null=True)
     email = TextField()
     uuid = UUIDField()
-    password_hash = CharField(128)
     validated = BooleanField(default=False)
     _privileges = TextField(column_name="privileges", default="[]")
 

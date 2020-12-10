@@ -87,16 +87,39 @@ def register_user(email, password, username=None, validated=False, privileges=No
     """
     if privileges is None:
         privileges = []
-    user = User(
-        email=email,
-        uuid=uuid.uuid4().hex,
-        password_hash=generate_password_hash(password),
-        username=username,
-        validated=validated,
-        privileges=privileges,
-    )
+
+    # Don't create a new user if the email exists already
+    try:
+        user = User.select().where((User.email == email)).get()
+    except DoesNotExist:
+        # Create user
+        user = User(
+            email=email,
+            uuid=uuid.uuid4().hex,
+            username=username,
+            validated=validated,
+            privileges=privileges,
+        )
+        with DATABASE.atomic():
+            user.save()
+
+    # Update to make sure to get the correct id
+    user = User.select().where((User.email == email)).get()
+
+    try:
+        # If we have a password authenticator already, update it instead of creating a new.
+        authenticator = Authenticators.select().where(
+                                               (Authenticators.user == user.id) &
+                                              (Authenticators.auth == 'password')).get()
+        authenticator.auth_data = generate_password_hash(password)
+    except DoesNotExist:
+        authenticator = Authenticators(
+            user = user.id,
+            auth = 'password',
+            auth_data = generate_password_hash(password))
     with DATABASE.atomic():
-        user.save()
+        authenticator.save()
+
     return user
 
 def authenticate_user(name, password):
@@ -110,7 +133,9 @@ def authenticate_user(name, password):
     try:
         with DATABASE.atomic():
             user_info = User.select().where((User.email == name) | (User.username == name)).get()
-        if check_password_hash(user_info.password_hash, password):
+            if user_info:
+                authenticator = Authenticators.select().where((Authenticators.auth == 'password') & (Authenticators.user == user_info.id)).get()
+        if check_password_hash(authenticator.auth_data, password):
             logging.info("Login from %s", name)
             return user_info
     except DoesNotExist:
