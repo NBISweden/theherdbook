@@ -74,7 +74,7 @@ class TestEndpoints(FlaskTest):
                 context.post(
                     "/api/login", json={"username": test_user.email, "password": "pass"}
                 )
-                self.assertEqual(flask.session["user_id"].hex, test_user.uuid)
+                self.assertEqual(flask.session["user_id"].hex, test_user.uuid.hex)
                 self.assertEqual(self.app.get("/api/user").get_json(), user_data)
                 context.get("/api/logout")
                 self.assertEqual(self.app.get("/api/user").get_json(), None)
