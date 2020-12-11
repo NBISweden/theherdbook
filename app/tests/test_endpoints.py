@@ -15,6 +15,7 @@ import requests
 import flask
 
 #pylint: disable=import-error
+import utils.database as db
 from herdbook import APP
 from tests.database_test import DatabaseTest
 
@@ -113,6 +114,29 @@ class TestEndpoints(FlaskTest):
                 self.assertEqual(
                     self.app.get("/api/manage/users").get_json(), {"users": None}
                 )
+
+    def test_breeding_list(self):
+        """
+        Checks that `herdbook.breeding_list` returns the intended information.
+        """
+
+        # not logged in
+        self.assertEqual(self.app.get("/api/breeding").get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.get("/api/breeding/%s" % self.herds[0].herd)
+
+            breeding = db.Breeding.get(self.breeding[-1].id)
+            expected = {'breedings': [
+                breeding.as_dict()
+            ]}
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), expected)
+
 
     def test_register_breeding(self):
         """

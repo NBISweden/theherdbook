@@ -393,6 +393,26 @@ class TestDataAccess(DatabaseTest):
         self.assertListEqual(sorted(value, key=lambda x: x['id']),
                              sorted(expected, key=lambda x: x['id']))
 
+    def test_get_breeding_events(self):
+        """
+        Checks that `utils.data_access.get_breeding_events` return the correct
+        information.
+        """
+        self.assertEqual(da.get_breeding_events(self.herds[0].herd,
+                                                'invalid-uuid'), [])
+        self.assertEqual(da.get_breeding_events('does_not_exist',
+                                                self.admin.uuid), [])
+        # lacking permissions
+        self.assertEqual(da.get_breeding_events(self.herds[2].herd,
+                                                self.specialist.uuid), [])
+
+        breeding = db.Breeding.get(self.breeding[-1].id)
+        expected = [breeding.as_dict()]
+        # success
+        self.assertEqual(da.get_breeding_events(self.herds[0].herd,
+                                                self.admin.uuid),
+                         expected)
+
     def test_register_breeding(self):
         """
         Checks that `utils.data_access.register_breeding` works as intended.

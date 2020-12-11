@@ -171,6 +171,18 @@ def manage_herd():
     return jsonify(status)
 
 
+@APP.route("/api/breeding/<h_id>")
+@login_required
+def breeding_list(h_id):
+    """
+    Returns a list of all breeding events connected to a given herd.
+    A breeding event is considered linked to a herd if any of the parents are
+    currently in the herd.
+    """
+    breedings = da.get_breeding_events(h_id, session.get("user_id", None))
+    return jsonify(breedings=breedings)
+
+
 @APP.route("/api/breeding", methods=["POST"])
 @login_required
 def register_breeding():

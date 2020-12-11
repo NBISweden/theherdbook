@@ -839,6 +839,32 @@ def get_all_individuals():
 
 # Breeding and birth functions
 
+def get_breeding_events(herd_id, user_uuid):
+    """
+    Returns a list of all breeding events where at least one of the parents is
+    in the herd given by `herd_id`.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return []
+
+    try:
+        herd = Herd.get(Herd.herd == herd_id)
+
+        if herd.genebank.id not in user.accessible_genebanks:
+            return []
+
+        parents = [i.id for i in herd.individuals]
+        with DATABASE.atomic():
+            query = Breeding.select().where((Breeding.father_id << parents) |
+                                            (Breeding.mother_id << parents))
+
+            return [b.as_dict() for b in query]
+    except DoesNotExist:
+        logging.warning("Unknown herd %s", herd_id)
+
+    return []
+
 def register_breeding(form, user_uuid):
     """
     Registers a breeding event between two rabbits, defined by `form`, into the

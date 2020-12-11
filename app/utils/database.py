@@ -366,6 +366,17 @@ class Breeding(BaseModel):
     birth_notes = TextField(null=True)
     litter_size = IntegerField(null=True)
 
+    def as_dict(self):
+        """
+        Returns the objects key/value pair as a dictionary, using parent numbers
+        instead of database id's.
+        """
+        data = super().as_dict()
+        #pylint: disable=no-member
+        data['mother'] = self.mother.number
+        data['father'] = self.father.number
+        return data
+
     class Meta:  # pylint: disable=too-few-public-methods
         """
         Add a unique index to mother+father+birth_date
