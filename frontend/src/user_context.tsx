@@ -64,7 +64,6 @@ export function WithUserContext(props: {children: React.ReactNode}) {
   async function handleLogin(promise: Promise<User | null>): Promise<Result> {
     return await promise.then(
       data => {
-        console.log(data)
         setUser(data ?? null)
         return data ? 'logged_in' : 'logged_out'
       },
