@@ -4,9 +4,9 @@ enableFetchMocks()
 import * as React from 'react'
 import { render, fireEvent, waitFor, screen, act } from '@testing-library/react'
 
-import {WithUserContext} from './user_context'
-import {UserInfo} from './user_info'
-import {Login} from './login'
+import {WithUserContext} from '@app/user_context'
+import {UserInfo} from '@app/user_info'
+import {Login} from '@app/login'
 
 
 test('login information set at mount (logged in)', async () => {

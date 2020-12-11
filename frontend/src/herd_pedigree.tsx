@@ -1,7 +1,7 @@
 
 import React from 'react'
-import { get } from './communication';
-import { useDataContext } from './data_context';
+import { get } from '@app/communication';
+import { useDataContext } from '@app/data_context';
 import { herdPedigree } from '@app/pedigree';
 import { PedigreeNetwork } from "@app/pedigree_plot"
 import Table from '@material-ui/core/Table';

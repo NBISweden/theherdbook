@@ -14,7 +14,7 @@ import { Autocomplete } from '@material-ui/lab';
 import { asLocale, Individual, inputVariant, OptionType
         } from '@app/data_context_global';
 import { IndividualView } from '@app/individual_view';
-import { HerdView } from './herd_view'
+import { HerdView } from '@app/herd_view'
 import { useMessageContext } from '@app/message_context';
 
 // Define styles

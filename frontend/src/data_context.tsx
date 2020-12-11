@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import {get} from './communication'
+import {get} from '@app/communication'
 
 import {Color, DataContext, Genebank, NameID} from "@app/data_context_global"
 

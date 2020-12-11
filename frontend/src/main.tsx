@@ -5,10 +5,10 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import {makeStyles} from '@material-ui/core/styles';
 import {BrowserRouter} from 'react-router-dom'
 
-import {WithUserContext} from './user_context'
-import {WithDataContext} from './data_context'
-import {WithMessageContext} from './message_context'
-import {Navigation} from './navigation'
+import {WithUserContext} from '@app/user_context'
+import {WithDataContext} from '@app/data_context'
+import {WithMessageContext} from '@app/message_context'
+import {Navigation} from '@app/navigation'
 
 const CSS = sc.createGlobalStyle`
   html, #root {

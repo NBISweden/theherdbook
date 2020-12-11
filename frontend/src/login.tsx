@@ -11,7 +11,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 import {useUserContext} from '@app/user_context'
-import { inputVariant } from './data_context_global';
+import { inputVariant } from '@app/data_context_global';
 
 const useStyles = makeStyles({
   loading: {

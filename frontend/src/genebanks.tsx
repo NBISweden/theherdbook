@@ -4,7 +4,7 @@
  * function.
  */
 import React, { useState } from 'react'
-import { useDataContext } from './data_context'
+import { useDataContext } from '@app/data_context'
 
 import { Genebank } from '@app/data_context_global';
 import { Button, Paper, makeStyles } from '@material-ui/core';

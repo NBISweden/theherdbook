@@ -1,7 +1,7 @@
 import * as React from 'react'
 
-import {post, get} from './communication'
-import {useDataContext} from './data_context'
+import {post, get} from '@app/communication'
+import {useDataContext} from '@app/data_context'
 
 /** The currently logged in user, if any */
 export interface User {
