@@ -31,6 +31,7 @@ export function Login() {
   const {user, login} = useUserContext()
   const [username, set_username] = useState('')
   const [password, set_password] = useState('')
+  const [authenticators, setAuthenticators] = useState([])
   const {userMessage} = useMessageContext()
 
   const styles = useStyles()
@@ -48,10 +49,14 @@ export function Login() {
   }
 
   React.useEffect(() => {
-    if (user) {
+       if (user) {
       history.replace(from)
     }
   }, [user])
+  
+  React.useEffect(() => {
+    getAvailableAuthenticators()
+  }, [])
 
   const keydown = (e: React.KeyboardEvent<any>) => {
     // Cannot get TextField to trigger onSubmit so listen for keydown instead
@@ -85,7 +90,7 @@ export function Login() {
     }
     catch (err) {
     } 
-    setTimeout( () => onTimeout(w), 100)
+    setTimeout( () => waitForExternalLogin(w), 100)
   }
   
   function authenticateExternal(service) {
@@ -126,8 +131,8 @@ export function Login() {
             }}
             ) }
           else {
-            var w = window.open('/api/login/'+service +"?redirect=true", "_blank")
-            setTimeout( () => waitForExternalLogin(w), 100)
+            var w = window.open('/api/login/'+service, "_blank")
+            setTimeout( () => waitForExternalLogin(w), 20)
           }}
       ,
       err => {
@@ -136,31 +141,19 @@ export function Login() {
     )
   }
 
-   async function available_authenticators(l) {
+   async function getAvailableAuthenticators(l) {
     await post('/api/login/available').then(
       data => { 
-        l.setState((a,b) => {
-          return {'authenticators':data}
-        })
-       },
+        if (!data) {
+          data = []
+        }
+        setAuthenticators(data)
+      },
       error => {
       })
   }
 
-  class loginDialog extends React.Component {
 
-    constructor(props) {
-      super(props);
-  
-      var authenticators = []
-      authenticators.push('hej')
-      this.state = { authenticators }
-    }
-
-    componentDidMount() {
-  }
-
-  render() {
         return <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
         <DialogTitle>Logga in</DialogTitle>
         <form onSubmit={submitLogin} onKeyDown={keydown}>
@@ -203,7 +196,7 @@ export function Login() {
             <DialogActions>
             <Container>              
             {                
-              this.state.authenticators.map((item) => (
+              authenticators.map((item) => (
                 <Button onClick={ () => authenticateExternal(item) } key={item} name={item}>
                 {item}
                 </Button>
@@ -213,11 +206,3 @@ export function Login() {
         </form>
       </Dialog>
      }
-    }
-
-    var l = new loginDialog()
-    available_authenticators(l)
-
-return l
-
-}

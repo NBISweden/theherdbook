@@ -280,11 +280,9 @@ def externalLoginHandler(service):
     if not utils.external_auth.authorized(APP, service):
         return redirect(url_for("%s.login" % service))
     
+    # Hack to reuse the same external handler for both linking and login
     if session.get("link_account"):
         return redirect("/api/link/%s" % service)
-
-    if request.args.get("redirect"):
-        return redirect(url_for("%s.login" % service))
 
     persistent_id = utils.external_auth.get_persistent(APP, service)
 
@@ -299,6 +297,7 @@ def externalLoginHandler(service):
     else:
         APP.logger.info("No user linked to persistent id %s for service %s" % 
                         (persistent_id, service))
+        # FIXME: Return error code?
 
     return get_user()
 
@@ -310,25 +309,25 @@ def externalLinkHandler(service):
     # Something odd
 
     if service == "reset":
-        del session['link_account']
+        if session.get("link_account"):
+            del session['link_account']
         return "reset"
 
     if not current_user.is_authenticated:
-        return 'null'
+        return 'null' # FIXME: error code instead?
 
-    if not session.get("link_account"):
+    if not utils.external_auth.authorized(APP,service):
+        # Not authorized? Go back to login
         session["link_account"] = True
         return redirect("/api/login/%s" % service)
-    
-    if not utils.external_auth.authorized(APP,service):
-        # Still not authorized? Go back to auth
-        return redirect(url_for("/api/link/%s" % service))
-    
+        
     persistent = utils.external_auth.get_persistent(APP,service)
     linked = da.link_account(current_user, service, persistent)
 
     if not linked:
-        return "null"
+        # Not linked
+        return "null" # FIXME: error code instead?
+    
     return "%d" % current_user.id 
 
 @APP.route("/api/linked", methods=["GET","POST"])
@@ -339,12 +338,12 @@ def externalLinkedAccountsHandler():
     # Something odd
 
     if not current_user.is_authenticated:
-        return 'null'
+        return 'null' # FIXME: Return error code instead?
 
     linked = da.linked_accounts(current_user)
 
     if not linked:
-        return "null"
+        return "null" # FIXME: error code instead?
     
     return jsonify(linked) 
 
@@ -356,9 +355,12 @@ def externalUnlinkHandler(service):
     # Something odd
 
     if not current_user.is_authenticated:
-        return 'null'
+        return 'null' # FIXME: 403 instead?
 
-    return da.unlink_account(current_user, service)
+    unlinked = da.unlink_account(current_user, service)
+    if not unlinked:
+        return "null"  # FIXME: Error code instead?
+    return "1"
 
 
 @APP.route("/api/logout")

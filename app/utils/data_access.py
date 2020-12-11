@@ -180,6 +180,17 @@ def link_account(user, method, ident):
     unlink_account(user, method)
 
     try:
+        with DATABASE.atomic():
+            authenticator = Authenticators.select().where((Authenticators.auth == method) & 
+                                                           (Authenticators.auth_data == ident)).get()
+        if authenticator:
+            # Someone else has this identity registered, do not allow the same external identity
+            # for multiple users
+            return None
+    except DoesNotExist:
+        pass
+
+    try:
         authenticator = Authenticators(
             user = user.id,
             auth = method,
@@ -197,7 +208,8 @@ def link_account(user, method, ident):
 
 def unlink_account(user, method):
     """
-    Removes any linked identities for method method.
+    Removes any linked identities for method method. Return somethings that
+    evaluates to false on failure.
     """
     if not method or not user:
         return None

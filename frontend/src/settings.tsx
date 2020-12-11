@@ -84,7 +84,7 @@ const classes = styles;
       }
       catch (err) {
       } 
-      setTimeout( () => onTimeout(w), 100)
+      setTimeout( () => waitForExternalLogin(w), 50)
     }
     
     async function linkExternal(service) {
@@ -108,7 +108,7 @@ const classes = styles;
               data => { if (data == null) { 
                 userMessage("Could not link identity", "error") 
               }          else {
-                userMessage("Logged in as "+data['username'], "success")
+                userMessage("Identity linked", "success")
                 updateLinkedAuthenticators()
               }}
               ) }
@@ -149,7 +149,7 @@ const classes = styles;
   useEffect( () => {
     updateAvailableAuthenticators()
     updateLinkedAuthenticators()
-    })
+    }, [])
 
 
   return <>
