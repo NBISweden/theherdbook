@@ -7,8 +7,6 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles({
   main: {
-    minHeight: 'calc(100vh - 76px)',
-    height: '100%',
     padding: '.25em 1em .5em 1em',
     display: 'flex',
     flexDirection: 'column',
@@ -17,8 +15,18 @@ const useStyles = makeStyles({
     marginTop: 'auto',
     textAlign: 'center',
     '& img': {
-      width: '200px',
+      height: '180px',
     }
+  },
+  footer: {
+    position: 'fixed',
+    zIndex: -4,
+    height: '200px',
+    width: '100%',
+    bottom: 0,
+    left: 0,
+    padding: '10px 20px',
+    background: 'white',
   }
 });
 
@@ -49,12 +57,8 @@ export function About() {
       i form av genbanksbesättningar, där avel på Gotlands- respektive
       Mellerudskanin bedrivs.
     </p>
-    <div className={styles.euLogo}>
-      <img src='EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
-    </div>
   </div>
 }
-
 
 export function Gotlandskaninen() {
   const styles = useStyles();
@@ -99,7 +103,6 @@ export function Gotlandskaninen() {
     </p>
   </div>
 }
-
 
 export function Mellerudskaninen() {
   const styles = useStyles();
@@ -191,5 +194,15 @@ export function Kontakt() {
         ordforande@gotlandskaninen.se
         Ordförande
     </p>
+  </div>
+}
+
+export function Footer() {
+  const styles = useStyles();
+
+  return <div className={styles.footer}>
+    <div className={styles.euLogo}>
+      <img src='EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
+    </div>
   </div>
 }
