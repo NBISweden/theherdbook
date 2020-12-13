@@ -59,7 +59,7 @@ const useStyles = makeStyles({
     marginLeft: 0,
     marginRight: 0,
     padding: '10px',
-    minHeight: 'calc(100vh - 61px)',
+    minHeight: 'calc(100vh - 271px)',
     ['@media (min-width:660px)']: {
       marginLeft: '20px',
       marginRight: '20px',

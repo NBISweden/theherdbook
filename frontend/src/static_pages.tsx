@@ -4,6 +4,7 @@
 
 import * as React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
+import { Typography } from '@material-ui/core';
 
 const useStyles = makeStyles({
   main: {
@@ -12,11 +13,20 @@ const useStyles = makeStyles({
     flexDirection: 'column',
   },
   euLogo: {
-    marginTop: 'auto',
     textAlign: 'center',
     '& img': {
+      display: 'inline',
       height: '180px',
     }
+  },
+  euText: {
+    margin: '10px 20px',
+    display: 'inline',
+    maxWidth: '250px',
+    fontSize: '0.65em',
+    ['@media (min-width:660px)']: {
+      fontSize: '1em',
+    },
   },
   footer: {
     position: 'fixed',
@@ -27,6 +37,9 @@ const useStyles = makeStyles({
     left: 0,
     padding: '10px 20px',
     background: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
 
@@ -204,5 +217,11 @@ export function Footer() {
     <div className={styles.euLogo}>
       <img src='EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
     </div>
+    <Typography className={styles.euText}>
+      Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands-
+      och Mellerudskanin. Stödet går till genbanksbesättningarna,
+      medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
+      utbildningar, transport av värdefulla djur samt obduktioner.
+    </Typography>
   </div>
 }
