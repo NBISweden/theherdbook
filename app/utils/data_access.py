@@ -990,3 +990,77 @@ def register_birth(form, user_uuid):
         breeding.birth_notes = form.get('notes', None)
         breeding.save()
         return {'status': 'success'}
+
+def update_breeding(form, user_uuid):
+    """
+    Updates a breeding event with the information in `form` (if the
+    given `user` has sufficient permissions).
+
+    The form should be formatted like:
+    {
+        id: <breeding database id>
+        breed_date?: <date, as %Y-%m-%d>,
+        breed_notes?: string,
+        father?: <individual-number>,
+        mother?: <individual-number>,
+        birth_date?: <date, as %Y-%m-%d>,
+        birth_notes?: string,
+        litter_size?: <total litter size (including stillborn)>,
+    }
+
+    The response will be on the format:
+    JSON:  {
+            status: 'success' | 'error',
+            message?: string
+           }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    try:
+        breeding = Breeding.get(form['id'])
+    except (DoesNotExist, KeyError):
+        return {"status": "error", "message": "Breeding does not exist"}
+
+    # A user can insert a breeding event if they have permission to edit at
+    # least one of the parents.
+    if not (user.can_edit(breeding.mother.number) or \
+        user.can_edit(breeding.father.number)):
+        return {'status': 'error', 'message': 'Forbidden'}
+
+    errors = []
+    # Check if the parents are valid
+    if 'mother' in form:
+        try:
+            breeding.mother = Individual.get(Individual.number == form['mother'])
+        except DoesNotExist:
+            errors += ['Unknown mother']
+    if 'father' in form:
+        try:
+            breeding.father = Individual.get(Individual.number == form['father'])
+        except DoesNotExist:
+            errors += ['Unknown father']
+
+    for date in ['breed_date', 'birth_date']:
+        if date in form:
+            try:
+                setattr(breeding, date, validate_date(form[date]))
+            except ValueError as error:
+                errors += [str(error)]
+
+    # check if the litter size is valid
+    if 'litter_size' in form:
+        try:
+            breeding.litter_size = int(form['litter_size'])
+            if breeding.litter_size <= 0:
+                errors += ['Litter size must be larger than zero.']
+        except ValueError as error:
+            errors += ['Unknown litter size.']
+
+    if errors:
+        return {'status': 'error', 'message': ', '.join(errors)}
+
+    with DATABASE.atomic():
+        breeding.save()
+        return {'status': 'success'}

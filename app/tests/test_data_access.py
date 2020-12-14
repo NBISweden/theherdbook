@@ -454,6 +454,7 @@ class TestDataAccess(DatabaseTest):
         valid_form = {'id': self.breeding[0].id,
                       'date': datetime.today().strftime('%Y-%m-%d'),
                       'litter': 4}
+        invalid_id = {'id': 'knasboll'}
         missing_date = {'id': self.breeding[0].id,
                         'litter': 4}
         invalid_date = {'id': self.breeding[0].id,
@@ -469,6 +470,8 @@ class TestDataAccess(DatabaseTest):
                           'date': datetime.today().strftime('%Y-%m-%d'),}
         self.assertEqual(da.register_birth(valid_form, 'invalid-uuid'),
                          {"status": "error", "message": "Not logged in"})
+        self.assertEqual(da.register_birth(invalid_id, self.admin.uuid),
+                         {"status": "error", "message": "Breeding does not exist"})
         self.assertEqual(da.register_birth(missing_date, self.admin.uuid),
                          {'status': 'error', 'message': 'Date missing'})
         self.assertEqual(da.register_birth(invalid_date, self.admin.uuid),
@@ -487,3 +490,47 @@ class TestDataAccess(DatabaseTest):
                          {'status': 'success'})
         self.assertEqual(da.register_birth(valid_form, self.admin.uuid),
                          {'status': 'error', 'message': 'Birth already registered.'})
+
+    def test_update_breeding(self):
+        """
+        Checks that `utils.data_access.register_breeding` works as intended.
+        """
+        valid_form = {'id': self.breeding[0].id,
+                      'father': self.individuals[0].number,
+                      'mother': self.individuals[1].number,
+                      'date': datetime.today().strftime('%Y-%m-%d')}
+        invalid_id = {'id': 'knasboll'}
+        invalid_mother = {'id': self.breeding[0].id,
+                          'father': self.individuals[0].number,
+                          'mother': 'invalid-mother'}
+        invalid_father = {'id': self.breeding[0].id,
+                          'father': 'invalid-father',
+                          'mother': self.individuals[1].number}
+        invalid_date = {'id': self.breeding[0].id,
+                        'father': self.individuals[0].number,
+                        'mother': self.individuals[1].number,
+                        'breed_date': '20-31-11'}
+        unknown_litter = {'id': self.breeding[0].id,
+                          'litter_size': 'jamaica'}
+        invalid_litter = {'id': self.breeding[0].id,
+                          'litter_size': 0}
+        self.assertEqual(da.update_breeding(valid_form, 'invalid-uuid'),
+                         {"status": "error", "message": "Not logged in"})
+        self.assertEqual(da.update_breeding(invalid_id, self.admin.uuid),
+                         {"status": "error", "message": "Breeding does not exist"})
+
+        self.assertEqual(da.update_breeding(invalid_mother, self.admin.uuid),
+                         {'status': 'error', 'message': 'Unknown mother'})
+        self.assertEqual(da.update_breeding(invalid_father, self.admin.uuid),
+                         {'status': 'error', 'message': 'Unknown father'})
+        self.assertEqual(da.update_breeding(invalid_date, self.admin.uuid),
+                         {'status': 'error',
+                          'message': 'Date must be formatted as yyyy-mm-dd.'})
+        self.assertEqual(da.update_breeding(unknown_litter, self.admin.uuid),
+                         {'status': 'error',
+                          'message': 'Unknown litter size.'})
+        self.assertEqual(da.update_breeding(invalid_litter, self.admin.uuid),
+                         {'status': 'error',
+                          'message': 'Litter size must be larger than zero.'})
+        self.assertEqual(da.update_breeding(valid_form, self.admin.uuid),
+                         {'status': 'success'})

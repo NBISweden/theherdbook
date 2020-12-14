@@ -183,7 +183,7 @@ def breeding_list(h_id):
     return jsonify(breedings=breedings)
 
 
-@APP.route("/api/breeding", methods=["POST"])
+@APP.route("/api/breeding", methods=["POST", "PATCH"])
 @login_required
 def register_breeding():
     """
@@ -198,6 +198,8 @@ def register_breeding():
     status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.register_breeding(form, session.get("user_id", None))
+    if request.method == "PATCH":
+        status = da.update_breeding(form, session.get("user_id", None))
     return jsonify(status)
 
 
