@@ -54,7 +54,7 @@ const useStyles = makeStyles({
   },
   main: {
     position: 'relative',
-    marginTop: '80vh',
+    marginTop: 'calc(100vh - 200px)',
     marginBottom: '210px',
     marginLeft: 0,
     marginRight: 0,
