@@ -123,6 +123,11 @@ calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
   return(as.data.frame(get(paste0("KIN_",genebank_id))))
 }
 
+#For Future use
+# Calculates founder Equivalents
+# @return The founder equivalents \code{FE = 1 / sum(p ^ 2)}, where \code{p}
+# is average number of descendants and \code{r} is the mean number of founder
+# alleles retained in the gene dropping experiment.
 calculateFEFG <- function() {
   Pedi<-get_rabbits(genebank_id)
   ped<- data.frame(
@@ -137,6 +142,7 @@ calculateFEFG <- function() {
 }
 
 
+#Updated and reload the data structures from the sql server
 #* @get /update-db/
 update_data_cron <- function() {
   con <- connect_to_pg()
