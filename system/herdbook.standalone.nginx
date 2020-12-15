@@ -9,15 +9,12 @@
         root /app/dist/;
 
         location ^~ /.well-known/ {
+		 # Stop processing here to serve content from .well-known
         }
 
         location ~ ..*/[^/]*$ {
             # Redirect any subdirectory request to /
             rewrite ^.*/([^/]*)$ /$1 last; 
-        }
-
-        location /.well-known/ {
-		 # Stop processing here to serve content from .well-known
         }
 
         location / {
