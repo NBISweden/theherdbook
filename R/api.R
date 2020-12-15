@@ -34,13 +34,22 @@ get_all_genebanks <- function(con) {
   return (genebanks)
 }
 
-#Return the digest of the current individuals in the corresponding genebank if this changes we know we need to recalculate
+#Return the digest of the current individuals in the corresponding genebank 
 get_modifications_digest <- function(con,genebank_id){
+  #' Get digest of the current individuals in a given genebank
+  #'
+  #' @description This function calculate the digest of all the individual numbers of the given genebank.
+  #'
+  #' @param con The connection object to to database.
+  #' @param genebank_id The Genebank ID to get the individual number list from.
+  #' @details If the digest changes we know we need to recalculate
+
   res <- dbSendQuery(con, paste0("select i.number FROM individual i JOIN herd h ON (i.origin_herd_id = h.herd_id) WHERE h.genebank_id=",genebank_id)) 
   individuals <- dbFetch(res)
   dbClearResult(res)
   return (digest(individuals))
 }
+?get_modifications_digest
 
 # Returns a data structure with selected individuals' ancestry information for genebank_id 
 # 1 Gotlandskanin 2, Mellerud
