@@ -11,7 +11,6 @@ import { CircularProgress, makeStyles, TableHead, TableRow, TableCell,
 
 const useStyles = makeStyles({
   table: {
-    height: "100%",
     padding: "5px",
     overflowY: "scroll",
   },
@@ -156,14 +155,19 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
   const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(props.rowsPerPage ?? 25);
+  const [selected, setSelected] = React.useState(null as number | null)
   const [order, setOrder] = React.useState('desc' as Order);
   const [orderBy, setOrderBy] = React.useState(undefined as any);
-  const [tableColumns, setColumns] = React.useState(columns)
 
-  const visibleColumns = React.useMemo(() => {
-      return tableColumns.filter(c => !c.hidden)
-    }, [tableColumns]
+  const tableData = React.useMemo(() => {
+      return data.map((row, i) => {return {tableId: i, ...row}})
+    }, [data]
   )
+  const visibleColumns = React.useMemo(() => {
+      return columns.filter(c => !c.hidden)
+    }, [columns]
+  )
+
 
   /**
    * Returns `true` or `false` depending on if the given key is available in
@@ -181,15 +185,15 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
    */
   const sortedData = React.useMemo(() => {
     // store column for reference
-    const column = tableColumns.find(c => c.field == orderBy)
+    const column = columns.find(c => c.field == orderBy)
     if (column) {
-      return data.sort((a, b) =>
+      return tableData.sort((a, b) =>
         columnSort(a, b, column, orderBy, order)
       )
     }
     // return the unsorted data if the columnn isn't valid
-    return data
-  }, [data, orderBy, order])
+    return tableData
+  }, [tableData, orderBy, order])
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -211,7 +215,7 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
   };
 
   return <>
-    <div className={props.className ?? styles.table}>
+    <div className={props.className ?? styles.table} style={props.style ?? props.style}>
       { data
         ? <>
             <TableContainer>
@@ -250,8 +254,20 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
                       return (
-                        <TableRow key={row.number}
+                        <TableRow key={row.tableId}
                           hover
+                          selected={selected == row.tableId}
+                          onClick={props.onClick
+                                   ? () => {
+                                     if (selected == row.tableId) {
+                                       props.onClick(null)
+                                       setSelected(null)
+                                     } else {
+                                       props.onClick(row)
+                                       setSelected(row.tableId)
+                                     }
+                                   }
+                                   : () => {}}
                           tabIndex={-1}
                         >
                           {visibleColumns.map(column => {

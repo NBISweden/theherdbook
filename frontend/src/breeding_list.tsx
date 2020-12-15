@@ -1,7 +1,7 @@
 /**
- * @file This file contains the HerdView function. This function fetches herd
- *       for a given `id` (parsed from the url), as well as the individuals
- *       belonging to that herd.
+ * @file This file contains the BreedingList function. This function fetches
+ *       breeding information for a given herd, and displays a list and edit
+ *       form to handle breedings.
  */
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
@@ -11,11 +11,27 @@ import { useMessageContext } from '@app/message_context';
 import { useDataContext } from './data_context';
 import { individualLabel } from './data_context_global';
 import { SortedTable, Column } from './sorted_table';
+import { Typography } from '@material-ui/core';
+import { BreedingForm } from './breeding_form';
 
 const useStyles = makeStyles({
+  breeding: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
   table: {
-    width: "50%",
-    padding: "5px",
+    padding: '10px 0',
+    margin: 0,
+    transition: 'width .5s',
+  },
+  form: {
+    padding: '10px 0',
+    margin: 0,
+    border: '1px solid lightgrey',
+    borderRadius: '3px',
+    overflowX: 'hidden',
+    transition: 'width .5s',
   },
   loading: {
     display: "flex",
@@ -38,14 +54,14 @@ export interface Breeding {
   birth_notes: string,
   litter_size: number,
 }
-type Order = 'asc' | 'desc'
 
 /**
- * Shows herd information, with a list of all individuals belonging to that
- * herd.
+ * The BreedingList function. This function fetches breeding information for a
+ * given herd, and displays a list and edit form to handle breedings.
  */
 export function BreedingList({id}: {id: string | undefined}) {
   const [ breedingEvents, setBreedingEvents ] = React.useState([] as Breeding[])
+  const [ active, setActive ] = React.useState(null as any)
   const { userMessage } = useMessageContext()
   const { genebanks } = useDataContext()
   const style = useStyles();
@@ -74,7 +90,8 @@ export function BreedingList({id}: {id: string | undefined}) {
     {field: 'father', label: 'Fader', sortAs: 'numbers', hidden: false},
     {field: 'birth_date', sortAs: 'date', label: 'Födslodatum', hidden: false},
     {field: 'birth_notes', label: 'Födselanteckningar', hidden: true},
-    {field: 'litter_size', sortAs: 'number', label: 'Antal ungar', hidden: false},
+    {field: 'litter_size', sortAs: 'number', label: 'Antal ungar', hidden: false,
+     numeric: true},
   ];
 
   React.useEffect(() => {
@@ -92,9 +109,17 @@ export function BreedingList({id}: {id: string | undefined}) {
   }, [id])
 
   return <>
-    <SortedTable columns={columns}
-                 data={breedingEvents}
-                 className={style.table}
-                 rowsPerPage={5}/>
+    <Typography variant="h5">Parningstillfällen</Typography>
+    <div className={style.breeding}>
+      <SortedTable columns={columns}
+                   data={breedingEvents}
+                   className={style.table}
+                   onClick={(row: any[]) => {setActive(row)}}
+                   rowsPerPage={5}
+                   style={{width: active ? '60%' : '100%'}}/>
+      <div className={style.form} style={{width: active ? '40%' : 0}}>
+        <BreedingForm data={active} />
+      </div>
+    </div>
   </>
 }
