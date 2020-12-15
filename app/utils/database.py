@@ -368,8 +368,10 @@ class Breeding(BaseModel):
 
     def as_dict(self):
         """
-        Returns the objects key/value pair as a dictionary, using parent numbers
-        instead of database id's.
+        Returns the objects key/value pair as a dictionary.
+
+        The parent foreign keys are also replaced by parent numbers, as they
+        frontend uses parent numbers instead of database id's.
         """
         data = super().as_dict()
         #pylint: disable=no-member

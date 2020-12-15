@@ -309,7 +309,7 @@ def individual(i_number):
             ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
             ind["MK"] = "%.2f" % (get_ind_mean_kinship(i_number, ind['genebank_id']) * 100)
         except requests.exceptions.ConnectionError as error:
-            logging.error('%s', error)
+            APP.logger.error('%s', error)
             ind["inbreeding"] = ind['inbreeding'] if 'inbreeding' in ind else None
             ind["MK"] = None
     return jsonify(ind)
@@ -382,7 +382,7 @@ def get_kinship(g_id):
         return csvparser.parse_kinship(response.content)
 
     APP.logger.error("Could not fetch kinship data.")
-    APP.logger.error("Error {}".format(response))
+    APP.logger.error("Error %s", response)
     return {}
 
 
@@ -412,7 +412,7 @@ def get_mean_kinship(g_id):
         return csvparser.parse_csv(response.content)
 
     APP.logger.error("Could not fetch mean kinship data.")
-    APP.logger.error("Error {}".format(response))
+    APP.logger.error("Error %s", response)
     return {}
 
 
