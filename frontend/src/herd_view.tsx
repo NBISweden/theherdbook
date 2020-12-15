@@ -17,6 +17,7 @@ import { FilterTable } from '@app/filter_table';
 import { IndividualView } from '@app/individual_view';
 import { IndividualEdit } from '@app/individual_edit';
 import { useUserContext } from '@app/user_context';
+import { BreedingList } from './breeding_list';
 
 const useStyles = makeStyles({
   container: {
@@ -162,6 +163,7 @@ export function HerdView({id}: {id: string | undefined}) {
           />
         }
       </TabPanel>
+      <BreedingList id={id}/>
     </Paper>
   </>
 }
