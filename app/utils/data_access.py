@@ -145,6 +145,44 @@ def authenticate_user(name, password):
     logging.info("Failed login attempt for %s", name)
     return None
 
+def change_password(active_user, changed_user, form):
+    """
+    Changes password for user changed_user. Returns 
+    something that evaluates as True on success.
+    """
+    if not active_user or not changed_user or not form:
+        logging.info("Bad call to change_password, somethings is missing)")
+        return None
+
+    if not active_user.is_admin:
+        try:
+            authenticator = Authenticators.select().where(
+                                               (Authenticators.user == changed_user) &
+                                              (Authenticators.auth == 'password')).get()
+            if not check_password_hash(authenticator.auth_data, form['oldpassword']):
+                # Incorrect password supplied
+                return None
+        except:
+            # Non-users need a password set to change it. Fall out on any other
+            # exception as well.
+            return None
+
+    try:
+        # If we have a password authenticator already, update it instead of creating a new.
+        authenticator = Authenticators.select().where(
+                                               (Authenticators.user == changed_user) &
+                                              (Authenticators.auth == 'password')).get()
+        authenticator.auth_data = generate_password_hash(form['newpassword'])
+    except DoesNotExist:
+        authenticator = Authenticators(
+            user = changed_user,
+            auth = 'password',
+            auth_data = generate_password_hash(form['password']))
+    with DATABASE.atomic():
+        authenticator.save()
+
+    return True
+
 def authenticate_with_credentials(method, ident):
     """
     Authenticates a user through an external authentication service.
@@ -278,7 +316,7 @@ def get_users(user_uuid=None):
 
 def get_user(user_id, user_uuid=None):
     """
-    Returns the user identified by `user_id`, if the user identified by
+    Returns the user with id `user_id`, if the user identified by
     `user_uuid` has admin or manager privileges. Note that the user does not
     need manager privileges over any particular genebank or herd.
     Returns:
@@ -336,9 +374,14 @@ def update_user(form, user_uuid=None):
        ):
         return {"status": "error", "message": f"malformed request: {form}"}
 
-    # Check permissions
-    if not (user.is_admin or user.is_manager):
+    # Check permissions - allow users to update e-mail only
+    if (not (user.is_admin or user.is_manager) 
+        or (form.get("validated") or form.get("username"))):
         return  {"status": "error", "message": "forbidden"}
+
+    if not (user.is_admin or user.is_manager):
+        # Mark user supplied e-mail as false 
+        form['validated'] = False
 
     # check target user
     try:
@@ -350,7 +393,7 @@ def update_user(form, user_uuid=None):
     # update target user data if needed
     updated = False
     for field in ["email", "username", "validated"]:
-        if getattr(target_user, field) != form[field]:
+        if field in form and getattr(target_user, field) != form[field]:
             setattr(target_user, field, form[field])
             updated = True
 

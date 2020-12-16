@@ -115,7 +115,8 @@ def get_users():
     return jsonify(users=users)
 
 
-@APP.route("/api/manage/user/<u_id>", methods=["GET", "PATCH", "POST"])
+@APP.route("/api/manage/user/", defaults={'u_id':False},methods=["GET", "UPDATE", "PATCH", "POST"])
+@APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "PATCH", "POST"])
 @login_required
 def manage_user(u_id):
     """
@@ -128,18 +129,47 @@ def manage_user(u_id):
             data?: any
         }
     """
+
+    form = request.json
+    if not u_id:
+        # If not provided, default to current user.
+        u_id = current_user.id
+        if form:
+            form['id'] = u_id
+
     if request.method == "GET":
         retval = da.get_user(u_id, session.get("user_id", None))
-    if request.method == "PATCH":
-        form = request.json
+    if request.method in ("UPDATE", "PATCH"):
         retval = da.update_user(form, session.get("user_id", None))
     if request.method == "POST":
-        form = request.json
         retval = da.add_user(form, session.get("user_id", None))
     return jsonify(retval)
 
+@APP.route("/api/manage/setpassword/", defaults={'u_id':False},methods=["POST"])
+@APP.route("/api/manage/setpassword/<u_id>", methods=["POST"])
+def change_userpassword(u_id):
+    """
+    Set password for user u_id. Administrators can set password for any user.
+    Non-administrators need to present the old password or a token.
+    """
 
-@APP.route("/api/manage/role", methods=["POST", "PATCH"])
+    if request.method != "POST":
+        abort(400)
+        return
+
+    form = request.json
+
+    if not current_user.is_authenticated:
+        abort(403)
+
+
+    if not u_id:
+        u_id = current_user.id
+    retval = da.change_password(current_user, u_id, form)
+    return jsonify(retval)
+
+
+@APP.route("/api/manage/role", methods=["POST", "PATCH", "UPDATE"])
 @login_required
 def manage_roles():
     """

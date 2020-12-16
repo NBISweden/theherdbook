@@ -44,12 +44,43 @@ export function Settings() {
   const { inputVariant } = "standard";
   const [availableAuthenticators, setAvailableAuthenticators] = useState([]);
   const [linkedAuthenticators, setLinkedAuthenticators] = useState([]);
+  const [newPassword, setNewPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [email, setEmail] = useState(user.email ?? "");
 
   const classes = styles;
 
   /**
    * Provides settings for user.
    */
+
+  async function changePassword() {
+    await post("/api/manage/setpassword/", {
+      password: oldPassword,
+      newpassword: newPassword,
+    }).then(
+      (data) => {
+        userMessage("Ändrat");
+      },
+      (error) => {
+        userMessage("Något gick fel", "error");
+      }
+    );
+  }
+
+  async function changeEmail() {
+    await update("/api/manage/user/", {
+      email: email,
+      validated: false,
+    }).then(
+      (data) => {
+        userMessage("E-postadress ändrad");
+      },
+      (error) => {
+        userMessage("Något gick fel", "error");
+      }
+    );
+  }
 
   async function updateLinkedAuthenticators() {
     await post("/api/linked").then(
@@ -160,30 +191,37 @@ export function Settings() {
                   type="email"
                   variant={inputVariant}
                   className={classes.simpleField}
-                  value={user.email ?? ""}
-                  onChange={(e) => setUser({ ...user, email: e.target.value })}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
+                <Button onClick={() => changeEmail()}>
+                  Ändra e-postadress
+                </Button>
               </form>
 
               <Grid container direction="column">
-                <TextField
-                  label="Nuvarande lösenord"
-                  type="password"
-                  variant={inputVariant}
-                  hidden={false}
-                  className={classes.simpleField}
-                  value=""
-                />
-                <TextField
-                  label="Nytt lösenord"
-                  type="password"
-                  variant={inputVariant}
-                  hidden={false}
-                  className={classes.simpleField}
-                  value=""
-                />
+                <form className={classes.form} noValidate autoComplete="off">
+                  <TextField
+                    label="Nuvarande lösenord"
+                    type="password"
+                    variant={inputVariant}
+                    hidden={false}
+                    className={classes.simpleField}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    value={oldPassword}
+                  />
+                  <TextField
+                    label="Nytt lösenord"
+                    type="password"
+                    variant={inputVariant}
+                    hidden={false}
+                    className={classes.simpleField}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    value={newPassword}
+                  />
 
-                <Button>Byt lösenord</Button>
+                  <Button onClick={() => changePassword()}>Byt lösenord</Button>
+                </form>
               </Grid>
               <Grid container direction="row">
                 {linkedAuthenticators ? (
