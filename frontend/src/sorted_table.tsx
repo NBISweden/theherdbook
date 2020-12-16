@@ -6,7 +6,7 @@
 
 import React from 'react'
 import { CircularProgress, makeStyles, TableHead, TableRow, TableCell,
-        TableSortLabel, TableContainer, Table, TablePagination, TableBody,
+        TableSortLabel, TableContainer, Table, TablePagination, TableBody, Button,
         } from '@material-ui/core';
 
 const useStyles = makeStyles({
@@ -42,8 +42,8 @@ const useStyles = makeStyles({
     top: 20,
     width: 1,
   },
-  search: {
-    float: 'right',
+  bottomButton: {
+    float: 'left',
   }
 });
 
@@ -149,6 +149,12 @@ function columnSort(a: any, b: any,  column: Column, orderBy: string, order: Ord
  * Shows a table of individual information for the given list of `individuals`.
  * Optionally `filters` or `action` (along with `actionIcon` and `actionLabel`)
  * can be set to further customize the table.
+ *
+ * additional recognized props are:
+ *    addButton: Function,
+ *    rowsPerPage: number
+ *    className: any
+ *    style: any
  */
 export function SortedTable({columns, data, ...props}: {columns: Column[], data: any[]} & Record<string, any>) {
 
@@ -167,18 +173,6 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
       return columns.filter(c => !c.hidden)
     }, [columns]
   )
-
-
-  /**
-   * Returns `true` or `false` depending on if the given key is available in
-   * `props`.
-   */
-  const hasProp = (key: string): boolean => {
-    if (!props) {
-      return false;
-    }
-    return Object.keys(props).includes(key);
-  }
 
   /**
    * Memoized list of data sorted by the columnSort function
@@ -288,6 +282,13 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                 </TableBody>
               </Table>
             </TableContainer>
+            { props.addButton
+              && <Button className={styles.bottomButton}
+                         variant='contained'
+                         color='primary'
+                         onClick={props.addButton}>
+                   Lägg till
+                 </Button> }
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"

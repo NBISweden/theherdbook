@@ -113,6 +113,7 @@ export function BreedingList({id}: {id: string | undefined}) {
     <div className={style.breeding}>
       <SortedTable columns={columns}
                    data={breedingEvents}
+                   addButton={() => {setActive('new')}}
                    className={style.table}
                    onClick={(row: any[]) => {setActive(row)}}
                    rowsPerPage={5}
