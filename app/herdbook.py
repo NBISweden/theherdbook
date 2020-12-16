@@ -420,10 +420,10 @@ def mean_kinship(g_id):
 
 
 def get_mean_kinship(g_id):
-     """
+    """
     Fetch the mean kinship matrix from R-api of the genebank given  by `g_id`.
     """
-    response = requests.get('http://{}:{}/meankinship/{}' \
+    response = requests.get('http://{}:{}/meankinship/{}'
                             .format(settings.rapi.host,
                                     settings.rapi.port,
                                     g_id),
