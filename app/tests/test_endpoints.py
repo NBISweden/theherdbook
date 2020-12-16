@@ -8,11 +8,14 @@ Unit tests for the herdbook endpoints.
 #pylint: disable=too-many-statements
 
 import unittest
-import requests
 
+from datetime import datetime
+
+import requests
 import flask
 
 #pylint: disable=import-error
+import utils.database as db
 from herdbook import APP
 from tests.database_test import DatabaseTest
 
@@ -112,6 +115,102 @@ class TestEndpoints(FlaskTest):
                     self.app.get("/api/manage/users").get_json(), {"users": None}
                 )
 
+    def test_breeding_list(self):
+        """
+        Checks that `herdbook.breeding_list` returns the intended information.
+        """
+
+        # not logged in
+        self.assertEqual(self.app.get("/api/breeding").get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.get("/api/breeding/%s" % self.herds[0].herd)
+
+            breeding = db.Breeding.get(self.breeding[-1].id)
+            expected = {'breedings': [
+                breeding.as_dict()
+            ]}
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), expected)
+
+
+    def test_register_breeding(self):
+        """
+        Checks that `herdbook.register_breeding` works as intended.
+
+        This will only do a subset of the checks that is done for the
+        data_access.register_breeding function, as to avoid too much redundancy.
+        """
+
+        valid_form = {'father': self.individuals[0].number,
+                      'mother': self.individuals[1].number,
+                      'date': datetime.today().strftime('%Y-%m-%d')}
+
+        # not logged in
+        self.assertEqual(self.app.get("/api/breeding").get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.post("/api/breeding", json=valid_form)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), {'status': 'success'})
+
+    def test_register_birth(self):
+        """
+        Checks that `herdbook.register_birth` works as intended.
+
+        This will only do a subset of the checks that is done for the
+        data_access.register_birth function, as to avoid too much redundancy.
+        """
+
+        valid_form = {'id': self.breeding[0].id,
+                      'date': datetime.today().strftime('%Y-%m-%d'),
+                      'litter': 4}
+
+        # not logged in
+        self.assertEqual(self.app.post("/api/birth",
+                                       json=valid_form).get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.post("/api/birth", json=valid_form)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), {'status': 'success'})
+
+    def test_update_breeding(self):
+        """
+        Checks that `herdbook.update_breeding` works as intended.
+
+        This will only do a subset of the checks that is done for the
+        data_access.update_breeding function, as to avoid too much redundancy.
+        """
+
+        valid_form = {'id': self.breeding[0].id,
+                      'birth_date': datetime.today().strftime('%Y-%m-%d'),
+                      'litter_size': 4}
+
+        # not logged in
+        self.assertEqual(self.app.post("/api/breeding",
+                                       json=valid_form).get_json(), None)
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+            # register a valid breeding event
+            response = context.patch("/api/breeding", json=valid_form)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), {'status': 'success'})
 
 
 if __name__ == "__main__":

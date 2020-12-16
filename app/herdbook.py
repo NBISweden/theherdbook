@@ -9,24 +9,22 @@ database.
 import sys
 import uuid
 import time
-import json
+import logging
+
 from flask import (
     Flask,
     jsonify,
     request,
     session
 )
+from flask_caching import Cache
+from flask_login import login_required, login_user, logout_user, current_user, LoginManager
+import requests
 
-from werkzeug.urls import url_parse
 import utils.database as db
 import utils.data_access as da
 import utils.settings as settings
 import utils.csvparser as csvparser
-import logging
-from flask_caching import Cache
-from flask_login import login_required, login_user, logout_user, current_user, LoginManager
-import requests
-import os
 
 
 APP = Flask(__name__, static_folder="/static")
@@ -42,11 +40,12 @@ APP.config.update(
     CACHE_DEFAULT_TIMEOUT=300
 )
 
+# pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
 
-cache = Cache(APP)
-login = LoginManager(APP)
-login.login_view = '/login'
+CACHE = Cache(APP)
+LOGIN = LoginManager(APP)
+LOGIN.login_view = '/login'
 
 
 @APP.after_request
@@ -69,9 +68,14 @@ def after_request(response):
     return response
 
 
-@login.user_loader
-def load_user(id):
-    # id is not required, since user is loaded from the session. Method added to support flask-login
+# pylint: disable=unused-argument
+@LOGIN.user_loader
+def load_user(u_id):
+    """
+    Loads user information for flask-login.
+
+    Currently u_id is not required, since user is loaded from the session.
+    """
     user = da.fetch_user_info(session.get('user_id', None))
     return user
 
@@ -167,6 +171,56 @@ def manage_herd():
     return jsonify(status)
 
 
+@APP.route("/api/breeding/<h_id>")
+@login_required
+def breeding_list(h_id):
+    """
+    Returns a list of all breeding events connected to a given herd.
+    A breeding event is considered linked to a herd if any of the parents are
+    currently in the herd.
+    """
+    breedings = da.get_breeding_events(h_id, session.get("user_id", None))
+    return jsonify(breedings=breedings)
+
+
+@APP.route("/api/breeding", methods=["POST", "PATCH"])
+@login_required
+def register_breeding():
+    """
+    Used to insert and update breeding events in the database.
+    Returns a message formatted like:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string
+        }
+    """
+    form = request.json
+    status = {"status": "error", "message": "Unknown request"}
+    if request.method == "POST":
+        status = da.register_breeding(form, session.get("user_id", None))
+    if request.method == "PATCH":
+        status = da.update_breeding(form, session.get("user_id", None))
+    return jsonify(status)
+
+
+@APP.route("/api/birth", methods=["POST"])
+@login_required
+def register_birth():
+    """
+    Used to update breeding events in the database with birth information.
+    Returns a message formatted like:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string
+        }
+    """
+    form = request.json
+    status = {"status": "error", "message": "Unknown request"}
+    if request.method == "POST":
+        status = da.register_birth(form, session.get("user_id", None))
+    return jsonify(status)
+
+
 @APP.route("/api/colors")
 @login_required
 def colors():
@@ -175,8 +229,9 @@ def colors():
     """
     return jsonify(da.get_colors())
 
+
 @APP.route("/api/login", methods=["POST"])
-def loginHandler():
+def login_handler():
     """
     Parses a login form and sets session variables when logged in.
     If login fails the system will return `None`.
@@ -252,10 +307,12 @@ def individual(i_number):
 
     if ind:
         try:
-            ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
-            ind["MK"] = "%.2f" % (get_ind_mean_kinship(i_number, ind['genebank_id']) * 100)
-        except requests.exceptions.ConnectionError as e:
-            logging.error(f'{e}')
+            ind["inbreeding"] = "%.2f" % (
+                get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
+            ind["MK"] = "%.2f" % (get_ind_mean_kinship(
+                i_number, ind['genebank_id']) * 100)
+        except requests.exceptions.ConnectionError as error:
+            APP.logger.error('%s', error)
             ind["inbreeding"] = ind['inbreeding'] if 'inbreeding' in ind else None
             ind["MK"] = None
     return jsonify(ind)
@@ -293,74 +350,91 @@ def get_ind_inbreeding(i_number, g_id):
 
 @APP.route("/api/<int:g_id>/inbreeding/")
 def inbreeding(g_id):
-    id = str(g_id)
-    inb_coeffcient = get_inbreeding(id)
+    """
+    Returns all inbreeding coefficient of the genebank given  by `g_id`.
+    """
+    inb_coeffcient = get_inbreeding(str(g_id))
     return jsonify(inb_coeffcient)
 
 
 def get_inbreeding(g_id):
-    response = requests.get('http://{}:{}/inbreeding/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
-                             params={})
+    """
+    Fetch ibreeding coefficient from R-API of the genebank given by `g_id`.
+    """
+    response = requests.get('http://{}:{}/inbreeding/{}'
+                            .format(settings.rapi.host,
+                                    settings.rapi.port,
+                                    g_id),
+                            params={})
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
 
-    else:
-        APP.logger.error("Could not fetch inbreeding data.")
-        APP.logger.error("Error {}".format(response))
-        return {}
+    APP.logger.error("Could not fetch inbreeding data.")
+    APP.logger.error("Error {}".format(response))
+    return {}
 
 
 @APP.route("/api/<int:g_id>/kinship/")
 def kinship(g_id):
-    id = str(g_id)
-    kinship = get_kinship(id)
-    return jsonify(kinship)
+    """
+    Returns kinship matrix of the genebank given  by `g_id`.
+    """
+    return jsonify(get_kinship(str(g_id)))
 
 
 def get_kinship(g_id):
-    response = requests.get('http://{}:{}/kinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
-                             params={})
+    """
+    Fetch kinship matrix from R-api of the genebank given  by `g_id`.
+    """
+    response = requests.get('http://{}:{}/kinship/{}'
+                            .format(settings.rapi.host,
+                                    settings.rapi.port,
+                                    g_id),
+                            params={})
 
     if response.status_code == 200:
         return csvparser.parse_kinship(response.content)
 
-    else:
-        APP.logger.error("Could not fetch kinship data.")
-        APP.logger.error("Error {}".format(response))
-        return {}
+    APP.logger.error("Could not fetch kinship data.")
+    APP.logger.error("Error %s", response)
+    return {}
 
 
 def get_ind_mean_kinship(i_number, g_id):
     """
     Returns the mean kinship coefficient of the individual given by `i_number`.
+    belonging to the genebank given by `g_id`.
     In case the individual is not active, we return 0.
     """
-    mean_kinship = get_mean_kinship(g_id)
-    if i_number in mean_kinship:
-        return mean_kinship[i_number]
-    return 0
-
-
-@APP.route("/api/<int:g_id>/kinship/")
-def mean_kinship(g_id):
-    id = str(g_id)
-    mean_kinship = get_mean_kinship(id)
-    return jsonify(mean_kinship)
+    mk_values = get_mean_kinship(g_id)
+    return mk_values[i_number] if i_number in mk_values else 0
 
 
 @APP.route("/api/<int:g_id>/meankinship/")
+def mean_kinship(g_id):
+    """
+    Returns the mean kinship list if the Genebank given by by `g_id`.
+    """
+    return jsonify(get_mean_kinship(str(g_id)))
+
+
 def get_mean_kinship(g_id):
-    response = requests.get('http://{}:{}/meankinship/{}'.format(settings.rapi.host, settings.rapi.port, g_id),
-                             params={})
+    """
+    Fetch the mean kinship matrix from R-api of the genebank given  by `g_id`.
+    """
+    response = requests.get('http://{}:{}/meankinship/{}'
+                            .format(settings.rapi.host,
+                                    settings.rapi.port,
+                                    g_id),
+                            params={})
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
 
-    else:
-        APP.logger.error("Could not fetch mean kinship data.")
-        APP.logger.error("Error {}".format(response))
-        return {}
+    APP.logger.error("Could not fetch mean kinship data.")
+    APP.logger.error("Error %s", response)
+    return {}
 
 
 @APP.route("/", defaults={"path": ""})

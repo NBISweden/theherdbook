@@ -130,6 +130,15 @@ class DatabaseTest(unittest.TestCase):
         for individual in self.individuals:
             individual.save()
 
+        # additional breeding between regular individuals
+        self.breeding += [
+            db.Breeding.get_or_create(breed_date=datetime(2020, 6, 1),
+                                      mother=self.individuals[0],
+                                      father=self.individuals[1],
+                                      litter_size=3)[0],
+        ]
+        self.breeding[-1].save()
+
         self.weights = [
             db.Weight.get_or_create(individual=self.individuals[0],
                                     weight=2.1,

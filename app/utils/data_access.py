@@ -28,6 +28,19 @@ from utils.database import (
     Weight,
 )
 
+# Helper functions
+
+def validate_date(date_string):
+    """
+    Validates a date string and returns a datetime object or raises ValueError.
+    """
+    if not date_string:
+        raise ValueError('Date missing')
+    try:
+        return datetime.strptime(date_string, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError('Date must be formatted as yyyy-mm-dd.')
+
 # User functions
 
 def add_user(form, user_uuid=None):
@@ -826,6 +839,32 @@ def get_all_individuals():
 
 # Breeding and birth functions
 
+def get_breeding_events(herd_id, user_uuid):
+    """
+    Returns a list of all breeding events where at least one of the parents is
+    in the herd given by `herd_id`.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return []
+
+    try:
+        herd = Herd.get(Herd.herd == herd_id)
+
+        if herd.genebank.id not in user.accessible_genebanks:
+            return []
+
+        parents = [i.id for i in herd.individuals]
+        with DATABASE.atomic():
+            query = Breeding.select().where((Breeding.father_id << parents) |
+                                            (Breeding.mother_id << parents))
+
+            return [b.as_dict() for b in query]
+    except DoesNotExist:
+        logging.warning("Unknown herd %s", herd_id)
+
+    return []
+
 def register_breeding(form, user_uuid):
     """
     Registers a breeding event between two rabbits, defined by `form`, into the
@@ -849,15 +888,19 @@ def register_breeding(form, user_uuid):
     if user is None:
         return {"status": "error", "message": "Not logged in"}
 
+    errors = []
     # Check if the parents are valid
     try:
         mother = Individual.get(Individual.number == form.get('mother', None))
     except DoesNotExist:
-        return {'status': 'error', 'message': 'Unknown mother'}
+        errors += ['Unknown mother']
     try:
         father = Individual.get(Individual.number == form.get('father', None))
     except DoesNotExist:
-        return {'status': 'error', 'message': 'Unknown father'}
+        errors += ['Unknown father']
+
+    if errors:
+        return {'status': 'error', 'message': ', '.join(errors)}
 
     # A user can insert a breeding event if they have permission to edit at
     # least one of the parents.
@@ -865,14 +908,10 @@ def register_breeding(form, user_uuid):
         return {'status': 'error', 'message': 'Forbidden'}
 
     # check if the breeding date is valid
-    breed_date = form.get('date', None)
-    if not breed_date:
-        return {'status': 'error', 'message': 'No breeding date'}
     try:
-        breed_date = datetime.strptime(breed_date, '%Y-%m-%d')
-    except ValueError:
-        return {'status': 'error',
-                'message': 'Breeding date must be formatted as yyyy-mm-dd.'}
+        breed_date = validate_date(form.get('date', None))
+    except ValueError as error:
+        return {'status': 'error', 'message': str(error)}
 
     exists = Breeding.select().where(Breeding.father == father) \
                                 .where(Breeding.mother == mother) \
@@ -885,6 +924,143 @@ def register_breeding(form, user_uuid):
         Breeding(father=father,
                  mother=mother,
                  breed_date=breed_date,
-                 breed_note=form.get('notes', None)).save()
+                 breed_notes=form.get('notes', None)).save()
         return {'status': 'success'}
 
+def register_birth(form, user_uuid):
+    """
+    Updates a breeding event with birth information, defined by `form` (if the
+    given `user` has sufficient permissions).
+
+    The form should be formatted like:
+    {
+        id: <breeding database id>
+        date: <birth-date, as %Y-%m-%d>,
+        litter: <total litter size (including stillborn)>
+        notes: <text>,
+    }
+
+    The response will be on the format:
+    JSON:  {
+            status: 'success' | 'error',
+            message?: string
+           }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    try:
+        breeding = Breeding.get(form.get('id', None))
+    except (DoesNotExist, KeyError):
+        return {"status": "error", "message": "Breeding does not exist"}
+
+    # A user can insert a breeding event if they have permission to edit at
+    # least one of the parents.
+    if not (user.can_edit(breeding.mother.number) or \
+        user.can_edit(breeding.father.number)):
+        return {'status': 'error', 'message': 'Forbidden'}
+
+    errors = []
+    # check if the birth date is valid
+    try:
+        birth_date = validate_date(form.get('date', None))
+    except ValueError as error:
+        errors += [str(error)]
+
+    # check if the litter size is valid
+    try:
+        litter = int(form.get('litter', None))
+        if litter <= 0:
+            errors += ['Litter size must be larger than zero.']
+    except ValueError as error:
+        errors += ['Unknown litter size.']
+    except TypeError as error:
+        errors += ['Missing litter size.']
+
+    if breeding.birth_date or breeding.birth_notes:
+        errors += ['Birth already registered.']
+
+    if errors:
+        return {'status': 'error', 'message': ', '.join(errors)}
+
+    with DATABASE.atomic():
+        breeding.birth_date = birth_date
+        breeding.litter_size = litter
+        breeding.birth_notes = form.get('notes', None)
+        breeding.save()
+        return {'status': 'success'}
+
+def update_breeding(form, user_uuid):
+    """
+    Updates a breeding event with the information in `form` (if the
+    given `user` has sufficient permissions).
+
+    The form should be formatted like:
+    {
+        id: <breeding database id>
+        breed_date?: <date, as %Y-%m-%d>,
+        breed_notes?: string,
+        father?: <individual-number>,
+        mother?: <individual-number>,
+        birth_date?: <date, as %Y-%m-%d>,
+        birth_notes?: string,
+        litter_size?: <total litter size (including stillborn)>,
+    }
+
+    The response will be on the format:
+    JSON:  {
+            status: 'success' | 'error',
+            message?: string
+           }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    try:
+        breeding = Breeding.get(form['id'])
+    except (DoesNotExist, KeyError):
+        return {"status": "error", "message": "Breeding does not exist"}
+
+    # A user can insert a breeding event if they have permission to edit at
+    # least one of the parents.
+    if not (user.can_edit(breeding.mother.number) or \
+        user.can_edit(breeding.father.number)):
+        return {'status': 'error', 'message': 'Forbidden'}
+
+    errors = []
+    # Check if the parents are valid
+    if 'mother' in form:
+        try:
+            breeding.mother = Individual.get(Individual.number == form['mother'])
+        except DoesNotExist:
+            errors += ['Unknown mother']
+    if 'father' in form:
+        try:
+            breeding.father = Individual.get(Individual.number == form['father'])
+        except DoesNotExist:
+            errors += ['Unknown father']
+
+    for date in ['breed_date', 'birth_date']:
+        if date in form:
+            try:
+                setattr(breeding, date, validate_date(form[date]))
+            except ValueError as error:
+                errors += [str(error)]
+
+    # check if the litter size is valid
+    if 'litter_size' in form:
+        try:
+            breeding.litter_size = int(form['litter_size'])
+            if breeding.litter_size <= 0:
+                errors += ['Litter size must be larger than zero.']
+        except ValueError as error:
+            errors += ['Unknown litter size.']
+
+    if errors:
+        return {'status': 'error', 'message': ', '.join(errors)}
+
+    with DATABASE.atomic():
+        breeding.save()
+        return {'status': 'success'}
