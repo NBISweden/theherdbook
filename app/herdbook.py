@@ -40,7 +40,7 @@ APP.config.update(
     CACHE_DEFAULT_TIMEOUT=300
 )
 
-#pylint: disable=no-member
+# pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
 
 CACHE = Cache(APP)
@@ -68,7 +68,7 @@ def after_request(response):
     return response
 
 
-#pylint: disable=unused-argument
+# pylint: disable=unused-argument
 @LOGIN.user_loader
 def load_user(u_id):
     """
@@ -229,6 +229,7 @@ def colors():
     """
     return jsonify(da.get_colors())
 
+
 @APP.route("/api/login", methods=["POST"])
 def login_handler():
     """
@@ -306,8 +307,10 @@ def individual(i_number):
 
     if ind:
         try:
-            ind["inbreeding"] = "%.2f" % (get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
-            ind["MK"] = "%.2f" % (get_ind_mean_kinship(i_number, ind['genebank_id']) * 100)
+            ind["inbreeding"] = "%.2f" % (
+                get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
+            ind["MK"] = "%.2f" % (get_ind_mean_kinship(
+                i_number, ind['genebank_id']) * 100)
         except requests.exceptions.ConnectionError as error:
             APP.logger.error('%s', error)
             ind["inbreeding"] = ind['inbreeding'] if 'inbreeding' in ind else None
@@ -347,12 +350,18 @@ def get_ind_inbreeding(i_number, g_id):
 
 @APP.route("/api/<int:g_id>/inbreeding/")
 def inbreeding(g_id):
+    """
+    Returns all inbreeding coefficient of the genebank given  by `g_id`.
+    """
     inb_coeffcient = get_inbreeding(str(g_id))
     return jsonify(inb_coeffcient)
 
 
 def get_inbreeding(g_id):
-    response = requests.get('http://{}:{}/inbreeding/{}' \
+    """
+    Fetch ibreeding coefficient from R-API of the genebank given by `g_id`.
+    """
+    response = requests.get('http://{}:{}/inbreeding/{}'
                             .format(settings.rapi.host,
                                     settings.rapi.port,
                                     g_id),
@@ -368,11 +377,17 @@ def get_inbreeding(g_id):
 
 @APP.route("/api/<int:g_id>/kinship/")
 def kinship(g_id):
+    """
+    Returns kinship matrix of the genebank given  by `g_id`.
+    """
     return jsonify(get_kinship(str(g_id)))
 
 
 def get_kinship(g_id):
-    response = requests.get('http://{}:{}/kinship/{}' \
+    """
+    Fetch kinship matrix from R-api of the genebank given  by `g_id`.
+    """
+    response = requests.get('http://{}:{}/kinship/{}'
                             .format(settings.rapi.host,
                                     settings.rapi.port,
                                     g_id),
@@ -389,19 +404,25 @@ def get_kinship(g_id):
 def get_ind_mean_kinship(i_number, g_id):
     """
     Returns the mean kinship coefficient of the individual given by `i_number`.
+    belonging to the genebank given by `g_id`.
     In case the individual is not active, we return 0.
     """
     mk_values = get_mean_kinship(g_id)
     return mk_values[i_number] if i_number in mk_values else 0
 
 
-@APP.route("/api/<int:g_id>/kinship/")
+@APP.route("/api/<int:g_id>/meankinship/")
 def mean_kinship(g_id):
+    """
+    Returns the mean kinship list if the Genebank given by by `g_id`.
+    """
     return jsonify(get_mean_kinship(str(g_id)))
 
 
-@APP.route("/api/<int:g_id>/meankinship/")
 def get_mean_kinship(g_id):
+     """
+    Fetch the mean kinship matrix from R-api of the genebank given  by `g_id`.
+    """
     response = requests.get('http://{}:{}/meankinship/{}' \
                             .format(settings.rapi.host,
                                     settings.rapi.port,
