@@ -31,8 +31,8 @@ import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt, Footer
         } from '@app/static_pages'
 import { Forum } from '@app/forum'
 import * as ui from '@app/ui_utils'
-import { Button, Checkbox, FormControlLabel, ListItemIcon, ListItemText, Menu, MenuItem, withStyles
-        } from '@material-ui/core';
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography,
+        withStyles } from '@material-ui/core';
 import { MenuProps } from '@material-ui/core/Menu';
 
 // Define styles for tab menu
@@ -115,29 +115,10 @@ const useStyles = makeStyles({
       marginTop: '-7px',
     },
   },
-  cssIcon: {
-    display: 'block',
-    fontSize: '3em',
-    margin: '-24px 0 -18px 0',
-  },
-  cssSelector: {
-    position: 'fixed',
-    top: '60px',
-    left: 0,
-    padding: '2px',
-    height: '42px',
-    background: 'white',
-    borderRadius: '0 5px 5px 0',
-    border: '1px solid black',
-    '&:hover': {
-      background: 'lightgrey',
-    }
-  },
   listItem: {
     display: 'block',
   }
 });
-
 
 const StyledMenu = withStyles({
   paper: {
@@ -291,7 +272,7 @@ export function Navigation() {
 
     {
       label: "Bli Medlem",
-      path: "/mellerudskaninen",
+      path: "/medlem",
       exact: true,
       component: <Medlem/>,
       visible: !is_logged_in,
@@ -330,7 +311,6 @@ export function Navigation() {
     },
   ]
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [cssList, setCssList] = React.useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -343,32 +323,6 @@ export function Navigation() {
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
   return <>
-    {/* temporary css selector */}
-    <Button className={classes.cssSelector}
-            onClick={(event) => setCssList(event.currentTarget)}>
-      <span className={classes.cssIcon}>⚙</span>
-      Stil
-    </Button>
-
-    <StyledMenu
-        anchorEl={cssList}
-        keepMounted
-        open={Boolean(cssList)}
-        onClose={() => {setCssList(null)}}
-      >
-        <FormControlLabel className={classes.listItem}
-          labelPlacement="end" label="Logga"
-          control={<Checkbox checked={showLogo} color="primary" />}
-          onChange={(event) => setShowLogo(event.target.checked)}
-        />
-        <FormControlLabel className={classes.listItem}
-          labelPlacement="end" label="Text"
-          control={<Checkbox checked={showLogoText} color="primary" />}
-          onChange={(event) => setShowLogoText(event.target.checked)}
-        />
-      </StyledMenu>
-
-
     {/* Insert the tab menu */}
     <div className={classes.menu}>
 
@@ -378,7 +332,8 @@ export function Navigation() {
           className={classes.menuButton}
           onClick={handleClick}
         >
-        <span className={classes.trigram}>☰</span> Menu
+        <span className={classes.trigram}>☰</span>
+        <Typography variant='subtitle1'>Menu</Typography>
       </Button>
 
       <StyledMenu
