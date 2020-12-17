@@ -9,7 +9,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import { get } from '@app/communication';
 import { useMessageContext } from '@app/message_context';
 import { useDataContext } from './data_context';
-import { individualLabel } from './data_context_global';
 import { SortedTable, Column } from './sorted_table';
 import { Typography } from '@material-ui/core';
 import { BreedingForm } from './breeding_form';
@@ -73,15 +72,6 @@ export function BreedingList({id}: {id: string | undefined}) {
       return genebank.individuals.filter(i => parentNumbers.includes(i.number))
     })
   }, [genebanks, breedingEvents])
-
-  function breedingInfo(breeding: Breeding): String {
-    const mother = parents.find(p => p.number == breeding.mother)
-    const father = parents.find(p => p.number == breeding.father)
-
-    const motherInfo = mother ? individualLabel(mother) : 'Unknown'
-    const fatherInfo = father ? individualLabel(father) : 'Unknown'
-    return `${motherInfo} & ${fatherInfo}`
-  }
 
   const columns: Column[] = [
     {field: 'breed_date', label: 'Parningsdatum', sortAs: 'date', hidden: false},
