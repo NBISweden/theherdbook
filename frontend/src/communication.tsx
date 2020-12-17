@@ -50,10 +50,10 @@ export async function post(url: string, content: any) {
  * @param url The target URL for the POST request
  * @param content The content to be sent with the request
  */
-export async function update(url: string, content: any) {
+export async function patch(url: string, content: any) {
   const resp = await fetch(url, {
     body: JSON.stringify(content),
-    method: 'UPDATE',
+    method: 'PATCH',
     credentials: credentials_policy,
     headers: {
       'Accept': 'application/json',
@@ -75,7 +75,7 @@ export async function update(url: string, content: any) {
 export async function updateHerd(herd: Herd) {
   // replace empty strings with null values
   Object.keys(herd).forEach((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
-  return await update('/api/manage/herd', herd).then(
+  return await patch('/api/manage/herd', herd).then(
     data => {
       return data;
     },

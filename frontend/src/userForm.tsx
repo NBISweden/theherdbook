@@ -7,7 +7,7 @@ import { unstable_batchedUpdates } from 'react-dom'
 import { TextField, Checkbox, FormControlLabel,
          Button, TableContainer, Paper, Table, TableBody, TableRow, TableCell, TableHead } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { get, post, update } from '@app/communication';
+import { get, post, patch } from '@app/communication';
 import { useDataContext } from '@app/data_context'
 import { Herd, Genebank, herdLabel, ServerMessage, inputVariant, OptionType } from '@app/data_context_global';
 import { useHistory } from 'react-router-dom';
@@ -114,12 +114,12 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   /**
    * If `isNew` is set, this function creates a POST request to create a new
    * user in the backend, and then navigates to edit the new user. Otherwise
-   * the current form is sent as an UPDATE request to update the user `id`.
+   * the current form is sent as an PATCH request to update the user `id`.
    */
   const submitForm = () => {
     let postData = {...user};
     delete postData["privileges"];
-    let protocol = isNew ? post : update;
+    let protocol = isNew ? post : patch;
     protocol(`/api/manage/user/${id == 'new' ? 0 : id}`, postData).then(
       (data: ServerMessage) => {
         switch (data.status) {
@@ -198,7 +198,7 @@ export function UserForm({id}: {id: number | 'new' | undefined}) {
   type GenebankOperation = Operation & {role: 'manager' | 'specialist',
                                        genebank: number | undefined}
   const updateRole = (operation: HerdOperation | GenebankOperation) => {
-    update('/api/manage/role', operation).then(
+    patch('/api/manage/role', operation).then(
       (data: ServerMessage) => {
         switch (data.status) {
           case "updated":

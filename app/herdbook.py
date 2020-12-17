@@ -62,7 +62,7 @@ def after_request(response):
 
     response.headers.add("Access-Control-Allow-Origin", origin)
     response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-    response.headers.add("Access-Control-Allow-Methods", "GET,POST,UPDATE")
+    response.headers.add("Access-Control-Allow-Methods", "GET,POST,PATCH")
     response.headers.add("Access-Control-Allow-Credentials", "true")
 
     return response
@@ -101,7 +101,7 @@ def get_users():
     return jsonify(users=users)
 
 
-@APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "POST"])
+@APP.route("/api/manage/user/<u_id>", methods=["GET", "PATCH", "POST"])
 @login_required
 def manage_user(u_id):
     """
@@ -116,7 +116,7 @@ def manage_user(u_id):
     """
     if request.method == "GET":
         retval = da.get_user(u_id, session.get("user_id", None))
-    if request.method == "UPDATE":
+    if request.method == "PATCH":
         form = request.json
         retval = da.update_user(form, session.get("user_id", None))
     if request.method == "POST":
@@ -125,7 +125,7 @@ def manage_user(u_id):
     return jsonify(retval)
 
 
-@APP.route("/api/manage/role", methods=["POST", "UPDATE"])
+@APP.route("/api/manage/role", methods=["POST", "PATCH"])
 @login_required
 def manage_roles():
     """
@@ -150,7 +150,7 @@ def manage_roles():
     return jsonify(status)
 
 
-@APP.route("/api/manage/herd", methods=["POST", "UPDATE"])
+@APP.route("/api/manage/herd", methods=["POST", "PATCH"])
 @login_required
 def manage_herd():
     """
@@ -166,7 +166,7 @@ def manage_herd():
     status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.add_herd(form, session.get("user_id", None))
-    elif request.method == "UPDATE":
+    elif request.method == "PATCH":
         status = da.update_herd(form, session.get("user_id", None))
     return jsonify(status)
 
@@ -318,11 +318,11 @@ def individual(i_number):
     return jsonify(ind)
 
 
-@APP.route("/api/individual", methods=["UPDATE", "POST"])
+@APP.route("/api/individual", methods=["PATCH", "POST"])
 @login_required
 def edit_user():
     """
-    Updates an individual on `UPDATE`, or creates a new individual on `POST`.
+    Updates an individual on `PATCH`, or creates a new individual on `POST`.
 
     The return value from this function should be:
         JSON: {
@@ -331,7 +331,7 @@ def edit_user():
         }
     """
     form = request.json
-    if request.method == "UPDATE":
+    if request.method == "PATCH":
         retval = da.update_individual(form, session.get("user_id", None))
     if request.method == "POST":
         retval = da.add_individual(form, session.get("user_id", None))

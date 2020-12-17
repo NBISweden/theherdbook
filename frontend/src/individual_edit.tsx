@@ -5,7 +5,7 @@
  */
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
-import { get, update } from '@app/communication';
+import { get, patch } from '@app/communication';
 import { asLocale, BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
          individualLabel, inputVariant, LimitedIndividual, OptionType, ServerMessage,
         } from '@app/data_context_global';
@@ -214,7 +214,7 @@ export function IndividualEdit({id}: {id: string | undefined}) {
    */
   const save = (data: Individual) => {
     const postData = {...data}
-    update('/api/individual', postData).then(
+    patch('/api/individual', postData).then(
       (retval: ServerMessage) => {
         switch (retval.status) {
           case 'success': userMessage(retval.message ?? 'Individual updated', 'success'); break;
