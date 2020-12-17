@@ -101,7 +101,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
   return <>
     <form className={style.form}>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <Typography variant='h6'>{data == 'new' && 'Nytt '}Avelstillfälle</Typography>
+        <Typography variant='h6'>{data == 'new' && 'Nytt '}Parningstillfälle</Typography>
         <div className={style.formBox}>
           <KeyboardDatePicker
             autoOk
