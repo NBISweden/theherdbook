@@ -101,7 +101,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
   return <>
     <form className={style.form}>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <Typography variant='h6'>Avelstillfälle</Typography>
+        <Typography variant='h6'>{data == 'new' && 'Nytt '}Avelstillfälle</Typography>
         <div className={style.formBox}>
           <KeyboardDatePicker
             autoOk
@@ -126,7 +126,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
               variant={inputVariant}
               margin="normal" />}
             onChange={(event: any, newValue: OptionType | null) => {
-              newValue && setFormField('mother', newValue)
+              newValue && setFormField('mother', newValue.value)
             }}
           />
           <Autocomplete
@@ -139,7 +139,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
               variant={inputVariant}
               margin="normal" />}
             onChange={(event: any, newValue: OptionType | null) => {
-              newValue && setFormField('father', newValue)
+              newValue && setFormField('father', newValue.value)
             }}
           />
           <TextField
@@ -153,43 +153,45 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
           />
 
         </div>
-        <Typography variant='h6'>Födsel</Typography>
-        { hasBirth
-          ? <div className={style.formBox}>
-              <KeyboardDatePicker
-                autoOk
-                variant="inline"
-                inputVariant={inputVariant}
-                label="Födslodatum"
-                format={dateFormat}
-                className={style.wideControl}
-                value={form ? form.birth_date ?? '' : ''}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(date, value) => {value && setFormField('birth_date', value)}}
-              />
-              <TextField label='Kullstorlek'
-                value={form.litter_size}
-                type='number'
-                className={style.wideControl}
-                variant={inputVariant}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e: any) => {setFormField('litter_size', e.target.value)}}
+        { data != 'new'
+          ? <>
+              <Typography variant='h6'>Födsel</Typography>
+              <div className={style.formBox}>
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant={inputVariant}
+                  label="Födslodatum"
+                  format={dateFormat}
+                  className={style.wideControl}
+                  value={form ? form.birth_date ?? '' : ''}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(date, value) => {value && setFormField('birth_date', value)}}
                 />
-              <TextField
-                label="Anteckningar om födseln"
-                variant={inputVariant}
-                className={style.wideControl}
-                multiline
-                rows={2}
-                value={form.birth_notes ?? ''}
-                onChange={(e: any) => {setFormField('birth_notes', e.target.value)}}
-              />
-            </div>
-          : <p>Ingen födsel registrerad</p>
+                <TextField label='Kullstorlek'
+                  value={form.litter_size}
+                  type='number'
+                  className={style.wideControl}
+                  variant={inputVariant}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(e: any) => {setFormField('litter_size', e.target.value)}}
+                  />
+                <TextField
+                  label="Anteckningar om födseln"
+                  variant={inputVariant}
+                  className={style.wideControl}
+                  multiline
+                  rows={2}
+                  value={form.birth_notes ?? ''}
+                  onChange={(e: any) => {setFormField('birth_notes', e.target.value)}}
+                />
+              </div>
+            </>
+          : <p>Ingen födselinformation</p>
         }
       </MuiPickersUtilsProvider>
     </form>
