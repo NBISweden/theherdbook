@@ -1,12 +1,11 @@
 FROM node:lts
-
 RUN npm install --global npm@7
-
-RUN mkdir -p /app
-COPY /frontend/ /app/
-
-WORKDIR /app
-
-RUN npm install
+RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
+COPY --chown=node:node /frontend/ /home/node/app/
+RUN ls -alF /home/node/app/
+RUN ls -alF /home/node/
+WORKDIR /home/node/app
+USER node
+RUN npm install && npm run build
 RUN npm --version
 CMD npm --version && npm run start

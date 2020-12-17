@@ -15,7 +15,7 @@ RUN pip3 install uwsgi
 # Mountpoint for backend
 RUN mkdir -p /api_src
 
-COPY --from=herdbook_frontend:latest --chown=www-data:www-data /app/dist/ /app/dist/
+COPY --from=herdbook_frontend:latest --chown=www-data:www-data /home/node/app/dist/ /app/dist/
 RUN cd /app/dist && ln -s . static
 
 COPY system/supervisord.conf /etc/
