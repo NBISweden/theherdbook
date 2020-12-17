@@ -116,10 +116,10 @@ export function BreedingList({id}: {id: string | undefined}) {
                    addButton={() => {setActive('new')}}
                    className={style.table}
                    onClick={(row: any[]) => {setActive(row)}}
-                   rowsPerPage={5}
-                   style={{width: active ? '60%' : '100%'}}/>
+                   rowsPerPage={10}
+                   style={{width: active ? '60%' : 'calc(100% - 2px)'}}/>
       <div className={style.form} style={{width: active ? '40%' : 0}}>
-        <BreedingForm data={active} />
+        <BreedingForm data={active} herdId={id}/>
       </div>
     </div>
   </>
