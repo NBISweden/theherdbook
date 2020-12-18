@@ -143,7 +143,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
             }}
           />
           <TextField
-            label="Anteckningar om avelstillfället"
+            label="Anteckningar om parningstillfället"
             variant={inputVariant}
             className={style.wideControl}
             multiline
