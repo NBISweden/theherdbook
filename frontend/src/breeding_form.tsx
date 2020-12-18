@@ -49,15 +49,17 @@ const emptyBreeding: Breeding = {
 export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: string | undefined}) {
   const style = useStyles();
   const { genebanks } = useDataContext()
-  const [form, setForm] = React.useState({...emptyBreeding} as Breeding)
-  const hasBirth = React.useMemo(() => {return !!form.birth_date}, [form])
+  const [formState, setFormState] = React.useState(emptyBreeding as Breeding)
+  React.useEffect(() => setFormState(!data || data == 'new' ? emptyBreeding : data),
+                 [data])
+  const hasBirth = React.useMemo(() => {return !!formState.birth_date}, [formState])
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
    * undefined).
    */
   const setFormField = <B extends keyof Breeding>(label: B, value: Breeding[B]) => {
-    form && setForm({...form, [label]: value})
+    formState && setFormState({...formState, [label]: value})
   }
   const herd: LimitedHerd | undefined = React.useMemo(() => {
     const herd = genebanks.map(g => g.herds.find(h => h.herd == herdId))
@@ -89,17 +91,8 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
     })
   }, [genebank])
 
-  React.useEffect(() => {
-
-    if (!data || data == 'new') {
-      setForm({...emptyBreeding})
-    } else {
-      setForm(data)
-    }
-  }, [data])
-
   return <>
-    <form className={style.form}>
+    <form className={style.formState}>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
         <Typography variant='h6'>{data == 'new' && 'Nytt '}Parningstillfälle</Typography>
         <div className={style.formBox}>
@@ -110,7 +103,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
             label="Parningsdatum"
             format={dateFormat}
             className={style.wideControl}
-            value={form ? form.breed_date ?? '' : ''}
+            value={formState ? formState.breed_date ?? '' : ''}
             InputLabelProps={{
               shrink: true,
             }}
@@ -118,7 +111,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
           />
           <Autocomplete
             options={allFemales ?? []}
-            value={allFemales.find(option => option.value == form.mother) ?? null}
+            value={allFemales.find(option => option.value == formState.mother) ?? null}
             getOptionLabel={(option: OptionType) => option.label}
             renderInput={(params) => <TextField {...params}
               label="Mor"
@@ -131,7 +124,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
           />
           <Autocomplete
             options={allMales ?? []}
-            value={allMales.find(option => option.value == form.father) ?? null}
+            value={allMales.find(option => option.value == formState.father) ?? null}
             getOptionLabel={(option: OptionType) => option.label}
             renderInput={(params) => <TextField {...params}
               label="Far"
@@ -148,7 +141,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
             className={style.wideControl}
             multiline
             rows={2}
-            value={form.breed_notes ?? ''}
+            value={formState.breed_notes ?? ''}
             onChange={(e: any) => {setFormField('breed_notes', e.target.value)}}
           />
 
@@ -164,14 +157,14 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
                   label="Födelsedatum"
                   format={dateFormat}
                   className={style.wideControl}
-                  value={form ? form.birth_date ?? '' : ''}
+                  value={formState ? formState.birth_date ?? '' : ''}
                   InputLabelProps={{
                     shrink: true,
                   }}
                   onChange={(date, value) => {value && setFormField('birth_date', value)}}
                 />
                 <TextField label='Kullstorlek'
-                  value={form.litter_size}
+                  value={formState.litter_size ?? 0}
                   type='number'
                   className={style.wideControl}
                   variant={inputVariant}
@@ -186,7 +179,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
                   className={style.wideControl}
                   multiline
                   rows={2}
-                  value={form.birth_notes ?? ''}
+                  value={formState.birth_notes ?? ''}
                   onChange={(e: any) => {setFormField('birth_notes', e.target.value)}}
                 />
               </div>
