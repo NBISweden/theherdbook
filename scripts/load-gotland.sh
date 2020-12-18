@@ -2,12 +2,12 @@
 
 # Needs to be called by load.sh
 
-csvsql  --db "$1" \
+csvsql  --db "$1" -I \
 	--tables g_data \
 	--overwrite \
 	--insert "$2"
 
-psql --quiet <<-'END_SQL'
+psql --echo-errors --quiet <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
 	------------------------------------------------------------
@@ -18,27 +18,40 @@ psql --quiet <<-'END_SQL'
 
 	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0';
 
+
+	ALTER TABLE g_data ALTER "ny G" TYPE NUMERIC USING "ny G"::numeric;
+	ALTER TABLE g_data ALTER "ny G" TYPE INTEGER USING "ny G"::integer;
+
+	ALTER TABLE g_data ALTER "Genb" TYPE NUMERIC USING "Genb"::numeric;
+	ALTER TABLE g_data ALTER "Genb" TYPE INTEGER USING "Genb"::integer;
 	ALTER TABLE g_data ALTER "Genb" TYPE VARCHAR(10);
 	UPDATE g_data SET "Genb" = CONCAT('G', "Genb")
-	WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'G%';
+	       WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'G%';
 
 	UPDATE g_data SET "Nummer" = CONCAT('G', "Nummer")
-	WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'G%';
+	       WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'G%';
 
 	ALTER TABLE g_data ALTER "Mor nr" TYPE VARCHAR(20);
 	UPDATE g_data SET "Mor nr" = CONCAT('G', "Mor nr")
-	WHERE "Mor nr" IS NOT NULL AND "Mor nr" NOT LIKE 'G%';
+	       WHERE "Mor nr" IS NOT NULL AND "Mor nr" NOT LIKE 'G%';
 
 	ALTER TABLE g_data ALTER "Far nr" TYPE VARCHAR(20);
 	UPDATE g_data SET "Far nr" = CONCAT('G', "Far nr")
-	WHERE "Far nr" IS NOT NULL AND "Far nr" NOT LIKE 'G%';
+	       WHERE "Far nr" IS NOT NULL AND "Far nr" NOT LIKE 'G%';
 
 	UPDATE g_data SET "Kön" = 'male' WHERE "Kön" = 'hane';
 	UPDATE g_data SET "Kön" = 'female' WHERE "Kön" = 'hona';
 
 	UPDATE g_data SET "Färgnr" = NULL WHERE "Färgnr" = '?';
 	UPDATE g_data SET "Färgnr" = NULL WHERE "Färgnr" = '0';
+
+	ALTER TABLE g_data ALTER "Färgnr" TYPE NUMERIC USING "Färgnr"::numeric;
 	ALTER TABLE g_data ALTER "Färgnr" TYPE INTEGER USING "Färgnr"::integer;
+
+	ALTER TABLE g_data ALTER "Född" TYPE DATE USING "Född"::date;
+
+	ALTER TABLE g_data ALTER "Kull" TYPE NUMERIC USING "Kull"::numeric;
+	ALTER TABLE g_data ALTER "Kull" TYPE INTEGER USING "Kull"::integer;
 
 	-- TODO: Use these columns to hold g_data temporarily, then move
 	-- that g_data into the breeding table.
@@ -181,6 +194,31 @@ psql --quiet <<-'END_SQL'
    ORDER BY i.individual_id;
 END_SQL
 
+# Fix table names for years.
+
+for year in $(seq 2000 2100); do
+  cat <<-END_SQL
+
+DO \$\$
+BEGIN
+  IF EXISTS(SELECT *
+    FROM information_schema.columns
+    WHERE table_name='g_data' and column_name='${year}.0')
+  THEN
+      ALTER TABLE "public"."g_data" RENAME COLUMN "${year}.0" TO "$year";
+      ALTER TABLE g_data ALTER "$year" TYPE VARCHAR(20);
+
+      UPDATE g_data SET "$year" = NULL WHERE "$year" is null;
+
+      ALTER TABLE g_data ALTER "$year" TYPE NUMERIC USING "$year"::numeric;
+      ALTER TABLE g_data ALTER "$year" TYPE INTEGER USING "$year"::integer;
+  END IF;
+END \$\$;
+
+END_SQL
+
+done | psql  --quiet
+	    
 # Load tracking data for years 2000 through to 2020
 year=2000
 while [ "$year" -le 2020 ]; do
@@ -252,6 +290,7 @@ while [ "$year" -le 2019 ]; do
 
 	cat <<-END_SQL
 		-- Fix column type
+		ALTER TABLE g_data ALTER "$column" TYPE NUMERIC USING "$column"::numeric;
 		ALTER TABLE g_data ALTER "$column" TYPE REAL;
 
 		-- Load $column data

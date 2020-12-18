@@ -3,12 +3,12 @@
 # Needs to be called by load.sh
 
 # read the csv into a temprary table called 'data'
-csvsql  --db "$1" \
+csvsql  --db "$1" -I \
 	--tables m_data \
 	--overwrite \
 	--insert "$2"
 
-psql --quiet <<-'END_SQL'
+psql --echo-errors --quiet <<-'END_SQL'
 	------------------------------------------------------------
 	-- Fixup data
 	------------------------------------------------------------
@@ -18,13 +18,25 @@ psql --quiet <<-'END_SQL'
 	UPDATE m_data SET "Far" = TRIM("Far");
 	UPDATE m_data SET "Besättning" = TRIM("Besättning");
 
+
+	UPDATE m_data SET "Genb" = REPLACE("Genb",'-','');
+	ALTER TABLE m_data ALTER "Genb" TYPE NUMERIC USING "Genb"::numeric;
+	ALTER TABLE m_data ALTER "Genb" TYPE INTEGER USING "Genb"::integer;
 	ALTER TABLE m_data ALTER "Genb" TYPE VARCHAR(9);
 	UPDATE m_data SET "Genb" = CONCAT('M', "Genb")
-	WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'M%';
+	       WHERE "Genb" IS NOT NULL AND "Genb" NOT LIKE 'M%';
 
 	ALTER TABLE m_data ALTER "Nummer" TYPE VARCHAR(20);
 	UPDATE m_data SET "Nummer" = CONCAT('M', "Nummer")
-	WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'M%';
+		WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'M%';
+
+	ALTER TABLE m_data ALTER "Intyg" TYPE NUMERIC USING "Intyg"::numeric;
+	ALTER TABLE m_data ALTER "Intyg" TYPE INTEGER USING "Intyg"::integer;
+
+	ALTER TABLE m_data ALTER "Kull" TYPE NUMERIC USING "Kull"::numeric;
+	ALTER TABLE m_data ALTER "Kull" TYPE INTEGER USING "Kull"::integer;
+
+	ALTER TABLE m_data ALTER "Född" TYPE DATE USING "Född"::date;
 
 	ALTER TABLE m_data ALTER "Mor nr" TYPE VARCHAR(20);
 	UPDATE m_data SET "Mor nr" = CONCAT('M', "Mor nr")
@@ -137,6 +149,31 @@ psql --quiet <<-'END_SQL'
    WHERE	gb.name = 'Mellerudskanin'
    ORDER BY i.individual_id;
 END_SQL
+
+# Fix table names for years and clean up fields.
+
+for year in $(seq 2000 2100); do
+  cat <<-END_SQL
+
+DO \$\$
+BEGIN
+  IF EXISTS(SELECT *
+    FROM information_schema.columns
+    WHERE table_name='m_data' and column_name='${year}.0')
+  THEN
+      ALTER TABLE "public"."m_data" RENAME COLUMN "${year}.0" TO "$year";
+      ALTER TABLE m_data ALTER "$year" TYPE VARCHAR(20);
+
+      UPDATE m_data SET "$year" = NULL WHERE "$year" is null;
+
+      ALTER TABLE m_data ALTER "$year" TYPE NUMERIC USING "$year"::numeric;
+      ALTER TABLE m_data ALTER "$year" TYPE INTEGER USING "$year"::integer;
+  END IF;
+END \$\$;
+
+END_SQL
+
+done | psql --quiet
 
 # Load tracking data for years 2000 through to 2020
 year=2000

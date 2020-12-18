@@ -87,6 +87,12 @@ export PGUSER="${POSTGRES_USER:?}"
 export PGPORT="${POSTGRES_PORT?}"
 export PGHOST="${POSTGRES_HOST?}"
 password="${POSTGRES_PASSWORD?}"
+export PGPASS="${POSTGRES_PASSWORD?}"
+
+echo "$PGHOST:$PGPORT:$PGDATABASE:$PGUSER:$PGPASS" > "$HOME/.pgpass"
+echo "$PGHOST:$PGPORT:postgres:$PGUSER:$PGPASS" >> "$HOME/.pgpass"
+
+chmod og-rwx "$HOME/.pgpass"
 
 # Assume that we're connecting through a socket if $PGHOST is localhost
 # (use 127.0.0.1 if this is not the case).
@@ -96,7 +102,7 @@ fi
 connstr="postgresql+psycopg2://$PGUSER:$password@${PGPORT:+$PGHOST:$PGPORT}/$PGDATABASE"
 
 echo '## Initializing database'
-dropdb "$PGDATABASE"
+psql -d postgres -c  "DROP DATABASE $PGDATABASE;"
 createdb "$PGDATABASE"
 
 cd /code

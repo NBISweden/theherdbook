@@ -64,13 +64,13 @@ if docker-compose -f ../dc-db-load.yml ps | grep -q 'main-load-db.*\sUp\s.*'; th
     :
 else
     # Start containers and wait a little to give it time to start 
-    echo "System is not up, bringing upp before registering user"
+    echo "System is not up, bringing up before loading data"
     echo
     docker-compose -f ../dc-db-load.yml up -d
     sleep 10
 fi
 
 
-docker-compose -f ../dc-db-load.yml exec -w /scripts -T main-load-db ./load-in-docker.sh -g "$gfile" -G "$Gfile" -m "$mfile"
+docker-compose -f ../dc-db-load.yml exec main-load-db /scripts/load-in-docker.sh -g "/scripts/$gfile" -G "/scripts/$Gfile" -m "/scripts/$mfile"
 
 echo "Done you can stop the main-load-db container with docker-compose -f ../dc-db-load.yml stop"
