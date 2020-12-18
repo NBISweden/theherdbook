@@ -107,7 +107,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
             autoOk
             variant="inline"
             inputVariant={inputVariant}
-            label="Avelsdatum"
+            label="Parningsdatum"
             format={dateFormat}
             className={style.wideControl}
             value={form ? form.breed_date ?? '' : ''}
