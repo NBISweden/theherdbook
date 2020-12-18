@@ -101,13 +101,13 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
   return <>
     <form className={style.form}>
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <Typography variant='h6'>{data == 'new' && 'Nytt '}Avelstillfälle</Typography>
+        <Typography variant='h6'>{data == 'new' && 'Nytt '}Parningstillfälle</Typography>
         <div className={style.formBox}>
           <KeyboardDatePicker
             autoOk
             variant="inline"
             inputVariant={inputVariant}
-            label="Avelsdatum"
+            label="Parningsdatum"
             format={dateFormat}
             className={style.wideControl}
             value={form ? form.breed_date ?? '' : ''}
@@ -143,7 +143,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
             }}
           />
           <TextField
-            label="Anteckningar om avelstillfället"
+            label="Anteckningar om parningstillfället"
             variant={inputVariant}
             className={style.wideControl}
             multiline
@@ -161,7 +161,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
                   autoOk
                   variant="inline"
                   inputVariant={inputVariant}
-                  label="Födslodatum"
+                  label="Födelsedatum"
                   format={dateFormat}
                   className={style.wideControl}
                   value={form ? form.birth_date ?? '' : ''}

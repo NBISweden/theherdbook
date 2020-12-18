@@ -78,7 +78,7 @@ export function BreedingList({id}: {id: string | undefined}) {
     {field: 'breed_notes', label: 'Parningsanteckningar', hidden: true},
     {field: 'mother', label: 'Moder', sortAs: 'numbers', hidden: false},
     {field: 'father', label: 'Fader', sortAs: 'numbers', hidden: false},
-    {field: 'birth_date', sortAs: 'date', label: 'Födslodatum', hidden: false},
+    {field: 'birth_date', sortAs: 'date', label: 'Födelsedatum', hidden: false},
     {field: 'birth_notes', label: 'Födselanteckningar', hidden: true},
     {field: 'litter_size', sortAs: 'number', label: 'Antal ungar', hidden: false,
      numeric: true},
