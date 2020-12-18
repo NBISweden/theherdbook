@@ -251,7 +251,8 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                         <TableRow key={row.tableId}
                           hover
                           selected={selected == row.tableId}
-                          onClick={props.onClick && () => {
+                          onClick={props.onClick
+                                   ? () => {
                                      if (selected == row.tableId) {
                                        props.onClick(null)
                                        setSelected(null)
@@ -259,7 +260,8 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                                        props.onClick(row)
                                        setSelected(row.tableId)
                                      }
-                                   }}
+                                   }
+                                   : () => {}}
                           tabIndex={-1}
                         >
                           {visibleColumns.map(column => {
