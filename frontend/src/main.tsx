@@ -43,7 +43,4 @@ const Main =
 ReactDOM.render(Main, document.querySelector('#root'))
 
 // https://www.snowpack.dev/#hot-module-replacement
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-
+import.meta?.hot?.accept() // Dan: OK to ignore esbuild warning on this line
