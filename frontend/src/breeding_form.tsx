@@ -161,7 +161,7 @@ export function BreedingForm({data, herdId}: {data: Breeding | 'new', herdId: st
                   autoOk
                   variant="inline"
                   inputVariant={inputVariant}
-                  label="Födslodatum"
+                  label="Födelsedatum"
                   format={dateFormat}
                   className={style.wideControl}
                   value={form ? form.birth_date ?? '' : ''}
