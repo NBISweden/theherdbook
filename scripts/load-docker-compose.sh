@@ -71,6 +71,6 @@ else
 fi
 
 
-docker-compose -f ../dc-db-load.yml exec -w /scripts -T main-load-db ./load-in-docker.sh -g "$gfile" -G "$Gfile" -m "$mfile"
+docker-compose -f ../dc-db-load.yml exec main-load-db /scripts/load-in-docker.sh -g "/scripts/$gfile" -G "/scripts/$Gfile" -m "/scripts/$mfile"
 
 echo "Done you can stop the main-load-db container with docker-compose -f ../dc-db-load.yml stop"
