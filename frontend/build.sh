@@ -3,6 +3,8 @@ rm -rf dist
 esbuild                                          \
     --bundle src/main.tsx                        \
     --outdir=dist                                \
+    --loader:.png=file                           \
+    --loader:.jpg=file                           \
     --target=es6                                 \
     --minify                                     \
     "--define:process.env.NODE_ENV='production'" \
