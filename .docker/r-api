@@ -20,7 +20,7 @@ RUN apt update \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","readr", "optiSel","plumber","jsonlite","nprcgenekeepr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
+RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","readr", "optiSel","plumber","rjson","jsonlite","nprcgenekeepr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
 
 FROM rocker/r-ver:4.0.2
 
