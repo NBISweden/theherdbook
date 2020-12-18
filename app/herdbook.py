@@ -10,6 +10,7 @@ import sys
 import uuid
 import time
 import logging
+import base64
 
 from flask import (
     Flask,
@@ -67,6 +68,33 @@ def after_request(response):
 
     return response
 
+
+
+@LOGIN.request_loader
+def load_user_from_request(request):
+
+    # Try to login using Basic Auth
+    api_key = request.headers.get('Authorization')
+    if api_key:
+        api_key = api_key.replace('Basic ', '', 1)
+        try:
+            api_key = base64.b64decode(api_key)
+        except TypeError:
+            pass
+
+        username = api_key[:api_key.find(b':')]
+        password = api_key[api_key.find(b':')+1:]
+
+        user = da.authenticate_user(username, password)
+        if user:
+            session["user_id"] = user.uuid
+            session.modified = True
+            login_user(user)
+
+            return user
+
+    # we are not logged in.
+    return None
 
 # pylint: disable=unused-argument
 @LOGIN.user_loader
