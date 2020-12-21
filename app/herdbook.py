@@ -86,12 +86,17 @@ def load_user_from_request(request):
         password = api_key[api_key.find(b':')+1:]
 
         user = da.authenticate_user(username, password)
+
         if user:
+            APP.logger.info('User %s logged in from request header', username)
+
             session["user_id"] = user.uuid
             session.modified = True
             login_user(user)
 
             return user
+
+        APP.logger.info('Failed login from header for %s', username)
 
     # we are not logged in.
     return None
