@@ -2,20 +2,41 @@ library(optiSel)
 library(nprcgenekeepr)
 library(digest)
 library(rjson)
+library(dplyr)
 
 #Only load the environment one
-api_base   <- Sys.getenv("APIBASE", "http://herdbook-main:8443/api/")
+api_base   <- Sys.getenv("API_BASE", "http://herdbook-main:9000/api/")
+auth_header <- Sys.getenv("API_AUTH", "")
 
+
+our_headers <- function() {
+  tmp <- unlist(strsplit(auth_header, ":"))
+
+  if (length(tmp) == 1) {
+    name <- 'Authorization'
+  } else {
+    name <-tmp[1]
+    tmp <- tmp[2:length(tmp)]
+  }
+
+  ret <- c(tmp[1])
+  names(ret) <- c(name)
+  return (ret)
+}
 
 get_resource <- function(resource) {
-  res <-fromJSON(paste(readLines(cat(api_base,resource, sep="")), collapse=""))
+  print(paste0("Fetching resource ", resource))
+  c <-url( paste0(api_base,resource), headers = our_headers())
+
+  res <-fromJSON(paste(readLines(c), collapse=""))
   return (res)
 }
 
 #Get available genebank ids in the database
 get_all_genebanks <- function() {
-  genebanks <- get_resource("genebanks")
-  return (genebanks)
+  js <- get_resource("genebanks")
+
+  return(js[1][[1]])
 }
 
 #Return the digest of the current individuals in the corresponding genebank 
@@ -27,10 +48,9 @@ get_modifications_digest <- function(genebank_id){
   #' @param genebank_id The Genebank ID to get the individual number list from.
   #' @details If the digest changes we know we need to recalculate
 
-  individuals <- get_resource(cat("genebanks/",genebank_id,"/individuals", sep=""))
+  individuals <- get_resource(paste0("genebank/",genebank_id,"/individuals"))
   return (digest(individuals))
 }
-?get_modifications_digest
 
 # Returns a data structure with selected individuals' ancestry information for genebank_id 
 # 1 Gotlandskanin 2, Mellerud
@@ -38,27 +58,56 @@ get_modifications_digest <- function(genebank_id){
 
 get_rabbits<-function(genebank_id){
   rabbits <- get_all_individuals(genebank_id)
-  names(rabbits)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
-  rabbits$Born_date<-rabbits$Born
-  rabbits$Born<-format(rabbits$Born_date, format="%Y")
-  Pedi <- optiSel::prePed(rabbits)
-  return(Pedi)
+
+  if (is.null(rabbits) || (length(rabbits) == 0)) {
+     return(NULL)
+  }
+  
+   names(rabbits)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
+   print("Calling on optisel")
+
+   Pedi <- optiSel::prePed(rabbits)
+   print("Return from optisel")
+   return(Pedi)
+
 }
 
 
 #Human readable version of all animals from the given genebank_id
 get_all_individuals <- function(genebank_id) {
-  individuals <- get_resource(cat("genebanks/",genebank_id,"/individuals", sep=""))
-  return (individuals)
+  js <- get_resource(paste0("genebank/",genebank_id,"/individuals"))
+  
+  tmp<-do.call('rbind', 
+        lapply(js$individuals, 
+               function(x) { 
+                 unlist(x)[c('id', 'mother.id', 'father.id', 'sex', 'birth_date','active')]
+               }
+          )
+    )
+
+  if (length(tmp) == 0) {
+   return(NULL)
+  }
+
+  df <- rename(
+    mutate(
+      mutate(data.frame(tmp),
+  	     Born = as.numeric(substr(birth_date, 1, 4)),
+	     after=4),
+	   birth_date = NULL),
+    Indiv=id, Sire=father.id, Dam=mother.id, Sex=sex, is_active = active)
+  print(df)
+  return (df)
 }
 
 
 # Function to Preload data on startup
 update_preload_all_data <- function() {
   genebanks<<-get_all_genebanks()
-  for(i in genebanks$genebank_id){
-    assign(paste0("MOD_",i),get_modifications_digest(i),envir = .GlobalEnv)
-    update_data(i)
+  for(i in genebanks){
+    print(i$id)
+    assign(paste0("MOD_",i$id),get_modifications_digest(i$id),envir = .GlobalEnv)
+    update_data(i$id)
   }
 }
 
@@ -66,6 +115,10 @@ update_preload_all_data <- function() {
 #Update and calculate the Kinship matrix and inbreeding
 update_data <- function(genebank_id) {
   Pedi<-get_rabbits(genebank_id)
+  if (is.null(Pedi)) {
+      return (NULL)
+  }
+
   #Calculate Inbreeding and name it after genebank_id
   assign(paste0("IDB_",genebank_id),data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE),envir = .GlobalEnv)
   #Get current active population
@@ -77,9 +130,9 @@ update_data <- function(genebank_id) {
 
 #* @serializer csv
 #* @get /kinship/<genebank_id:int>
-calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
+calculate_kinship <- function(genebank_id, update_data="FALSE") {
   if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
-  if(update_from_db){
+  if(update_data){
     MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
@@ -97,6 +150,11 @@ calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
 # alleles retained in the gene dropping experiment.
 calculateFEFG <- function() {
   Pedi<-get_rabbits(genebank_id)
+
+  if (is.null(Pedi)) {
+     return
+  }
+
   ped<- data.frame(
     id = Pedi$Indiv,
     sire = Pedi$Sire,
@@ -154,9 +212,7 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
   return(
     data.frame(number=names(get(paste0("MK_",genebank_id))), MK=get(paste0("MK_",genebank_id)), row.names=NULL)
   )
-
 }
-
 
 #RUN stuff and preload
 update_preload_all_data()
