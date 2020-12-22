@@ -93,7 +93,7 @@ get_all_individuals <- function(genebank_id) {
     mutate(
       mutate(data.frame(tmp),
   	     Born = as.numeric(substr(birth_date, 1, 4)),
-	     after=4),
+	     .after=4),
 	   birth_date = NULL),
     Indiv=id, Sire=father.id, Dam=mother.id, Sex=sex, is_active = active)
   print(df)
