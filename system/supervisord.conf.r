@@ -1,5 +1,6 @@
 [unix_http_server]
 file=/tmp/supervisor.sock                       ; path to your socket file
+chown=www-data
 
 [supervisord]
 logfile=/dev/stdout
@@ -27,7 +28,7 @@ stdout_logfile_maxbytes = 0
 stderr_logfile_maxbytes = 0
 
 [program:code_reloader]
-command=bash -c 'while true; do inotifywait -e modify,attrib,create,delete -r -q /code; rsync -a /code/ /usr/local/r-api/; pkill -TERM R; done'
+command=bash -c 'while true; do inotifywait -e modify,attrib,create,delete -r -q /code; rsync -a /code/ /usr/local/r-api/; supervisorctl restart rserver; done'
 user=www-data
 directory=/code
 stderr_logfile = /dev/stdout
