@@ -340,6 +340,8 @@ csvsql	--db "$1" \
 
 psql --quiet <<-'END_SQL'
 	-- Fixup data somewhat
+	ALTER TABLE g_data2 ALTER "Nr" TYPE NUMERIC USING "Nr"::numeric;
+	ALTER TABLE g_data2 ALTER "Nr" TYPE INTEGER USING "Nr"::integer;
 	ALTER TABLE g_data2 ALTER "Nr" TYPE VARCHAR(10);
 	UPDATE g_data2 SET "Nr" = CONCAT('G', "Nr")
 	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
