@@ -10,7 +10,11 @@ import logging
 from datetime import datetime, timedelta
 from flask_login import UserMixin
 
-from playhouse.migrate import PostgresqlMigrator, migrate
+from playhouse.migrate import  (
+    migrate,
+    PostgresqlMigrator,
+    SqliteMigrator,
+)
 
 from peewee import (
     PostgresqlDatabase,
@@ -36,16 +40,19 @@ from peewee import (
 CurrentSchemaVersion = 2
 DB_PROXY = Proxy()
 DATABASE = None
+migrator = None
 
 
 def set_test_database(name):
     """
     This function sets the database to a named sqlite3 database for testing.
     """
-    global DATABASE  # pylint: disable=global-statement
+    global DATABASE, migrator  # pylint: disable=global-statement
     DATABASE = SqliteDatabase(name)
 
     DB_PROXY.initialize(DATABASE)
+
+    migrator = SqliteMigrator(DATABASE)
 
 
 def set_database(name, host=None, port=None, user=None, password=None):
@@ -53,12 +60,13 @@ def set_database(name, host=None, port=None, user=None, password=None):
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
-    global DATABASE  # pylint: disable=global-statement
+    global DATABASE, migrator  # pylint: disable=global-statement
     DATABASE = PostgresqlDatabase(
         name, host=host, port=port, user=user, password=password
     )
     DB_PROXY.initialize(DATABASE)
 
+    migrator = PostgresqlMigrator(DATABASE)
 
 try:
     #pylint: disable=import-error
@@ -1082,7 +1090,6 @@ def migrate_1_to_2():
         cols = [x.name for x in DATABASE.get_columns('schemahistory')]
 
         if not 'applied' in cols:
-            migrator = PostgresqlMigrator(DATABASE)
             migrate(
                 migrator.add_column(
                     'schemahistory', 'applied', DateTimeField(null=True))
@@ -1119,5 +1126,5 @@ def check_migrations():
         current_version = SchemaHistory.select(
             fn.MAX(SchemaHistory.version)).scalar()
 
-
-check_migrations()
+if DATABASE:
+    check_migrations()
