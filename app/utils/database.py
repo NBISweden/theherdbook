@@ -10,6 +10,8 @@ import logging
 from datetime import datetime, timedelta
 from flask_login import UserMixin
 
+from playhouse.migrate import PostgresqlMigrator, migrate
+
 from peewee import (
     PostgresqlDatabase,
     fn,
@@ -31,6 +33,7 @@ from peewee import (
     UUIDField,
 )
 
+CurrentSchemaVersion = 2
 DB_PROXY = Proxy()
 DATABASE = None
 
@@ -939,6 +942,12 @@ class Authenticators(BaseModel):
     auth_data = TextField(null=True)
 
 
+class SchemaHistory(BaseModel):
+    version = IntegerField(primary_key=True)
+    comment = TextField()
+    applied = DateTimeField(null=True)
+
+
 MODELS = [
     Genebank,
     Herd,
@@ -956,6 +965,7 @@ MODELS = [
     GenebankReport,
     HerdTracking,
     Authenticators,
+    SchemaHistory
 ]
 
 
@@ -1022,6 +1032,12 @@ def init():
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
 
+    s = SchemaHistory(version=CurrentSchemaVersion, comment="Bootstrapped")
+
+    with DATABASE.atomic():
+        s.save()
+
+
 def verify(try_init=True):
     """
     Initialize the database, verify the tables in the database, and verify that
@@ -1041,3 +1057,67 @@ def verify(try_init=True):
         return verify(False)
 
     return all_ok
+
+
+def migrate_None_to_1():
+    """
+    Migrate between no schema version and version 1.
+    """
+
+    logging.info("Migrating to schema version 1")
+
+    with DATABASE.atomic():
+        SchemaHistory.create_table()
+        SchemaHistory.insert(
+            version=1, comment="Create schema history table").execute()
+
+
+def migrate_1_to_2():
+    """
+    Migrate between schema version 1 and 2.
+    """
+
+    with DATABASE.atomic():
+
+        cols = [x.name for x in DATABASE.get_columns('schemahistory')]
+
+        if not 'applied' in cols:
+            migrator = PostgresqlMigrator(DATABASE)
+            migrate(
+                migrator.add_column(
+                    'schemahistory', 'applied', DateTimeField(null=True))
+            )
+        SchemaHistory.insert(
+            version=2, comment="Fix schema history table", applied=datetime.now()).execute()
+
+
+def check_migrations():
+    """
+    Check if the database needs any migrations run and run those if that's the case.
+    """
+    logging.debug("Checking for needed database migrations")
+
+    current_version = None
+    if SchemaHistory.table_exists():
+        current_version = SchemaHistory.select(
+            fn.MAX(SchemaHistory.version)).scalar()
+
+    logging.debug("Doing (if any) needed migrations from %s to %s",
+                  current_version,
+                  CurrentSchemaVersion)
+
+    while current_version is None or current_version < CurrentSchemaVersion:
+        next_version = (current_version if current_version else 0) + 1
+        call = "migrate_%s_to_%s" % (current_version, next_version)
+        logging.info("Calling %s to migrate from %s to %s", call,
+                     current_version, next_version)
+
+        print("Calling %s to migrate from %s to %s" % (call,
+                                                       current_version, next_version))
+
+        globals()[call]()
+        current_version = SchemaHistory.select(
+            fn.MAX(SchemaHistory.version)).scalar()
+
+
+check_migrations()
