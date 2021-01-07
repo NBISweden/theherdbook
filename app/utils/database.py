@@ -90,6 +90,7 @@ def connect():
     if DATABASE and DATABASE.is_closed():
         try:
             DATABASE.connect()
+            check_migrations()
         except OperationalError as exception:
             logging.error(exception)
 
@@ -1126,5 +1127,5 @@ def check_migrations():
         current_version = SchemaHistory.select(
             fn.MAX(SchemaHistory.version)).scalar()
 
-if DATABASE:
+if is_connected():
     check_migrations()
