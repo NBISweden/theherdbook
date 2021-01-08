@@ -37,22 +37,22 @@ from peewee import (
     UUIDField,
 )
 
-CurrentSchemaVersion = 2
+CURRENT_SCHEMA_VERSION = 2
 DB_PROXY = Proxy()
 DATABASE = None
-migrator = None
+DATABASE_MIGRATOR = None
 
 
 def set_test_database(name):
     """
     This function sets the database to a named sqlite3 database for testing.
     """
-    global DATABASE, migrator  # pylint: disable=global-statement
+    global DATABASE, DATABASE_MIGRATOR  # pylint: disable=global-statement
     DATABASE = SqliteDatabase(name)
 
     DB_PROXY.initialize(DATABASE)
 
-    migrator = SqliteMigrator(DATABASE)
+    DATABASE_MIGRATOR = SqliteMigrator(DATABASE)
 
 
 def set_database(name, host=None, port=None, user=None, password=None):
@@ -60,13 +60,13 @@ def set_database(name, host=None, port=None, user=None, password=None):
     This function makes it possible to set the database manually when settings
     aren't loaded.
     """
-    global DATABASE, migrator  # pylint: disable=global-statement
+    global DATABASE, DATABASE_MIGRATOR  # pylint: disable=global-statement
     DATABASE = PostgresqlDatabase(
         name, host=host, port=port, user=user, password=password
     )
     DB_PROXY.initialize(DATABASE)
 
-    migrator = PostgresqlMigrator(DATABASE)
+    DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
 try:
     #pylint: disable=import-error
@@ -952,6 +952,9 @@ class Authenticators(BaseModel):
 
 
 class SchemaHistory(BaseModel):
+    """
+    Contains schema migration history for the database.
+    """
     version = IntegerField(primary_key=True)
     comment = TextField()
     applied = DateTimeField(null=True)
@@ -1041,10 +1044,10 @@ def init():
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
 
-    s = SchemaHistory(version=CurrentSchemaVersion, comment="Bootstrapped")
+    sh_bootstrap = SchemaHistory(version=CURRENT_SCHEMA_VERSION, comment="Bootstrapped")
 
     with DATABASE.atomic():
-        s.save()
+        sh_bootstrap.save()
 
 
 def verify(try_init=True):
@@ -1068,7 +1071,19 @@ def verify(try_init=True):
     return all_ok
 
 
-def migrate_None_to_1():
+#
+# Templates for database migrations.
+#
+# Migrations should be expected to run incrementally, each function supporting going
+# from schema version N to N+1.
+#
+# In case data changes are necessary, they should be included in the migration.
+#
+# Migrations should also support replays, i.e. on a repeated call to a migration
+# that has already been applied, it should simply do nothing rather than fail.
+#
+
+def migrate_none_to_1():
     """
     Migrate between no schema version and version 1.
     """
@@ -1077,7 +1092,7 @@ def migrate_None_to_1():
 
     with DATABASE.atomic():
         SchemaHistory.create_table()
-        SchemaHistory.insert(
+        SchemaHistory.insert( # pylint: disable=E1120
             version=1, comment="Create schema history table").execute()
 
 
@@ -1092,10 +1107,10 @@ def migrate_1_to_2():
 
         if not 'applied' in cols:
             migrate(
-                migrator.add_column(
+                DATABASE_MIGRATOR.add_column(
                     'schemahistory', 'applied', DateTimeField(null=True))
             )
-        SchemaHistory.insert(
+        SchemaHistory.insert( # pylint: disable=E1120
             version=2, comment="Fix schema history table", applied=datetime.now()).execute()
 
 
@@ -1107,16 +1122,16 @@ def check_migrations():
 
     current_version = None
     if SchemaHistory.table_exists():
-        current_version = SchemaHistory.select(
+        current_version = SchemaHistory.select( # pylint: disable=E1120
             fn.MAX(SchemaHistory.version)).scalar()
 
     logging.debug("Doing (if any) needed migrations from %s to %s",
                   current_version,
-                  CurrentSchemaVersion)
+                  CURRENT_SCHEMA_VERSION)
 
-    while current_version is None or current_version < CurrentSchemaVersion:
+    while current_version is None or current_version < CURRENT_SCHEMA_VERSION:
         next_version = (current_version if current_version else 0) + 1
-        call = "migrate_%s_to_%s" % (current_version, next_version)
+        call = ("migrate_%s_to_%s" % (current_version, next_version)).lower()
         logging.info("Calling %s to migrate from %s to %s", call,
                      current_version, next_version)
 
@@ -1124,7 +1139,7 @@ def check_migrations():
                                                        current_version, next_version))
 
         globals()[call]()
-        current_version = SchemaHistory.select(
+        current_version = SchemaHistory.select( # pylint: disable=E1120
             fn.MAX(SchemaHistory.version)).scalar()
 
 if is_connected():
