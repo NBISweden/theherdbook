@@ -672,23 +672,23 @@ class TestDatabaseMigration(DatabaseTest):
 
         db.check_migrations()
         self.assertTrue(db.SchemaHistory.table_exists())
-        self.assertEqual(db.SchemaHistory.select(
+        self.assertEqual(db.SchemaHistory.select( # pylint: disable=E1120
                         db.fn.MAX(db.SchemaHistory.version)).scalar(),
-                        db.CurrentSchemaVersion)
+                         db.CurrentSchemaVersion)
 
     def test_last_migration(self):
         """
         Replays the last migration
         """
 
-        db.SchemaHistory.delete().where(db.SchemaHistory.version == 
+        db.SchemaHistory.delete().where(db.SchemaHistory.version ==
                                         db.CurrentSchemaVersion).execute()
 
         db.check_migrations()
         self.assertTrue(db.SchemaHistory.table_exists())
-        self.assertEqual(db.SchemaHistory.select(
+        self.assertEqual(db.SchemaHistory.select( # pylint: disable=E1120
                         db.fn.MAX(db.SchemaHistory.version)).scalar(),
-                        db.CurrentSchemaVersion)
+                         db.CurrentSchemaVersion)
 
     def test_migration_replays(self):
         """
@@ -708,6 +708,6 @@ class TestDatabaseMigration(DatabaseTest):
         db.check_migrations()
 
         self.assertTrue(db.SchemaHistory.table_exists())
-        self.assertEqual(db.SchemaHistory.select(
+        self.assertEqual(db.SchemaHistory().select( # pylint: disable=E1120
                         db.fn.MAX(db.SchemaHistory.version)).scalar(),
-                        db.CurrentSchemaVersion)
+                         db.CurrentSchemaVersion)
