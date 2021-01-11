@@ -163,7 +163,11 @@ BEGIN
   THEN
       ALTER TABLE "public"."m_data" RENAME COLUMN "${year}.0" TO "$year";
       ALTER TABLE m_data ALTER "$year" TYPE VARCHAR(20);
-
+  END IF;
+  IF EXISTS(SELECT *
+    FROM information_schema.columns
+    WHERE table_name='m_data' and column_name='${year}')
+  THEN
       UPDATE m_data SET "$year" = NULL WHERE "$year" is null;
 
       ALTER TABLE m_data ALTER "$year" TYPE NUMERIC USING "$year"::numeric;
