@@ -19,7 +19,7 @@ services:
             cache_from:
               - ghcr.io/nbisweden/herdbook_frontend
         volumes:
-            - ./frontend:/app
+            - ./frontend:/home/node/app/
             - /app/node_modules
     main:
         image: herdbook_main
