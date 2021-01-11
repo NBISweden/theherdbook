@@ -654,3 +654,60 @@ class TestDatabase(DatabaseTest):
         verifying the table.
         """
         self.assertTrue(db.HerdTracking.table_exists())
+
+
+#pylint: disable=too-few-public-methods
+class TestDatabaseMigration(DatabaseTest):
+    """
+    Checks that the database migrations works
+    """
+
+    def test_no_table(self):
+        """
+        Checks that the schema migration works from very old version.
+        Will also run through all migrations.
+        """
+        if db.SchemaHistory.table_exists():
+            db.SchemaHistory.drop_table()
+
+        db.check_migrations()
+        self.assertTrue(db.SchemaHistory.table_exists())
+        self.assertEqual(db.SchemaHistory.select( # pylint: disable=E1120
+                        db.fn.MAX(db.SchemaHistory.version)).scalar(),
+                         db.CURRENT_SCHEMA_VERSION)
+
+    def test_last_migration(self):
+        """
+        Replays the last migration
+        """
+
+        db.SchemaHistory.delete().where(db.SchemaHistory.version ==
+                                        db.CURRENT_SCHEMA_VERSION).execute()
+
+        db.check_migrations()
+        self.assertTrue(db.SchemaHistory.table_exists())
+        self.assertEqual(db.SchemaHistory.select( # pylint: disable=E1120
+                        db.fn.MAX(db.SchemaHistory.version)).scalar(),
+                         db.CURRENT_SCHEMA_VERSION)
+
+    def test_migration_replays(self):
+        """
+        Run migrations sereral times to verify that all migrations work even
+        if they have been applied already.
+        """
+        db.check_migrations()
+
+        if db.SchemaHistory.table_exists():
+            db.SchemaHistory.drop_table()
+
+        db.check_migrations()
+
+        if db.SchemaHistory.table_exists():
+            db.SchemaHistory.drop_table()
+
+        db.check_migrations()
+
+        self.assertTrue(db.SchemaHistory.table_exists())
+        self.assertEqual(db.SchemaHistory().select( # pylint: disable=E1120
+                        db.fn.MAX(db.SchemaHistory.version)).scalar(),
+                         db.CURRENT_SCHEMA_VERSION)
