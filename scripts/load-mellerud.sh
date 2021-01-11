@@ -137,7 +137,7 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Far nr" = b.father
        AND d."Mor nr" = b.mother
        AND d."Född" = b.birth_date
-  );
+  ) WHERE i.breeding_id IS NULL;
 
 	-- Initial herd tracking
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)

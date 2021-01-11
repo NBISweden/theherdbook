@@ -183,7 +183,7 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Far nr" = b.father
        AND d."Mor nr" = b.mother
        AND d."Född" = b.birth_date
-  );
+  ) WHERE i.breeding_id IS NULL;
 
 	-- Initial herd tracking
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
@@ -349,10 +349,8 @@ csvsql	--db "$1" \
 
 psql --quiet <<-'END_SQL'
 	-- Fixup data somewhat
-
 	ALTER TABLE g_data2 ALTER "Nr" TYPE NUMERIC USING "Nr"::numeric;
 	ALTER TABLE g_data2 ALTER "Nr" TYPE INTEGER USING "Nr"::integer;
-
 	ALTER TABLE g_data2 ALTER "Nr" TYPE VARCHAR(10);
 	UPDATE g_data2 SET "Nr" = CONCAT('G', "Nr")
 	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
