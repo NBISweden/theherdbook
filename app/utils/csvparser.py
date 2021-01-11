@@ -8,10 +8,10 @@ def parse_kinship(resp_content):
     """
     content_utf = resp_content.decode('utf-8')
     csv_list = [[val.strip() for val in r.split(",")] for r in content_utf.splitlines()]
-    (header,*data) = csv_list
+    (header, *data) = csv_list
     csv_dict = {}
-    for idx,row in enumerate(data):
-        csv_dict[header[idx]]={key: value for key, value in zip(header, map(float, row))}
+    for idx, row in enumerate(data):
+        csv_dict[header[idx]] = dict(zip(header, map(float, row)))
     return csv_dict
 
 
@@ -21,7 +21,7 @@ def parse_csv(resp_content):
     """
     content_utf = resp_content.decode('utf-8')
     csv_list = [[val.strip() for val in r.split(",")] for r in content_utf.splitlines()]
-    (_,*data) = csv_list
+    (_, *data) = csv_list
     csv_dict = {}
     for row in data:
         key, *values = row

@@ -3,12 +3,14 @@ This file contains data access and manipulation functions to interact with the
 database.
 """
 
+# pylint: disable=too-many-lines
+
 import uuid
 import logging
 
 from datetime import date, datetime, timedelta
 
-from peewee import DoesNotExist, IntegrityError, fn, JOIN
+from peewee import PeeweeException, DoesNotExist, IntegrityError, fn, JOIN
 from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
@@ -39,8 +41,8 @@ def validate_date(date_string):
         raise ValueError('Date missing')
     try:
         return datetime.strptime(date_string, '%Y-%m-%d')
-    except ValueError:
-        raise ValueError('Date must be formatted as yyyy-mm-dd.')
+    except ValueError as date_except:
+        raise ValueError('Date must be formatted as yyyy-mm-dd.') from date_except
 
 # User functions
 
@@ -109,14 +111,14 @@ def register_user(email, password, username=None, validated=False, privileges=No
     try:
         # If we have a password authenticator already, update it instead of creating a new.
         authenticator = Authenticators.select().where(
-                                               (Authenticators.user == user.id) &
-                                              (Authenticators.auth == 'password')).get()
+            (Authenticators.user == user.id) &
+            (Authenticators.auth == 'password')).get()
         authenticator.auth_data = generate_password_hash(password)
     except DoesNotExist:
         authenticator = Authenticators(
-            user = user.id,
-            auth = 'password',
-            auth_data = generate_password_hash(password))
+            user=user.id,
+            auth='password',
+            auth_data=generate_password_hash(password))
     with DATABASE.atomic():
         authenticator.save()
 
@@ -134,7 +136,9 @@ def authenticate_user(name, password):
         with DATABASE.atomic():
             user_info = User.select().where((User.email == name) | (User.username == name)).get()
             if user_info:
-                authenticator = Authenticators.select().where((Authenticators.auth == 'password') & (Authenticators.user == user_info.id)).get()
+                authenticator = Authenticators.select().where(
+                    (Authenticators.auth == 'password') &
+                    (Authenticators.user == user_info.id)).get()
         if check_password_hash(authenticator.auth_data, password):
             logging.info("Login from %s", name)
             return user_info
@@ -147,7 +151,7 @@ def authenticate_user(name, password):
 
 def change_password(active_user, changed_user, form):
     """
-    Changes password for user changed_user. Returns 
+    Changes password for user changed_user. Returns
     something that evaluates as True on success.
     """
     if not active_user or not changed_user or not form:
@@ -157,12 +161,12 @@ def change_password(active_user, changed_user, form):
     if not active_user.is_admin:
         try:
             authenticator = Authenticators.select().where(
-                                               (Authenticators.user == changed_user) &
-                                              (Authenticators.auth == 'password')).get()
+                (Authenticators.user == changed_user) &
+                (Authenticators.auth == 'password')).get()
             if not check_password_hash(authenticator.auth_data, form['oldpassword']):
                 # Incorrect password supplied
                 return None
-        except:
+        except PeeweeException:
             # Non-users need a password set to change it. Fall out on any other
             # exception as well.
             return None
@@ -170,14 +174,14 @@ def change_password(active_user, changed_user, form):
     try:
         # If we have a password authenticator already, update it instead of creating a new.
         authenticator = Authenticators.select().where(
-                                               (Authenticators.user == changed_user) &
-                                              (Authenticators.auth == 'password')).get()
+            (Authenticators.user == changed_user) &
+            (Authenticators.auth == 'password')).get()
         authenticator.auth_data = generate_password_hash(form['newpassword'])
     except DoesNotExist:
         authenticator = Authenticators(
-            user = changed_user,
-            auth = 'password',
-            auth_data = generate_password_hash(form['password']))
+            user=changed_user,
+            auth='password',
+            auth_data=generate_password_hash(form['password']))
     with DATABASE.atomic():
         authenticator.save()
 
@@ -193,7 +197,9 @@ def authenticate_with_credentials(method, ident):
         return None
     try:
         with DATABASE.atomic():
-            authenticator = Authenticators.select().where((Authenticators.auth == method) & (Authenticators.auth_data == ident)).get()
+            authenticator = Authenticators.select().where(
+                (Authenticators.auth == method) &
+                (Authenticators.auth_data == ident)).get()
         if authenticator:
             user_info = User.select().where((User.id == authenticator.user)).get()
 
@@ -208,7 +214,7 @@ def authenticate_with_credentials(method, ident):
 
 def link_account(user, method, ident):
     """
-    Registers an account linked to an external authentication service. Returns 
+    Registers an account linked to an external authentication service. Returns
     something that evaluates as True on success.
     """
     if not method or not ident or not user:
@@ -219,8 +225,9 @@ def link_account(user, method, ident):
 
     try:
         with DATABASE.atomic():
-            authenticator = Authenticators.select().where((Authenticators.auth == method) & 
-                                                           (Authenticators.auth_data == ident)).get()
+            authenticator = Authenticators.select().where(
+                (Authenticators.auth == method) &
+                (Authenticators.auth_data == ident)).get()
         if authenticator:
             # Someone else has this identity registered, do not allow the same external identity
             # for multiple users
@@ -230,18 +237,24 @@ def link_account(user, method, ident):
 
     try:
         authenticator = Authenticators(
-            user = user.id,
-            auth = method,
-            auth_data = ident)
+            user=user.id,
+            auth=method,
+            auth_data=ident)
         with DATABASE.atomic():
             authenticator.save()
         logging.info("Linked %s to %s persistent id %s", user.username, method, ident)
         return user
-    except Exception as e:
-         logging.info("Error (%s) while linking %s to %s persistent id %s", e, 
-                        user.username, method, ident)
+    except PeeweeException as auth_except:
+        logging.info("Error (%s) while linking %s to %s persistent id %s",
+                     auth_except,
+                     user.username,
+                     method,
+                     ident)
 
-    logging.info("Failed link attempt for user %s service %s persistent id %s", user.username, method, ident)
+    logging.info("Failed link attempt for user %s service %s persistent id %s",
+                 user.username,
+                 method,
+                 ident)
     return None
 
 def unlink_account(user, method):
@@ -254,12 +267,12 @@ def unlink_account(user, method):
     try:
         with DATABASE.atomic():
             Authenticators.delete().where(
-                            (Authenticators.user == user.id) &
-                            (Authenticators.auth == method)).execute()
+                (Authenticators.user == user.id) &
+                (Authenticators.auth == method)).execute()
 
         return True
     except DoesNotExist:
-        return
+        return None
 
     logging.info("Failed to unlink idenities for service %s user %d", method, user.id)
     return None
@@ -273,8 +286,8 @@ def linked_accounts(user):
     try:
         with DATABASE.atomic():
             auths = Authenticators.select().where(
-                            (Authenticators.user == user.id) &
-                            (Authenticators.auth != 'password'))
+                (Authenticators.user == user.id) &
+                (Authenticators.auth != 'password'))
 
         return [x.auth for x in auths]
     except DoesNotExist:
@@ -375,12 +388,12 @@ def update_user(form, user_uuid=None):
         return {"status": "error", "message": f"malformed request: {form}"}
 
     # Check permissions - allow users to update e-mail only
-    if (not (user.is_admin or user.is_manager) 
-        or (form.get("validated") or form.get("username"))):
+    if (not (user.is_admin or user.is_manager)
+            or (form.get("validated") or form.get("username"))):
         return  {"status": "error", "message": "forbidden"}
 
     if not (user.is_admin or user.is_manager):
-        # Mark user supplied e-mail as false 
+        # Mark user supplied e-mail as false
         form['validated'] = False
 
     # check target user
@@ -686,16 +699,17 @@ def form_to_individual(form, user=None):
         try:
             with DATABASE.atomic():
                 form['colour'] = Colour.get(Colour.name == form['colour'])
-        except DoesNotExist:
-            raise ValueError(f"Unknown color: '{form['colour']}''")
+        except DoesNotExist as colour_except:
+            raise ValueError(f"Unknown color: '{form['colour']}''") from colour_except
 
     # fetch the origin herd
     if 'origin_herd' in form:
         try:
             with DATABASE.atomic():
                 form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
-        except DoesNotExist:
-            raise ValueError(f"Unknown origin herd: '{form['origin_herd']['herd']}''")
+        except DoesNotExist as herd_except:
+            raise ValueError(
+                f"Unknown origin herd: '{form['origin_herd']['herd']}''") from herd_except
 
     # parents
     for parent in ['mother', 'father']:
@@ -703,8 +717,8 @@ def form_to_individual(form, user=None):
             try:
                 with DATABASE.atomic():
                     form[parent] = Individual.get(Individual.number == form[parent]['number'])
-            except DoesNotExist:
-                raise ValueError("Invalid parents")
+            except DoesNotExist as parent_except:
+                raise ValueError("Invalid parents") from parent_except
 
     # Update individual fields by looping through all fields on an Individual
     # object.
@@ -1211,10 +1225,10 @@ def update_breeding(form, user_uuid):
         except DoesNotExist:
             errors += ['Unknown father']
 
-    for date in ['breed_date', 'birth_date']:
-        if date in form:
+    for adate in ['breed_date', 'birth_date']:
+        if adate in form:
             try:
-                setattr(breeding, date, validate_date(form[date]))
+                setattr(breeding, adate, validate_date(form[adate]))
             except ValueError as error:
                 errors += [str(error)]
 
