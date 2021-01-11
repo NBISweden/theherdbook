@@ -3,7 +3,7 @@
  * settings by users.
  */
 import React, { useState, useEffect } from "react";
-import { get, post, update } from "@app/communication";
+import { get, post, patch } from "@app/communication";
 
 import { Button, TextField, Grid, Paper, makeStyles } from "@material-ui/core";
 import { useUserContext, WithUserContext } from "@app/user_context";
@@ -69,7 +69,7 @@ export function Settings() {
   }
 
   async function changeEmail() {
-    await update("/api/manage/user/", {
+    await patch("/api/manage/user/", {
       email: email,
       validated: false,
     }).then(
