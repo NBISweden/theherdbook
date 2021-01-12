@@ -37,7 +37,7 @@ from peewee import (
     UUIDField,
 )
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -1100,6 +1100,29 @@ def migrate_1_to_2():
             )
         SchemaHistory.insert( # pylint: disable=E1120
             version=2, comment="Fix schema history table", applied=datetime.now()).execute()
+
+def migrate_2_to_3():
+    """
+    Migrate between schema version 2 and 3.
+    """
+
+    with DATABASE.atomic():
+
+        cols = [x.name for x in DATABASE.get_columns('hbuser')]
+
+        if 'password_hash' in cols:
+            # Go through hbuser and fill in authenticators from the old data.
+            pw_cursor = DATABASE.execute_sql('select user_id,password_hash from hbuser')
+
+            for user_data in pw_cursor.fetchmany():
+                auth = Authenticators(user=user_data[0], auth='password', auth_data=user_data[1])
+                auth.save()
+            migrate(
+                DATABASE_MIGRATOR.drop_column(
+                    'hbuser', 'password_hash'
+                ))
+        SchemaHistory.insert( # pylint: disable=E1120
+            version=3, comment="Remove password_hash from hbuser", applied=datetime.now()).execute()
 
 
 def check_migrations():
