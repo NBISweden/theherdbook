@@ -129,7 +129,7 @@ def authorized(app, method):
 
     try:
         token = app.blueprints[method].token
-        if (('expires_in' in token and token['expires_in'] < 0) or
+        if token and (('expires_in' in token and token['expires_in'] < 0) or
                 ('expires_at') in token and token['expires_at'] > time.time()):
             del app.blueprints[method].token
     except KeyError:
