@@ -54,6 +54,8 @@ def set_test_database(name):
 
     DATABASE_MIGRATOR = SqliteMigrator(DATABASE)
 
+    check_migrations()
+
 
 def set_database(name, host=None, port=None, user=None, password=None):
     """
@@ -68,20 +70,7 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
-try:
-    #pylint: disable=import-error
-    import utils.settings as settings
-
-    set_database(
-        settings.postgres.name,
-        settings.postgres.host,
-        settings.postgres.port,
-        settings.postgres.user,
-        settings.postgres.password,
-    )
-except ModuleNotFoundError:
-    logging.warning("No settings file found. Database must be set manually")
-
+    check_migrations()
 
 def connect():
     """
@@ -1134,12 +1123,25 @@ def check_migrations():
         logging.info("Calling %s to migrate from %s to %s", call,
                      current_version, next_version)
 
-        print("Calling %s to migrate from %s to %s" % (call,
-                                                       current_version, next_version))
-
         globals()[call]()
         current_version = SchemaHistory.select( # pylint: disable=E1120
             fn.MAX(SchemaHistory.version)).scalar()
+
+try:
+    #pylint: disable=import-error
+    import utils.settings as settings
+
+    set_database(
+        settings.postgres.name,
+        settings.postgres.host,
+        settings.postgres.port,
+        settings.postgres.user,
+        settings.postgres.password,
+    )
+except ModuleNotFoundError:
+    logging.warning("No settings file found. Database must be set manually")
+
+
 
 if is_connected():
     check_migrations()
