@@ -303,6 +303,8 @@ def external_login_handler(service):
         return get_user()
 
     if not utils.external_auth.authorized(APP, service):
+        APP.logger.debug("Need to do external auth for service %s" %
+                         service)
         return redirect(url_for("%s.login" % service))
 
     # Hack to reuse the same external handler for both linking and login
