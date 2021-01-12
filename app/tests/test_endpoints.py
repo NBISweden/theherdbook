@@ -6,13 +6,19 @@ Unit tests for the herdbook endpoints.
 
 #pylint: disable=too-many-public-methods
 #pylint: disable=too-many-statements
+#pylint: disable=wrong-import-position
 
+import os
 import unittest
 
 from datetime import datetime
 
 import requests
 import flask
+
+# Set configuration file for external accounts
+os.environ.setdefault('AUTHCONFIGFILE', os.path.join(
+    os.path.dirname(__file__), 'auth.ini.test'))
 
 #pylint: disable=import-error
 import utils.database as db
@@ -211,6 +217,79 @@ class TestEndpoints(FlaskTest):
             response = context.patch("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), {'status': 'success'})
+
+    def test_available_auth_methods(self):
+        """
+        Checks that `herdbook.external_login_handler` works as intended.
+        """
+
+        response = self.app.post("/api/login/available")
+        self.assertEqual(response.status_code, 200)
+
+        available_request = response.get_json()
+        available_request.sort()
+        self.assertEqual(available_request, ["google", "twitter"])
+
+    def test_no_link_without_auth(self):
+        """
+        Checks that `herdbook.external_link_handler` does not run without
+        the user being authenticated.
+        """
+
+        response = self.app.post("/api/link/somservice")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), None)
+
+    def test_unlink_method(self):
+        """
+        Checks that `herdbook.external_unlink_handler` works as intended.
+        """
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+
+            admin_user = db.User.select().where(db.User.email == self.admin.email).get()
+            print(admin_user.id)
+            db.Authenticators(user=admin_user.id, auth='someservice', auth_data='data').save()
+
+            response = context.get("/api/unlink/someservice")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data.strip(), b'1')
+
+            with self.assertRaises(type(db.Authenticators.DoesNotExist())):
+                db.Authenticators.select().where(
+                    db.Authenticators.user == admin_user.id,
+                    db.Authenticators.auth == 'someservice').get()
+
+    def test_linked_method(self):
+        """
+        Checks that `herdbook.external_linked_accounts_handler` works as intended.
+        """
+
+        with self.app as context:
+            # login
+            context.post("/api/login", json={"username": self.admin.email,
+                                             "password": "pass"})
+
+            admin_user = db.User.select().where(db.User.email == self.admin.email).get()
+            print(admin_user.id)
+            db.Authenticators(user=admin_user.id, auth='someservice', auth_data='data').save()
+
+            response = context.get("/api/linked")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), ['someservice'])
+
+
+            response = context.get("/api/unlink/someservice")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data.strip(), b'1')
+
+            response = context.get("/api/linked")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), None)
+
 
 
 if __name__ == "__main__":
