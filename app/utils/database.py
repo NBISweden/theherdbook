@@ -50,6 +50,7 @@ def set_test_database(name):
     global DATABASE, DATABASE_MIGRATOR  # pylint: disable=global-statement
     DATABASE = SqliteDatabase(name)
 
+    # Assume Sqlite to be connected always.
     DB_PROXY.initialize(DATABASE)
 
     DATABASE_MIGRATOR = SqliteMigrator(DATABASE)
@@ -66,11 +67,13 @@ def set_database(name, host=None, port=None, user=None, password=None):
     DATABASE = PostgresqlDatabase(
         name, host=host, port=port, user=user, password=password
     )
+
     DB_PROXY.initialize(DATABASE)
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
-    check_migrations()
+    if is_connected():
+        check_migrations()
 
 def connect():
     """
@@ -1163,8 +1166,3 @@ try:
     )
 except ModuleNotFoundError:
     logging.warning("No settings file found. Database must be set manually")
-
-
-
-if is_connected():
-    check_migrations()
