@@ -8,7 +8,6 @@ Unit tests for the herdbook endpoints.
 #pylint: disable=too-many-statements
 
 import base64
-import binascii
 import unittest
 
 from datetime import datetime
