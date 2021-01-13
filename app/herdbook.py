@@ -6,6 +6,7 @@ The server uses Flask to serve a React frontend, and connect to a postgres
 database.
 """
 
+import binascii
 import sys
 import uuid
 import time
@@ -79,8 +80,8 @@ def load_user_from_request(request):
         api_key = api_key.replace('Basic ', '', 1)
         try:
             api_key = base64.b64decode(api_key)
-        except TypeError:
-            pass
+        except (TypeError, binascii.Error):
+            return None
 
         username = api_key[:api_key.find(b':')]
         password = api_key[api_key.find(b':')+1:]

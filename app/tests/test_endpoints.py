@@ -150,12 +150,9 @@ class TestEndpoints(FlaskTest):
         # not logged in
         self.assertEqual(self.app.get("/api/breeding/%s" % herd).get_json(), None)
 
-        try:
-            self.assertEqual(self.app.get("/api/breeding/%s" % herd,
-                                          headers=[('Authorization',
-                                                    'somethingwrong')]).get_json(), None)
-        except binascii.Error:
-            pass
+        self.assertEqual(self.app.get("/api/breeding/%s" % herd,
+                                      headers=[('Authorization',
+                                                'somethingwrong')]).get_json(), None)
 
         auth_head = base64.encodebytes(bytes(self.admin.email, 'utf-8') + b':pass').strip()
 
