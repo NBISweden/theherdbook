@@ -17,18 +17,20 @@ usage () {
 	    -g file	Load Gotland rabbit data from "file"
 	    -G file	Load Gotland herd data from "file"
 	    -m file	Load Mellerud rabbit data from "file"
+	    -M file	Load Mellerud herd data from "file"
 
 	    -h		Show this help text
 	USAGE_END
 }
 
 
-while getopts 'g:G:hm:' opt; do
+while getopts 'g:G:hm:M:' opt; do
 	case $opt in
 		g)	gfile=$OPTARG ;;
 		G)	Gfile=$OPTARG ;;
 		h)	usage; exit ;;
 		m)	mfile=$OPTARG ;;
+		M)	Mfile=$OPTARG ;;
 		*)
 			echo 'Error in command line parsing' >&2
 			usage >&2
@@ -54,8 +56,13 @@ if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 	echo 'Will not load Mellerud data'
 	load_mellerud=false
 fi
+if [ -z "$Mfile" ] || [ ! -f "$Mfile" ]; then
+	echo 'Missing or unusable Mellerud data file (-M file)' >&2
+	echo 'Will not load Mellerud herds'
+	load_mellerud_herds=false
+fi
 
-for name in "$gfile" "$Gfile" "$mfile"; do
+for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 	[ ! -f "$name" ] && continue
 
 	case $name in
@@ -67,6 +74,10 @@ for name in "$gfile" "$Gfile" "$mfile"; do
 			then
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2
 				in2csv "$name" >"$csvname"
+				if [ -s "$csvname" ]; then
+				    echo "in2csv failed, doing xlsx2csv instead"
+				    xlsx2csv --skipemptycolumns --ignoreempty "$name" > "$csvname"
+				fi
 			fi
 			;;
 		*.csv)	# all good
@@ -80,6 +91,7 @@ done
 gfile=${gfile%.*}.csv
 Gfile=${Gfile%.*}.csv
 mfile=${mfile%.*}.csv
+Mfile=${Mfile%.*}.csv
 
 
 export PGDATABASE="${POSTGRES_DB:?}"
@@ -118,7 +130,7 @@ fi
 
 if "$load_mellerud"; then
 	echo '## Loading Mellerudskanin'
-	./load-mellerud.sh "$connstr" "$mfile"
+	./load-mellerud.sh "$connstr" "$mfile" "$Mfile"
 	echo '## Running Mellerudskanin healthchecks'
 	./check-mellerud.sh
 fi

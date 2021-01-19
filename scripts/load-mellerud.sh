@@ -229,3 +229,62 @@ psql --quiet <<-'END_SQL'
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Mellerudskanin';
 END_SQL
+
+
+if [ "x$3" = x ]; then
+    # No herd info
+    exit 0
+fi
+
+# read the csv into a temprary table called 'm_data2'
+csvsql  --db "$1" -I \
+	--tables m_data2 \
+	--overwrite \
+	--insert "$3"
+
+
+psql --echo-errors --quiet <<-'END_SQL'
+	UPDATE m_data2 SET "Genbanknr." = REPLACE("Genbanknr.",'-','');
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE NUMERIC USING "Genbanknr."::numeric;
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE INTEGER USING "Genbanknr."::integer;
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE VARCHAR(9);
+	UPDATE m_data2 SET "Genbanknr." = CONCAT('M', "Genbanknr.")
+	       WHERE "Genbanknr." IS NOT NULL AND "Genbanknr." NOT LIKE 'M%';
+
+	UPDATE herd h
+	SET herd_name = (
+		SELECT MAX("Gårdsnamn")
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.herd_name IS NULL;
+
+	UPDATE herd h
+	SET name = (
+		SELECT MAX("Namn")
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.name IS NULL;
+
+	UPDATE herd h
+	SET is_active = (
+		SELECT "status" = 'A'
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.is_active IS NULL;
+
+END_SQL

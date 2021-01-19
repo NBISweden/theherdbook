@@ -27,12 +27,13 @@ usage () {
 }
 
 
-while getopts 'g:G:hm:' opt; do
+while getopts 'g:G:hm:M:' opt; do
 	case $opt in
 		g)	gfile=$OPTARG ;;
 		G)	Gfile=$OPTARG ;;
 		h)	usage; exit ;;
 		m)	mfile=$OPTARG ;;
+		M)	Mfile=$OPTARG ;;
 		*)
 			echo 'Error in command line parsing' >&2
 			usage >&2
@@ -58,6 +59,13 @@ if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 	echo 'Will not load Mellerud data'
 	load_mellerud=false
 fi
+if [ -z "Mfile" ] || [ ! -f "$Mfile" ]; then
+	echo 'Missing or unusable Mellerud herd file (-M file)' >&2
+	echo 'Will not load extra Mellerud herd info'
+	load_mellerud_herds=false
+else
+    herd="-M /scripts/$Mfile"
+fi
 
 if docker-compose -f ../dc-db-load.yml ps | grep -q 'main-load-db.*\sUp\s.*'; then
     # Alll good here
@@ -71,6 +79,6 @@ else
 fi
 
 
-docker-compose -f ../dc-db-load.yml exec main-load-db /scripts/load-in-docker.sh -g "/scripts/$gfile" -G "/scripts/$Gfile" -m "/scripts/$mfile"
+docker-compose -f ../dc-db-load.yml exec main-load-db /scripts/load-in-docker.sh -g "/scripts/$gfile" -G "/scripts/$Gfile" -m "/scripts/$mfile" $herd
 
 echo "Done you can stop the main-load-db container with docker-compose -f ../dc-db-load.yml stop"
