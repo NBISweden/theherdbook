@@ -5,7 +5,7 @@ library(rjson)
 library(dplyr)
 
 # Load environment variables for configuration into global namespace
-api_base   <- Sys.getenv("API_BASE", "http://herdbook-main:9000/api/")
+api_base   <- Sys.getenv("API_BASE", "http://localhost:8080/api/")
 auth_header <- Sys.getenv("API_AUTH", "")
 
 #' Return any custom headers to use for API requests
@@ -84,7 +84,7 @@ get_all_individuals <- function(genebank_id) {
   tmp<-do.call('rbind', 
         lapply(js$individuals, 
                function(x) { 
-                 unlist(x)[c('id', 'mother.id', 'father.id', 'sex', 'birth_date','active')]
+                 unlist(x)[c('number','father.number', 'mother.number','sex', 'birth_date','active')]
                }
           )
     )
@@ -99,7 +99,7 @@ get_all_individuals <- function(genebank_id) {
   	     Born = as.numeric(substr(birth_date, 1, 4)),
 	     .after=4),
 	   birth_date = NULL),
-    Indiv=id, Sire=father.id, Dam=mother.id, Sex=sex, is_active = active)
+    Indiv=number, Sire=father.number, Dam=mother.number, Sex=sex, is_active = active)
 
   names(df)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
   return (df)
