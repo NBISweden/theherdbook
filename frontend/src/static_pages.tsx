@@ -241,7 +241,7 @@ export function Footer() {
 
   return <div className={styles.footer}>
     <div className={styles.euLogo}>
-      <img src='EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
+      <img src='/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
     </div>
     <Typography className={styles.euText}>
       Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands-
