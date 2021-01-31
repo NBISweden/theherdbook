@@ -365,7 +365,7 @@ export function Navigation() {
       Gotlandskaninen
     </h1>
     <div className={`${classes.logoImageWrapper} ${!showLogo && classes.hidden}`}>
-      <img src='/logo.png' alt="logo" className={classes.logoImage} />
+      <img src='/images/logo.png' alt="logo" className={classes.logoImage} />
     </div>
 
       {/* Declare routes, and what component should be rendered for each
