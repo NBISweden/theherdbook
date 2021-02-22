@@ -2,6 +2,8 @@
 
 # Needs to be called by load.sh
 
+echo "Loading rabbits"
+
 csvsql  --db "$1" -I \
 	--tables g_data \
 	--overwrite \
@@ -18,6 +20,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 
 	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0';
 
+	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = 'u';
 
 	ALTER TABLE g_data ALTER "ny G" TYPE NUMERIC USING "ny G"::numeric;
 	ALTER TABLE g_data ALTER "ny G" TYPE INTEGER USING "ny G"::integer;
@@ -181,7 +184,7 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Far nr" = b.father
        AND d."Mor nr" = b.mother
        AND d."Född" = b.birth_date
-  );
+  ) WHERE i.breeding_id IS NULL;
 
 	-- Initial herd tracking
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
@@ -207,7 +210,11 @@ BEGIN
   THEN
       ALTER TABLE "public"."g_data" RENAME COLUMN "${year}.0" TO "$year";
       ALTER TABLE g_data ALTER "$year" TYPE VARCHAR(20);
-
+  END IF;
+  IF EXISTS(SELECT *
+    FROM information_schema.columns
+    WHERE table_name='g_data' and column_name='${year}')
+  THEN
       UPDATE g_data SET "$year" = NULL WHERE "$year" is null;
 
       ALTER TABLE g_data ALTER "$year" TYPE NUMERIC USING "$year"::numeric;
@@ -329,8 +336,11 @@ while [ "$year" -le 2018 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
+
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.
+
+echo "Loading herds"
 
 csvsql	--db "$1" \
 	--tables g_data2 \
@@ -340,6 +350,8 @@ csvsql	--db "$1" \
 
 psql --quiet <<-'END_SQL'
 	-- Fixup data somewhat
+	ALTER TABLE g_data2 ALTER "Nr" TYPE NUMERIC USING "Nr"::numeric;
+	ALTER TABLE g_data2 ALTER "Nr" TYPE INTEGER USING "Nr"::integer;
 	ALTER TABLE g_data2 ALTER "Nr" TYPE VARCHAR(10);
 	UPDATE g_data2 SET "Nr" = CONCAT('G', "Nr")
 	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';

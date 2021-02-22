@@ -137,7 +137,7 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Far nr" = b.father
        AND d."Mor nr" = b.mother
        AND d."Född" = b.birth_date
-  );
+  ) WHERE i.breeding_id IS NULL;
 
 	-- Initial herd tracking
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
@@ -163,7 +163,11 @@ BEGIN
   THEN
       ALTER TABLE "public"."m_data" RENAME COLUMN "${year}.0" TO "$year";
       ALTER TABLE m_data ALTER "$year" TYPE VARCHAR(20);
-
+  END IF;
+  IF EXISTS(SELECT *
+    FROM information_schema.columns
+    WHERE table_name='m_data' and column_name='${year}')
+  THEN
       UPDATE m_data SET "$year" = NULL WHERE "$year" is null;
 
       ALTER TABLE m_data ALTER "$year" TYPE NUMERIC USING "$year"::numeric;
