@@ -18,7 +18,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE g_data SET "Mor" = TRIM("Mor");
 	UPDATE g_data SET "Far" = TRIM("Far");
 
-	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0';
+	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0' or "Intyg" = '?';
 
 	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = 'u';
 
