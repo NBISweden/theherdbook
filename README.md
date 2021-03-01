@@ -34,7 +34,7 @@ First set up your secure environment variables by
 copy or rename the default `.env` files found in the `.docker` folder so there are files without the
 `.default` suffix.
 
-Remember to update your secrets before going in production.
+Remember to update your secrets before going into production.
 
 The following files should exist:
 
