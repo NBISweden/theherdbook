@@ -90,7 +90,7 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 
 ## Loading data
 
-Data files are delivered out of band. Instructions for inital importing of data are available in [the scripts help]scripts/README.docker.
+Data files are delivered out of band. Instructions for inital importing of data are available in `scripts/README.docker`.
 
 ## Testing
 
