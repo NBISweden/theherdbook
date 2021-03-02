@@ -11,7 +11,7 @@ type VisColor = {border: string, background: string,
 export type Node = {id: string, x: number, label: string, shape: string,
                     color: VisColor
                   }
-export type Edge = {id: string, from: string, to: string}
+export type Edge = {id: string, from: string, to: string, color?: string, width?: number, selectionWidth?: number}
 export type Pedigree = {nodes: Node[], edges: Edge[]}
 
 /**
@@ -31,6 +31,22 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
     return !duplicate
   })
 }
+
+// TO DO, merge method unique with commonAncestors?
+function commonAncestors(xs: any[], key: string | undefined = undefined): any {
+  const seen = new Set()
+  let commonAnc = new Set()
+  xs.forEach(x => {
+    const duplicate = key ? seen.has(x[key]) : seen.has(x)
+    key ? seen.add(x[key]) : seen.add(x)
+    if (duplicate) {
+      key ? commonAnc.add(x[key]) : commonAnc.add(x)
+    }
+  })
+  return commonAnc
+}
+
+
 
 const indexes = new WeakMap<Genebank[], Record<string, Individual>>()
 
@@ -242,4 +258,108 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
   edges = unique(edges, 'id')
 
   return {nodes: nodes, edges: edges}
+}
+
+function colourEdges(edges: Edge[], rootId:string, seekedNode:string): any {
+  let finalEdgesToColor = new Set()
+  const getChildren = (ogEdges: Edge[], parentNode: string, seekedNode: string) => {
+    let edgesToColor = new Set()
+    let seekedFound: boolean = false
+    ogEdges.forEach(edge => {
+      // Current node is a child to parentNode
+      if (edge.to == parentNode) {
+        // Current node is seeked node, add to edgesToColor
+        if (edge.from == seekedNode) {
+          edgesToColor.add(edge.id)
+          seekedFound = true
+          return
+        } else {
+          let res = getChildren(ogEdges, edge.from, seekedNode)
+          const found = res.seekedFound
+          const edgeArr = res.arr
+
+          if (found) {
+            edgesToColor.add(edge.id)
+            edgesToColor = new Set([...edgesToColor, ...edgeArr])
+            seekedFound = true
+            return
+          }
+      }
+        }
+      }
+    )
+    return {arr: edgesToColor, seekedFound: seekedFound}
+  }
+  const finalRes = getChildren(edges, rootId, seekedNode)
+  finalEdgesToColor = finalRes.arr
+
+  return finalEdgesToColor
+}
+
+export function parentPedigree(genebanks: Genebank[], parents: Individual[], generations: number = 1000): Pedigree {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+
+  const offspringNode = {id: "13371337",
+    x: 0,
+    label: "Potentiell avkomma",
+    shape: 'triangle',
+    color:  {
+      border: 'darkgrey',
+      background: '#e5dbd7',
+      highlight: {
+        border: 'grey',
+        background: '#b5aeab'
+      },
+      hover: {
+        border: 'black',
+        background: '#b5aeab'
+      }
+    }
+  }
+  nodes.push(offspringNode)
+
+  parents.forEach((parent: Individual) => {
+    edges.push({id: `${offspringNode.id}-${parent.number}`,
+                                  from: offspringNode.id,
+                                  to: parent.number})
+
+    const pedigree = calcPedigree(genebanks, parent.number, generations)
+
+    nodes = [...nodes, ...pedigree.nodes]
+    edges = [...edges, ...pedigree.edges]
+
+  })
+  // save duplicate nodes, i.e. common ancestors
+  let commonAnc = commonAncestors(nodes, 'id')
+
+  // remove duplicate nodes and edges
+  nodes = unique(nodes, 'id')
+  edges = unique(edges, 'id')
+
+  // color nodes that are common ancestors
+  nodes.forEach(x => {
+    if (commonAnc.has(x['id'])) {
+      x.color.border = "#f24d0c"
+    }
+  })
+  // for each common ancestors, save edges from offspring to this ancestor
+  let edgesToColor = new Set()
+  commonAnc.forEach((nodeId: string) => {
+    let localEdgeToColor = colourEdges(edges, nodeId, "13371337")
+    edgesToColor = new Set([...edgesToColor, ...localEdgeToColor])
+    
+  })
+
+  // color the saved edges
+  edges.forEach(x => {
+    if (edgesToColor.has(x['id'])) {
+      x.color = "#f24d0c"
+      x.selectionWidth = 2
+      x.width = 3
+  }
+})
+  
+  return {nodes: nodes, edges: edges}
+  
 }

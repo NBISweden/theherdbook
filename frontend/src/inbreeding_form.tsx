@@ -73,7 +73,7 @@ export function InbreedingForm() {
   limit: 30,
   });
   
-  /* TODO, develop function to calculate COI */
+  /* TODO, develop function to calculate COI and if there are sufficient generations*/
   let COI = 3
   
   return <>
@@ -112,7 +112,7 @@ export function InbreedingForm() {
                          variant='contained'
                          color='primary'
                          disabled={!female || !male}
-                         onClick={() => popup(<InbreedingRecommendation femlabel={female.label} malelabel={male.label} COI={COI} sufficientGenerations={true}/>)}
+                         onClick={() => popup(<InbreedingRecommendation female={female} male={male} COI={COI} sufficientGenerations={true}/>)}
             >
                   Beräkna inavelkoefficient
           </Button>
