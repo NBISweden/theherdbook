@@ -261,32 +261,29 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
 }
 
 /**
- * Return the edges that connect rootId to seekedNode. RootId is a parent/ancestor of seekedNode
- * @param edges The edges that make up the connections between the nodes in the pedigree
- * @param rootId The parent/ancestor id
- * @param seekedNode The child id
+ * Return the edges that connect ancestor id to seeked descendant id
+ * @param edges the edges that make up the connections between the nodes in the pedigree
+ * @param ancestorId the ancestor id
+ * @param seekedDescendantId the child id
  */
-export function colourEdges(edges: Edge[], rootId:string, seekedNode:string): any {
-  let finalEdgesToColor = new Set()
-  const getChildren = (ogEdges: Edge[], parentNode: string, seekedNode: string) => {
-    let edgesToColor = new Set()
+export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDescendantId:string): any {
+  const getChildren = (edges: Edge[], parentId: string, seekeDescendantId: string) => {
+    let connectingEdges = new Set()
     let seekedFound: boolean = false
-    ogEdges.forEach(edge => {
+    edges.forEach(edge => {
       // Current node is a child to parentNode
-      if (edge.to == parentNode) {
-        // Current node is seeked node, add to edgesToColor
-        if (edge.from == seekedNode) {
-          edgesToColor.add(edge.id)
+      if (edge.to == parentId) {
+        // Current node is the seeked node, add to connectingEdges
+        if (edge.from == seekeDescendantId) {
+          connectingEdges.add(edge.id)
           seekedFound = true
           return
         } else {
-          let res = getChildren(ogEdges, edge.from, seekedNode)
-          const found = res.seekedFound
-          const edgeArr = res.arr
-
-          if (found) {
-            edgesToColor.add(edge.id)
-            edgesToColor = new Set([...edgesToColor, ...edgeArr])
+          let res = getChildren(edges, edge.from, seekeDescendantId)
+          // Descendant node connected to seeked node, add current node
+          if (res.seekedFound) {
+            connectingEdges.add(edge.id)
+            connectingEdges = new Set([...connectingEdges, ...res.connectingEdges])
             seekedFound = true
             return
           }
@@ -294,12 +291,12 @@ export function colourEdges(edges: Edge[], rootId:string, seekedNode:string): an
         }
       }
     )
-    return {arr: edgesToColor, seekedFound: seekedFound}
+    return {connectingEdges: connectingEdges, seekedFound: seekedFound}
   }
-  const finalRes = getChildren(edges, rootId, seekedNode)
-  finalEdgesToColor = finalRes.arr
 
-  return finalEdgesToColor
+  const finalRes = getChildren(edges, ancestorId, seekedDescendantId)
+  let finalConnectingEdges = finalRes.connectingEdges
+  return finalConnectingEdges
 }
 
 export function parentPedigree(genebanks: Genebank[], parents: Individual[], generations: number = 1000): Pedigree {
@@ -337,13 +334,11 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
 
   })
   // save duplicate nodes, i.e. common ancestors
-  console.log("NODES DUPLICATES", nodes)
   let commonAnc = commonAncestors(nodes, 'id')
 
   // remove duplicate nodes and edges
   nodes = unique(nodes, 'id')
   edges = unique(edges, 'id')
-  console.log("EDGES", edges)
 
   // color nodes that are common ancestors
   nodes.forEach(x => {
@@ -351,11 +346,12 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
       x.color.border = "#f24d0c"
     }
   })
+
   // for each common ancestors, save edges from offspring to this ancestor
   let edgesToColor = new Set()
   commonAnc.forEach((nodeId: string) => {
-    let localEdgeToColor = colourEdges(edges, nodeId, "13371337")
-    edgesToColor = new Set([...edgesToColor, ...localEdgeToColor])
+    let ancestorEdges = getConnectingEdges(edges, nodeId, offspringNode.id)
+    edgesToColor = new Set([...edgesToColor, ...ancestorEdges])
     
   })
 
