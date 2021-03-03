@@ -33,7 +33,7 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
 }
 
 // TO DO, merge method unique with commonAncestors?
-function commonAncestors(xs: any[], key: string | undefined = undefined): any {
+export function commonAncestors(xs: any[], key: string | undefined = undefined): any {
   const seen = new Set()
   let commonAnc = new Set()
   xs.forEach(x => {
@@ -260,7 +260,13 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
   return {nodes: nodes, edges: edges}
 }
 
-function colourEdges(edges: Edge[], rootId:string, seekedNode:string): any {
+/**
+ * Return the edges that connect rootId to seekedNode. RootId is a parent/ancestor of seekedNode
+ * @param edges The edges that make up the connections between the nodes in the pedigree
+ * @param rootId The parent/ancestor id
+ * @param seekedNode The child id
+ */
+export function colourEdges(edges: Edge[], rootId:string, seekedNode:string): any {
   let finalEdgesToColor = new Set()
   const getChildren = (ogEdges: Edge[], parentNode: string, seekedNode: string) => {
     let edgesToColor = new Set()
@@ -331,11 +337,13 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
 
   })
   // save duplicate nodes, i.e. common ancestors
+  console.log("NODES DUPLICATES", nodes)
   let commonAnc = commonAncestors(nodes, 'id')
 
   // remove duplicate nodes and edges
   nodes = unique(nodes, 'id')
   edges = unique(edges, 'id')
+  console.log("EDGES", edges)
 
   // color nodes that are common ancestors
   nodes.forEach(x => {
