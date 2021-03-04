@@ -32,10 +32,10 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
   })
 }
 
-// TO DO, merge method unique with commonAncestors?
-export function commonAncestors(xs: any[], key: string | undefined = undefined): any {
+// FEEDBACK, adapt method unique instead to return the commonAncestors as well as the unique nodes?
+export function commonAncestors(xs: any[], key: string | undefined = undefined): Set<any> {
   const seen = new Set()
-  let commonAnc = new Set()
+  let commonAnc = new Set<any>()
   xs.forEach(x => {
     const duplicate = key ? seen.has(x[key]) : seen.has(x)
     key ? seen.add(x[key]) : seen.add(x)
@@ -266,9 +266,9 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
  * @param ancestorId the ancestor id
  * @param seekedDescendantId the child id
  */
-export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDescendantId:string): any {
+export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDescendantId:string): Set<string> {
   const getChildren = (edges: Edge[], parentId: string, seekeDescendantId: string) => {
-    let connectingEdges = new Set()
+    let connectingEdges = new Set<string>()
     let seekedFound: boolean = false
     edges.forEach(edge => {
       // Current node is a child to parentNode
@@ -299,6 +299,15 @@ export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDesce
   return finalConnectingEdges
 }
 
+/**
+ * Returns the combined pedigree of `parents` from the data in `genebanks`
+ * and a potential offspring as a child node of the parents
+ * @param genebanks the genebank data to use for pedigree generation
+ * @param parents the parents whos pdeigree should be plotted
+ * @param generations the number of generations to plot. The potential 
+ * offspring is not taken into account as a generation, i.e. it is the 
+ * number of generations from the parents 
+ */
 export function parentPedigree(genebanks: Genebank[], parents: Individual[], generations: number = 1000): Pedigree {
   let nodes: Node[] = []
   let edges: Edge[] = []
@@ -326,7 +335,7 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
     edges.push({id: `${offspringNode.id}-${parent.number}`,
                                   from: offspringNode.id,
                                   to: parent.number})
-
+    //FEEDBACK, should it be optional to use calcPedigreeDan as well?
     const pedigree = calcPedigree(genebanks, parent.number, generations)
 
     nodes = [...nodes, ...pedigree.nodes]
@@ -347,12 +356,13 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
     }
   })
 
+  //FEEDBACK, better to make a function that take edges as input and returns edges with the relevant edges colored?
+  
   // for each common ancestors, save edges from offspring to this ancestor
   let edgesToColor = new Set()
   commonAnc.forEach((nodeId: string) => {
     let ancestorEdges = getConnectingEdges(edges, nodeId, offspringNode.id)
     edgesToColor = new Set([...edgesToColor, ...ancestorEdges])
-    
   })
 
   // color the saved edges

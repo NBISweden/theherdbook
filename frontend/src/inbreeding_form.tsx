@@ -42,11 +42,8 @@ function activeIndividuals(genebank: Genebank, sex: string){
     if (!genebank) {
       return []
     }
-    return genebank?.individuals.filter(i => i.sex == sex && i.active == true).map(i => {
-      return {...i, label: individualLabel(i)}
-    })
+    return genebank?.individuals.filter(i => i.sex == sex && i.active == true)
   }, [genebank])
-
 }
 
 /**
@@ -58,8 +55,8 @@ export function InbreedingForm() {
   const { genebanks } = useDataContext()
   const { popup } = useMessageContext()
   const style = useStyles()
-  const [female, setFemale] = React.useState(null)
-  const [male, setMale] = React.useState(null)
+  const [female, setFemale] = React.useState(undefined as Individual | undefined)
+  const [male, setMale] = React.useState(undefined as Individual | undefined)
   
 
   /* TODO, add ability to choose genebank when several are present in DB. Copy or rewrite genebanks? */
@@ -69,7 +66,7 @@ export function InbreedingForm() {
 
   const activeMales : Individual[] = activeIndividuals(genebank, 'male')
 
-  const filterOptions = createFilterOptions({
+  const filterOptions = createFilterOptions<Individual>({
   limit: 30,
   });
   
@@ -83,10 +80,11 @@ export function InbreedingForm() {
           <div className={style.formBox}>
           <Autocomplete
                   options={activeFemales}
-                  getOptionLabel={option => option.label}
+                  getOptionLabel={(option: Individual) => individualLabel(option)}
                   value={female}
+                  // FEEDBACK, not sure if onChange "typing" solution optimal
                   onChange={(event, newValue) => {
-                    setFemale(newValue);
+                    setFemale(newValue ? newValue : undefined);
                   }}
                   filterOptions={filterOptions}
                   renderInput={(params) => <TextField {...params}
@@ -96,10 +94,11 @@ export function InbreedingForm() {
           />
           <Autocomplete
                   options={activeMales}
-                  getOptionLabel={(option) => option.label}
+                  getOptionLabel={(option: Individual) => individualLabel(option)}
                   value={male}
+                  // FEEDBACK, not sure if onChange "typing" solution optimal
                   onChange={(event, newValue) => {
-                    setMale(newValue);
+                    setMale(newValue ? newValue : undefined);
                   }}
                   filterOptions={filterOptions}
                   renderInput={(params) => <TextField {...params}
@@ -112,7 +111,7 @@ export function InbreedingForm() {
                          variant='contained'
                          color='primary'
                          disabled={!female || !male}
-                         onClick={() => popup(<InbreedingRecommendation female={female} male={male} COI={COI} sufficientGenerations={true}/>)}
+                         onClick={() => popup(<InbreedingRecommendation female={female} male={male} COI={COI} sufficientGenerations={true}/>, undefined)}
             >
                   Beräkna inavelkoefficient
           </Button>
