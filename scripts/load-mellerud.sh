@@ -148,6 +148,27 @@ psql --echo-errors --quiet <<-'END_SQL'
     JOIN  breeding b ON (i.breeding_id = b.breeding_id)
    WHERE	gb.name = 'Mellerudskanin'
    ORDER BY i.individual_id;
+
+   ---
+   --- Create empty breeding events for any remaining individuals
+   ---
+   DO $$
+   DECLARE iid INTEGER;
+   BEGIN
+     FOR iid IN SELECT individual_id FROM individual WHERE breeding_id is NULL
+     LOOP
+        WITH b AS (
+           INSERT INTO breeding(breed_date)
+           VALUES(NULL)
+           RETURNING breeding_id)
+        UPDATE individual
+          SET breeding_id = b.breeding_id
+          FROM b
+          WHERE individual_id=iid;
+     END LOOP;
+   END;
+   $$;
+
 END_SQL
 
 # Fix table names for years and clean up fields.
