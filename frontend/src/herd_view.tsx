@@ -131,8 +131,8 @@ export function HerdView({id}: {id: string | undefined}) {
           <FilterTable
             individuals={herdIndividuals}
             title={'Individer i besättningen'}
-            filters={[{field: 'alive', label: 'Dölj döda'},
-                      {field: 'active', label: 'Dölj inaktiva djur'}]}
+            filters={[{field: 'alive', label: 'Visa döda'},
+                      {field: 'active', label: 'Visa inaktiva djur'}]}
             action={user?.canEdit(id)
                       ? (event: any, rowData: any) => {
                           popup(<IndividualEdit id={rowData.number} />)
