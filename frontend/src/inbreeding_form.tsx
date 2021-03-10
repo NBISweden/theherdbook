@@ -34,9 +34,11 @@ const useStyles = makeStyles({
   }
 });
 
-/* TODO, decide if type Indivial, useMemo and unpacking makes sense*/
-
-/* Filter genebank for active individuals of given sex*/
+/**
+ * Returns active individuals of given sex in the genebank
+ * @param genebank the genebank data to filter active individuals from
+ * @param sex the sex of the active individuals
+ */
 function activeIndividuals(genebank: Genebank, sex: string){
   return React.useMemo(() => {
     if (!genebank) {
@@ -70,13 +72,13 @@ export function InbreedingForm() {
   limit: 30,
   });
   
-  /* TODO, develop function to calculate COI and if there are sufficient generations*/
-  let COI = 3
+  /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
+  let coefficientOfInbreeding = 3
   
   return <>
           <Paper>
           <form className={style.form}>
-          <Typography variant='h6'>Inavelkoefficient</Typography>
+          <Typography variant='h6'>Provparning</Typography>
           <div className={style.formBox}>
           <Autocomplete
                   options={activeFemales}
@@ -111,7 +113,7 @@ export function InbreedingForm() {
                          variant='contained'
                          color='primary'
                          disabled={!female || !male}
-                         onClick={() => popup(<InbreedingRecommendation female={female} male={male} COI={COI} sufficientGenerations={true}/>, undefined)}
+                         onClick={() => popup(<InbreedingRecommendation female={female} male={male} coefficientOfInbreeding={coefficientOfInbreeding} sufficientGenerations={true}/>, undefined)}
             >
                   Beräkna inavelkoefficient
           </Button>

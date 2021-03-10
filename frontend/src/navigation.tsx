@@ -64,8 +64,8 @@ export function Navigation() {
       icon: <AccountBalanceIcon />
     },
     {
-      label: "Inavel",
-      path: "/inavel",
+      label: "Provparning",
+      path: "/Provparning",
       component: <Restricted><InbreedingForm/></Restricted>,
       visible: is_logged_in,
       icon: <AccountBalanceIcon />

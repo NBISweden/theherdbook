@@ -9,32 +9,36 @@ import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context';
 
-export function InbreedingRecommendation({female, male, COI, sufficientGenerations = true} : {female: Individual, male: Individual, COI: number, sufficientGenerations: boolean}) {
+// TODO, write docstring when functon is legitimate
+export function InbreedingRecommendation({female, male, coefficientOfInbreeding, sufficientGenerations = true} : {female: Individual, male: Individual, coefficientOfInbreeding: number, sufficientGenerations: boolean}) {
   const { popup } = useMessageContext()
   const { genebanks } = useDataContext()
   
   let parents: Individual[] = [female, male]
   
   const pedigree = React.useMemo(() => parentPedigree(genebanks, parents, 4), [genebanks, parents])
+  // All coefficientOfInbreeding logic/info is only a template of how it could function when we have possibility to calculate the coefficient
+  // Current numbers and recommendations are more or less humbug
+
   const beneficialCOI = 5
   const badCOI = 10
   let breedCouple = `${female.name} och ${male.name}`
   let recommendation
   if (!sufficientGenerations) {
     recommendation = <p> Too few generations available to make accurate assessment of inbreed coefficient </p>
-  } else if (COI == 0) {
-    recommendation = <p> Inga gemensamma förfäder, ok att para {breedCouple} </p>
-  } else if (COI <= beneficialCOI) {
-    recommendation = <p> Gemensamma förfäder, men bör ej ha deleterious effects att para {breedCouple}</p>
-  } else if (COI <= badCOI) {
-    recommendation = <p> Gemensamma förfäder, modest detrimental effects att para {breedCouple} </p>
+  } else if (coefficientOfInbreeding == 0) {
+    recommendation = <p> No common anscestors, ok to breed {breedCouple} </p>
+  } else if (coefficientOfInbreeding <= beneficialCOI) {
+    recommendation = <p> Common anscestors but should not have deleterious effects to breed {breedCouple}</p>
+  } else if (coefficientOfInbreeding <= badCOI) {
+    recommendation = <p> Common anscestors, modest detrimental effects to breed {breedCouple} </p>
   } else {
-    recommendation = <p> Gemensamma förfäder, significant effects on the offspring and detrimental effects on the breed att para {breedCouple} </p>
+    recommendation = <p> Common anscestors, significant effects on the offspring and detrimental effects on the breed to breed {breedCouple} </p>
   }
   return <>
     <div>
       <h1> Resultat beräkning </h1>
-      <p> Inavelskoefficient {COI} </p>
+      <p> Inavelskoefficient {coefficientOfInbreeding} </p>
       {recommendation}
     </div>
 

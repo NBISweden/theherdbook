@@ -267,19 +267,19 @@ export function herdPedigree(genebanks: Genebank[], herdId: string | undefined, 
  * @param seekedDescendantId the child id
  */
 export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDescendantId:string): Set<string> {
-  const getChildren = (edges: Edge[], parentId: string, seekeDescendantId: string) => {
+  const getChildren = (edges: Edge[], parentId: string, seekedDescendantId: string) => {
     let connectingEdges = new Set<string>()
     let seekedFound: boolean = false
     edges.forEach(edge => {
       // Current node is a child to parentNode
       if (edge.to == parentId) {
         // Current node is the seeked node, add to connectingEdges
-        if (edge.from == seekeDescendantId) {
+        if (edge.from == seekedDescendantId) {
           connectingEdges.add(edge.id)
           seekedFound = true
           return
         } else {
-          let res = getChildren(edges, edge.from, seekeDescendantId)
+          let res = getChildren(edges, edge.from, seekedDescendantId)
           // Descendant node connected to seeked node, add current node
           if (res.seekedFound) {
             connectingEdges.add(edge.id)
