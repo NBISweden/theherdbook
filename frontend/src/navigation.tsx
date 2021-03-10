@@ -65,7 +65,7 @@ export function Navigation() {
     },
     {
       label: "Provparning",
-      path: "/Provparning",
+      path: "/provparning",
       component: <Restricted><InbreedingForm/></Restricted>,
       visible: is_logged_in,
       icon: <AccountBalanceIcon />
