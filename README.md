@@ -31,8 +31,12 @@ breeding/preservation effort for a genebank. Usually responsible for a specific 
 # Development setup
 
 First set up your secure environment variables by
-copy or rename the default .env files found in the .docker folder and name them
-Remember to update your secrets before going in production
+copy or rename the default `.env` files found in the `.docker` folder so there are files without the
+`.default` suffix.
+
+Remember to update your secrets before going into production.
+
+The following files should exist:
 
 ```console
 .docker/database-variables.env
@@ -83,6 +87,10 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 ```
 ./run-with-prebuilt-images.sh
 ```
+
+## Loading data
+
+Data files are delivered out of band. Instructions for inital importing of data are available in `scripts/README.docker`.
 
 ## Testing
 
