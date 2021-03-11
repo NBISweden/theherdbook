@@ -230,8 +230,7 @@ psql --quiet <<-'END_SQL'
 	AND	gb.name = 'Mellerudskanin';
 END_SQL
 
-
-if [ "x$3" = x ]; then
+if [ ! -f "$3" ]; then 
     # No herd info
     exit 0
 fi
@@ -241,7 +240,6 @@ csvsql  --db "$1" -I \
 	--tables m_data2 \
 	--overwrite \
 	--insert "$3"
-
 
 psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE m_data2 SET "Genbanknr." = REPLACE("Genbanknr.",'-','');
@@ -286,5 +284,4 @@ psql --echo-errors --quiet <<-'END_SQL'
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Mellerudskanin'
 	AND	h.is_active IS NULL;
-
 END_SQL
