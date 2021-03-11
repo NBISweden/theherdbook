@@ -53,15 +53,16 @@ if "$load_gotland" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
 	load_gotland=false
 fi >&2
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
-	echo 'Missing or unusable Mellerud data file (-m file)' >&2
+	echo 'Missing or unusable Mellerud data file (-m file)'
 	echo 'Will not load Mellerud data'
 	load_mellerud=false
-fi
-if [ -z "$Mfile" ] || [ ! -f "$Mfile" ]; then
-	echo 'Missing or unusable Mellerud data file (-M file)' >&2
-	echo 'Will not load Mellerud herds'
-	load_mellerud_herds=false
-fi
+fi >&2
+if "$load_mellerud" && ( [ -z "$Mfile" ] || [ ! -f "$Mfile" ] ); then
+	echo 'Missing or unusable Mellerud data file (-M file)'
+	echo 'Will not load Mellerud data'
+	#load_mellerud=false
+	# FIXME: Uncomment above later, or make Gotland work the same way
+fi >&2
 
 for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 	[ ! -f "$name" ] && continue
