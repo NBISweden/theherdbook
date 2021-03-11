@@ -56,3 +56,8 @@ services:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
         image: herdbook_r-api
+        volumes:
+            - type: bind
+              source: ./R
+              target: /code
+ 
