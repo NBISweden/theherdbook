@@ -289,12 +289,13 @@ done | psql --quiet
 # Handle individuals that have disappeared from this genebank (animals
 # sold to external herds).  For each individual with "ny G" equal to
 # "0", figure out the most recent tracking date.  Add tracking info to
-# the "GX1" herd at the last of December of the year of that date.
+# the "GX1" herd at the last of December of the year *after* the year of
+# that date.
 psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
 		i.individual_id,
-		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer, 12, 31)
+		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer + 1, 12, 31)
 	FROM	herd h
 	JOIN	individual i ON (true)
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
