@@ -1,13 +1,17 @@
 #!/bin/bash
 
 # This will use docker-compose to load the data
-# Using a stage built main container and the actula 
-# Postgres container
+# using a stage built main container and the
+# actual Postgres container.
 
+# Any arguments will be passed on to load-in-docker.sh
+#
 # Usage example:
 #	./load-docker-compose.sh -g kanindata-gotland-v9.xlsx \
 #	          -G herd-registry-gotland.xlsx \
-#	          -m kanindata-mellerud-v4.xlsx
+#	          -m kanindata-mellerud-v4.xlsx \
+#	          -M herd-registry-mellerud.xlsx
+#
 
 usage () {
 	cat <<-USAGE_END

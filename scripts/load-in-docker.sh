@@ -3,14 +3,15 @@
 # Usage example:
 #	./load.sh -g kanindata-gotland-v9.xlsx \
 #	          -G herd-registry-gotland.xlsx \
-#	          -m kanindata-mellerud-v4.xlsx
+#	          -m kanindata-mellerud-v4.xlsx \
+#	          -M herd-registry-mellerud.xlsx
 
 usage () {
 	cat <<-USAGE_END
 	Usage:
 	    $0	\\
 	    	-g kanindata-gotland.xlsx -G herd-registry-gotland.xlsx \\
-	    	-m kanindata-mellerud.xlsx
+	    	-m kanindata-mellerud.xlsx -M herd-registry-mellerud.xlsx
 
 	Options:
 
@@ -117,9 +118,9 @@ echo '## Initializing database'
 psql -d postgres -c  "DROP DATABASE $PGDATABASE;"
 createdb "$PGDATABASE"
 
-cd /code
+cd /code || exit 1
 python3 -c 'import utils.database as db; db.init()'
-cd /scripts
+cd /scripts || exit 1
 
 if "$load_gotland"; then
 	echo '## Loading Gotlandskanin'
