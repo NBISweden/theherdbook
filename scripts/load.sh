@@ -3,20 +3,23 @@
 # Usage example:
 #	./load.sh -g kanindata-gotland-v9.xlsx \
 #	          -G herd-registry-gotland.xlsx \
-#	          -m kanindata-mellerud-v4.xlsx
+#	          -m kanindata-mellerud-v4.xlsx \
+#	          -M herd-registry-mellerud.xlsx
 
 usage () {
 	cat <<-USAGE_END
 	Usage:
 	    $0	\\
 	    	-g kanindata-gotland.xlsx -G herd-registry-gotland.xlsx \\
-	    	-m kanindata-mellerud.xlsx
+	    	-m kanindata-mellerud.xlsx -M herd-registry-mellerud.xlsx
 
 	Options:
 
 	    -g file	Load Gotland rabbit data from "file"
 	    -G file	Load Gotland herd data from "file"
+
 	    -m file	Load Mellerud rabbit data from "file"
+	    -M file	Load Mellerud herd data from "file"
 
 	    -h		Show this help text
 	USAGE_END
@@ -27,12 +30,13 @@ if [ ! -e ../.docker/database-variables.env ]; then
 	exit 1
 fi
 
-while getopts 'g:G:hm:' opt; do
+while getopts 'g:G:hm:M:' opt; do
 	case $opt in
 		g)	gfile=$OPTARG ;;
 		G)	Gfile=$OPTARG ;;
 		h)	usage; exit ;;
 		m)	mfile=$OPTARG ;;
+		M)	Mfile=$OPTARG ;;
 		*)
 			echo 'Error in command line parsing' >&2
 			usage >&2
@@ -53,13 +57,19 @@ if "$load_gotland" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
 	echo 'Will not load Gotland data'
 	load_gotland=false
 fi >&2
+
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
-	echo 'Missing or unusable Mellerud data file (-m file)' >&2
+	echo 'Missing or unusable Mellerud data file (-m file)'
 	echo 'Will not load Mellerud data'
 	load_mellerud=false
-fi
+fi >&2
+if "$load_mellerud" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
+	echo 'Missing or unusable Mellerud herd registry file (-M file)'
+	echo 'Will not load Mellerud data'
+	load_mellerud=false
+fi >&2
 
-for name in "$gfile" "$Gfile" "$mfile"; do
+for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 	[ ! -f "$name" ] && continue
 
 	case $name in
@@ -84,6 +94,7 @@ done
 gfile=${gfile%.*}.csv
 Gfile=${Gfile%.*}.csv
 mfile=${mfile%.*}.csv
+Mfile=${Mfile%.*}.csv
 
 set -a	# export all variables
 . ../.docker/database-variables.env
@@ -116,7 +127,7 @@ fi
 
 if "$load_mellerud"; then
 	echo '## Loading Mellerudskanin'
-	./load-mellerud.sh "$connstr" "$mfile"
+	./load-mellerud.sh "$connstr" "$mfile" "$Mfile"
 	echo '## Running Mellerudskanin healthchecks'
 	./check-mellerud.sh
 fi
