@@ -77,13 +77,13 @@ export function InbreedingForm() {
   const { genebanks } = useDataContext()
   const { popup } = useMessageContext()
   const style = useStyles()
-  const [female, setFemale] = React.useState(undefined as Individual | undefined)
-  const [male, setMale] = React.useState(undefined as Individual | undefined)
-  const [grandMomFem, setGrandMomFem] = React.useState(undefined as LimitedIndividual | undefined)
-  const [grandDadFem, setGrandDadFem] = React.useState(undefined as LimitedIndividual | undefined)
-  const [grandMomMale, setGrandMomMale] = React.useState(undefined as LimitedIndividual | undefined)
-  const [grandDadMale, setGrandDadMale] = React.useState(undefined as LimitedIndividual | undefined)
-  
+  // FEEDBACK, gather ancestors into a dict or something?
+  const [female, setFemale] = React.useState(null as Individual | null)
+  const [male, setMale] = React.useState(null as Individual | null)
+  const [grandMomFem, setGrandMomFem] = React.useState(null as LimitedIndividual | null)
+  const [grandDadFem, setGrandDadFem] = React.useState(null as LimitedIndividual | null)
+  const [grandMomMale, setGrandMomMale] = React.useState(null as LimitedIndividual | null)
+  const [grandDadMale, setGrandDadMale] = React.useState(null as LimitedIndividual | null)
 
   /* TODO, add ability to choose genebank when several are present in DB. Copy or rewrite genebanks? */
   const genebank = genebanks[0]
@@ -105,6 +105,9 @@ export function InbreedingForm() {
   const parentsUndefined = !female || !male
   const grandParentsUndefined = !grandMomFem || !grandDadFem || !grandMomMale || !grandDadMale
   
+  const inbreedCalcPossible = (female && male) || (grandMomFem && grandDadFem && grandMomMale && grandDadMale)
+  || (female && grandMomMale && grandDadMale) || (male && grandMomFem && grandDadFem)
+
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let coefficientOfInbreeding = 3
   
@@ -118,11 +121,11 @@ export function InbreedingForm() {
                         options={activeFemales}
                         getOptionLabel={(option: Individual) => individualLabel(option)}
                         value={female}
-                        // FEEDBACK, not sure if onChange "typing" solution optimal
                         onChange={(event, newValue) => {
-                          setFemale(newValue ? newValue : undefined)
-                          setGrandMomFem(newValue?.mother ? newValue?.mother : undefined)
-                          setGrandDadFem(newValue?.father ? newValue?.father : undefined)
+                          setFemale(newValue)
+                          setGrandMomFem(null)
+                          setGrandDadFem(null)
+
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
@@ -137,15 +140,14 @@ export function InbreedingForm() {
                         options={activeMales}
                         getOptionLabel={(option: Individual) => individualLabel(option)}
                         value={male}
-                        // FEEDBACK, not sure if onChange "typing" solution optimal
                         onChange={(event, newValue) => {
-                          setMale(newValue ? newValue : undefined)
-                          setGrandMomMale(newValue?.mother ? newValue.mother : undefined)
-                          setGrandDadMale(newValue?.father ? newValue.father : undefined)
+                          setMale(newValue)
+                          setGrandMomMale(null)
+                          setGrandDadMale(null)
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          placeholder="Test"
+                          placeholder="Placeholder value"
                           label="Välj far"
                           className={style.wideControl}
                           variant={inputVariant} />}
@@ -158,9 +160,11 @@ export function InbreedingForm() {
                         getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                         getOptionSelected={(option, value) => option.id === value.id}
                         value={grandMomFem}
-                        inputValue={grandMomFem ? individualLabel(grandMomFem) : ''}
+                        // FEEDBACK, is there a possibility for individuals to not have a registered mother/father?
+                        // Is '' a valid input in those cases?
+                        inputValue={female?.mother ? individualLabel(female.mother) : grandMomFem ? individualLabel(grandMomFem) : ''}
                         onChange={(event, newValue) => {
-                          setGrandMomFem(newValue ? newValue : undefined);
+                          setGrandMomFem(newValue)
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
@@ -176,9 +180,9 @@ export function InbreedingForm() {
                         options={activeMalesLimited}
                         getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                         value={grandDadFem}
-                        inputValue={grandDadFem ? individualLabel(grandDadFem) : ''}
+                        inputValue={female?.father ? individualLabel(female.father) : grandDadFem ? individualLabel(grandDadFem) : ''}
                         onChange={(event, newValue) => {
-                          setGrandDadFem(newValue ? newValue : undefined);
+                          setGrandDadFem(newValue)
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
@@ -193,9 +197,9 @@ export function InbreedingForm() {
                         getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                         getOptionSelected={(option, value) => option.id === value.id}
                         value={grandMomMale}
-                        inputValue={grandMomMale ? individualLabel(grandMomMale) : ''}
+                        inputValue={male?.mother ? individualLabel(male.mother) : grandMomMale ? individualLabel(grandMomMale) : ''}
                         onChange={(event, newValue) => {
-                          setGrandMomMale(newValue ? newValue : undefined)
+                          setGrandMomMale(newValue)
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
@@ -210,9 +214,9 @@ export function InbreedingForm() {
                         getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                         getOptionSelected={(option, value) => option.id === value.id}
                         value={grandDadMale}
-                        inputValue={grandDadMale ? individualLabel(grandDadMale) : ''}
+                        inputValue={male?.father ? individualLabel(male.father) : grandDadMale ? individualLabel(grandDadMale) : ''}
                         onChange={(event, newValue) => {
-                          setGrandDadMale(newValue ? newValue : undefined);
+                          setGrandDadMale(newValue);
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
@@ -225,7 +229,7 @@ export function InbreedingForm() {
               <Button className={style.bottomButton}
                             variant='contained'
                             color='primary'
-                            disabled={parentsUndefined && grandParentsUndefined}
+                            disabled={!inbreedCalcPossible}
                             onClick={() => popup(<InbreedingRecommendation female={female} male={male} coefficientOfInbreeding={coefficientOfInbreeding} sufficientGenerations={true}/>, undefined)}
                 >
                       Beräkna inavelkoefficient
