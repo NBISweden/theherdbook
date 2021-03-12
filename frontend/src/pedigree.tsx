@@ -32,21 +32,7 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
   })
 }
 
-// FEEDBACK, adapt method unique instead to return the commonAncestors as well as the unique nodes?
-export function commonAncestors(xs: any[], key: string | undefined = undefined): Set<any> {
-  const seen = new Set()
-  let commonAnc = new Set<any>()
-  xs.forEach(x => {
-    const duplicate = key ? seen.has(x[key]) : seen.has(x)
-    key ? seen.add(x[key]) : seen.add(x)
-    if (duplicate) {
-      key ? commonAnc.add(x[key]) : commonAnc.add(x)
-    }
-  })
-  return commonAnc
-}
-
-export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefined): {uniqueNodes: any[], commonNodes: Set<any>}{
+export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefined): [any[], Set<any>]{
   const seen = new Set()
   let commonNodes = new Set<any>()
   let uniqueNodes: any[]
@@ -58,7 +44,7 @@ export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefi
     }
     return !duplicate
   })
-  return {uniqueNodes: uniqueNodes, commonNodes: commonNodes}
+  return [uniqueNodes, commonNodes]
 }
 
 
@@ -356,31 +342,30 @@ export function parentPedigree(genebanks: Genebank[], parents: LimitedIndividual
     edges = [...edges, ...pedigree.edges]
 
   })
-  // save duplicate nodes, i.e. common ancestors
-  let commonAnc = commonAncestors(nodes, 'id')
 
-  // remove duplicate nodes and edges
-  nodes = unique(nodes, 'id')
-  edges = unique(edges, 'id')
+  // get the unique nodes and the ones that were duplicate
+  const [uniqueNodes, commonNodes] = uniqueAndCommonNodes(nodes, 'id')
+
+  // remove duplicate edges
+  const uniqueEdges = unique(edges, 'id')
 
   // color nodes that are common ancestors
-  nodes.forEach(x => {
-    if (commonAnc.has(x['id'])) {
+  uniqueNodes.forEach(x => {
+    if (commonNodes.has(x['id'])) {
       x.color.border = "#f24d0c"
     }
   })
 
-  //FEEDBACK, better to make a function that take edges as input and returns edges with the relevant edges colored?
-  
+  // TODO, make this less ugly
   // for each common ancestors, save edges from offspring to this ancestor
   let edgesToColor = new Set()
-  commonAnc.forEach((nodeId: string) => {
-    let ancestorEdges = getConnectingEdges(edges, nodeId, offspringNode.id)
+  commonNodes.forEach((nodeId: string) => {
+    let ancestorEdges = getConnectingEdges(uniqueEdges, nodeId, offspringNode.id)
     edgesToColor = new Set([...edgesToColor, ...ancestorEdges])
   })
 
   // color the saved edges
-  edges.forEach(x => {
+  uniqueEdges.forEach(x => {
     if (edgesToColor.has(x['id'])) {
       x.color = "#f24d0c"
       x.selectionWidth = 2
@@ -388,6 +373,6 @@ export function parentPedigree(genebanks: Genebank[], parents: LimitedIndividual
   }
 })
   
-  return {nodes: nodes, edges: edges}
+  return {nodes: uniqueNodes, edges: uniqueEdges}
   
 }
