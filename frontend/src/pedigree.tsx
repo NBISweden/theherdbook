@@ -46,6 +46,20 @@ export function commonAncestors(xs: any[], key: string | undefined = undefined):
   return commonAnc
 }
 
+export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefined): {uniqueNodes: any[], commonNodes: Set<any>}{
+  const seen = new Set()
+  let commonNodes = new Set<any>()
+  let uniqueNodes: any[]
+  uniqueNodes = xs.filter(x => {
+    const duplicate = key ? seen.has(x[key]) : seen.has(x)
+    key ? seen.add(x[key]) : seen.add(x)
+    if (duplicate) {
+      key ? commonNodes.add(x[key]) : commonNodes.add(x)
+    }
+    return !duplicate
+  })
+  return {uniqueNodes: uniqueNodes, commonNodes: commonNodes}
+}
 
 
 const indexes = new WeakMap<Genebank[], Record<string, Individual>>()

@@ -1,18 +1,28 @@
-import { commonAncestors, getConnectingEdges, Edge } from '@app/pedigree'
+import { commonAncestors, getConnectingEdges, Edge, uniqueAndCommonNodes, unique } from '@app/pedigree'
 
 type Node = {id: string, x?: number, label: string, shape?: string,
     color?: string}
 
 let duplicateNodes: Node[] = []
-for (let i = 0; i < 9; i++) {
+for (let i = 0; i < 5; i++) {
     duplicateNodes.push({"id": `${i}`, "label": `${i}`})
   }
-duplicateNodes.push(...[{"id": "4", "label": "4"}, {"id": "6", "label": "6"}])
-let commonNodes = ["4", "6"]
+duplicateNodes.push(...[{"id": "2", "label": "2"}, {"id": "4", "label": "4"}])
+let commonNodes = ["2", "4"]
 
 test('commonAncestors with key id', () => {
     expect(commonAncestors(duplicateNodes, 'id')).toEqual(new Set(commonNodes))
   })
+
+test('unique with key id', () => {
+  expect(unique(duplicateNodes, 'id')).toEqual([{"id": "0", "label": "0"}, {"id": "1", "label": "1"}, 
+  {"id": "2", "label": "2"}, {"id": "3", "label": "3"}, {"id": "4", "label": "4"}])
+})
+
+test('uniqueAndCommonNodes with key id', () => {
+  expect(uniqueAndCommonNodes(duplicateNodes, 'id')).toEqual({uniqueNodes: [{"id": "0", "label": "0"}, {"id": "1", "label": "1"}, 
+  {"id": "2", "label": "2"}, {"id": "3", "label": "3"}, {"id": "4", "label": "4"}], commonNodes: new Set(commonNodes)})
+})
 
 let undefinedVar:string
 let duplicateNumbers = [1, 1, 2, 2, 3, 4]
