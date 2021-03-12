@@ -13,10 +13,9 @@
 #	          -M herd-registry-mellerud.xlsx
 #
 
-if docker-compose -f ../dc-db-load.yml ps | grep -q 'main-load-db.*\sUp\s.*'
+if	docker-compose -f ../dc-db-load.yml ps |
+	[[ $(grep -c -E '^herdbook-(db|main-load-db).*\<Up\>') -ne 2 ]]
 then
-	: # All good
-else
     # Start containers and wait a little to give it time to start 
     echo "System is not up, bringing up before loading data"
     echo
