@@ -49,8 +49,7 @@ if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
 fi >&2
 if "$load_gotland" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
 	echo 'Missing or unusable Gotland herd registry file (-G file)'
-	echo 'Will not load Gotland data'
-	load_gotland=false
+	echo 'Will not load Gotland herd data'
 fi >&2
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 	echo 'Missing or unusable Mellerud data file (-m file)'
@@ -59,9 +58,7 @@ if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
 fi >&2
 if "$load_mellerud" && ( [ -z "$Mfile" ] || [ ! -f "$Mfile" ] ); then
 	echo 'Missing or unusable Mellerud data file (-M file)'
-	echo 'Will not load Mellerud data'
-	#load_mellerud=false
-	# FIXME: Uncomment above later, or make Gotland work the same way
+	echo 'Will not load Mellerud herd data'
 fi >&2
 
 for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
