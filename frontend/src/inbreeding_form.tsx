@@ -47,7 +47,7 @@ const useStyles = makeStyles({
   },
   bottomButton: {
     float: 'left',
-    marginTop: '20px',
+    margin: '30px',
   },
   testInput: {
     paddingLeft: '15px'
@@ -101,6 +101,9 @@ export function InbreedingForm() {
   const filterOptions = createFilterOptions<Individual>({
   limit: 30,
   });
+
+  const parentsUndefined = !female || !male
+  const grandParentsUndefined = !grandMomFem || !grandDadFem || !grandMomMale || !grandDadMale
   
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let coefficientOfInbreeding = 3
@@ -222,7 +225,7 @@ export function InbreedingForm() {
               <Button className={style.bottomButton}
                             variant='contained'
                             color='primary'
-                            disabled={!female || !male}
+                            disabled={parentsUndefined && grandParentsUndefined}
                             onClick={() => popup(<InbreedingRecommendation female={female} male={male} coefficientOfInbreeding={coefficientOfInbreeding} sufficientGenerations={true}/>, undefined)}
                 >
                       Beräkna inavelkoefficient
