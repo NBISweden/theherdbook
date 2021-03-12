@@ -102,15 +102,14 @@ export function InbreedingForm() {
   limit: 30,
   });
 
-  const parentsUndefined = !female || !male
-  const grandParentsUndefined = !grandMomFem || !grandDadFem || !grandMomMale || !grandDadMale
+  const femaleGrandParentDefined = grandMomFem && grandDadFem
+  const maleGrandParentDefined = grandMomMale && grandDadMale
   
-  const inbreedCalcPossible = (female && male) || (grandMomFem && grandDadFem && grandMomMale && grandDadMale)
-  || (female && grandMomMale && grandDadMale) || (male && grandMomFem && grandDadFem)
-
-  /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
-  let coefficientOfInbreeding = 3
+  const inbreedCalcPossible = (female && male) || (femaleGrandParentDefined && maleGrandParentDefined)
+  || (female && maleGrandParentDefined) || (male && femaleGrandParentDefined)
   
+  //FEEDBACK, should there be a check to make sure they don't choose mother and grandmother as the same?
+  // E.g. mother Estrid and male grandparents Estrid and Bamse
   return <>
           <Paper>
             <form className={style.form}>
@@ -230,7 +229,7 @@ export function InbreedingForm() {
                             variant='contained'
                             color='primary'
                             disabled={!inbreedCalcPossible}
-                            onClick={() => popup(<InbreedingRecommendation female={female} male={male} coefficientOfInbreeding={coefficientOfInbreeding} sufficientGenerations={true}/>, undefined)}
+                            onClick={() => popup(<InbreedingRecommendation chosenFemaleAncestors={femaleGrandParentDefined ? [grandMomFem, grandDadFem] : [female]} chosenMaleAncestors={maleGrandParentDefined ? [grandMomMale, grandDadMale] : [male]} femaleGrandParents={femaleGrandParentDefined} maleGrandParents={maleGrandParentDefined}/>, undefined)}
                 >
                       Beräkna inavelkoefficient
               </Button>  

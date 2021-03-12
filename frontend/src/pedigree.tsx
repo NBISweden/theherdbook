@@ -308,7 +308,7 @@ export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDesce
  * offspring is not taken into account as a generation, i.e. it is the 
  * number of generations from the parents 
  */
-export function parentPedigree(genebanks: Genebank[], parents: Individual[], generations: number = 1000): Pedigree {
+export function parentPedigree(genebanks: Genebank[], parents: LimitedIndividual[], generations: number = 1000): Pedigree {
   let nodes: Node[] = []
   let edges: Edge[] = []
 
@@ -331,7 +331,7 @@ export function parentPedigree(genebanks: Genebank[], parents: Individual[], gen
   }
   nodes.push(offspringNode)
 
-  parents.forEach((parent: Individual) => {
+  parents.forEach((parent: LimitedIndividual) => {
     edges.push({id: `${offspringNode.id}-${parent.number}`,
                                   from: offspringNode.id,
                                   to: parent.number})
