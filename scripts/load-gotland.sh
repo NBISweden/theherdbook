@@ -360,6 +360,10 @@ while [ "$year" -le 2018 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
+if [ ! -f "$3" ]; then
+	# No herd info
+	exit 0
+fi
 
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.

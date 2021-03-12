@@ -3,32 +3,35 @@
 # Usage example:
 #	./load.sh -g kanindata-gotland-v9.xlsx \
 #	          -G herd-registry-gotland.xlsx \
-#	          -m kanindata-mellerud-v4.xlsx
+#	          -m kanindata-mellerud-v4.xlsx \
+#	          -M herd-registry-mellerud.xlsx
 
 usage () {
 	cat <<-USAGE_END
 	Usage:
 	    $0	\\
 	    	-g kanindata-gotland.xlsx -G herd-registry-gotland.xlsx \\
-	    	-m kanindata-mellerud.xlsx
+	    	-m kanindata-mellerud.xlsx -M herd-registry-mellerud.xlsx
 
 	Options:
 
 	    -g file	Load Gotland rabbit data from "file"
 	    -G file	Load Gotland herd data from "file"
 	    -m file	Load Mellerud rabbit data from "file"
+	    -M file	Load Mellerud herd data from "file"
 
 	    -h		Show this help text
 	USAGE_END
 }
 
 
-while getopts 'g:G:hm:' opt; do
+while getopts 'g:G:hm:M:' opt; do
 	case $opt in
 		g)	gfile=$OPTARG ;;
 		G)	Gfile=$OPTARG ;;
 		h)	usage; exit ;;
 		m)	mfile=$OPTARG ;;
+		M)	Mfile=$OPTARG ;;
 		*)
 			echo 'Error in command line parsing' >&2
 			usage >&2
@@ -46,16 +49,19 @@ if [ -z "$gfile" ] || [ ! -f "$gfile" ]; then
 fi >&2
 if "$load_gotland" && ( [ -z "$Gfile" ] || [ ! -f "$Gfile" ] ); then
 	echo 'Missing or unusable Gotland herd registry file (-G file)'
-	echo 'Will not load Gotland data'
-	load_gotland=false
+	echo 'Will not load Gotland herd data'
 fi >&2
 if [ -z "$mfile" ] || [ ! -f "$mfile" ]; then
-	echo 'Missing or unusable Mellerud data file (-m file)' >&2
+	echo 'Missing or unusable Mellerud data file (-m file)'
 	echo 'Will not load Mellerud data'
 	load_mellerud=false
-fi
+fi >&2
+if "$load_mellerud" && ( [ -z "$Mfile" ] || [ ! -f "$Mfile" ] ); then
+	echo 'Missing or unusable Mellerud data file (-M file)'
+	echo 'Will not load Mellerud herd data'
+fi >&2
 
-for name in "$gfile" "$Gfile" "$mfile"; do
+for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 	[ ! -f "$name" ] && continue
 
 	case $name in
@@ -67,6 +73,10 @@ for name in "$gfile" "$Gfile" "$mfile"; do
 			then
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2
 				in2csv "$name" >"$csvname"
+				if [ -s "$csvname" ]; then
+				    echo "in2csv failed, doing xlsx2csv instead"
+				    xlsx2csv --skipemptycolumns --ignoreempty "$name" > "$csvname"
+				fi
 			fi
 			;;
 		*.csv)	# all good
@@ -80,6 +90,7 @@ done
 gfile=${gfile%.*}.csv
 Gfile=${Gfile%.*}.csv
 mfile=${mfile%.*}.csv
+Mfile=${Mfile%.*}.csv
 
 
 export PGDATABASE="${POSTGRES_DB:?}"
@@ -105,9 +116,9 @@ echo '## Initializing database'
 psql -d postgres -c  "DROP DATABASE $PGDATABASE;"
 createdb "$PGDATABASE"
 
-cd /code
+cd /code || exit 1
 python3 -c 'import utils.database as db; db.init()'
-cd /scripts
+cd /scripts || exit 1
 
 if "$load_gotland"; then
 	echo '## Loading Gotlandskanin'
@@ -118,7 +129,7 @@ fi
 
 if "$load_mellerud"; then
 	echo '## Loading Mellerudskanin'
-	./load-mellerud.sh "$connstr" "$mfile"
+	./load-mellerud.sh "$connstr" "$mfile" "$Mfile"
 	echo '## Running Mellerudskanin healthchecks'
 	./check-mellerud.sh
 fi
