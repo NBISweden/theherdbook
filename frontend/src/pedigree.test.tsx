@@ -9,27 +9,24 @@ for (let i = 0; i < 5; i++) {
   }
 duplicateNodes.push(...[{"id": "2", "label": "2"}, {"id": "4", "label": "4"}])
 let commonNodes = ["2", "4"]
-
-test('commonAncestors with key id', () => {
-    expect(commonAncestors(duplicateNodes, 'id')).toEqual(new Set(commonNodes))
-  })
+let uniqueNodes = [{"id": "0", "label": "0"}, {"id": "1", "label": "1"}, 
+{"id": "2", "label": "2"}, {"id": "3", "label": "3"}, {"id": "4", "label": "4"}]
 
 test('unique with key id', () => {
-  expect(unique(duplicateNodes, 'id')).toEqual([{"id": "0", "label": "0"}, {"id": "1", "label": "1"}, 
-  {"id": "2", "label": "2"}, {"id": "3", "label": "3"}, {"id": "4", "label": "4"}])
+  expect(unique(duplicateNodes, 'id')).toEqual(uniqueNodes)
 })
 
 test('uniqueAndCommonNodes with key id', () => {
-  expect(uniqueAndCommonNodes(duplicateNodes, 'id')).toEqual({uniqueNodes: [{"id": "0", "label": "0"}, {"id": "1", "label": "1"}, 
-  {"id": "2", "label": "2"}, {"id": "3", "label": "3"}, {"id": "4", "label": "4"}], commonNodes: new Set(commonNodes)})
+  expect(uniqueAndCommonNodes(duplicateNodes, 'id')).toEqual([uniqueNodes, new Set(commonNodes)])
 })
 
 let undefinedVar:string
 let duplicateNumbers = [1, 1, 2, 2, 3, 4]
 let commonNumbers = [1, 2]
+let uniqueNumbers = [1, 2, 3, 4]
 
-test('commonAncestors key not specified', () => {
-expect(commonAncestors(duplicateNumbers, undefinedVar)).toEqual(new Set(commonNumbers))
+test('uniqueAndCommonNodes key not specified', () => {
+  expect(uniqueAndCommonNodes(duplicateNumbers, undefinedVar)).toEqual([uniqueNumbers, new Set(commonNumbers)])
 })
 
 let edges: Edge[] = [{"id": "0-1", "from": "0", "to": "1"}, {"id": "0-2", "from": "0", "to": "2"}, {"id": "1-3", "from": "1", "to": "3"}, {"id": "1-4", "from": "1", "to": "4"},

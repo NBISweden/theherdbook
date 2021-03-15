@@ -32,6 +32,7 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
   })
 }
 
+// TO DO: docstring and likely replace function unique in all pedigree calculations with uniqueAndCommonNodes
 export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefined): [any[], Set<any>]{
   const seen = new Set()
   let commonNodes = new Set<any>()
@@ -347,7 +348,7 @@ export function parentPedigree(genebanks: Genebank[], parents: LimitedIndividual
   const [uniqueNodes, commonNodes] = uniqueAndCommonNodes(nodes, 'id')
 
   // remove duplicate edges
-  const uniqueEdges = unique(edges, 'id')
+  const [uniqueEdges] = uniqueAndCommonNodes(edges, 'id')
 
   // color nodes that are common ancestors
   uniqueNodes.forEach(x => {
