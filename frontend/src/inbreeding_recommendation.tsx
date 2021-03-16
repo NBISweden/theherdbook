@@ -4,7 +4,7 @@
 import React from 'react'
 import { Individual, LimitedIndividual, individualLabel} from './data_context_global'
 import { useDataContext } from '@app/data_context'
-import { parentPedigree } from '@app/pedigree'
+import { parentPedigree, testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context';
@@ -61,6 +61,8 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
       </div>
     </>
   } else {
+    const pedigree = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, 4), [genebanks, chosenFemaleAncestors, chosenMaleAncestors])
+
     if (!maleGrandParents) {
       breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenFemaleAncestors[1])} gemensamma avkomma och ${individualLabel(chosenMaleAncestors[0])}`
     } else {
@@ -69,9 +71,17 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   return <>
     <div>
       <h1> GRANDPARENTS </h1>
-      <p> This will be replaced by grandParentPedigree </p>
       {breedCouple}
     </div>
+
+    <div>
+      {pedigree &&
+            <PedigreeNetwork
+              pedigree={pedigree}
+              onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
+            />
+          }
+      </div>
   </>
   }
 }

@@ -300,6 +300,112 @@ export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDesce
   return finalConnectingEdges
 }
 
+function ancestorsPedigree(genebanks: Genebank[], parents: LimitedIndividual[], offspringId: string, generations: number) {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+  parents.forEach((parent: LimitedIndividual) => {
+    edges.push({id: `${offspringId}-${parent.number}`,
+                                  from: offspringId,
+                                  to: parent.number})
+    //FEEDBACK, should it be optional to use calcPedigreeDan as well?
+    const pedigree = calcPedigree(genebanks, parent.number, generations)
+
+    nodes = [...nodes, ...pedigree.nodes]
+    edges = [...edges, ...pedigree.edges]
+
+  })
+  return {nodes, edges}
+}
+
+export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], 
+  femaleGrandParents: boolean, maleGrandParents: boolean, generations: number = 1000): Pedigree {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+
+  const offspringNode = {id: "13371337",
+    x: 0,
+    label: "Potentiell avkomma",
+    shape: 'triangle',
+    color:  {
+      border: 'darkgrey',
+      background: '#e5dbd7',
+      highlight: {
+        border: 'grey',
+        background: '#b5aeab'
+      },
+      hover: {
+        border: 'black',
+        background: '#b5aeab'
+      }
+    }
+  }
+nodes.push(offspringNode)
+let femaleEdgeId = offspringNode.id
+let maleEdgeId = offspringNode.id
+if (femaleGrandParents) {
+  let offspringMother = Object.assign({}, offspringNode)
+  offspringMother["id"] = "1337133700"
+  offspringMother["label"] = "Ej registrerad mor\n"
+  offspringMother["shape"] = "oval"
+  nodes.push(offspringMother)
+  edges.push({id: `${offspringNode.id}-${offspringMother.id}`,
+                                  from: offspringNode.id,
+                                  to: offspringMother.id})
+  femaleEdgeId = offspringMother.id
+}
+
+if (maleGrandParents) {
+  let offspringFather = Object.assign({}, offspringNode)
+  offspringFather["id"] = "1337133711"
+  offspringFather["label"] = "Ej registrerad far\n"
+  offspringFather["shape"] = "box"
+  nodes.push(offspringFather)
+  edges.push({id: `${offspringNode.id}-${offspringFather.id}`,
+                                  from: offspringNode.id,
+                                  to: offspringFather.id})
+  maleEdgeId = offspringFather.id
+}
+
+let femaleAncestorsPedigree = ancestorsPedigree(genebanks, chosenFemaleAncestors, femaleEdgeId, generations)
+let maleAncestorsPedigree = ancestorsPedigree(genebanks, chosenMaleAncestors, maleEdgeId, generations)
+nodes = [...nodes, ...femaleAncestorsPedigree.nodes, ...maleAncestorsPedigree.nodes]
+edges = [...edges, ...femaleAncestorsPedigree.edges, ...maleAncestorsPedigree.edges]
+
+// get the unique nodes and the ones that were duplicate
+const [uniqueNodes, commonNodes] = uniqueAndCommonNodes(nodes, 'id')
+
+// remove duplicate edges
+const [uniqueEdges] = uniqueAndCommonNodes(edges, 'id')
+
+// color nodes that are common ancestors
+uniqueNodes.forEach(x => {
+  if (commonNodes.has(x['id'])) {
+    x.color.border = "#f24d0c"
+  }
+})
+
+// TODO, make this less ugly
+// for each common ancestors, save edges from offspring to this ancestor
+let edgesToColor = new Set()
+commonNodes.forEach((nodeId: string) => {
+  let ancestorEdges = getConnectingEdges(uniqueEdges, nodeId, offspringNode.id)
+  edgesToColor = new Set([...edgesToColor, ...ancestorEdges])
+})
+
+// color the saved edges
+uniqueEdges.forEach(x => {
+  if (edgesToColor.has(x['id'])) {
+    x.color = "#f24d0c"
+    x.selectionWidth = 2
+    x.width = 3
+}
+})
+
+return {nodes: uniqueNodes, edges: uniqueEdges}
+
+
+}
+
 /**
  * Returns the combined pedigree of `parents` from the data in `genebanks`
  * and a potential offspring as a child node of the parents
