@@ -18,13 +18,17 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   let sufficientGenerations = true
   let breedCouple
 
-  if ((!femaleGrandParents) && (!maleGrandParents)){
+  // TODO, style
+  if (!femaleGrandParents && !maleGrandParents){
     breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[0])}`
-    let female = chosenFemaleAncestors[0]
-    let male = chosenMaleAncestors[0]
-    let parents: LimitedIndividual[] = [female, male]
+  } else if (!maleGrandParents) {
+    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenFemaleAncestors[1])} gemensamma avkomma och ${individualLabel(chosenMaleAncestors[0])}`
+  } else {
+    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och gemensam avkomma från ${individualLabel(chosenMaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[1])}`
+  }
 
-    const pedigree = React.useMemo(() => parentPedigree(genebanks, parents, 4), [genebanks, parents])
+
+    const pedigree = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, 4), [genebanks, chosenFemaleAncestors, chosenMaleAncestors])
 
     // All coefficientOfInbreeding logic/info is only a template of how it could function when we have possibility to calculate the coefficient
     // Current numbers and recommendations are more or less humbug
@@ -60,28 +64,4 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
           }
       </div>
     </>
-  } else {
-    const pedigree = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, 4), [genebanks, chosenFemaleAncestors, chosenMaleAncestors])
-
-    if (!maleGrandParents) {
-      breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenFemaleAncestors[1])} gemensamma avkomma och ${individualLabel(chosenMaleAncestors[0])}`
-    } else {
-      breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och gemensam avkomma från ${individualLabel(chosenMaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[1])}`
-    }
-  return <>
-    <div>
-      <h1> GRANDPARENTS </h1>
-      {breedCouple}
-    </div>
-
-    <div>
-      {pedigree &&
-            <PedigreeNetwork
-              pedigree={pedigree}
-              onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
-            />
-          }
-      </div>
-  </>
-  }
 }
