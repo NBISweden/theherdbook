@@ -139,15 +139,6 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Född" = b.birth_date
   ) WHERE i.breeding_id IS NULL;
 
-	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-  SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Mellerudskanin'
-   ORDER BY i.individual_id;
 
    ---
    --- Create empty breeding events for any remaining individuals
@@ -168,6 +159,24 @@ psql --echo-errors --quiet <<-'END_SQL'
      END LOOP;
    END;
    $$;
+
+	-- Fix missing breeding birth_date entries
+	UPDATE  breeding
+	SET     birth_date = m."Född"
+	FROM    m_data m
+	JOIN    individual i ON (m."Nummer" = i.number)
+	WHERE   i.breeding_id = breeding.breeding_id
+	AND     birth_date IS NULL;
+
+	-- Initial herd tracking
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+  SELECT	i.origin_herd_id, i.individual_id, b.birth_date
+    FROM	genebank gb
+    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
+   WHERE	gb.name = 'Mellerudskanin'
+   ORDER BY i.individual_id;
 
 END_SQL
 

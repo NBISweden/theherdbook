@@ -165,7 +165,7 @@ psql --echo-errors --quiet <<-'END_SQL'
           d."Född" birth_date,
           MAX(d."Kull") litter_size
           FROM g_data d
-        GROUP BY (d."Far nr", d."Mor nr", d."Född")
+          GROUP BY (d."Far nr", d."Mor nr", d."Född")
       ) d
       JOIN individual father ON d."Far nr" = father.number
       JOIN individual mother ON d."Mor nr" = mother.number;
@@ -186,15 +186,6 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Född" = b.birth_date
   ) WHERE i.breeding_id IS NULL;
 
-	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Gotlandskanin'
-   ORDER BY i.individual_id;
 
    ---
    --- Create empty breeding events for any remaining individuals
@@ -216,9 +207,25 @@ psql --echo-errors --quiet <<-'END_SQL'
    END;
    $$;
 
+	-- Fix missing breeding birth_date entries
+	UPDATE	breeding
+	SET	birth_date = g."Född"
+	FROM	g_data g
+	JOIN	individual i ON (g."Nummer" = i.number)
+	WHERE	i.breeding_id = breeding.breeding_id
+	AND	birth_date IS NULL;
+
+	-- Initial herd tracking
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
+    FROM	genebank gb
+    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
+   WHERE	gb.name = 'Gotlandskanin'
+   ORDER BY i.individual_id;
+
 END_SQL
-
-
 
 # Fix table names for years.
 
