@@ -2,9 +2,9 @@
  * @file This file shows the calculated COI and resulting recommendations based on that COI
  */
 import React from 'react'
-import { Individual, LimitedIndividual, individualLabel} from './data_context_global'
+import { LimitedIndividual, individualLabel} from './data_context_global'
 import { useDataContext } from '@app/data_context'
-import { parentPedigree, testBreedPedigree } from '@app/pedigree'
+import { testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context';
@@ -27,12 +27,10 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
     breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och gemensam avkomma från ${individualLabel(chosenMaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[1])}`
   }
 
-
     const pedigree = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, 4), [genebanks, chosenFemaleAncestors, chosenMaleAncestors])
 
     // All coefficientOfInbreeding logic/info is only a template of how it could function when we have possibility to calculate the coefficient
     // Current numbers and recommendations are more or less humbug
-    // TODO, style text
 
     const beneficialCOI = 5
     const badCOI = 10

@@ -13,7 +13,6 @@ import { useDataContext } from './data_context'
 import { useMessageContext } from '@app/message_context'
 import { InbreedingRecommendation } from '@app/inbreeding_recommendation'
 
-
 const useStyles = makeStyles({
   form: {
     width: '100%',
@@ -44,6 +43,7 @@ const useStyles = makeStyles({
     flexBasis: '22%',
   },
   wideControl: {
+    variant: 'outlined'
   },
   bottomButton: {
     float: 'left',
@@ -128,10 +128,10 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          label="Välj mor"
-                          helperText="Om ännu ej registrerad, välj morföräldrar nedan"
+                          label='Välj mor'
+                          helperText='Om ännu ej registrerad, välj morföräldrar nedan'
                           className={style.wideControl}
-                          variant={"outlined"}
+                          variant={'outlined'}
                           />}
                 />
                 <Autocomplete className={style.input}
@@ -146,10 +146,11 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          placeholder="Placeholder value"
-                          label="Välj far"
+                          label='Välj far'
+                          helperText='Om ännu ej registrerad, välj farföräldrar nedan'
                           className={style.wideControl}
-                          variant={inputVariant} />}
+                          variant={'outlined'}
+                          />}
                 />
               </div>
               <div className={style.formBox}>
@@ -167,9 +168,9 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          label="Välj mormor"
+                          label='Välj mormor'
                           className={style.wideControl}
-                          variant={"outlined"}
+                          variant={'outlined'}
                           />}
                 />
                 <Autocomplete className={style.inputGrandParents}
@@ -185,9 +186,9 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          label="Välj morfar"
+                          label='Välj morfar'
                           className={style.wideControl}
-                          variant={"outlined"} />}
+                          variant={'outlined'} />}
                 />
                 <Autocomplete className={style.inputGrandParents}
                         style={{ marginLeft: '15px' }}
@@ -202,9 +203,9 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          label="Välj farmor"
+                          label='Välj farmor'
                           className={style.wideControl}
-                          variant={"outlined"}
+                          variant={'outlined'}
                           />}
                 />
                 <Autocomplete className={style.inputGrandParents}
@@ -219,10 +220,9 @@ export function InbreedingForm() {
                         }}
                         filterOptions={filterOptions}
                         renderInput={(params) => <TextField {...params}
-                          placeholder="Test"
-                          label="Välj farfar"
+                          label='Välj farfar'
                           className={style.wideControl}
-                          variant={"outlined"} />}
+                          variant={'outlined'} />}
                 />
               </div>
               <Button className={style.bottomButton}
