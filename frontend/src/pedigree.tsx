@@ -327,7 +327,8 @@ function ancestorsPedigree(genebanks: Genebank[], parents: LimitedIndividual[], 
  * @param chosenMaleAncestors chosen father or grandparents of not yet registered father
  * @param femaleGrandParents if a mother or grandparents are chosen
  * @param maleGrandParents if a father of grandparents are chosen
- * @param generations the number of generation to plot
+ * @param generations the number of generation to plot where the potential offspring is
+ * considered generation 0
  * @returns 
  */
 export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], 
@@ -360,6 +361,8 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
 
   let femalePseudoId = offspringNode.id
   let malePseudoId = offspringNode.id
+  let femaleGenerations = generations -1
+  let maleGenerations = generations -1
 
   if (femaleGrandParents) {
     let offspringMother = pseudoNode('1337133700', 'Ej registrerad\nmor', 'oval', '#fce5e9')
@@ -369,6 +372,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
                                     to: offspringMother.id})
 
     femalePseudoId = offspringMother.id
+    femaleGenerations = generations -2
   }
   if (maleGrandParents) {
     let offspringFather = pseudoNode('1337133711', 'Ej registrerad\nfar', 'box', '#d4ecfc')
@@ -378,10 +382,11 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
                                     to: offspringFather.id})
                                     
     malePseudoId = offspringFather.id
+    maleGenerations = generations -2
   }
 
-  let femaleAncestorsPedigree = ancestorsPedigree(genebanks, chosenFemaleAncestors, femalePseudoId, generations)
-  let maleAncestorsPedigree = ancestorsPedigree(genebanks, chosenMaleAncestors, malePseudoId, generations)
+  let femaleAncestorsPedigree = ancestorsPedigree(genebanks, chosenFemaleAncestors, femalePseudoId, femaleGenerations)
+  let maleAncestorsPedigree = ancestorsPedigree(genebanks, chosenMaleAncestors, malePseudoId, maleGenerations)
   nodes = [...nodes, ...femaleAncestorsPedigree.nodes, ...maleAncestorsPedigree.nodes]
   edges = [...edges, ...femaleAncestorsPedigree.edges, ...maleAncestorsPedigree.edges]
 
