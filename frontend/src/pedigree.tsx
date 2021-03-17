@@ -354,14 +354,15 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
       }
     }
     }
-  let offspringNode = pseudoNode("13371337", "Potentiell avkomma", "triangle", "#e5dbd7")
+
+  let offspringNode = pseudoNode('13371337', 'Potentiell avkomma', 'triangle', '#e5dbd7')
   nodes.push(offspringNode)
 
   let femalePseudoId = offspringNode.id
   let malePseudoId = offspringNode.id
 
   if (femaleGrandParents) {
-    let offspringMother = pseudoNode("1337133700", "Ej registrerad\nmor", "oval", "#fce5e9")
+    let offspringMother = pseudoNode('1337133700', 'Ej registrerad\nmor', 'oval', '#fce5e9')
     nodes.push(offspringMother)
     edges.push({id: `${offspringNode.id}-${offspringMother.id}`,
                                     from: offspringNode.id,
@@ -369,9 +370,8 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
 
     femalePseudoId = offspringMother.id
   }
-
   if (maleGrandParents) {
-    let offspringFather = pseudoNode("1337133711", "Ej registrerad\nfar", "box", "#d4ecfc")
+    let offspringFather = pseudoNode('1337133711', 'Ej registrerad\nfar', 'box', '#d4ecfc')
     nodes.push(offspringFather)
     edges.push({id: `${offspringNode.id}-${offspringFather.id}`,
                                     from: offspringNode.id,
@@ -394,7 +394,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
   // color nodes that are common ancestors
   uniqueNodes.forEach(x => {
     if (commonNodes.has(x['id'])) {
-      x.color.border = "#f24d0c"
+      x.color.border = '#f24d0c'
     }
   })
 
@@ -409,7 +409,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
   // color the saved edges
   uniqueEdges.forEach(x => {
     if (edgesToColor.has(x['id'])) {
-      x.color = "#f24d0c"
+      x.color = '#f24d0c'
       x.selectionWidth = 2
       x.width = 3
   }
