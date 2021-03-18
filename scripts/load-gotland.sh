@@ -2,7 +2,14 @@
 
 # Needs to be called by load.sh
 
-echo "Loading rabbits"
+# Checking for duplicate numbers before even attempting to load data.
+echo "Looking for duplicates"
+if csvcut -c 4 "$2" | sort | uniq -d | grep .; then
+	echo '!!! Duplicates found (see numbers above), aborting' >&2
+	exit 1
+fi
+
+echo 'Loading rabbits'
 
 csvsql  --db "$1" -I \
 	--tables g_data \
