@@ -332,7 +332,7 @@ function ancestorsPedigree(genebanks: Genebank[], parents: LimitedIndividual[], 
  * @returns 
  */
 export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], 
-  femaleGrandParents: boolean, maleGrandParents: boolean, generations: number = 1000, showCommonAncestors: boolean): Pedigree {
+  femaleGrandParents: boolean, maleGrandParents: boolean, generations: number = 1000, showCommonAncestors: boolean): {pedigree: Pedigree, commonAncestors: boolean} {
     let nodes: Node[] = []
     let edges: Edge[] = []
     
@@ -395,7 +395,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
 
   // remove duplicate edges
   const [uniqueEdges] = uniqueAndCommonNodes(edges, 'id')
-
+  
   if (showCommonAncestors) {
   // color nodes that are common ancestors
   uniqueNodes.forEach(x => {
@@ -422,6 +422,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
   })
 }
 
-  return {nodes: uniqueNodes, edges: uniqueEdges}
+
+  return {pedigree: {nodes: uniqueNodes, edges: uniqueEdges}, commonAncestors: commonNodes.size > 0}
 
 }

@@ -1,5 +1,8 @@
 /**
- * @file This file shows the calculated COI and resulting recommendations based on that COI
+ * @file This file shows the calculated COI and resulting recommendations based on that COI. 
+ * All coefficientOfInbreeding logic/info is only a template of how it could function when 
+ * we have possibility to calculate the coefficient Current numbers and recommendations 
+ * are more or less humbug
  */
 import React from 'react'
 import { Autocomplete } from '@material-ui/lab'
@@ -24,7 +27,6 @@ const useStyles = makeStyles({
     margin: '10px 0px 5px 0px',
   }
 })
-
 
 // TODO, write docstring when functon is legitimate
 export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents} : {chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], femaleGrandParents: boolean, maleGrandParents: boolean}) {
@@ -52,10 +54,12 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
     breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och gemensam avkomma från ${individualLabel(chosenMaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[1])}`
   }
 
-    const pedigree = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, generations, showCommonAncestors), [genebanks, chosenFemaleAncestors, chosenMaleAncestors, generations, showCommonAncestors])
-
-    // All coefficientOfInbreeding logic/info is only a template of how it could function when we have possibility to calculate the coefficient
-    // Current numbers and recommendations are more or less humbug
+    // FEEDBACK, not sure if useMemo makes any sense with configurable number of generations and coloring common Ancestors
+    // Also not sure if reasonable to rerender for coloring common Ancestors, maybe better with color method in this file
+    const res = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents,
+      generations, showCommonAncestors), [genebanks, chosenFemaleAncestors, chosenMaleAncestors, generations, showCommonAncestors])
+    let pedigree = res.pedigree
+    let commonAncestors = res.commonAncestors
 
     const beneficialCOI = 5
     const badCOI = 10
@@ -93,7 +97,7 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
           value={showCommonAncestors}
           control={<Switch color="primary" onChange={(event) => {
             setshowCommonAncestors(!showCommonAncestors)
-          }}/>}
+          }} disabled={commonAncestors ? false : true}/>}
           label= "Markera ev. gemensamma släktingar"
           labelPlacement="end"
         />
