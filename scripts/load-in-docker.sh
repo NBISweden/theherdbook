@@ -147,14 +147,11 @@ while [ -f "$dumpfile" ]; do
 	dumpfile=$( printf '%s-%.2d.dump' "$prefix" "$d" )
 done
 
-# Only dump the specific tables we're loading, nothing else
+# Dump complete database in text format, but avoid the CSV tables.
 pg_dump --clean \
 	--if-exists \
 	--no-privileges \
-	-t genebank \
-	-t individual \
-	-t weight \
-	-t bodyfat \
-	-t herd \
-	-t herd_tracking \
-	"$PGDATABASE" >"$dumpfile"
+	--no-owner \
+	--file="$dumpfile" \
+	-T '[gm]_data' -T '[gm]_data2' \
+	"$PGDATABASE"
