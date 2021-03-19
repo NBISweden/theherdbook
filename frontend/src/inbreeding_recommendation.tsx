@@ -98,7 +98,7 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
           control={<Switch color="primary" onChange={(event) => {
             setshowCommonAncestors(!showCommonAncestors)
           }} disabled={commonAncestors ? false : true}/>}
-          label= "Markera ev. gemensamma släktingar"
+          label= "Markera gemensamma släktingar"
           labelPlacement="end"
         />
         </div>

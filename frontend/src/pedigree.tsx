@@ -418,6 +418,7 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
       x.color = '#f24d0c'
       x.selectionWidth = 2
       x.width = 3
+      x.dashes = true
   }
   })
 }
