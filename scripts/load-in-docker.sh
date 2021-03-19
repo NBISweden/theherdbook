@@ -73,7 +73,7 @@ for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 			then
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2
 				in2csv "$name" >"$csvname"
-				if [ -s "$csvname" ]; then
+				if [ ! -s "$csvname" ]; then
 				    echo "in2csv failed, doing xlsx2csv instead"
 				    xlsx2csv --skipemptycolumns --ignoreempty "$name" > "$csvname"
 				fi
