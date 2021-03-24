@@ -13,7 +13,7 @@
         ssl_dhparam /code/dhparam.pem;
         root /app/dist/;
 
-        location ^~ /.well-known/ {
+        location ^~ /(.well-known|images)/ {
 		 # Stop processing here to serve content from .well-known
         }
 
