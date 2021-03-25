@@ -16,16 +16,20 @@ import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context';
 
 const useStyles = makeStyles({
+  inbreedCoefficient: {
+    width: '70%'
+  },
   netWorkConfiguration: {
-    width: '20%',
+    width: '30%',
+    height: '30%'
   },
   generationsInput: {
-    width: '50%',
+    width: '140px',
     margin: '5px 0px 5px 0px'
   },
   toggle: {
-    margin: '10px 0px 5px 0px',
-  }
+    margin: '5px 0px 5px 0px',
+  },
 })
 
 // TODO, write docstring when functon is legitimate
@@ -67,19 +71,21 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
     if (!sufficientGenerations) {
       recommendation = <p> Too few generations available to make accurate assessment of inbreed coefficient </p>
     } else if (coefficientOfInbreeding == 0) {
-      recommendation = <p> No common anscestors, ok to breed {breedCouple} </p>
+      recommendation = <p> Inga gemensamma förfäder, ok att para {breedCouple} </p>
     } else if (coefficientOfInbreeding <= beneficialCOI) {
-      recommendation = <p> Common anscestors but should not have deleterious effects to breed {breedCouple}</p>
+      recommendation = <p> Gemensamma förfäder men ingen negativ inverkan på avkomma från {breedCouple}</p>
     } else if (coefficientOfInbreeding <= badCOI) {
-      recommendation = <p> Common anscestors, modest detrimental effects to breed {breedCouple} </p>
+      recommendation = <p> Gemensamma förfäder, viss negativ inverkan på avkomma från {breedCouple} </p>
     } else {
-      recommendation = <p> Common anscestors, significant effects on the offspring and detrimental effects on the breed to breed {breedCouple} </p>
+      recommendation = <p> Gemensamma förfäder, skadlig inverkan på avkomma från {breedCouple} </p>
     }
     return <>
       <div>
-        <h1> Resultat beräkning </h1>
-        <p> Inavelskoefficient {coefficientOfInbreeding} </p>
-        {recommendation}
+      <h1> Resultat beräkning </h1>
+        <div className={style.inbreedCoefficient}>
+          <p> Inavelskoefficient {coefficientOfInbreeding} %</p>
+          {recommendation}
+        </div>
         <div className={style.netWorkConfiguration}>
           <Autocomplete className = {style.generationsInput}
                             options={generationsOptions}
@@ -94,23 +100,22 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
                               />}
           />
           <FormControlLabel className= {style.toggle}
-          value={showCommonAncestors}
-          control={<Switch color="primary" onChange={(event) => {
-            setshowCommonAncestors(!showCommonAncestors)
-          }} disabled={commonAncestors ? false : true}/>}
-          label= "Markera gemensamma släktingar"
-          labelPlacement="end"
-        />
+            value={showCommonAncestors}
+            control={<Switch color="primary" onChange={(event) => {
+              setshowCommonAncestors(!showCommonAncestors)
+            }} disabled={commonAncestors ? false : true} edge='start'/>}
+            label= "Markera gemensamma släktingar"
+            labelPlacement="end"
+          />
         </div>
-      </div>
-
-      <div>
-      {pedigree &&
-            <PedigreeNetwork
-              pedigree={pedigree}
-              onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
-            />
-          }
+        <div>
+          {pedigree &&
+                <PedigreeNetwork
+                  pedigree={pedigree}
+                  onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
+                />
+              }
+        </div>
       </div>
     </>
 }
