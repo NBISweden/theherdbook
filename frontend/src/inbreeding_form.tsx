@@ -2,6 +2,7 @@
  * @file This file contains the form that allows a user to choose mother and father to calculate coefficient of inbreeding
  */
 import React from 'react'
+import { Link, useRouteMatch, useHistory } from 'react-router-dom'
 
 import { makeStyles } from '@material-ui/core/styles'
 import { Autocomplete } from '@material-ui/lab'
@@ -9,15 +10,19 @@ import { createFilterOptions } from '@material-ui/lab/Autocomplete'
 import { TextField, Button, Typography, Paper } from '@material-ui/core'
 
 import { individualLabel, Individual, LimitedIndividual, Genebank } from '@app/data_context_global'
-import { useDataContext } from './data_context'
+import { useDataContext } from '@app/data_context'
 import { useMessageContext } from '@app/message_context'
 import { InbreedingRecommendation } from '@app/inbreeding_recommendation'
+
 
 const useStyles = makeStyles({
   title: {
     fontSize: '2em',
     fontWeight: 'bold',
     paddingLeft: '20px'
+  },
+  buttonBar: {
+    margin: '5px 5px 5px 20px'
   },
   form: {
     width: '100%',
@@ -63,7 +68,7 @@ const inputVariant = 'outlined'
  * @param genebank the genebank data to filter active individuals from
  * @param sex the sex of the active individuals
  */
-function activeIndividuals(genebank: Genebank, sex: string){
+function activeIndividuals(genebank: Genebank | undefined, sex: string){
   return React.useMemo(() => {
     if (!genebank) {
       return []
@@ -74,14 +79,16 @@ function activeIndividuals(genebank: Genebank, sex: string){
 
 /**
  * Simple form where mother and father can be chosen out of the active 
- * females and males in current herd. All individuals are searchable, but the 
- * mount of individuals to display can be configured through filterOptions. 
+ * females and males in chosen genebank. All individuals are searchable, but the 
+ * amount of individuals to display can be configured through filterOptions. 
  */
 export function InbreedingForm() {
-  const { genebanks } = useDataContext()
-  const { popup } = useMessageContext()
   const style = useStyles()
-  // FEEDBACK, gather ancestors into a dict or something?
+  const {url} = useRouteMatch()
+  const history = useHistory()
+  const {genebanks} = useDataContext()
+  const [genebank, setGenebank] = React.useState(undefined as Genebank | undefined)
+  const { popup } = useMessageContext()
   const [female, setFemale] = React.useState(null as Individual | null)
   const [male, setMale] = React.useState(null as Individual | null)
   const [grandMomFem, setGrandMomFem] = React.useState(null as LimitedIndividual | null)
@@ -89,9 +96,22 @@ export function InbreedingForm() {
   const [grandMomMale, setGrandMomMale] = React.useState(null as LimitedIndividual | null)
   const [grandDadMale, setGrandDadMale] = React.useState(null as LimitedIndividual | null)
 
-  /* TODO, add ability to choose genebank when several are present in DB. Copy or rewrite genebanks? */
-  const genebank = genebanks[0]
+ 
+ // Updates which genebank is targeted
+ const subpath = location.pathname.replace(url, '').trim().replace(/\//, '')
+ React.useLayoutEffect(() => {
+  if (!subpath && genebanks.length > 0) {
+    history.push(`${url}/${genebanks[0].name}`)
+  } else if (genebanks.length > 0) {
+    const targetGenebank = genebanks.find((g: Genebank) => g.name.toLowerCase() == subpath.toLowerCase())
+    if (targetGenebank && targetGenebank !== genebank) {
+      setGenebank(targetGenebank)
+    }
+  }
+}, [subpath, genebank, genebanks])
 
+
+  
   const activeFemales : Individual[] = activeIndividuals(genebank, 'female')
   const activeFemalesLimited : LimitedIndividual[] = activeFemales.map(i => {
     return {id: i.id, name: i.name, number: i.number}
@@ -112,11 +132,22 @@ export function InbreedingForm() {
   const inbreedCalcPossible = (female && male) || (femaleGrandParentDefined && maleGrandParentDefined)
   || (female && maleGrandParentDefined) || (male && femaleGrandParentDefined)
   
-  //FEEDBACK, should there be a check to make sure they don't choose mother and grandmother as the same?
-  // E.g. mother Estrid and male grandparents Estrid and Bamse
   return <>
           <Paper>
           <Typography variant='h5'className={style.title}>Provparning</Typography>
+          <div className={style.buttonBar}>
+         {genebanks.length > 1 && genebanks.map((g: Genebank, i: number) => {
+             return <Link to={`${url}/${g.name}`} key={g.id}>
+                 <Button variant='contained'
+                         value={g.id}
+                         color={genebank && genebank.id == g.id ? 'primary' : 'default'}
+                         >
+                   {g.name}
+                 </Button>
+               </Link>
+           })
+         }
+       </div>
             <form className={style.form}>
                 <div className={style.chooseAncestor}>
                   <Autocomplete className={style.inputAncestor}
