@@ -7,6 +7,7 @@ Unit tests for the herdbook endpoints.
 #pylint: disable=too-many-public-methods
 #pylint: disable=too-many-statements
 
+import base64
 import unittest
 
 from datetime import datetime
@@ -136,6 +137,33 @@ class TestEndpoints(FlaskTest):
             ]}
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), expected)
+
+    def test_request_loader_breeding(self):
+        """
+        Checks that `herdbook.load_user_from_request` works as intended for
+        authenticating the supplied user.
+        """
+
+        herd = self.herds[0].herd
+
+        # not logged in
+        self.assertEqual(self.app.get("/api/breeding/%s" % herd).get_json(), None)
+
+        self.assertEqual(self.app.get("/api/breeding/%s" % herd,
+                                      headers=[('Authorization',
+                                                'somethingwrong')]).get_json(), None)
+
+        auth_head = base64.encodebytes(bytes(self.admin.email, 'utf-8') + b':pass').strip()
+
+        expected_breedings = {'breedings': [
+            db.Breeding.get(self.breeding[-1].id).as_dict()
+        ]}
+
+        response = self.app.get("/api/breeding/%s" % herd,
+                                headers=[('Authorization', b'Basic '+auth_head)])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), expected_breedings)
 
 
     def test_register_breeding(self):

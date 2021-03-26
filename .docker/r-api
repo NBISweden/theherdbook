@@ -20,7 +20,7 @@ RUN apt update \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","readr", "optiSel","plumber","jsonlite","nprcgenekeepr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
+RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("RPostgres","readr", "optiSel","plumber","rjson","jsonlite","nprcgenekeepr","dplyr"),repos=c("https://packagemanager.rstudio.com/all/__linux__/focal/345","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
 
 FROM rocker/r-ver:4.0.2
 
@@ -31,10 +31,17 @@ RUN apt-get update \
   libpq5 \
   libglu1-mesa \
   pandoc \
-  && rm -rf /var/lib/apt/lists/*
+  supervisor \
+  rsync \
+  inotify-tools && \
+  mkdir -p /code /usr/local/r-api && \
+  chown www-data:www-data /usr/local/r-api && \
+  rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/local/r-api
 
-COPY R .
+COPY --chown=www-data:www-data R .
+COPY system/supervisord.conf.r /etc/supervisord.conf
 
-ENTRYPOINT ["Rscript", "/usr/local/r-api/serve.R"]
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
