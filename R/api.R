@@ -88,8 +88,9 @@ get_all_individuals <- function(genebank_id) {
                }
           )
     )
-
-  if (length(tmp) == 0) {
+   #Force columnames fix for mellerud data where first ind does not have father or mother. 
+   colnames(tmp)<-c('number','father.number', 'mother.number','sex', 'birth_date','active')
+   if (length(tmp) == 0) {
    return(NULL)
   }
 
@@ -239,4 +240,3 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
 
 #RUN stuff and preload
 update_preload_all_data()
-
