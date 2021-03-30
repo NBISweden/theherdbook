@@ -183,7 +183,7 @@ calculateFEFG <- function() {
 #' Update and reload the data structures from the sql server
 #* @get /update-db/
 update_data_cron <- function() {
-  for(i in genebanks$genebank_id){
+  for(i in genebanks){
     MOD_change<-get_modifications_digest(i)
     if(get(paste0("MOD_",i))!= MOD_change)
     {
