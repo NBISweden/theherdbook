@@ -88,8 +88,8 @@ get_all_individuals <- function(genebank_id) {
                }
           )
     )
-
-  if (length(tmp) == 0) {
+   #Force columnames fix for mellerud data where first ind does not have father or mother. 
+   colnames(tmp)<-c('number','father.number', 'mother.number','sex', 'birth_date','active')if (length(tmp) == 0) {
    return(NULL)
   }
 
