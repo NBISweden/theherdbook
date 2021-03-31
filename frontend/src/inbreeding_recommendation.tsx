@@ -6,22 +6,30 @@
  */
 import React from 'react'
 import { Autocomplete } from '@material-ui/lab'
-import { TextField, Switch, FormControlLabel } from '@material-ui/core'
+import { TextField, Switch, FormControlLabel, Tooltip } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
+import CheckCircleSharpIcon from '@material-ui/icons/CheckCircleSharp'
+import CancelSharpIcon from '@material-ui/icons/CancelSharp'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { LimitedIndividual, individualLabel, inputVariant} from './data_context_global'
 import { useDataContext } from '@app/data_context'
 import { testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
-import { useMessageContext } from '@app/message_context';
+import { useMessageContext } from '@app/message_context'
 
 const useStyles = makeStyles({
   inbreedCoefficient: {
     width: '70%'
   },
+  recommendation: {
+    display: 'flex',
+    alignItems: 'center'
+  },
   netWorkConfiguration: {
     width: '30%',
-    height: '30%'
+    height: '30%',
+    marginTop: '30px'
   },
   generationsInput: {
     width: '140px',
@@ -45,27 +53,37 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   }
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let sufficientGenerations = true
-  let coefficientOfInbreeding = 6
-  let thresholdCOI = 4
+  let coefficientOfInbreeding = 4.1
+  let thresholdCOI = 4.3
   let beneficialCOI = coefficientOfInbreeding <= thresholdCOI ? true : false
 
   let breedCouple
   if (!femaleGrandParents && !maleGrandParents){
     breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[0])}`
   } else if (!maleGrandParents) {
-    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenFemaleAncestors[1])} gemensamma avkomma och ${individualLabel(chosenMaleAncestors[0])}`
+    breedCouple = `♀(${chosenFemaleAncestors[0].name}+${chosenFemaleAncestors[1].name}) och ${individualLabel(chosenMaleAncestors[0])}`
   } else {
-    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och gemensam avkomma från ${individualLabel(chosenMaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[1])}`
+    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ♂(${chosenMaleAncestors[0].name}+${chosenMaleAncestors[1].name})`
   }
 
-  let recommendation
+  let recommendationText
+  let recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   if (!sufficientGenerations) {
-    recommendation = <p> För få generationer tillgängliga för att göra tillförlitlig beräkning av inavelskoefficient </p>
+    recommendationText = 'För få generationer tillgängliga för att göra tillförlitlig beräkning av inavelskoefficient'
   } else if (beneficialCOI) {
-    recommendation = <p> Ok att para {breedCouple}</p>
+    recommendationText = 'Parning rekommenderas'
+    recommendationSymbol = <CheckCircleSharpIcon  style={{ color: '#4CB950', paddingRight: '4px' }}/>
   } else {
-    recommendation = <p> Rekommenderas ej att para {breedCouple}</p>
+    recommendationText = 'Parning rekommenderas ej'
+
   }
+
+  let toolTip = <Tooltip title={`Rekommenderad maxvärde på inavelskoefficent är ${thresholdCOI}`}>
+                  <HelpOutlineIcon style={{ width: '0.55em', padding: '0px', color: 'grey'}} />
+                  </Tooltip>
+  
+  let recTemp = <p> Rekommenderad maxvärde på inavelskoefficent är {thresholdCOI} % {toolTip}</p>
+  
 
   // FEEDBACK, not sure if useMemo makes any sense with configurable number of generations and coloring common Ancestors
   // Also not sure if reasonable to rerender for coloring common Ancestors, maybe better with color method in this file
@@ -76,11 +94,10 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
 
   return <>
     <div>
-      <h1> Resultat beräkning </h1>
+      <h1> Provparning {breedCouple} </h1>
       <div className={style.inbreedCoefficient}>
-        <p> Inavelskoefficient {coefficientOfInbreeding} %</p>
-        <p> Rekommenderad maxvärde på inavelskoefficent är {thresholdCOI} %</p>
-        {recommendation}
+        <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {coefficientOfInbreeding} %</p>
+        <p> {recommendationText} {toolTip}</p> 
       </div>
       <div className={style.netWorkConfiguration}>
         <Autocomplete className = {style.generationsInput}
