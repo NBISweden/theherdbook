@@ -123,7 +123,7 @@ export function InbreedingForm() {
   })
 
   const filterOptions = createFilterOptions<Individual>({
-  limit: 30,
+  limit: 300,
   })
 
   const femaleGrandParentDefined = grandMomFem && grandDadFem
@@ -131,7 +131,6 @@ export function InbreedingForm() {
   
   const inbreedCalcPossible = (female && male) || (femaleGrandParentDefined && maleGrandParentDefined)
   || (female && maleGrandParentDefined) || (male && femaleGrandParentDefined)
-  
   return <>
           <Paper>
           <Typography variant='h5'className={style.title}>Provparning</Typography>
@@ -257,7 +256,7 @@ export function InbreedingForm() {
                             variant='contained'
                             color='primary'
                             disabled={!inbreedCalcPossible}
-                            onClick={() => popup(<InbreedingRecommendation chosenFemaleAncestors={femaleGrandParentDefined ? [grandMomFem, grandDadFem] : [female]} chosenMaleAncestors={maleGrandParentDefined ? [grandMomMale, grandDadMale] : [male]} femaleGrandParents={femaleGrandParentDefined} maleGrandParents={maleGrandParentDefined}/>, undefined)}
+                            onClick={() => popup(<InbreedingRecommendation chosenFemaleAncestors={femaleGrandParentDefined ? [grandMomFem, grandDadFem] : [female]} chosenMaleAncestors={maleGrandParentDefined ? [grandMomMale, grandDadMale] : [male]} femaleGrandParents={femaleGrandParentDefined} maleGrandParents={maleGrandParentDefined} genebankId={genebank?.id}/>, undefined)}
                 >
                       Beräkna inavelkoefficient
               </Button>

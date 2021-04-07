@@ -42,9 +42,9 @@ const useStyles = makeStyles({
 })
 
 function calculateOffspringCOI(femaleAncestors: LimitedIndividual[], maleAncestors: LimitedIndividual[], 
-  femaleGrandParents: boolean, maleGrandParents: boolean) {
+  femaleGrandParents: boolean, maleGrandParents: boolean, genebankId: number | undefined) {
     //TODO, error handling
-    let payload = {}
+    let payload = {genebankId: genebankId}
     //This ugly code will be for now but updated when R-api is in place
     if (femaleGrandParents) {
       payload['femGM'] = femaleAncestors[0].number
@@ -65,7 +65,8 @@ function calculateOffspringCOI(femaleAncestors: LimitedIndividual[], maleAncesto
 }
 
 // TODO, write docstring when functon is legitimate
-export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents} : {chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], femaleGrandParents: boolean, maleGrandParents: boolean}) {
+export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, genebankId}
+  : {chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], femaleGrandParents: boolean, maleGrandParents: boolean, genebankId: number | undefined}) {
   const { popup } = useMessageContext()
   const { genebanks } = useDataContext()
   const style = useStyles()
@@ -78,7 +79,7 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let sufficientGenerations = true
   let coefficientOfInbreeding = 4.3
-  let temp = calculateOffspringCOI(chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents)
+  let temp = calculateOffspringCOI(chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, genebankId)
   let thresholdCOI = 4.3
   let beneficialCOI = coefficientOfInbreeding <= thresholdCOI ? true : false
 

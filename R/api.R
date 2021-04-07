@@ -240,46 +240,34 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
 
 #* @post /testbreed/
 testbreed <- function(req){
-  genebank_id <- 1
-  calculated_coi <- 1337
   body <- req$argsBody
-  Pedi<-get_rabbits(genebank_id)
+  Pedi<-get_rabbits(body$genebankId)
   if (is.null(Pedi)) {
       return (NULL)
   }
-  mother_id <- NA
-  father_id <- NA
-  offspring_id <- 'G1010-1337'
 
   if(!"mother" %in% names(body)) {
-    mother_id <- 'G1010-133700'
+    mother_id <- paste(body$femGF, '+', body$femGM)
     unregistered_female <- c(mother_id, body$femGF, body$femGM, NaN, NaN, NaN, TRUE, TRUE)
     Pedi <- rbind(Pedi, unregistered_female)
   } else {
     mother_id <- body$mother
   }
-
   if(!"father" %in% names(body)) {
-    father_id <- 'G1010-133711'
+    father_id <- paste(body$maleGF, '+', body$maleGM)
     unregistered_male <- c(father_id, body$maleGF, body$maleGM, NaN, NaN, NaN, TRUE, TRUE)
     Pedi <- rbind(Pedi, unregistered_male)
   } else {
     father_id <- body$father
   }
 
-  if(is.na(mother_id) | is.na(father_id)) {
-    print('Nothing added')
-  }
+  offspring_id <- paste(father_id, '+', mother_id)
+  potentialOffspring <- c(offspring_id, father_id, mother_id, NaN, NaN, NaN, TRUE, TRUE)
+  Pedi <- rbind(Pedi, potentialOffspring)
+  inbreed_calculation <- data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE)
+  calculated_coi <- inbreed_calculation[inbreed_calculation$number == offspring_id,2]
 
-  else {
-    potentialOffspring <- c(offspring_id, father_id, mother_id, NaN, NaN, NaN, TRUE, TRUE)
-    Pedi <- rbind(Pedi, potentialOffspring)
-    inbreed_calculation <- data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE)
-    calculated_coi <- inbreed_calculation[inbreed_calculation$number == offspring_id,2]
-    calculated_coi_fem <- inbreed_calculation[inbreed_calculation$number == mother_id,2]
-    calculated_coi_male <- inbreed_calculation[inbreed_calculation$number == father_id,2]
-  }
-  return(list(calculated_coi=calculated_coi, calculated_coi_fem=calculated_coi_fem, calculated_coi_male=calculated_coi_male))
+  return(list(calculated_coi=calculated_coi))
 }
 
 #RUN stuff and preload
