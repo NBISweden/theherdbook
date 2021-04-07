@@ -11,8 +11,9 @@ import { makeStyles } from '@material-ui/core/styles'
 import CheckCircleSharpIcon from '@material-ui/icons/CheckCircleSharp'
 import CancelSharpIcon from '@material-ui/icons/CancelSharp'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import { LimitedIndividual, individualLabel, inputVariant} from './data_context_global'
+import { Individual, LimitedIndividual, individualLabel, inputVariant} from './data_context_global'
 import { useDataContext } from '@app/data_context'
+import { get, post } from '@app/communication'
 import { testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
@@ -40,6 +41,29 @@ const useStyles = makeStyles({
   },
 })
 
+function calculateOffspringCOI(femaleAncestors: LimitedIndividual[], maleAncestors: LimitedIndividual[], 
+  femaleGrandParents: boolean, maleGrandParents: boolean) {
+    //TODO, error handling
+    let payload = {}
+    //This ugly code will be for now but updated when R-api is in place
+    if (femaleGrandParents) {
+      payload['femGM'] = femaleAncestors[0].number
+      payload['femGF'] = femaleAncestors[1].number
+    } else {
+      payload['mother'] = femaleAncestors[0].number
+    }
+    if (maleGrandParents) {
+      payload['maleGM'] = maleAncestors[0].number
+      payload['maleGF'] = maleAncestors[1].number
+    } else {
+      payload['father'] = maleAncestors[0].number
+    }
+    post('/api/testbreed', payload).then(
+      (data: any) => {
+        console.log('Data', data)
+      } )
+}
+
 // TODO, write docstring when functon is legitimate
 export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents} : {chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], femaleGrandParents: boolean, maleGrandParents: boolean}) {
   const { popup } = useMessageContext()
@@ -53,7 +77,8 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   }
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let sufficientGenerations = true
-  let coefficientOfInbreeding = 4.1
+  let coefficientOfInbreeding = 4.3
+  let temp = calculateOffspringCOI(chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents)
   let thresholdCOI = 4.3
   let beneficialCOI = coefficientOfInbreeding <= thresholdCOI ? true : false
 
@@ -65,7 +90,6 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   } else {
     breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ♂(${chosenMaleAncestors[0].name}+${chosenMaleAncestors[1].name})`
   }
-
   let recommendationText
   let recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   if (!sufficientGenerations) {
@@ -97,7 +121,8 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
       <h1> Provparning {breedCouple} </h1>
       <div className={style.inbreedCoefficient}>
         <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {coefficientOfInbreeding} %</p>
-        <p> {recommendationText} {toolTip}</p> 
+        <p> {recommendationText} {toolTip}</p>
+        
       </div>
       <div className={style.netWorkConfiguration}>
         <Autocomplete className = {style.generationsInput}

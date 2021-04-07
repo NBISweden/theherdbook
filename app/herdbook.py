@@ -471,6 +471,15 @@ def get_mean_kinship(g_id):
     return {}
 
 
+@APP.route("/api/testbreed", methods=["POST"])
+def testbreed():
+    url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
+    payload = request.json
+    response = requests.post(url, data=payload)
+    payload['offspringCOI'] = response.json()['calculated_coi'][0]*100
+    return payload
+
+
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
 def main(path):  # pylint: disable=unused-argument
