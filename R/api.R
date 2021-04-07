@@ -252,14 +252,17 @@ testbreed <- function(req){
   offspring_id <- 'G1010-1337'
 
   if(!"mother" %in% names(body)) {
-    print('mother NOT present')
-    print(body$femGM)
+    mother_id <- 'G1010-133700'
+    unregistered_female <- c(mother_id, body$femGF, body$femGM, NaN, NaN, NaN, TRUE, TRUE)
+    Pedi <- rbind(Pedi, unregistered_female)
   } else {
     mother_id <- body$mother
   }
 
   if(!"father" %in% names(body)) {
-    print('father NOT present')
+    father_id <- 'G1010-133711'
+    unregistered_male <- c(father_id, body$maleGF, body$maleGM, NaN, NaN, NaN, TRUE, TRUE)
+    Pedi <- rbind(Pedi, unregistered_male)
   } else {
     father_id <- body$father
   }
@@ -273,8 +276,10 @@ testbreed <- function(req){
     Pedi <- rbind(Pedi, potentialOffspring)
     inbreed_calculation <- data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE)
     calculated_coi <- inbreed_calculation[inbreed_calculation$number == offspring_id,2]
+    calculated_coi_fem <- inbreed_calculation[inbreed_calculation$number == mother_id,2]
+    calculated_coi_male <- inbreed_calculation[inbreed_calculation$number == father_id,2]
   }
-  return(list(calculated_coi=calculated_coi))
+  return(list(calculated_coi=calculated_coi, calculated_coi_fem=calculated_coi_fem, calculated_coi_male=calculated_coi_male))
 }
 
 #RUN stuff and preload

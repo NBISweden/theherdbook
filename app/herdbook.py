@@ -476,6 +476,7 @@ def testbreed():
     url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
     payload = request.json
     response = requests.post(url, data=payload)
+    APP.logger.info(response.json())
     payload['offspringCOI'] = response.json()['calculated_coi'][0]*100
     return payload
 
