@@ -154,11 +154,11 @@ export function InbreedingForm() {
   limit: 300,
   })
 
-  const femaleGrandParentDefined = grandMomFem && grandDadFem
+  const femaleGrandParentDefined = formState.femaleGF && formState.femaleGM
   const maleGrandParentDefined = formState.maleGF && formState.maleGM
   
-  const inbreedCalcPossible = (female && formState.male) || (femaleGrandParentDefined && maleGrandParentDefined)
-  || (female && maleGrandParentDefined) || (formState.male && femaleGrandParentDefined)
+  const inbreedCalcPossible = (formState.female && formState.male) || (femaleGrandParentDefined && maleGrandParentDefined)
+  || (formState.female && maleGrandParentDefined) || (formState.male && femaleGrandParentDefined)
   return <>
           <Paper>
           <Typography variant='h5'className={style.title}>Provparning</Typography>
@@ -180,12 +180,14 @@ export function InbreedingForm() {
                   <Autocomplete className={style.inputAncestor}
                           options={activeFemales}
                           getOptionLabel={(option: Individual) => individualLabel(option)}
-                          value={female}
+                          value={formState.female}
                           onChange={(event, newValue) => {
-                            setFemale(newValue)
-                            setGrandMomFem(null)
-                            setGrandDadFem(null)
-
+                            let newStates =
+                            {'female': newValue, 'femaleGF': null, 'femaleGM': null,
+                            'femaleGFLabel': newValue? individualLabel(newValue.father) : '',
+                            'femaleGMLabel': newValue? individualLabel(newValue.mother) : ''
+                          }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
@@ -196,16 +198,25 @@ export function InbreedingForm() {
                   />
                   <div className={style.lineBreak}></div>
                   <Autocomplete className={style.inputAncestor}
-                          disabled={female ? true : false}
+                          disabled={formState.female ? true : false}
                           options={activeFemalesLimited}
                           getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                           getOptionSelected={(option, value) => option.id === value.id}
-                          value={grandMomFem}
+                          value={formState.femaleGM}
                           // FEEDBACK, is there a possibility for individuals to not have a registered mother/father?
                           // Is '' a valid input in those cases?
-                          inputValue={female?.mother ? individualLabel(female.mother) : grandMomFem ? individualLabel(grandMomFem) : ''}
+                          inputValue={formState.femaleGMLabel}
+                          onInputChange={(event, newValue) => {
+                            if(event) {
+                              setFormState({...formState, ...{'femaleGMLabel': newValue}})
+                            }
+                          }}
                           onChange={(event, newValue) => {
-                            setGrandMomFem(newValue)
+                            let newStates = {
+                              'femaleGM': newValue,
+                              'femaleGMLabel': newValue ? individualLabel(newValue) : ''
+                            }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
@@ -214,14 +225,23 @@ export function InbreedingForm() {
                             />}
                   />
                   <Autocomplete className={style.inputAncestor}
-                          disabled={female ? true : false}
+                          disabled={formState.female ? true : false}
                           getOptionSelected={(option, value) => option.id === value.id}
                           options={activeMalesLimited}
                           getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
-                          value={grandDadFem}
-                          inputValue={female?.father ? individualLabel(female.father) : grandDadFem ? individualLabel(grandDadFem) : ''}
+                          value={formState.femaleGF}
+                          inputValue={formState.femaleGFLabel}
+                          onInputChange={(event, newValue) => {
+                            if(event) {
+                              setFormState({...formState, ...{'femaleGFLabel': newValue}})
+                            }
+                          }}
                           onChange={(event, newValue) => {
-                            setGrandDadFem(newValue)
+                            let newStates = {
+                              'femaleGF': newValue,
+                              'femaleGFLabel': newValue ? individualLabel(newValue) : ''
+                            }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
