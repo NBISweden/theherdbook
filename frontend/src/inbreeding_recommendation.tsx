@@ -18,6 +18,7 @@ import { testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context'
+import { testBreedIndividuals } from '@app/inbreeding_form'
 
 const useStyles = makeStyles({
   inbreedCoefficient: {
@@ -41,32 +42,25 @@ const useStyles = makeStyles({
   },
 })
 
-function calculateOffspringCOI(femaleAncestors: LimitedIndividual[], maleAncestors: LimitedIndividual[], 
-  femaleGrandParents: boolean, maleGrandParents: boolean, genebankId: number | undefined) {
+function calculateOffspringCOI(chosenAncestors: testBreedIndividuals, genebankId: number | undefined) {
     //TODO, error handling
     let payload = {genebankId: genebankId}
-    //This ugly code will be for now but updated when R-api is in place
-    if (femaleGrandParents) {
-      payload['femGM'] = femaleAncestors[0].number
-      payload['femGF'] = femaleAncestors[1].number
-    } else {
-      payload['mother'] = femaleAncestors[0].number
-    }
-    if (maleGrandParents) {
-      payload['maleGM'] = maleAncestors[0].number
-      payload['maleGF'] = maleAncestors[1].number
-    } else {
-      payload['father'] = maleAncestors[0].number
-    }
-    post('/api/testbreed', payload).then(
-      (data: any) => {
-        console.log('Data', data)
-      } )
+    Object.entries(chosenAncestors).forEach(([key, value]) => {
+      console.log(`${key}: ${value}`)
+      if (value) {
+        payload[key] = value.number
+      }
+  })
+  
+  post('/api/testbreed', payload).then(
+    (data: any) => {
+      console.log('R-api data', data)
+    } )
 }
 
 // TODO, write docstring when functon is legitimate
-export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, genebankId}
-  : {chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], femaleGrandParents: boolean, maleGrandParents: boolean, genebankId: number | undefined}) {
+export function InbreedingRecommendation({chosenAncestors, genebankId}
+  : {chosenAncestors: testBreedIndividuals, genebankId: number | undefined}) {
   const { popup } = useMessageContext()
   const { genebanks } = useDataContext()
   const style = useStyles()
@@ -79,18 +73,16 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
   let sufficientGenerations = true
   let coefficientOfInbreeding = 4.3
-  let temp = calculateOffspringCOI(chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents, genebankId)
+  let temp = calculateOffspringCOI(chosenAncestors, genebankId)
   let thresholdCOI = 4.3
   let beneficialCOI = coefficientOfInbreeding <= thresholdCOI ? true : false
 
-  let breedCouple
-  if (!femaleGrandParents && !maleGrandParents){
-    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ${individualLabel(chosenMaleAncestors[0])}`
-  } else if (!maleGrandParents) {
-    breedCouple = `♀(${chosenFemaleAncestors[0].name}+${chosenFemaleAncestors[1].name}) och ${individualLabel(chosenMaleAncestors[0])}`
-  } else {
-    breedCouple = `${individualLabel(chosenFemaleAncestors[0])} och ♂(${chosenMaleAncestors[0].name}+${chosenMaleAncestors[1].name})`
-  }
+  let mother = chosenAncestors['female'] ? individualLabel(chosenAncestors['female']) : 
+  `♀(${chosenAncestors['femaleGM'].name}+${chosenAncestors['femaleGF'].name})`
+  
+  let father = chosenAncestors['male'] ? individualLabel(chosenAncestors['male']) : 
+  `♂(${chosenAncestors['maleGM'].name}+${chosenAncestors['maleGF'].name})`
+
   let recommendationText
   let recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   if (!sufficientGenerations) {
@@ -112,14 +104,16 @@ export function InbreedingRecommendation({chosenFemaleAncestors, chosenMaleAnces
 
   // FEEDBACK, not sure if useMemo makes any sense with configurable number of generations and coloring common Ancestors
   // Also not sure if reasonable to rerender for coloring common Ancestors, maybe better with color method in this file
-  const res = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents,
+  /*const res = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents,
     generations, showCommonAncestors), [genebanks, chosenFemaleAncestors, chosenMaleAncestors, generations, showCommonAncestors])
   let pedigree = res.pedigree
-  let commonAncestors = res.commonAncestors
+  let commonAncestors = res.commonAncestors*/
+  let pedigree = undefined
+  let commonAncestors = false
 
   return <>
     <div>
-      <h1> Provparning {breedCouple} </h1>
+      <h1> Provparning {mother} och {father}</h1>
       <div className={style.inbreedCoefficient}>
         <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {coefficientOfInbreeding} %</p>
         <p> {recommendationText} {toolTip}</p>

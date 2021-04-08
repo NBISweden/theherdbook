@@ -246,19 +246,19 @@ testbreed <- function(req){
       return (NULL)
   }
 
-  if(!"mother" %in% names(body)) {
-    mother_id <- paste(body$femGF, '+', body$femGM)
-    unregistered_female <- c(mother_id, body$femGF, body$femGM, NaN, NaN, NaN, TRUE, TRUE)
+  if(!"female" %in% names(body)) {
+    mother_id <- paste(body$femaleGF, '+', body$femaleGM)
+    unregistered_female <- c(mother_id, body$femaleGF, body$femaleGM, NaN, NaN, NaN, TRUE, TRUE)
     Pedi <- rbind(Pedi, unregistered_female)
   } else {
-    mother_id <- body$mother
+    mother_id <- body$female
   }
-  if(!"father" %in% names(body)) {
+  if(!"male" %in% names(body)) {
     father_id <- paste(body$maleGF, '+', body$maleGM)
     unregistered_male <- c(father_id, body$maleGF, body$maleGM, NaN, NaN, NaN, TRUE, TRUE)
     Pedi <- rbind(Pedi, unregistered_male)
   } else {
-    father_id <- body$father
+    father_id <- body$male
   }
 
   offspring_id <- paste(father_id, '+', mother_id)
