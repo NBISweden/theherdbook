@@ -95,8 +95,8 @@ export function InbreedingForm() {
   const [grandDadFem, setGrandDadFem] = React.useState(null as LimitedIndividual | null)
   const [grandMomMale, setGrandMomMale] = React.useState(null as LimitedIndividual | null)
   const [grandDadMale, setGrandDadMale] = React.useState(null as LimitedIndividual | null)
+  const [GDML, setGDML] = React.useState('' as string)
 
- 
  // Updates which genebank is targeted
  const subpath = location.pathname.replace(url, '').trim().replace(/\//, '')
  React.useLayoutEffect(() => {
@@ -210,6 +210,7 @@ export function InbreedingForm() {
                             setMale(newValue)
                             setGrandMomMale(null)
                             setGrandDadMale(null)
+                            setGDML(newValue? individualLabel(newValue.father) : '')
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
@@ -241,9 +242,14 @@ export function InbreedingForm() {
                           getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                           getOptionSelected={(option, value) => option.id === value.id}
                           value={grandDadMale}
-                          inputValue={male?.father ? individualLabel(male.father) : grandDadMale ? individualLabel(grandDadMale) : ''}
+                          inputValue={GDML}
+                          onInputChange={(event, newValue) => {
+                            if(event) {
+                              setGDML(newValue)
+                            }
+                          }}
                           onChange={(event, newValue) => {
-                            setGrandDadMale(newValue);
+                            setGrandDadMale(newValue)
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
