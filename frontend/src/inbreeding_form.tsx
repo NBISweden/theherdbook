@@ -77,6 +77,32 @@ function activeIndividuals(genebank: Genebank | undefined, sex: string){
   }, [genebank])
 }
 
+export interface inbreedingForm {
+  male: Individual | null,
+  female: Individual | null,
+  maleGF: LimitedIndividual | null,
+  maleGM: LimitedIndividual | null,
+  femaleGF: LimitedIndividual | null,
+  femaleGM: LimitedIndividual | null,
+  maleGFLabel: string,
+  maleGMLabel: string,
+  femaleGFLabel: string,
+  femaleGMLabel: string
+}
+
+const emptyForm: inbreedingForm = {
+  male: null,
+  female: null,
+  maleGF: null,
+  maleGM: null,
+  femaleGF: null,
+  femaleGM: null,
+  maleGFLabel: '',
+  maleGMLabel: '',
+  femaleGFLabel: '',
+  femaleGMLabel: ''
+}
+
 /**
  * Simple form where mother and father can be chosen out of the active 
  * females and males in chosen genebank. All individuals are searchable, but the 
@@ -96,6 +122,8 @@ export function InbreedingForm() {
   const [grandMomMale, setGrandMomMale] = React.useState(null as LimitedIndividual | null)
   const [grandDadMale, setGrandDadMale] = React.useState(null as LimitedIndividual | null)
   const [GDML, setGDML] = React.useState('' as string)
+  const [formState, setFormState] = React.useState(emptyForm as inbreedingForm)
+  console.log('FORMSTATE', formState)
 
  // Updates which genebank is targeted
  const subpath = location.pathname.replace(url, '').trim().replace(/\//, '')
@@ -127,10 +155,10 @@ export function InbreedingForm() {
   })
 
   const femaleGrandParentDefined = grandMomFem && grandDadFem
-  const maleGrandParentDefined = grandMomMale && grandDadMale
+  const maleGrandParentDefined = formState.maleGF && formState.maleGM
   
-  const inbreedCalcPossible = (female && male) || (femaleGrandParentDefined && maleGrandParentDefined)
-  || (female && maleGrandParentDefined) || (male && femaleGrandParentDefined)
+  const inbreedCalcPossible = (female && formState.male) || (femaleGrandParentDefined && maleGrandParentDefined)
+  || (female && maleGrandParentDefined) || (formState.male && femaleGrandParentDefined)
   return <>
           <Paper>
           <Typography variant='h5'className={style.title}>Provparning</Typography>
@@ -205,12 +233,14 @@ export function InbreedingForm() {
                   <Autocomplete className={style.inputAncestor}
                           options={activeMales}
                           getOptionLabel={(option: Individual) => individualLabel(option)}
-                          value={male}
+                          value={formState.male}
                           onChange={(event, newValue) => {
-                            setMale(newValue)
-                            setGrandMomMale(null)
-                            setGrandDadMale(null)
-                            setGDML(newValue? individualLabel(newValue.father) : '')
+                            let newStates =
+                            {'male': newValue, 'maleGF': null, 'maleGM': null,
+                            'maleGFLabel': newValue? individualLabel(newValue.father) : '',
+                            'maleGMLabel': newValue? individualLabel(newValue.mother) : ''
+                          }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
@@ -221,14 +251,23 @@ export function InbreedingForm() {
                   />
                   <div className={style.lineBreak}></div>
                   <Autocomplete className={style.inputAncestor}
-                          disabled={male ? true : false}
+                          disabled={formState.male ? true : false}
                           options={activeFemalesLimited}
                           getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                           getOptionSelected={(option, value) => option.id === value.id}
-                          value={grandMomMale}
-                          inputValue={male?.mother ? individualLabel(male.mother) : grandMomMale ? individualLabel(grandMomMale) : ''}
+                          value={formState.maleGM}
+                          inputValue={formState.maleGMLabel}
+                          onInputChange={(event, newValue) => {
+                            if(event) {
+                              setFormState({...formState, ...{'maleGMLabel': newValue}})
+                            }
+                          }}
                           onChange={(event, newValue) => {
-                            setGrandMomMale(newValue)
+                            let newStates = {
+                              'maleGM': newValue,
+                              'maleGMLabel': newValue ? individualLabel(newValue) : ''
+                            }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
@@ -237,19 +276,23 @@ export function InbreedingForm() {
                             />}
                   />
                   <Autocomplete className={style.inputAncestor}
-                          disabled={male ? true : false}
+                          disabled={formState.male ? true : false}
                           options={activeMalesLimited}
                           getOptionLabel={(option: LimitedIndividual) => individualLabel(option)}
                           getOptionSelected={(option, value) => option.id === value.id}
-                          value={grandDadMale}
-                          inputValue={GDML}
+                          value={formState.maleGF}
+                          inputValue={formState.maleGFLabel}
                           onInputChange={(event, newValue) => {
                             if(event) {
-                              setGDML(newValue)
+                              setFormState({...formState, ...{'maleGFLabel': newValue}})
                             }
                           }}
                           onChange={(event, newValue) => {
-                            setGrandDadMale(newValue)
+                            let newStates = {
+                              'maleGF': newValue,
+                              'maleGFLabel': newValue ? individualLabel(newValue) : ''
+                            }
+                            setFormState({...formState, ...newStates})
                           }}
                           filterOptions={filterOptions}
                           renderInput={(params) => <TextField {...params}
