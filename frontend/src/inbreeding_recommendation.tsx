@@ -6,7 +6,7 @@
  */
 import React from 'react'
 import { Autocomplete } from '@material-ui/lab'
-import { TextField, Switch, FormControlLabel, Tooltip, CircularProgress } from '@material-ui/core'
+import { TextField, Switch, FormControlLabel, Tooltip, CircularProgress, Table, TableBody, TableHead, TableRow, TableCell } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import CheckCircleSharpIcon from '@material-ui/icons/CheckCircleSharp'
 import CancelSharpIcon from '@material-ui/icons/CancelSharp'
@@ -28,7 +28,10 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   inbreedCoefficient: {
-    width: '70%'
+    width: '22%',
+    borderStyle: 'solid',
+    borderColor: '#d3d3d3',
+    borderWidth: '1px'
   },
   recommendation: {
     display: 'flex',
@@ -122,11 +125,31 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
     {offspringCOI ? 
       <div>
         <h1> Provparning {mother} och {father}</h1>
-        <div className={style.inbreedCoefficient}>
-          <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {offspringCOI} %</p>
-          <p> {recommendationText} {toolTip}</p>
-          
-        </div>
+        <div>
+          <Table className={style.inbreedCoefficient} size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell align="right">Inavelskoefficient</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Beräknad för avkomma
+                  </TableCell>
+                  <TableCell align="right">{offspringCOI}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Rekommenderat värde
+                  </TableCell>
+                  <TableCell align="right">{thresholdCOI}</TableCell>
+                </TableRow>
+            </TableBody>
+          </Table>
+      <p className={style.recommendation}> {recommendationSymbol} {recommendationText} </p>
+      </div>
         <div className={style.netWorkConfiguration}>
           <Autocomplete className = {style.generationsInput}
                             options={generationsOptions}
