@@ -6,7 +6,7 @@
  */
 import React from 'react'
 import { Autocomplete } from '@material-ui/lab'
-import { TextField, Switch, FormControlLabel, Tooltip } from '@material-ui/core'
+import { TextField, Switch, FormControlLabel, Tooltip, CircularProgress } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import CheckCircleSharpIcon from '@material-ui/icons/CheckCircleSharp'
 import CancelSharpIcon from '@material-ui/icons/CancelSharp'
@@ -21,6 +21,12 @@ import { useMessageContext } from '@app/message_context'
 import { testBreedIndividuals } from '@app/inbreeding_form'
 
 const useStyles = makeStyles({
+  loading: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   inbreedCoefficient: {
     width: '70%'
   },
@@ -42,28 +48,13 @@ const useStyles = makeStyles({
   },
 })
 
-function calculateOffspringCOI(chosenAncestors: testBreedIndividuals, genebankId: number | undefined) {
-    //TODO, error handling
-    let payload = {genebankId: genebankId}
-    Object.entries(chosenAncestors).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`)
-      if (value) {
-        payload[key] = value.number
-      }
-  })
-  
-  post('/api/testbreed', payload).then(
-    (data: any) => {
-      console.log('R-api data', data)
-    } )
-}
-
 // TODO, write docstring when functon is legitimate
 export function InbreedingRecommendation({chosenAncestors, genebankId}
   : {chosenAncestors: testBreedIndividuals, genebankId: number | undefined}) {
-  const { popup } = useMessageContext()
+  const { popup, userMessage } = useMessageContext()
   const { genebanks } = useDataContext()
   const style = useStyles()
+  const [offspringCOI, setOffspringCOI] = React.useState(undefined as number | undefined)
   const [generations, setGenerations] = React.useState(4 as number)
   const [showCommonAncestors, setshowCommonAncestors] = React.useState(false as boolean)
   let generationsOptions: number[] = []
@@ -71,11 +62,30 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
     generationsOptions.push(i)
   }
   /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
+
+  
+  React.useEffect(() => {
+    setOffspringCOI(undefined)
+    let payload = {genebankId: genebankId}
+    Object.entries(chosenAncestors).forEach(([key, value]) => {
+      if (value) {
+        payload[key] = value.number
+      }
+    })
+    post('/api/testbreed', payload).then(
+      (data: any) => { 
+        setOffspringCOI(data.offspringCOI)
+        console.log('R-api data', data)
+      },
+      error => {
+      console.error(error);
+      userMessage(error, 'error')
+      } )
+    }, [chosenAncestors])
+
   let sufficientGenerations = true
-  let coefficientOfInbreeding = 4.3
-  let temp = calculateOffspringCOI(chosenAncestors, genebankId)
-  let thresholdCOI = 4.3
-  let beneficialCOI = coefficientOfInbreeding <= thresholdCOI ? true : false
+  let thresholdCOI = 4.5
+  let beneficialCOI = offspringCOI? offspringCOI <= thresholdCOI : false
 
   let mother = chosenAncestors['female'] ? individualLabel(chosenAncestors['female']) : 
   `♀(${chosenAncestors['femaleGM'].name}+${chosenAncestors['femaleGF'].name})`
@@ -84,14 +94,16 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
   `♂(${chosenAncestors['maleGM'].name}+${chosenAncestors['maleGF'].name})`
 
   let recommendationText
-  let recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
+  let recommendationSymbol
   if (!sufficientGenerations) {
     recommendationText = 'För få generationer tillgängliga för att göra tillförlitlig beräkning av inavelskoefficient'
+    recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   } else if (beneficialCOI) {
     recommendationText = 'Parning rekommenderas'
     recommendationSymbol = <CheckCircleSharpIcon  style={{ color: '#4CB950', paddingRight: '4px' }}/>
   } else {
     recommendationText = 'Parning rekommenderas ej'
+    recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
 
   }
 
@@ -112,43 +124,48 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
   let commonAncestors = false
 
   return <>
-    <div>
-      <h1> Provparning {mother} och {father}</h1>
-      <div className={style.inbreedCoefficient}>
-        <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {coefficientOfInbreeding} %</p>
-        <p> {recommendationText} {toolTip}</p>
-        
-      </div>
-      <div className={style.netWorkConfiguration}>
-        <Autocomplete className = {style.generationsInput}
-                          options={generationsOptions}
-                          getOptionLabel={(option: number) => option.toString()}
-                          value={generations}
-                          onChange={(event, newValue) => {
-                            setGenerations(newValue ? newValue : 4)
-                          }}
-                          renderInput={(params) => <TextField {...params}
-                            label='Antal generationer'
-                            variant={inputVariant}
-                            />}
-        />
-        <FormControlLabel className= {style.toggle}
-          value={showCommonAncestors}
-          control={<Switch color="primary" onChange={(event) => {
-            setshowCommonAncestors(!showCommonAncestors)
-          }} disabled={commonAncestors ? false : true} edge='start'/>}
-          label= "Markera gemensamma släktingar"
-          labelPlacement="end"
-        />
-      </div>
+    {offspringCOI ? 
       <div>
-        {pedigree &&
-              <PedigreeNetwork
-                pedigree={pedigree}
-                onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
-              />
-            }
-      </div>
-    </div>
+        <h1> Provparning {mother} och {father}</h1>
+        <div className={style.inbreedCoefficient}>
+          <p className={style.recommendation}> {recommendationSymbol} Inavelskoefficient hos avkomma {offspringCOI} %</p>
+          <p> {recommendationText} {toolTip}</p>
+          
+        </div>
+        <div className={style.netWorkConfiguration}>
+          <Autocomplete className = {style.generationsInput}
+                            options={generationsOptions}
+                            getOptionLabel={(option: number) => option.toString()}
+                            value={generations}
+                            onChange={(event, newValue) => {
+                              setGenerations(newValue ? newValue : 4)
+                            }}
+                            renderInput={(params) => <TextField {...params}
+                              label='Antal generationer'
+                              variant={inputVariant}
+                              />}
+          />
+          <FormControlLabel className= {style.toggle}
+            value={showCommonAncestors}
+            control={<Switch color="primary" onChange={(event) => {
+              setshowCommonAncestors(!showCommonAncestors)
+            }} disabled={commonAncestors ? false : true} edge='start'/>}
+            label= "Markera gemensamma släktingar"
+            labelPlacement="end"
+          />
+        </div>
+        <div>
+          {pedigree &&
+                <PedigreeNetwork
+                  pedigree={pedigree}
+                  onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
+                />
+              }
+        </div>
+      </div> : 
+      <div className={style.loading}>
+            <h2>Beräknar provparning</h2>
+            <CircularProgress />
+      </div>}
   </>
 }
