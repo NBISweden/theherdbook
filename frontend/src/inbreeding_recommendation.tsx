@@ -110,18 +110,13 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
   let toolTip = <Tooltip title={`Rekommenderad maxvärde på inavelskoefficent är ${thresholdCOI}`}>
                   <HelpOutlineIcon style={{ width: '0.55em', padding: '0px', color: 'grey'}} />
                   </Tooltip>
-  
-  let recTemp = <p> Rekommenderad maxvärde på inavelskoefficent är {thresholdCOI} % {toolTip}</p>
-  
 
   // FEEDBACK, not sure if useMemo makes any sense with configurable number of generations and coloring common Ancestors
   // Also not sure if reasonable to rerender for coloring common Ancestors, maybe better with color method in this file
-  /*const res = React.useMemo(() => testBreedPedigree(genebanks, chosenFemaleAncestors, chosenMaleAncestors, femaleGrandParents, maleGrandParents,
-    generations, showCommonAncestors), [genebanks, chosenFemaleAncestors, chosenMaleAncestors, generations, showCommonAncestors])
+  const res = React.useMemo(() => testBreedPedigree(genebanks, chosenAncestors,
+    generations, showCommonAncestors), [genebanks, chosenAncestors, generations, showCommonAncestors])
   let pedigree = res.pedigree
-  let commonAncestors = res.commonAncestors*/
-  let pedigree = undefined
-  let commonAncestors = false
+  let commonAncestors = res.commonAncestors
 
   return <>
     {offspringCOI ? 

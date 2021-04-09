@@ -2,7 +2,8 @@
  * @file This file contains functions for calculating and formatting pedigrees.
  */
 
-import { Genebank, Individual, LimitedIndividual } from '@app/data_context_global';
+import { Genebank, Individual, LimitedIndividual } from '@app/data_context_global'
+import { testBreedIndividuals } from '@app/inbreeding_form'
 
 type VisColor = {border: string, background: string,
                  highlight: {border: string, background: string},
@@ -331,8 +332,7 @@ function ancestorsPedigree(genebanks: Genebank[], parents: LimitedIndividual[], 
  * considered generation 0
  * @returns 
  */
-export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: LimitedIndividual[], chosenMaleAncestors: LimitedIndividual[], 
-  femaleGrandParents: boolean, maleGrandParents: boolean, generations: number = 1000, showCommonAncestors: boolean): {pedigree: Pedigree, commonAncestors: boolean} {
+export function testBreedPedigree(genebanks: Genebank[], chosenAncestors: testBreedIndividuals, generations: number = 1000, showCommonAncestors: boolean): {pedigree: Pedigree, commonAncestors: boolean} {
     let nodes: Node[] = []
     let edges: Edge[] = []
     
@@ -359,34 +359,33 @@ export function testBreedPedigree(genebanks: Genebank[], chosenFemaleAncestors: 
   let offspringNode = pseudoNode('13371337', 'Potentiell avkomma', 'triangle', '#e5dbd7')
   nodes.push(offspringNode)
 
-  let femalePseudoId = offspringNode.id
-  let malePseudoId = offspringNode.id
-  let femaleGenerations = generations -1
-  let maleGenerations = generations -1
+  let maleAncestorsPedigree
+  let femaleAncestorsPedigree
 
-  if (femaleGrandParents) {
-    let offspringMother = pseudoNode('1337133700', 'Ej registrerad\nmor', 'oval', '#fce5e9')
-    nodes.push(offspringMother)
-    edges.push({id: `${offspringNode.id}-${offspringMother.id}`,
-                                    from: offspringNode.id,
-                                    to: offspringMother.id})
-
-    femalePseudoId = offspringMother.id
-    femaleGenerations = generations -2
-  }
-  if (maleGrandParents) {
+  //malePedigree
+  if(chosenAncestors['male']) {
+    maleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['male']], offspringNode.id, generations -1)
+  } else {
     let offspringFather = pseudoNode('1337133711', 'Ej registrerad\nfar', 'box', '#d4ecfc')
     nodes.push(offspringFather)
     edges.push({id: `${offspringNode.id}-${offspringFather.id}`,
                                     from: offspringNode.id,
                                     to: offspringFather.id})
-                                    
-    malePseudoId = offspringFather.id
-    maleGenerations = generations -2
-  }
+    
+    maleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['maleGF'], chosenAncestors['maleGM']], offspringFather.id, generations -2)
 
-  let femaleAncestorsPedigree = ancestorsPedigree(genebanks, chosenFemaleAncestors, femalePseudoId, femaleGenerations)
-  let maleAncestorsPedigree = ancestorsPedigree(genebanks, chosenMaleAncestors, malePseudoId, maleGenerations)
+  }
+  //femalePedigree
+  if(chosenAncestors['female']) {
+    femaleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['female']], offspringNode.id, generations -1)
+  } else {
+    let offspringMother = pseudoNode('1337133700', 'Ej registrerad\nmor', 'oval', '#fce5e9')
+    nodes.push(offspringMother)
+    edges.push({id: `${offspringNode.id}-${offspringMother.id}`,
+                                    from: offspringNode.id,
+                                    to: offspringMother.id})
+    femaleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['femaleGF'], chosenAncestors['femaleGM']], offspringMother.id, generations -2)
+  }
   nodes = [...nodes, ...femaleAncestorsPedigree.nodes, ...maleAncestorsPedigree.nodes]
   edges = [...edges, ...femaleAncestorsPedigree.edges, ...maleAncestorsPedigree.edges]
 
