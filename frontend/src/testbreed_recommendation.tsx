@@ -18,7 +18,7 @@ import { testBreedPedigree } from '@app/pedigree'
 import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context'
-import { testBreedIndividuals } from '@app/inbreeding_form'
+import { testBreedIndividuals } from '@app/testbreed_form'
 
 const useStyles = makeStyles({
   loading: {

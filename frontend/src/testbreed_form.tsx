@@ -12,7 +12,7 @@ import { TextField, Button, Typography, Paper } from '@material-ui/core'
 import { individualLabel, Individual, LimitedIndividual, Genebank } from '@app/data_context_global'
 import { useDataContext } from '@app/data_context'
 import { useMessageContext } from '@app/message_context'
-import { InbreedingRecommendation } from '@app/inbreeding_recommendation'
+import { InbreedingRecommendation } from '@app/testbreed_recommendation'
 
 
 const useStyles = makeStyles({

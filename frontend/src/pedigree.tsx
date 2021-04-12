@@ -3,7 +3,7 @@
  */
 
 import { Genebank, Individual, LimitedIndividual } from '@app/data_context_global'
-import { testBreedIndividuals } from '@app/inbreeding_form'
+import { testBreedIndividuals } from '@app/testbreed_form'
 
 type VisColor = {border: string, background: string,
                  highlight: {border: string, background: string},

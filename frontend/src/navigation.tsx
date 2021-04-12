@@ -19,7 +19,7 @@ import {IndividualPedigree} from '@app/individual_pedigree'
 import { IndividualView } from '@app/individual_view'
 import {HerdPedigree} from '@app/herd_pedigree'
 import {useUserContext} from '@app/user_context'
-import { InbreedingForm } from '@app/inbreeding_form'
+import { InbreedingForm } from '@app/testbreed_form'
 import * as ui from '@app/ui_utils'
 
 // Define styles for tab menu
