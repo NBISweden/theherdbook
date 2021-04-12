@@ -28,10 +28,13 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   inbreedCoefficient: {
-    width: '22%',
+    width: '30%',
     borderStyle: 'solid',
     borderColor: '#d3d3d3',
     borderWidth: '1px'
+  },
+  tableCell: {
+    padding: '5px',
   },
   recommendation: {
     display: 'flex',
@@ -129,22 +132,18 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
           <Table className={style.inbreedCoefficient} size="small">
             <TableHead>
               <TableRow>
-                <TableCell></TableCell>
-                <TableCell align="right">Inavelskoefficient</TableCell>
+                <TableCell className={style.tableCell}></TableCell>
+                <TableCell className={style.tableCell} align="left">Beräknad för avkomma</TableCell>
+                <TableCell className={style.tableCell} align="left">Rekommenderat värde</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
                 <TableRow>
-                  <TableCell component="th" scope="row">
-                    Beräknad för avkomma
+                  <TableCell className={style.tableCell} component="th" scope="row">
+                    Inavelskoefficient
                   </TableCell>
-                  <TableCell align="right">{offspringCOI}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Rekommenderat värde
-                  </TableCell>
-                  <TableCell align="right">{thresholdCOI}</TableCell>
+                  <TableCell className={style.tableCell} align="left">{offspringCOI}</TableCell>
+                  <TableCell className={style.tableCell} align="left">{thresholdCOI}</TableCell>
                 </TableRow>
             </TableBody>
           </Table>
