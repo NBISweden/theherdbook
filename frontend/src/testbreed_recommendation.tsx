@@ -19,6 +19,7 @@ import { PedigreeNetwork } from '@app/pedigree_plot'
 import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context'
 import { testBreedIndividuals } from '@app/testbreed_form'
+import { TestbreedPedigreView } from '@app/testbreed_pedigree_view'
 
 const useStyles = makeStyles({
   loading: {
@@ -39,6 +40,9 @@ const useStyles = makeStyles({
   recommendation: {
     display: 'flex',
     alignItems: 'center'
+  },
+  fillWidth: {
+    width: '100%',
   },
   netWorkConfiguration: {
     width: '30%',
@@ -149,36 +153,10 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
           </Table>
       <p className={style.recommendation}> {recommendationSymbol} {recommendationText} </p>
       </div>
-        <div className={style.netWorkConfiguration}>
-          <Autocomplete className = {style.generationsInput}
-                            options={generationsOptions}
-                            getOptionLabel={(option: number) => option.toString()}
-                            value={generations}
-                            onChange={(event, newValue) => {
-                              setGenerations(newValue ? newValue : 4)
-                            }}
-                            renderInput={(params) => <TextField {...params}
-                              label='Antal generationer'
-                              variant={inputVariant}
-                              />}
-          />
-          <FormControlLabel className= {style.toggle}
-            value={showCommonAncestors}
-            control={<Switch color="primary" onChange={(event) => {
-              setshowCommonAncestors(!showCommonAncestors)
-            }} disabled={commonAncestors ? false : true} edge='start'/>}
-            label= "Markera gemensamma släktingar"
-            labelPlacement="end"
-          />
-        </div>
-        <div>
-          {pedigree &&
-                <PedigreeNetwork
-                  pedigree={pedigree}
-                  onClick={(node: string) => popup(<IndividualView id={node} />, `/individual/${node}`)}
-                />
-              }
-        </div>
+      <div className={style.fillWidth}>
+        <h3>Släktträd</h3>
+        <TestbreedPedigreView chosenAncestors={chosenAncestors} generations={4}></TestbreedPedigreView>
+      </div>
       </div> : 
       <div className={style.loading}>
             <h2>Beräknar provparning</h2>
