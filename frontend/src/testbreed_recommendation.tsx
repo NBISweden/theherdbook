@@ -5,18 +5,15 @@
  * are more or less humbug
  */
 import React from 'react'
-import { Autocomplete } from '@material-ui/lab'
-import { TextField, Switch, FormControlLabel, Tooltip, CircularProgress, Table, TableBody, TableHead, TableRow, TableCell } from '@material-ui/core'
+import { AppBar, Box, Tabs, Tab, Tooltip, CircularProgress, Table, TableBody, TableHead, TableRow, TableCell } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import CheckCircleSharpIcon from '@material-ui/icons/CheckCircleSharp'
 import CancelSharpIcon from '@material-ui/icons/CancelSharp'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import { Individual, LimitedIndividual, individualLabel, inputVariant} from './data_context_global'
+import { individualLabel } from './data_context_global'
 import { useDataContext } from '@app/data_context'
 import { get, post } from '@app/communication'
 import { testBreedPedigree } from '@app/pedigree'
-import { PedigreeNetwork } from '@app/pedigree_plot'
-import { IndividualView } from '@app/individual_view'
 import { useMessageContext } from '@app/message_context'
 import { testBreedIndividuals } from '@app/testbreed_form'
 import { TestbreedPedigreView } from '@app/testbreed_pedigree_view'
@@ -30,6 +27,7 @@ const useStyles = makeStyles({
   },
   inbreedCoefficient: {
     width: '30%',
+    marginTop: '30px',
     borderStyle: 'solid',
     borderColor: '#d3d3d3',
     borderWidth: '1px'
@@ -56,23 +54,23 @@ const useStyles = makeStyles({
   toggle: {
     margin: '5px 0px 5px 0px',
   },
+  //TODO, make this responsive and not ugly hardcoded
+  test: {
+    height: '900px',
+    width: '1500px',
+  }
 })
 
 // TODO, write docstring when functon is legitimate
 export function InbreedingRecommendation({chosenAncestors, genebankId}
   : {chosenAncestors: testBreedIndividuals, genebankId: number | undefined}) {
-  const { popup, userMessage } = useMessageContext()
-  const { genebanks } = useDataContext()
   const style = useStyles()
   const [offspringCOI, setOffspringCOI] = React.useState(undefined as number | undefined)
-  const [generations, setGenerations] = React.useState(4 as number)
-  const [showCommonAncestors, setshowCommonAncestors] = React.useState(false as boolean)
+  const [activeTab, setActiveTab] = React.useState('COI' as TabValue)
   let generationsOptions: number[] = []
   for (let i=3; i < 8; i++) {
     generationsOptions.push(i)
   }
-  /* TODO, develop function to calculate coefficientOfInbreeding and if there are sufficient generations*/
-
   
   React.useEffect(() => {
     setOffspringCOI(undefined)
@@ -93,7 +91,9 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
       } )
     }, [chosenAncestors])
 
+  //TODO, error handling
   let sufficientGenerations = true
+  //TODO, change depending on genebankId
   let thresholdCOI = 4.5
   let beneficialCOI = offspringCOI? offspringCOI <= thresholdCOI : false
 
@@ -117,47 +117,80 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
 
   }
 
-  let toolTip = <Tooltip title={`Rekommenderad maxvärde på inavelskoefficent är ${thresholdCOI}`}>
-                  <HelpOutlineIcon style={{ width: '0.55em', padding: '0px', color: 'grey'}} />
-                  </Tooltip>
+  type TabValue = 'COI' | 'pedigree'
 
-  // FEEDBACK, not sure if useMemo makes any sense with configurable number of generations and coloring common Ancestors
-  // Also not sure if reasonable to rerender for coloring common Ancestors, maybe better with color method in this file
-  const res = React.useMemo(() => testBreedPedigree(genebanks, chosenAncestors,
-    generations, showCommonAncestors), [genebanks, chosenAncestors, generations, showCommonAncestors])
-  let pedigree = res.pedigree
-  let commonAncestors = res.commonAncestors
+  interface TabPanelProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+    children?: React.ReactNode;
+    index: any;
+    value: any;
+  }
+
+  function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+  
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`full-width-tabpanel-${index}`}
+        aria-labelledby={`full-width-tab-${index}`}
+        {...other}
+      >
+        {value === index && (
+          <Box>
+            {children}
+          </Box>
+        )}
+      </div>
+    );
+  }
 
   return <>
-    {offspringCOI ? 
-      <div>
+    {offspringCOI ?
+    <div className={style.test}>
         <h1> Provparning {mother} och {father}</h1>
-        <div>
-          <Table className={style.inbreedCoefficient} size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell className={style.tableCell}></TableCell>
-                <TableCell className={style.tableCell} align="left">Beräknad för avkomma</TableCell>
-                <TableCell className={style.tableCell} align="left">Rekommenderat värde</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+          <AppBar position="static" color="default">
+            <Tabs
+              value={activeTab}
+              onChange={(event: React.ChangeEvent<{}>, newValue: TabValue) => {
+                setActiveTab(newValue)
+              }}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+              >
+                <Tab label="Beräkning inavelskoefficient" value='COI'/>
+                <Tab label="Släktträd för potentiell avkomma" value='pedigree'/>
+            </Tabs>
+          </AppBar>
+          <TabPanel value={activeTab} index='COI'>
+            <Table className={style.inbreedCoefficient} size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell className={style.tableCell} component="th" scope="row">
-                    Inavelskoefficient
-                  </TableCell>
-                  <TableCell className={style.tableCell} align="left">{offspringCOI}</TableCell>
-                  <TableCell className={style.tableCell} align="left">{thresholdCOI}</TableCell>
+                  <TableCell className={style.tableCell}></TableCell>
+                  <TableCell className={style.tableCell} align="left">Beräknad för avkomma</TableCell>
+                  <TableCell className={style.tableCell} align="left">Rekommenderat värde</TableCell>
                 </TableRow>
-            </TableBody>
-          </Table>
-      <p className={style.recommendation}> {recommendationSymbol} {recommendationText} </p>
+              </TableHead>
+              <TableBody>
+                  <TableRow>
+                    <TableCell className={style.tableCell} component="th" scope="row">
+                      Inavelskoefficient
+                    </TableCell>
+                    <TableCell className={style.tableCell} align="left">{offspringCOI}</TableCell>
+                    <TableCell className={style.tableCell} align="left">{thresholdCOI}</TableCell>
+                  </TableRow>
+              </TableBody>
+            </Table>
+          <p className={style.recommendation}> {recommendationSymbol} {recommendationText} </p>
+       </TabPanel>
+       <TabPanel value={activeTab} index='pedigree'>
+        <div className={style.fillWidth}>
+          <TestbreedPedigreView chosenAncestors={chosenAncestors} generations={4}></TestbreedPedigreView>
+        </div> 
+      </TabPanel>
       </div>
-      <div className={style.fillWidth}>
-        <h3>Släktträd</h3>
-        <TestbreedPedigreView chosenAncestors={chosenAncestors} generations={4}></TestbreedPedigreView>
-      </div>
-      </div> : 
+         : 
       <div className={style.loading}>
             <h2>Beräknar provparning</h2>
             <CircularProgress />

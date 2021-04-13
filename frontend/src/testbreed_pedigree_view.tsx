@@ -11,8 +11,7 @@ import { IndividualView } from '@app/individual_view'
 
 const useStyles = makeStyles({
     netWorkConfiguration: {
-      width: '30%',
-      height: '30%',
+      display: 'flex',
       marginTop: '30px'
     },
     generationsInput: {
@@ -34,10 +33,11 @@ export function TestbreedPedigreView({ chosenAncestors, generations }: { chosenA
         generationsOptions.push(i)
     }
     const res = React.useMemo(() => testBreedPedigree(genebanks, chosenAncestors,
-        generations, showCommonAncestors), [genebanks, chosenAncestors, generations, showCommonAncestors])
+      generations_input, showCommonAncestors), [genebanks, chosenAncestors, generations_input, showCommonAncestors])
     let pedigree = res.pedigree
     let commonAncestors = res.commonAncestors
 return<>
+        <div className= {style.netWorkConfiguration}>
         <Autocomplete className = {style.generationsInput}
                             options={generationsOptions}
                             getOptionLabel={(option: number) => option.toString()}
@@ -58,6 +58,7 @@ return<>
             label= "Markera gemensamma släktingar"
             labelPlacement="end"
         />
+        </div>
         {pedigree &&
                 <PedigreeNetwork
                 pedigree={pedigree}
