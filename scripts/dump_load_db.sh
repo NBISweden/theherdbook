@@ -35,8 +35,6 @@ usage () {
 	         help
 	                                Show this help text.
 	HELP
-
-	exit 1
 }
 
 if [ "$( docker container inspect -f '{{.State.Status}}' ${CONTAINER} )" != "running" ]
