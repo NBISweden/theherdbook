@@ -317,6 +317,8 @@ psql --quiet <<-'END_SQL'
 	ORDER BY	i.individual_id;
 END_SQL
 
+# jscpd:ignore-start
+
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
 # $year (etc.)
@@ -371,6 +373,8 @@ if [ ! -f "$3" ]; then
 	# No herd info
 	exit 0
 fi
+
+# jscpd:ignore-end
 
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.
