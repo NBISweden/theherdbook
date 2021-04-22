@@ -4,14 +4,15 @@ Unit tests for the herdbook endpoints.
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-statements
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-statements
 
-#pylint: disable=import-error
+# pylint: disable=import-error
 import utils.database as db
 import utils.data_access as da
 
 from tests.database_test import DatabaseTest
+
 
 class TestPermissions(DatabaseTest):
     """
@@ -98,11 +99,10 @@ class TestPermissions(DatabaseTest):
                 value = da.get_herd(herd.herd, user.uuid)
 
                 expected = herd.filtered_dict(user)
-                if expected['genebank'] not in user.accessible_genebanks:
+                if expected["genebank"] not in user.accessible_genebanks:
                     self.assertIsNone(value)
                 else:
-                    expected['individuals'] = \
-                        [i.short_info() for i in herd.individuals]
+                    expected["individuals"] = [i.short_info() for i in herd.individuals]
                     self.assertDictEqual(expected, value)
 
     def test_add_herd(self):
@@ -111,33 +111,59 @@ class TestPermissions(DatabaseTest):
         for all test users.
         """
         # admin
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test1'},
-                                     self.admin.uuid),
-                         {"status":"success"})
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test2'},
-                                     self.admin.uuid),
-                         {"status":"success"})
+        self.assertEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[0].id, "herd": "test1"}, self.admin.uuid
+            ),
+            {"status": "success"},
+        )
+        self.assertEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[1].id, "herd": "test2"}, self.admin.uuid
+            ),
+            {"status": "success"},
+        )
         # specialist
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test3'},
-                                        self.specialist.uuid),
-                            {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test4'},
-                                        self.specialist.uuid),
-                            {"status":"success"})
+        self.assertNotEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[0].id, "herd": "test3"},
+                self.specialist.uuid,
+            ),
+            {"status": "success"},
+        )
+        self.assertNotEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[1].id, "herd": "test4"},
+                self.specialist.uuid,
+            ),
+            {"status": "success"},
+        )
         # manager
-        self.assertEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test5'},
-                                     self.manager.uuid),
-                         {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test6'},
-                                        self.manager.uuid),
-                            {"status":"success"})
+        self.assertEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[0].id, "herd": "test5"}, self.manager.uuid
+            ),
+            {"status": "success"},
+        )
+        self.assertNotEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[1].id, "herd": "test6"}, self.manager.uuid
+            ),
+            {"status": "success"},
+        )
         # owner
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[0].id, 'herd':'test7'},
-                                        self.owner.uuid),
-                            {"status":"success"})
-        self.assertNotEqual(da.add_herd({'genebank':self.genebanks[1].id, 'herd':'test8'},
-                                        self.owner.uuid),
-                            {"status":"success"})
+        self.assertNotEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[0].id, "herd": "test7"}, self.owner.uuid
+            ),
+            {"status": "success"},
+        )
+        self.assertNotEqual(
+            da.add_herd(
+                {"genebank": self.genebanks[1].id, "herd": "test8"}, self.owner.uuid
+            ),
+            {"status": "success"},
+        )
 
     def test_get_individual(self):
         """
@@ -149,13 +175,25 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(da.get_individual(self.individuals[1].number, self.admin.uuid))
         self.assertTrue(da.get_individual(self.individuals[2].number, self.admin.uuid))
         # specialist
-        self.assertTrue(da.get_individual(self.individuals[0].number, self.specialist.uuid))
-        self.assertTrue(da.get_individual(self.individuals[1].number, self.specialist.uuid))
-        self.assertFalse(da.get_individual(self.individuals[2].number, self.specialist.uuid))
+        self.assertTrue(
+            da.get_individual(self.individuals[0].number, self.specialist.uuid)
+        )
+        self.assertTrue(
+            da.get_individual(self.individuals[1].number, self.specialist.uuid)
+        )
+        self.assertFalse(
+            da.get_individual(self.individuals[2].number, self.specialist.uuid)
+        )
         # manager
-        self.assertTrue(da.get_individual(self.individuals[0].number, self.manager.uuid))
-        self.assertTrue(da.get_individual(self.individuals[1].number, self.manager.uuid))
-        self.assertFalse(da.get_individual(self.individuals[2].number, self.manager.uuid))
+        self.assertTrue(
+            da.get_individual(self.individuals[0].number, self.manager.uuid)
+        )
+        self.assertTrue(
+            da.get_individual(self.individuals[1].number, self.manager.uuid)
+        )
+        self.assertFalse(
+            da.get_individual(self.individuals[2].number, self.manager.uuid)
+        )
         # owner
         self.assertTrue(da.get_individual(self.individuals[0].number, self.owner.uuid))
         self.assertTrue(da.get_individual(self.individuals[1].number, self.owner.uuid))
@@ -223,9 +261,13 @@ class TestPermissions(DatabaseTest):
         # insufficient permissions
         operation = {"action": "add", "role": "manager", "user": 1, "genebank": 1}
         self.assertEqual(da.update_role(operation, self.owner.uuid)["status"], "error")
-        self.assertEqual(da.update_role(operation, self.specialist.uuid)["status"], "error")
+        self.assertEqual(
+            da.update_role(operation, self.specialist.uuid)["status"], "error"
+        )
         operation["genebank"] = 2
-        self.assertEqual(da.update_role(operation, self.manager.uuid)["status"], "error")
+        self.assertEqual(
+            da.update_role(operation, self.manager.uuid)["status"], "error"
+        )
 
         # unknown target user
         operation = {"action": "add", "role": "manager", "user": -1, "genebank": 1}
@@ -238,18 +280,26 @@ class TestPermissions(DatabaseTest):
             "user": self.manager.id,
             "genebank": 1,
         }
-        self.assertEqual(da.update_role(operation, self.admin.uuid)["status"], "updated")
+        self.assertEqual(
+            da.update_role(operation, self.admin.uuid)["status"], "updated"
+        )
 
         # unnecessary remove
-        self.assertEqual(da.update_role(operation, self.admin.uuid)["status"], "unchanged")
+        self.assertEqual(
+            da.update_role(operation, self.admin.uuid)["status"], "unchanged"
+        )
 
         # successful insert
         operation["action"] = "add"
         operation["user"] = str(operation["user"])
-        self.assertEqual(da.update_role(operation, self.admin.uuid)["status"], "updated")
+        self.assertEqual(
+            da.update_role(operation, self.admin.uuid)["status"], "updated"
+        )
 
         # unnecessary insert
-        self.assertEqual(da.update_role(operation, self.admin.uuid)["status"], "unchanged")
+        self.assertEqual(
+            da.update_role(operation, self.admin.uuid)["status"], "unchanged"
+        )
 
     def test_can_edit(self):
         """

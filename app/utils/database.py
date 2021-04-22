@@ -2,7 +2,7 @@
 """
 Database handler for 'the herdbook'.
 """
-#pylint: disable=too-many-lines
+# pylint: disable=too-many-lines
 
 import re
 import json
@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from flask_login import UserMixin
 
-from playhouse.migrate import  (
+from playhouse.migrate import (
     migrate,
     PostgresqlMigrator,
     SqliteMigrator,
@@ -68,8 +68,9 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
+
 try:
-    #pylint: disable=import-error
+    # pylint: disable=import-error
     import utils.settings as settings
 
     set_database(
@@ -159,9 +160,7 @@ class Genebank(BaseModel):
             "id": self.id,
             "name": self.name,
             "herds": [
-                h.short_info()
-                for h in Herd.select()
-                .where(Herd.genebank == self)
+                h.short_info() for h in Herd.select().where(Herd.genebank == self)
             ],
         }
 
@@ -227,24 +226,27 @@ class Herd(BaseModel):
         """
 
         # Rank all herdtracking values by individual and date
-        current_herd = \
-            HerdTracking.select(HerdTracking.herd.alias('herd'),
-                                HerdTracking.individual.alias('i_id'),
-                                fn.RANK().over(
-                                    order_by=[HerdTracking.herd_tracking_date \
-                                              .desc()],
-                                    partition_by=[HerdTracking.individual]
-                                ).alias('rank'))
+        current_herd = HerdTracking.select(
+            HerdTracking.herd.alias("herd"),
+            HerdTracking.individual.alias("i_id"),
+            fn.RANK()
+            .over(
+                order_by=[HerdTracking.herd_tracking_date.desc()],
+                partition_by=[HerdTracking.individual],
+            )
+            .alias("rank"),
+        )
 
         # Select all the individuals in the current herd
-        i_query = Individual.select() \
-                            .join(current_herd,
-                                  on=(Individual.id == current_herd.c.i_id)) \
-                            .where(current_herd.c.rank == 1) \
-                            .where(current_herd.c.herd == self.id)
+        i_query = (
+            Individual.select()
+            .join(current_herd, on=(Individual.id == current_herd.c.i_id))
+            .where(current_herd.c.rank == 1)
+            .where(current_herd.c.herd == self.id)
+        )
 
         # return as a list
-        #pylint: disable=unnecessary-comprehension
+        # pylint: disable=unnecessary-comprehension
         return [i for i in i_query]
 
     def short_info(self):
@@ -255,7 +257,7 @@ class Herd(BaseModel):
         return {
             "id": self.id,
             "herd": self.herd,
-            "genebank": self.__dict__['__data__']['genebank'],
+            "genebank": self.__dict__["__data__"]["genebank"],
             "herd_name": self.herd_name,
             "is_active": self.is_active,
         }
@@ -282,7 +284,7 @@ class Herd(BaseModel):
 
         data = self.as_dict()
 
-        if 'email_verified' in data:
+        if "email_verified" in data:
             del data["email_verified"]
 
         return remove_fields_by_privacy(data, access_level)
@@ -369,6 +371,7 @@ class Breeding(BaseModel):
     """
     Table for breeding and birth.
     """
+
     id = AutoField(primary_key=True, column_name="breeding_id")
     breed_date = DateField(null=True)
     breed_notes = TextField(null=True)
@@ -386,9 +389,9 @@ class Breeding(BaseModel):
         frontend uses parent numbers instead of database id's.
         """
         data = super().as_dict()
-        #pylint: disable=no-member
-        data['mother'] = self.mother.number
-        data['father'] = self.father.number
+        # pylint: disable=no-member
+        data["mother"] = self.mother.number
+        data["father"] = self.father.number
         return data
 
     class Meta:  # pylint: disable=too-few-public-methods
@@ -434,10 +437,11 @@ class Individual(BaseModel):
         """
         if not self.herdtracking_set:
             return self.origin_herd
-        return self.herdtracking_set \
-                   .order_by(HerdTracking.herd_tracking_date.desc()) \
-                   .first() \
-                   .herd
+        return (
+            self.herdtracking_set.order_by(HerdTracking.herd_tracking_date.desc())
+            .first()
+            .herd
+        )
 
     @property
     def children(self):
@@ -446,12 +450,13 @@ class Individual(BaseModel):
         """
         # use a list comprehension to execute the query and return the result
         # as a list.
-        #pylint: disable=unnecessary-comprehension
-        return [i for i in Individual.select() \
-                                     .join(Breeding) \
-                                     .where((Breeding.mother == self) |
-                                            (Breeding.father == self))
-                ]
+        # pylint: disable=unnecessary-comprehension
+        return [
+            i
+            for i in Individual.select()
+            .join(Breeding)
+            .where((Breeding.mother == self) | (Breeding.father == self))
+        ]
 
     def as_dict(self):
         """
@@ -461,33 +466,45 @@ class Individual(BaseModel):
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
         data["genebank"] = self.current_herd.genebank.name
-        data["origin_herd"] = {"id": self.origin_herd.id,
-                               "herd":  self.origin_herd.herd,
-                               "herd_name": self.origin_herd.herd_name}
-        data["herd"] = {"id": self.current_herd.id,
-                        "herd": self.current_herd.herd,
-                        "herd_name": self.current_herd.herd_name}
+        data["origin_herd"] = {
+            "id": self.origin_herd.id,
+            "herd": self.origin_herd.herd,
+            "herd_name": self.origin_herd.herd_name,
+        }
+        data["herd"] = {
+            "id": self.current_herd.id,
+            "herd": self.current_herd.herd,
+            "herd_name": self.current_herd.herd_name,
+        }
 
         data["birth_date"] = self.breeding.birth_date if self.breeding else None
         data["litter"] = self.breeding.litter_size if self.breeding else None
 
         data["mother"] = (
-            {"id": self.breeding.mother.id, "name": self.breeding.mother.name,
-             "number": self.breeding.mother.number} \
-            if self.breeding and self.breeding.mother else None
+            {
+                "id": self.breeding.mother.id,
+                "name": self.breeding.mother.name,
+                "number": self.breeding.mother.number,
+            }
+            if self.breeding and self.breeding.mother
+            else None
         )
         data["father"] = (
-            {"id": self.breeding.father.id, "name": self.breeding.father.name,
-             "number": self.breeding.father.number} \
-            if self.breeding and self.breeding.father else None
+            {
+                "id": self.breeding.father.id,
+                "name": self.breeding.father.name,
+                "number": self.breeding.father.number,
+            }
+            if self.breeding and self.breeding.father
+            else None
         )
         data["colour"] = self.colour.name if self.colour else None
         data["weights"] = [
-            {"weight": w.weight, "date": w.weight_date.strftime('%Y-%m-%d')} \
+            {"weight": w.weight, "date": w.weight_date.strftime("%Y-%m-%d")}
             for w in self.weight_set
         ]  # pylint: disable=no-member
         data["bodyfat"] = [
-            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime('%Y-%m-%d')} \
+            {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime("%Y-%m-%d")}
             for b in self.bodyfat_set
         ]  # pylint: disable=no-member
         data["herd_tracking"] = [
@@ -496,8 +513,8 @@ class Individual(BaseModel):
                 "herd": h.herd.herd,
                 "herd_name": h.herd.herd_name,
                 "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                        if h.herd_tracking_date
-                        else None,
+                if h.herd_tracking_date
+                else None,
             }
             for h in self.herdtracking_set  # pylint: disable=no-member
         ]
@@ -524,22 +541,36 @@ class Individual(BaseModel):
             - father
             - mother
         """
-        father = {"id": self.breeding.father.id,
-                  "number": self.breeding.father.number} \
-                  if self.breeding and self.breeding.father else None
-        mother = {"id": self.breeding.mother.id,
-                  "number": self.breeding.mother.number} \
-                  if self.breeding and self.breeding.mother else None
-        is_active = self.is_active \
-                    and not self.death_date \
-                    and not self.death_note \
-                    and self.herdtracking_set.select() \
-                            .where(HerdTracking.herd_tracking_date >
-                                   datetime.now() - timedelta(days=366)
-                                   ).count() > 0
-        return {"id": self.id, "name": self.name, "number": self.number,
-                "sex": self.sex, "father": father, "mother": mother,
-                "is_active": is_active}
+        father = (
+            {"id": self.breeding.father.id, "number": self.breeding.father.number}
+            if self.breeding and self.breeding.father
+            else None
+        )
+        mother = (
+            {"id": self.breeding.mother.id, "number": self.breeding.mother.number}
+            if self.breeding and self.breeding.mother
+            else None
+        )
+        is_active = (
+            self.is_active
+            and not self.death_date
+            and not self.death_note
+            and self.herdtracking_set.select()
+            .where(
+                HerdTracking.herd_tracking_date > datetime.now() - timedelta(days=366)
+            )
+            .count()
+            > 0
+        )
+        return {
+            "id": self.id,
+            "name": self.name,
+            "number": self.number,
+            "sex": self.sex,
+            "father": father,
+            "mother": mother,
+            "is_active": is_active,
+        }
 
     class Meta:  # pylint: disable=too-few-public-methods
         """
@@ -553,6 +584,7 @@ class IndividualFile(BaseModel):
     """
     Table for referencing files connected to individuals
     """
+
     id = AutoField(primary_key=True, column_name="breeding_id")
     individual = ForeignKeyField(Individual)
     filepath = CharField(32)
@@ -565,6 +597,7 @@ class Disease(BaseModel):
     Lists user defined diseases, and keeps track of wheather they should be
     included in the yearly report.
     """
+
     id = AutoField(primary_key=True, column_name="disease_id")
     name = CharField()
     include_in_reports = BooleanField(default=False)
@@ -574,6 +607,7 @@ class IndividualDisease(BaseModel):
     """
     Kepps track of disease periods for individuals.
     """
+
     id = AutoField(primary_key=True, column_name="individual_disease_id")
     individual = ForeignKeyField(Individual)
     disease = ForeignKeyField(Disease)
@@ -779,7 +813,7 @@ class User(BaseModel, UserMixin):
             "validated": self.validated if self.validated else False,
             "is_admin": self.is_admin,
             "is_manager": self.is_manager,
-            "is_owner": self.is_owner
+            "is_owner": self.is_owner,
         }
 
     def get_genebanks(self):
@@ -830,22 +864,30 @@ class User(BaseModel, UserMixin):
         if self.is_admin:
             return True
 
-        if re.match('^([a-zA-Z][0-9]+-[0-9]+)$', identifier):
+        if re.match("^([a-zA-Z][0-9]+-[0-9]+)$", identifier):
             try:
                 with DATABASE.atomic():
                     individual = Individual.get(Individual.number == identifier)
-                    if self.is_owner and individual.current_herd.herd in self.is_owner \
-                    or self.is_manager and individual.current_herd.genebank_id in self.is_manager:
+                    if (
+                        self.is_owner
+                        and individual.current_herd.herd in self.is_owner
+                        or self.is_manager
+                        and individual.current_herd.genebank_id in self.is_manager
+                    ):
                         return True
             except DoesNotExist:
                 pass
 
-        elif re.match('^([a-zA-Z][0-9]+)$', identifier):
+        elif re.match("^([a-zA-Z][0-9]+)$", identifier):
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(Herd.herd == identifier)
-                    if self.is_owner and herd.herd in self.is_owner \
-                    or self.is_manager and herd.genebank_id in self.is_manager:
+                    if (
+                        self.is_owner
+                        and herd.herd in self.is_owner
+                        or self.is_manager
+                        and herd.genebank_id in self.is_manager
+                    ):
                         return True
             except DoesNotExist:
                 pass
@@ -874,6 +916,7 @@ class UserMessage(BaseModel):
     """
     Table storing messages to be displayed to users.
     """
+
     id = AutoField(primary_key=True, column_name="user_message_id")
     sender = ForeignKeyField(User, null=True)
     receiver = ForeignKeyField(User, null=False)
@@ -890,6 +933,7 @@ class YearlyHerdReport(BaseModel):
     The data field stores the report data in json format, but we refrained from
     storing it in a JSONField so that we could still use sqlite for testing.
     """
+
     id = AutoField(primary_key=True, column_name="disease_id")
     herd = ForeignKeyField(Herd)
     report_date = DateField()
@@ -909,6 +953,7 @@ class GenebankReport(BaseModel):
     The data field stores the report data in json format, but we refrained from
     storing it in a JSONField so that we could still use sqlite for testing.
     """
+
     genebank = ForeignKeyField(Genebank)
     generated_by = ForeignKeyField(User)
     report_date = DateField()
@@ -955,6 +1000,7 @@ class SchemaHistory(BaseModel):
     """
     Contains schema migration history for the database.
     """
+
     version = IntegerField(primary_key=True)
     comment = TextField()
     applied = DateTimeField(null=True)
@@ -977,7 +1023,7 @@ MODELS = [
     GenebankReport,
     HerdTracking,
     Authenticators,
-    SchemaHistory
+    SchemaHistory,
 ]
 
 
@@ -1009,8 +1055,7 @@ def insert_data(filename="default_data.json"):
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
-            logging.error("Unknown data table '%s' in file '%s'",
-                          table, filename)
+            logging.error("Unknown data table '%s' in file '%s'", table, filename)
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
         logging.info("Inserting %s data from %s", model.__name__, filename)
@@ -1034,13 +1079,13 @@ def init():
     for model in MODELS:
         if not model.table_exists():
             logging.info("Creating database table %s", model.__name__)
-            if model.__name__ == 'Breeding':
+            if model.__name__ == "Breeding":
                 created_breeding = True
             model.create_table()
     # sqlite can't add constraints after creation
     if created_breeding and not isinstance(DATABASE, SqliteDatabase):
         logging.info("Creating foreign keys for breeding table")
-        #pylint: disable=protected-access
+        # pylint: disable=protected-access
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
 
@@ -1083,6 +1128,7 @@ def verify(try_init=True):
 # that has already been applied, it should simply do nothing rather than fail.
 #
 
+
 def migrate_none_to_1():
     """
     Migrate between no schema version and version 1.
@@ -1092,8 +1138,9 @@ def migrate_none_to_1():
 
     with DATABASE.atomic():
         SchemaHistory.create_table()
-        SchemaHistory.insert( # pylint: disable=E1120
-            version=1, comment="Create schema history table").execute()
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=1, comment="Create schema history table"
+        ).execute()
 
 
 def migrate_1_to_2():
@@ -1103,15 +1150,17 @@ def migrate_1_to_2():
 
     with DATABASE.atomic():
 
-        cols = [x.name for x in DATABASE.get_columns('schemahistory')]
+        cols = [x.name for x in DATABASE.get_columns("schemahistory")]
 
-        if not 'applied' in cols:
+        if not "applied" in cols:
             migrate(
                 DATABASE_MIGRATOR.add_column(
-                    'schemahistory', 'applied', DateTimeField(null=True))
+                    "schemahistory", "applied", DateTimeField(null=True)
+                )
             )
-        SchemaHistory.insert( # pylint: disable=E1120
-            version=2, comment="Fix schema history table", applied=datetime.now()).execute()
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=2, comment="Fix schema history table", applied=datetime.now()
+        ).execute()
 
 
 def check_migrations():
@@ -1122,25 +1171,33 @@ def check_migrations():
 
     current_version = None
     if SchemaHistory.table_exists():
-        current_version = SchemaHistory.select( # pylint: disable=E1120
-            fn.MAX(SchemaHistory.version)).scalar()
+        current_version = SchemaHistory.select(  # pylint: disable=E1120
+            fn.MAX(SchemaHistory.version)
+        ).scalar()
 
-    logging.debug("Doing (if any) needed migrations from %s to %s",
-                  current_version,
-                  CURRENT_SCHEMA_VERSION)
+    logging.debug(
+        "Doing (if any) needed migrations from %s to %s",
+        current_version,
+        CURRENT_SCHEMA_VERSION,
+    )
 
     while current_version is None or current_version < CURRENT_SCHEMA_VERSION:
         next_version = (current_version if current_version else 0) + 1
         call = ("migrate_%s_to_%s" % (current_version, next_version)).lower()
-        logging.info("Calling %s to migrate from %s to %s", call,
-                     current_version, next_version)
+        logging.info(
+            "Calling %s to migrate from %s to %s", call, current_version, next_version
+        )
 
-        print("Calling %s to migrate from %s to %s" % (call,
-                                                       current_version, next_version))
+        print(
+            "Calling %s to migrate from %s to %s"
+            % (call, current_version, next_version)
+        )
 
         globals()[call]()
-        current_version = SchemaHistory.select( # pylint: disable=E1120
-            fn.MAX(SchemaHistory.version)).scalar()
+        current_version = SchemaHistory.select(  # pylint: disable=E1120
+            fn.MAX(SchemaHistory.version)
+        ).scalar()
+
 
 if is_connected():
     check_migrations()
