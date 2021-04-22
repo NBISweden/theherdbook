@@ -1,6 +1,8 @@
 import {default as fetch_mock, enableFetchMocks} from 'jest-fetch-mock'
 enableFetchMocks()
 
+// jscpd:ignore-start
+
 import * as React from 'react'
 import { render, fireEvent, waitFor, screen, act } from '@testing-library/react'
 
@@ -107,3 +109,5 @@ test('can be logged out', async () => {
   expect(screen.queryAllByText(/testuser@nbis.se/)).toHaveLength(0)
   expect(screen.queryAllByText(/anonymous/)).toHaveLength(1)
 })
+
+// jscpd:ignore-end
