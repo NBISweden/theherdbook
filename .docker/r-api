@@ -41,7 +41,7 @@ RUN apt-get update \
 WORKDIR /usr/local/r-api
 
 COPY --chown=www-data:www-data R .
-COPY system/supervisord.conf.r /etc/supervisord.conf
+COPY system/supervisord-r.conf /etc/supervisord.conf
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
