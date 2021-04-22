@@ -12,9 +12,8 @@ import { asLocale, BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
 import { useMessageContext } from '@app/message_context';
 import { Button, CircularProgress, InputAdornment, TextField,
         } from '@material-ui/core';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers'
-import DateFnsUtils from '@date-io/date-fns'
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers'
+import DateFnsUtils from '@date-io/date-fns';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
 import { Autocomplete } from '@material-ui/lab';
