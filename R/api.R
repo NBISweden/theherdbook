@@ -127,7 +127,8 @@ update_data <- function(genebank_id) {
   if (is.null(Pedi)) {
       return (NULL)
   }
-
+  #Save Pedi to reduce amount of request to db
+  assign(paste0("PEDI_",genebank_id), Pedi, envir = .GlobalEnv)
   #Calculate Inbreeding and name it after genebank_id
   assign(paste0("IDB_",genebank_id),data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE),envir = .GlobalEnv)
   #Get current active population
@@ -241,7 +242,7 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
 #* @post /testbreed/
 testbreed <- function(req){
   body <- req$argsBody
-  Pedi<-get_rabbits(body$genebankId)
+  Pedi <- get(paste0("PEDI_",body$genebankId))
   if (is.null(Pedi)) {
       return (NULL)
   }
