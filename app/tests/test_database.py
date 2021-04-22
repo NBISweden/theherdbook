@@ -16,6 +16,8 @@ import utils.data_access as da
 # pylint: disable=import-error
 from tests.database_test import DatabaseTest
 
+# jscpd:ignore-start 
+
 # pylint: disable=too-few-public-methods
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -818,3 +820,4 @@ class TestDatabaseMigration(DatabaseTest):
             .scalar(),
             db.CURRENT_SCHEMA_VERSION,
         )
+# jscpd:ignore-end

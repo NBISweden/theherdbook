@@ -2,8 +2,8 @@
 Instance specific settings for the herdbook.
 """
 
-import os
 import logging
+import os
 from argparse import Namespace
 
 logging.info("Reading Environemt")
