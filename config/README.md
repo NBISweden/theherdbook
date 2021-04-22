@@ -21,4 +21,4 @@ Currently known contents that will be picked up from here:
 
 * key.pem
 
-   Private key to use for TLS (in pem format). 
+   Private key to use for TLS (in pem format).
