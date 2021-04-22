@@ -483,7 +483,7 @@ def testbreed():
         url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
         response = requests.post(url, data=payload)
         offspring_coi = response.json()['calculated_coi'][0]*100
-    payload['offspringCOI'] = offspring_coi
+    payload['offspringCOI'] = round(offspring_coi,2)
     APP.logger.info(f'Testbreed calculation result {payload}')
     return payload
 
