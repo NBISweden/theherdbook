@@ -3,30 +3,27 @@ This file contains data access and manipulation functions to interact with the
 database.
 """
 
-import uuid
 import logging
-
+import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import DoesNotExist, IntegrityError, fn, JOIN
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
+from peewee import JOIN, DoesNotExist, IntegrityError, fn
 
 # pylint: disable=import-error
-from utils.database import (
-    DB_PROXY as DATABASE,
-    Bodyfat,
-    Breeding,
-    Colour,
-    Genebank,
-    Herd,
-    HerdTracking,
-    Individual,
-    User,
-    Weight,
-)
+
+from utils.database import DB_PROXY as DATABASE  # isort:skip
+from utils.database import Bodyfat  # isort: skip
+from utils.database import Breeding  # isort: skip
+from utils.database import Colour  # isort: skip
+from utils.database import Genebank  # isort: skip
+from utils.database import Herd  # isort: skip
+from utils.database import HerdTracking  # isort: skip
+from utils.database import Individual  # isort: skip
+from utils.database import User  # isort: skip
+from utils.database import Weight  # isort: skip
+
+from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
+
 
 # Helper functions
 
@@ -1066,9 +1063,9 @@ def register_birth(form, user_uuid):
         litter = int(form.get("litter", None))
         if litter <= 0:
             errors += ["Litter size must be larger than zero."]
-    except ValueError as error:
+    except ValueError:
         errors += ["Unknown litter size."]
-    except TypeError as error:
+    except TypeError:
         errors += ["Missing litter size."]
 
     if breeding.birth_date or breeding.birth_notes:
@@ -1137,10 +1134,10 @@ def update_breeding(form, user_uuid):
         except DoesNotExist:
             errors += ["Unknown father"]
 
-    for date in ["breed_date", "birth_date"]:
-        if date in form:
+    for bdate in ["breed_date", "birth_date"]:
+        if bdate in form:
             try:
-                setattr(breeding, date, validate_date(form[date]))
+                setattr(breeding, bdate, validate_date(form[bdate]))
             except ValueError as error:
                 errors += [str(error)]
 
@@ -1150,7 +1147,7 @@ def update_breeding(form, user_uuid):
             breeding.litter_size = int(form["litter_size"])
             if breeding.litter_size <= 0:
                 errors += ["Litter size must be larger than zero."]
-        except ValueError as error:
+        except ValueError:
             errors += ["Unknown litter size."]
 
     if errors:

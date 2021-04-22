@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Unit tests for the herdbook endpoints.
+
+isort:skip_file
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
@@ -9,11 +11,10 @@ Unit tests for the herdbook endpoints.
 
 import base64
 import unittest
-
 from datetime import datetime
 
-import requests
 import flask
+import requests
 
 # pylint: disable=import-error
 import utils.database as db
@@ -21,6 +22,7 @@ from herdbook import APP
 from tests.database_test import DatabaseTest
 
 HOST = "http://localhost:4200"
+
 
 # pylint: disable=too-few-public-methods
 class FlaskTest(DatabaseTest):
@@ -122,6 +124,7 @@ class TestEndpoints(FlaskTest):
         # not logged in
         self.assertEqual(self.app.get("/api/breeding").get_json(), None)
 
+        # jscpd:ignore-start
         with self.app as context:
             # login
             context.post(
@@ -134,6 +137,7 @@ class TestEndpoints(FlaskTest):
             expected = {"breedings": [breeding.as_dict()]}
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), expected)
+        # jscpd:ignore-end
 
     def test_request_loader_breeding(self):
         """
@@ -186,6 +190,7 @@ class TestEndpoints(FlaskTest):
         # not logged in
         self.assertEqual(self.app.get("/api/breeding").get_json(), None)
 
+        # jscpd:ignore-start
         with self.app as context:
             # login
             context.post(
@@ -195,6 +200,7 @@ class TestEndpoints(FlaskTest):
             response = context.post("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), {"status": "success"})
+        # jscpd:ignore-end
 
     def test_register_birth(self):
         """

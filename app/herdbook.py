@@ -6,29 +6,28 @@ The server uses Flask to serve a React frontend, and connect to a postgres
 database.
 """
 
-import binascii
-import sys
-import uuid
-import time
-import logging
 import base64
+import binascii
+import logging
+import sys
+import time
+import uuid
 
+import requests
 from flask import Flask, jsonify, request, session
 from flask_caching import Cache
 from flask_login import (
+    LoginManager,
+    current_user,
     login_required,
     login_user,
     logout_user,
-    current_user,
-    LoginManager,
 )
-import requests
 
-import utils.database as db
-import utils.data_access as da
-import utils.settings as settings
-import utils.csvparser as csvparser
-
+import utils.csvparser as csvparser  # isort:skip
+import utils.data_access as da  # isort:skip
+import utils.database as db  # isort:skip
+import utils.settings as settings  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -84,7 +83,7 @@ def load_user_from_request(request):
             return None
 
         username = api_key[: api_key.find(b":")]
-        password = api_key[api_key.find(b":") + 1 :]
+        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
 
         user = da.authenticate_user(username, password)
 

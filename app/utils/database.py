@@ -4,38 +4,33 @@ Database handler for 'the herdbook'.
 """
 # pylint: disable=too-many-lines
 
-import re
 import json
 import logging
+import re
 from datetime import datetime, timedelta
+
 from flask_login import UserMixin
-
-from playhouse.migrate import (
-    migrate,
-    PostgresqlMigrator,
-    SqliteMigrator,
-)
-
 from peewee import (
-    PostgresqlDatabase,
-    fn,
-    SqliteDatabase,
-    Proxy,
-    Model,
-    DoesNotExist,
     AutoField,
     BooleanField,
     CharField,
     DateField,
     DateTimeField,
     DeferredForeignKey,
-    ForeignKeyField,
+    DoesNotExist,
     FloatField,
+    ForeignKeyField,
     IntegerField,
+    Model,
     OperationalError,
+    PostgresqlDatabase,
+    Proxy,
+    SqliteDatabase,
     TextField,
     UUIDField,
+    fn,
 )
+from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
 CURRENT_SCHEMA_VERSION = 2
 DB_PROXY = Proxy()
@@ -1152,7 +1147,7 @@ def migrate_1_to_2():
 
         cols = [x.name for x in DATABASE.get_columns("schemahistory")]
 
-        if not "applied" in cols:
+        if "applied" not in cols:
             migrate(
                 DATABASE_MIGRATOR.add_column(
                     "schemahistory", "applied", DateTimeField(null=True)

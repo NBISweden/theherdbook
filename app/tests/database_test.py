@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Unit tests for the herdbook endpoints.
+
+isort:skip_file
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
@@ -9,12 +11,12 @@ Unit tests for the herdbook endpoints.
 
 import os
 import unittest
-
 from datetime import datetime
+
+import utils.data_access as da
 
 # pylint: disable=import-error
 import utils.database as db
-import utils.data_access as da
 
 
 class DatabaseTest(unittest.TestCase):

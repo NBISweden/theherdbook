@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
 Unit tests for the herdbook endpoints.
+
+isort:skip_file
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-statements
 
-# pylint: disable=import-error
-import utils.database as db
 import utils.data_access as da
 
+# pylint: disable=import-error
+import utils.database as db
 from tests.database_test import DatabaseTest
 
 

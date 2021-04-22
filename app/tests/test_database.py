@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Unit tests for the herdbook endpoints.
+
+isort:skip_file
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
@@ -9,15 +11,16 @@ Unit tests for the herdbook endpoints.
 
 from datetime import datetime, timedelta
 
+import utils.data_access as da
+
 # pylint: disable=import-error
 import utils.database as db
-import utils.data_access as da
 
 # pylint: disable=import-error
 from tests.database_test import DatabaseTest
 
-# jscpd:ignore-start 
 
+# jscpd:ignore-start
 # pylint: disable=too-few-public-methods
 class TestDatabaseMapping(DatabaseTest):
     """
@@ -820,4 +823,6 @@ class TestDatabaseMigration(DatabaseTest):
             .scalar(),
             db.CURRENT_SCHEMA_VERSION,
         )
+
+
 # jscpd:ignore-end
