@@ -49,6 +49,7 @@ if [ ! -e "$ENV_FILE" ]; then
 	exit 1
 fi
 
+# shellcheck source=/dev/null
 source "$scriptdir/../.docker/database-variables.env"
 
 if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_DB" ]; then
