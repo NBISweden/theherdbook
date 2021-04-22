@@ -473,13 +473,18 @@ def get_mean_kinship(g_id):
 
 @APP.route("/api/testbreed", methods=["POST"])
 def testbreed():
-    url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
     payload = request.json
-    APP.logger.info('PRE PAYLOAD')
-    APP.logger.info(payload)
-    response = requests.post(url, data=payload)
-    APP.logger.info(response.json())
-    payload['offspringCOI'] = response.json()['calculated_coi'][0]*100
+    APP.logger.info(f'Testbreed calculation input {payload}')
+    if ('male' in payload) and ('female' in payload):
+        kinship_matrix = get_kinship(request.json["genebankId"])
+        offspring_coi = kinship_matrix[payload["male"]][payload["female"]]*100
+    # One/both of the parents not registrered, thus not present in the kinship matrix
+    else:
+        url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
+        response = requests.post(url, data=payload)
+        offspring_coi = response.json()['calculated_coi'][0]*100
+    payload['offspringCOI'] = offspring_coi
+    APP.logger.info(f'Testbreed calculation result {payload}')
     return payload
 
 
