@@ -26,6 +26,6 @@ echo 'Installing app dependencies...'
 pip3 install -r app/requirements.txt >/dev/null
 
 echo 'Initializing database...'
-cd app/ || exit 1
+cd app || exit 1
 python3 -c 'import utils.database as db; db.init()'
 echo DONE
