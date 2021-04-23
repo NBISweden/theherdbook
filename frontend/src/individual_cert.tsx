@@ -92,6 +92,7 @@ const useStyles = makeStyles({
 export function IndividualCert({id}: {id: string | undefined}) {
     const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
     const [father, setFather] = React.useState(undefined as Individual | undefined)
+    const [mother, setMother] = React.useState(undefined as Individual | undefined)
     const [isNew, setIsNew] = React.useState(!!id as boolean)
     const { user } = useUserContext()
     const { genebanks, colors } = useDataContext()
@@ -108,6 +109,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
     user && user.canEdit(id) ?
       get(`/api/individual/${id}`).then(
         (data: Individual) => {
+          console.log(data)
           setIndividual(data)
           setIsNew(false)
         },
@@ -120,10 +122,21 @@ export function IndividualCert({id}: {id: string | undefined}) {
   }, [id, user])
 
   React.useEffect(() => {
+    console.log(individual)
       get(`/api/individual/${individual?.father?.number}`).then(
         (data: Individual) => {
           setFather(data)
           console.log(father)
+        },
+        error => {
+          console.error(error);
+          userMessage(error, 'error')
+        }
+      )
+      get(`/api/individual/${individual?.mother?.number}`).then(
+        (data: Individual) => {
+          setMother(data)
+          console.log(mother)
         },
         error => {
           console.error(error);
@@ -138,7 +151,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
    * @param field field name to update
    * @param value the new value of the field
    */
-  const updateField = <T extends keyof Individual>(field: T, value: Individual[T]) => {
+  const updateIndividual = <T extends keyof Individual>(field: T, value: Individual[T]) => {
     individual && setIndividual({...individual, [field]: value})
   }
 
@@ -198,7 +211,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={individual.number ?? ''}
-                  onChange={(event) => {updateField('number', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('number', event.currentTarget.value)}}
                 />
                 <TextField
                   disabled={!(isNew || canManage)}
@@ -206,7 +219,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={individual.certificate ?? ''}
-                  onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('certificate', event.currentTarget.value)}}
                 />
               </div>
               <h2>Identitet</h2>
@@ -216,7 +229,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 className={style.control}
                 variant={inputVariant}
                 value={individual.name ?? ''}
-                onChange={(event) => {updateField('name', event.currentTarget.value)}}
+                onChange={(event) => {updateIndividual('name', event.currentTarget.value)}}
               />
               <div className={style.flexRow}>
                 <Autocomplete
@@ -230,7 +243,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                     variant={inputVariant}
                     margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateField('sex', newValue?.value ?? '')
+                    updateIndividual('sex', newValue?.value ?? '')
                   }}
                 />
                 <KeyboardDatePicker
@@ -245,7 +258,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   InputLabelProps={{
                     shrink: true,
                   }}
-                  onChange={(date, value) => {value && updateField('birth_date', value)}}
+                  onChange={(date, value) => {value && updateIndividual('birth_date', value)}}
                 />
               </div>
               <div className={style.flexRow}>
@@ -260,7 +273,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                     variant={inputVariant}
                     margin="normal" />}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateField('color', newValue?.value ?? '')
+                    updateIndividual('color', newValue?.value ?? '')
                   }}
                 />
                 <TextField
@@ -271,7 +284,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   multiline
                   rows={3}
                   value={individual.color_note ?? ''}
-                  onChange={(event) => {updateField('color_note', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('color_note', event.currentTarget.value)}}
                 />
               </div>
               <div className={style.flexRow}>
@@ -281,7 +294,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={individual.belly_color ?? ''}
-                  onChange={(event) => {updateField('belly_color', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('belly_color', event.currentTarget.value)}}
                 />
                 <TextField
                   disabled={!(isNew || canManage)}
@@ -289,7 +302,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={individual.eye_color ?? ''}
-                  onChange={(event) => {updateField('eye_color', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('eye_color', event.currentTarget.value)}}
                 />
               </div>
               <div className={style.flexRow}>
@@ -299,7 +312,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={individual.claw_color ?? ''}
-                  onChange={(event) => {updateField('claw_color', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('claw_color', event.currentTarget.value)}}
                 />
                  <Autocomplete
                   disabled={!(isNew || canManage)}
@@ -319,7 +332,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 multiline
                 rows={4}
                 value={individual.notes ?? ''}
-                onChange={(event) => {updateField('notes', event.currentTarget.value)}}
+                onChange={(event) => {updateIndividual('notes', event.currentTarget.value)}}
               />
               <h2>Härstamning</h2>
               <h3>Far</h3>
@@ -329,15 +342,15 @@ export function IndividualCert({id}: {id: string | undefined}) {
                   className={style.control}
                   variant={inputVariant}
                   value={father?.number ?? ''}
-                  onChange={(event) => {updateField('father.genebank', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('father.genebank', event.currentTarget.value)}}
                 />
               <TextField
                   disabled
-                  label="Nummer"
+                  label="År, kull, individ (öra vänster)"
                   className={style.control}
                   variant={inputVariant}
                   value={father?.number ?? ''}
-                  onChange={(event) => {updateField('father.number', event.currentTarget.value)}}
+                  onChange={(event) => {updateIndividual('father.number', event.currentTarget.value)}}
                 />
               <TextField
                 disabled={!(isNew || canManage)}
@@ -345,7 +358,48 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 className={style.control}
                 variant={inputVariant}
                 value={father?.name ?? ''}
-                onChange={(event) => {updateField('father.name', event.currentTarget.value)}}
+                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
+              />
+              <TextField
+                disabled={!(isNew || canManage)}
+                label="Färg/ kännetecken"
+                className={style.control}
+                variant={inputVariant}
+                value={father?.color ?? ''}
+                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
+              />
+              <h3>Mor</h3>
+              <TextField
+                  disabled
+                  label="Genbanksnr. (öra höger)"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={mother?.number ?? ''}
+                  onChange={(event) => {updateIndividual('father.genebank', event.currentTarget.value)}}
+                />
+              <TextField
+                  disabled
+                  label="År, kull, individ (öra vänster)"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={mother?.number ?? ''}
+                  onChange={(event) => {updateIndividual('father.number', event.currentTarget.value)}}
+                />
+              <TextField
+                disabled={!(isNew || canManage)}
+                label="Namn"
+                className={style.control}
+                variant={inputVariant}
+                value={mother?.name ?? ''}
+                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
+              />
+              <TextField
+                disabled={!(isNew || canManage)}
+                label="Färg/ kännetecken"
+                className={style.control}
+                variant={inputVariant}
+                value={mother?.color ?? ''}
+                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
               />
             </div>     
           </div>
