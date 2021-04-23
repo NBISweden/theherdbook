@@ -13,7 +13,10 @@ then
   echo "Warning: Could not find virtual environment '$VENV'."
   echo "Creating virtual environment '$VENV'".
 
-  python3 -m venv "$VENV" || "Error: Couldn't create virtual environment" && exit 1
+  if ! python3 -m venv "$VENV"; then
+      echo "Error: Couldn't create virtual environment"
+      exit 1
+  fi
 fi
 
 # shellcheck source=/dev/null
