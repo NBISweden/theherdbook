@@ -91,6 +91,7 @@ const useStyles = makeStyles({
 
 export function IndividualCert({id}: {id: string | undefined}) {
     const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
+    const [father, setFather] = React.useState(undefined as Individual | undefined)
     const [isNew, setIsNew] = React.useState(!!id as boolean)
     const { user } = useUserContext()
     const { genebanks, colors } = useDataContext()
@@ -117,6 +118,19 @@ export function IndividualCert({id}: {id: string | undefined}) {
       )
       : userMessage('You do not have permission to edit this individual', 'error')
   }, [id, user])
+
+  React.useEffect(() => {
+      get(`/api/individual/${individual?.father?.number}`).then(
+        (data: Individual) => {
+          setFather(data)
+          console.log(father)
+        },
+        error => {
+          console.error(error);
+          userMessage(error, 'error')
+        }
+      )
+  }, [individual])
     
     /**
    * Updates a single field in `individual`.
@@ -173,9 +187,7 @@ export function IndividualCert({id}: {id: string | undefined}) {
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
-              <div className={style.titleText}>
-                Fyll i uppgifterna för certifikatet
-              </div>
+              <h1>Fyll i uppgifterna för certifikatet</h1>
               <div className={style.adminPane}>
                 <div className={style.paneTitle}>
                   Kan endast ändras av genbanksansvarig
@@ -190,13 +202,14 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 />
                 <TextField
                   disabled={!(isNew || canManage)}
-                  label="Certifikat"
+                  label="Certifikat" //should be generating a new number
                   className={style.control}
                   variant={inputVariant}
                   value={individual.certificate ?? ''}
                   onChange={(event) => {updateField('certificate', event.currentTarget.value)}}
                 />
               </div>
+              <h2>Identitet</h2>
               <TextField
                 disabled={!(isNew || canManage)}
                 label="Namn"
@@ -307,6 +320,32 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 rows={4}
                 value={individual.notes ?? ''}
                 onChange={(event) => {updateField('notes', event.currentTarget.value)}}
+              />
+              <h2>Härstamning</h2>
+              <h3>Far</h3>
+              <TextField
+                  disabled
+                  label="Genbanksnr. (öra höger)"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={father?.number ?? ''}
+                  onChange={(event) => {updateField('father.genebank', event.currentTarget.value)}}
+                />
+              <TextField
+                  disabled
+                  label="Nummer"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={father?.number ?? ''}
+                  onChange={(event) => {updateField('father.number', event.currentTarget.value)}}
+                />
+              <TextField
+                disabled={!(isNew || canManage)}
+                label="Namn"
+                className={style.control}
+                variant={inputVariant}
+                value={father?.name ?? ''}
+                onChange={(event) => {updateField('father.name', event.currentTarget.value)}}
               />
             </div>     
           </div>
