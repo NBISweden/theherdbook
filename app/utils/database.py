@@ -10,6 +10,7 @@ import re
 import sys
 from datetime import datetime, timedelta
 
+import utils.settings as settings
 from flask_login import UserMixin
 from peewee import (
     AutoField,
@@ -32,8 +33,6 @@ from peewee import (
     fn,
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
-
-import utils.settings as settings
 
 CURRENT_SCHEMA_VERSION = 2
 DB_PROXY = Proxy()
@@ -66,7 +65,8 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
-if "pytest" in sys.modules:
+
+if "pytest" in sys.modules or "unittest" in sys.modules:
     logging.info("No settings for databse, using test database")
     set_test_database("herdbook")
 else:
@@ -79,6 +79,7 @@ else:
         settings.postgres.user,
         settings.postgres.password,
     )
+
 
 def connect():
     """
