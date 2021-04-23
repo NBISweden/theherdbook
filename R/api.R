@@ -202,6 +202,7 @@ update_data_cron <- function() {
 #* @serializer csv
 #* @get /inbreeding/<genebank_id:int>
 inbreeding <- function(genebank_id,update_from_db="FALSE") {
+  # jscpd:ignore-start
   if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
   if(update_from_db ){
     MOD_change<-get_modifications_digest(genebank_id)
@@ -213,6 +214,7 @@ inbreeding <- function(genebank_id,update_from_db="FALSE") {
     }
   }
   return (get(paste0("IDB_",genebank_id)))
+  # jscpd:ignore-end
 }
 
 
@@ -224,6 +226,7 @@ inbreeding <- function(genebank_id,update_from_db="FALSE") {
 #* @serializer csv
 #* @get /meankinship/<genebank_id:int>
 meankinship <- function(genebank_id,update_from_db="FALSE") {
+  # jscpd:ignore-start
   if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
   if(update_from_db ){
     MOD_change<-get_modifications_digest(genebank_id)
@@ -236,6 +239,7 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
   return(
     data.frame(number=names(get(paste0("MK_",genebank_id))), MK=get(paste0("MK_",genebank_id)), row.names=NULL)
   )
+  # jscpd:ignore-end
 }
 
 #RUN stuff and preload

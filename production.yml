@@ -11,7 +11,6 @@ services:
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
-        restart: always
     main:
         image:  ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
         container_name: herdbook-main

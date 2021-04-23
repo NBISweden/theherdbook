@@ -6,28 +6,28 @@ The server uses Flask to serve a React frontend, and connect to a postgres
 database.
 """
 
-import binascii
-import sys
-import uuid
-import time
-import logging
 import base64
+import binascii
+import logging
+import sys
+import time
+import uuid
 
-from flask import (
-    Flask,
-    jsonify,
-    request,
-    session
-)
-from flask_caching import Cache
-from flask_login import login_required, login_user, logout_user, current_user, LoginManager
 import requests
+from flask import Flask, jsonify, request, session
+from flask_caching import Cache
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 
-import utils.database as db
-import utils.data_access as da
-import utils.settings as settings
-import utils.csvparser as csvparser
-
+import utils.csvparser as csvparser  # isort:skip
+import utils.data_access as da  # isort:skip
+import utils.database as db  # isort:skip
+import utils.settings as settings  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -35,11 +35,11 @@ APP.secret_key = uuid.uuid4().hex
 APP.config.update(
     #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Strict',
+    SESSION_COOKIE_SAMESITE="Strict",
     DEBUG=True,  # some Flask specific configs
-    CACHE_TYPE='filesystem',
-    CACHE_DIR='/tmp',
-    CACHE_DEFAULT_TIMEOUT=300
+    CACHE_TYPE="filesystem",
+    CACHE_DIR="/tmp",
+    CACHE_DEFAULT_TIMEOUT=300,
 )
 
 # pylint: disable=no-member
@@ -47,7 +47,7 @@ APP.logger.setLevel(logging.INFO)
 
 CACHE = Cache(APP)
 LOGIN = LoginManager(APP)
-LOGIN.login_view = '/login'
+LOGIN.login_view = "/login"
 
 
 @APP.after_request
@@ -70,26 +70,25 @@ def after_request(response):
     return response
 
 
-
 @LOGIN.request_loader
 def load_user_from_request(request):
 
     # Try to login using Basic Auth
-    api_key = request.headers.get('Authorization')
+    api_key = request.headers.get("Authorization")
     if api_key:
-        api_key = api_key.replace('Basic ', '', 1)
+        api_key = api_key.replace("Basic ", "", 1)
         try:
             api_key = base64.b64decode(api_key)
         except (TypeError, binascii.Error):
             return None
 
-        username = api_key[:api_key.find(b':')]
-        password = api_key[api_key.find(b':')+1:]
+        username = api_key[: api_key.find(b":")]
+        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
 
         user = da.authenticate_user(username, password)
 
         if user:
-            APP.logger.info('User %s logged in from request header', username)
+            APP.logger.info("User %s logged in from request header", username)
 
             session["user_id"] = user.uuid
             session.modified = True
@@ -97,10 +96,11 @@ def load_user_from_request(request):
 
             return user
 
-        APP.logger.info('Failed login from header for %s', username)
+        APP.logger.info("Failed login from header for %s", username)
 
     # we are not logged in.
     return None
+
 
 # pylint: disable=unused-argument
 @LOGIN.user_loader
@@ -110,7 +110,7 @@ def load_user(u_id):
 
     Currently u_id is not required, since user is loaded from the session.
     """
-    user = da.fetch_user_info(session.get('user_id', None))
+    user = da.fetch_user_info(session.get("user_id", None))
     return user
 
 
@@ -342,12 +342,14 @@ def individual(i_number):
     if ind:
         try:
             ind["inbreeding"] = "%.2f" % (
-                get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
-            ind["MK"] = "%.2f" % (get_ind_mean_kinship(
-                i_number, ind['genebank_id']) * 100)
+                get_ind_inbreeding(i_number, ind["genebank_id"]) * 100
+            )
+            ind["MK"] = "%.2f" % (
+                get_ind_mean_kinship(i_number, ind["genebank_id"]) * 100
+            )
         except requests.exceptions.ConnectionError as error:
-            APP.logger.error('%s', error)
-            ind["inbreeding"] = ind['inbreeding'] if 'inbreeding' in ind else None
+            APP.logger.error("%s", error)
+            ind["inbreeding"] = ind["inbreeding"] if "inbreeding" in ind else None
             ind["MK"] = None
     return jsonify(ind)
 
@@ -395,11 +397,12 @@ def get_inbreeding(g_id):
     """
     Fetch ibreeding coefficient from R-API of the genebank given by `g_id`.
     """
-    response = requests.get('http://{}:{}/inbreeding/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/inbreeding/{}".format(
+            settings.rapi.host, settings.rapi.port, g_id
+        ),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
@@ -421,11 +424,10 @@ def get_kinship(g_id):
     """
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
     """
-    response = requests.get('http://{}:{}/kinship/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_kinship(response.content)
@@ -457,11 +459,12 @@ def get_mean_kinship(g_id):
     """
     Fetch the mean kinship matrix from R-api of the genebank given  by `g_id`.
     """
-    response = requests.get('http://{}:{}/meankinship/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/meankinship/{}".format(
+            settings.rapi.host, settings.rapi.port, g_id
+        ),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
