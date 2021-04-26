@@ -356,7 +356,7 @@ def individual(i_number):
 
 @APP.route("/api/individual", methods=["PATCH", "POST"])
 @login_required
-def edit_user():
+def edit_individual():
     """
     Updates an individual on `PATCH`, or creates a new individual on `POST`.
 
