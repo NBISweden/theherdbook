@@ -7,8 +7,10 @@ Database handler for 'the herdbook'.
 import json
 import logging
 import re
+import sys
 from datetime import datetime, timedelta
 
+import utils.settings as settings
 from flask_login import UserMixin
 from peewee import (
     AutoField,
@@ -64,9 +66,11 @@ def set_database(name, host=None, port=None, user=None, password=None):
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
 
-try:
-    # pylint: disable=import-error
-    import utils.settings as settings
+if "pytest" in sys.modules or "unittest" in sys.modules:
+    logging.info("No settings for databse, using test database")
+    set_test_database("herdbook")
+else:
+    logging.info("Using database per settings")
 
     set_database(
         settings.postgres.name,
@@ -75,8 +79,6 @@ try:
         settings.postgres.user,
         settings.postgres.password,
     )
-except ModuleNotFoundError:
-    logging.warning("No settings file found. Database must be set manually")
 
 
 def connect():
