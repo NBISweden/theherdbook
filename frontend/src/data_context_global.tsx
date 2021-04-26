@@ -60,6 +60,7 @@ export interface Individual extends LimitedIndividual{
     belly_color: string | null
     eye_color: string | null
     claw_color: string | null
+    hair_notes: string | null
     inbreeding?: number
     MK?: number
     children?: number
