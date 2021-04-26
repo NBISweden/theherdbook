@@ -5,6 +5,8 @@ import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/picker
 import { Autocomplete } from '@material-ui/lab';
 import DateFnsUtils from '@date-io/date-fns';
 
+import { IndividualView } from '@app/individual_view';
+import { CertificateSummary } from '@app/certificate_summary';
 import { get, patch } from '@app/communication';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
@@ -89,13 +91,15 @@ const useStyles = makeStyles({
 })
 
 
-export function IndividualCert({id}: {id: string | undefined}) {
+export function CertificateEdit({id}: {id: string }) {
     const [individual, setIndividual] = React.useState(undefined as Individual | undefined)
     const [father, setFather] = React.useState(undefined as Individual | undefined)
     const [mother, setMother] = React.useState(undefined as Individual | undefined)
-    const [isNew, setIsNew] = React.useState(!!id as boolean)
+    const [isNew, setIsNew] = React.useState(!!id as boolean) // probably unnecessary in the cert form
+    const [showSummary, setShowSummary] = React.useState(false as boolean)
     const { user } = useUserContext()
     const { genebanks, colors } = useDataContext()
+    const { popup } = useMessageContext()
     const {userMessage} = useMessageContext()
     const canManage: boolean = React.useMemo(() => {
         return user?.canEdit(individual?.genebank)
@@ -120,30 +124,6 @@ export function IndividualCert({id}: {id: string | undefined}) {
       )
       : userMessage('You do not have permission to edit this individual', 'error')
   }, [id, user])
-
-  React.useEffect(() => {
-    console.log(individual)
-      get(`/api/individual/${individual?.father?.number}`).then(
-        (data: Individual) => {
-          setFather(data)
-          console.log(father)
-        },
-        error => {
-          console.error(error);
-          userMessage(error, 'error')
-        }
-      )
-      get(`/api/individual/${individual?.mother?.number}`).then(
-        (data: Individual) => {
-          setMother(data)
-          console.log(mother)
-        },
-        error => {
-          console.error(error);
-          userMessage(error, 'error')
-        }
-      )
-  }, [individual])
     
     /**
    * Updates a single field in `individual`.
@@ -195,8 +175,8 @@ export function IndividualCert({id}: {id: string | undefined}) {
 
 
     return <>
-       {individual
-    ? <div className={style.form}>
+      {individual && !showSummary ?
+      <div className={style.form}>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
@@ -334,88 +314,37 @@ export function IndividualCert({id}: {id: string | undefined}) {
                 value={individual.notes ?? ''}
                 onChange={(event) => {updateIndividual('notes', event.currentTarget.value)}}
               />
-              <h2>Härstamning</h2>
-              <h3>Far</h3>
-              <TextField
-                  disabled
-                  label="Genbanksnr. (öra höger)"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={father?.number ?? ''}
-                  onChange={(event) => {updateIndividual('father.genebank', event.currentTarget.value)}}
-                />
-              <TextField
-                  disabled
-                  label="År, kull, individ (öra vänster)"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={father?.number ?? ''}
-                  onChange={(event) => {updateIndividual('father.number', event.currentTarget.value)}}
-                />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Namn"
-                className={style.control}
-                variant={inputVariant}
-                value={father?.name ?? ''}
-                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
-              />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Färg/ kännetecken"
-                className={style.control}
-                variant={inputVariant}
-                value={father?.color ?? ''}
-                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
-              />
-              <h3>Mor</h3>
-              <TextField
-                  disabled
-                  label="Genbanksnr. (öra höger)"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={mother?.number ?? ''}
-                  onChange={(event) => {updateIndividual('father.genebank', event.currentTarget.value)}}
-                />
-              <TextField
-                  disabled
-                  label="År, kull, individ (öra vänster)"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={mother?.number ?? ''}
-                  onChange={(event) => {updateIndividual('father.number', event.currentTarget.value)}}
-                />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Namn"
-                className={style.control}
-                variant={inputVariant}
-                value={mother?.name ?? ''}
-                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
-              />
-              <TextField
-                disabled={!(isNew || canManage)}
-                label="Färg/ kännetecken"
-                className={style.control}
-                variant={inputVariant}
-                value={mother?.color ?? ''}
-                onChange={(event) => {updateIndividual('father.name', event.currentTarget.value)}}
-              />
             </div>     
           </div>
           <div className={style.paneControls}>
             <Button variant="contained"
                     color="primary"
-                    onClick={() => save(individual)}>
-              {'Spara'}
+
+                    onClick={() => popup(<IndividualView id={id} />, `/individual/${id}`)}>
+              {'Tillbaka'}
+            </Button>
+          </div>
+          <div className={style.paneControls}>
+            <Button variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      save(individual);
+                      setShowSummary(true);
+                    }}>                    
+              {'Nästa steg'}
             </Button>
           </div>
         </MuiPickersUtilsProvider>
       </div>
-    : <div className={style.loading}>
+    : !individual && !showSummary ?
+      <div className={style.loading}>
         <h2>Loading data</h2>
         <CircularProgress />
       </div>
+    : individual && showSummary ?
+        <p>Summary</p>
+    : <> 
+      </>
   }
-    </>
+  </>
 }
