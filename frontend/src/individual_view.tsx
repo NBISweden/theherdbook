@@ -13,7 +13,7 @@ import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 import { useUserContext } from '@app/user_context'
 import { IndividualEdit } from '@app/individual_edit'
-import { IndividualCert } from './individual_cert'
+import { CertificateEdit, IndividualCert } from './certificate_edit'
 
 const useStyles = makeStyles({
   body: {
@@ -161,7 +161,7 @@ export function IndividualView({id} : {id: string}) {
             <Button className={style.editButton}
                     variant="contained"
                     color="primary"
-                    onClick={() => popup(<IndividualCert id={id} />)}
+                    onClick={() => popup(<CertificateEdit id={id} />)}
               >
               Hämta certifikat
             </Button>
