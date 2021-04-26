@@ -2,6 +2,7 @@
  * @file The IndividualView function provides information about a single
  * individual, including links to parents and progeny.
  */
+<<<<<<< HEAD
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button, Tooltip } from "@material-ui/core";
@@ -19,6 +20,20 @@ import { useDataContext } from "@app/data_context";
 import { IndividualPedigree } from "@app/individual_pedigree";
 import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
+=======
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Button, Tooltip} from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles'
+import { useMessageContext } from '@app/message_context'
+import { get } from '@app/communication'
+import { Individual, herdLabel, DateValue, individualLabel, asLocale } from '@app/data_context_global'
+import { useDataContext } from '@app/data_context'
+import { IndividualPedigree } from '@app/individual_pedigree'
+import { useUserContext } from '@app/user_context'
+import { IndividualEdit } from '@app/individual_edit'
+import { CertificateEdit, IndividualCert, IndividualCertificate } from './individual_certificate'
+>>>>>>> added summary and authentification
 
 const useStyles = makeStyles({
   body: {
@@ -179,7 +194,7 @@ export function IndividualView({ id }: { id: string }) {
             <Button className={style.editButton}
                     variant="contained"
                     color="primary"
-                    onClick={() => popup(<CertificateEdit id={id} />)}
+                    onClick={() => popup(<IndividualCertificate id={id} />)}
               >
               Hämta certifikat
             </Button>
