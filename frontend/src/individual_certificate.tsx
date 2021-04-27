@@ -265,6 +265,17 @@ export function IndividualCertificate({ id }: { id: string }) {
     setNumPages(numPages);
   }
 
+  async function issueCertificate(id: string) {
+    return await get(`/api/certificates/issue/${id}`).then(
+      (data) => {
+        console.log("cert", data);
+      },
+      (error) => {
+        userMessage(error, "error");
+      }
+    );
+  }
+
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
