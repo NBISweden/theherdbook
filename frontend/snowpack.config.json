@@ -8,7 +8,7 @@
     "@snowpack/plugin-babel",
     "@snowpack/plugin-dotenv"
   ],
-  "installOptions": {
+  "packageOptions": {
     "polyfillNode": true
   },
   "devOptions": {
