@@ -11,10 +11,12 @@ import binascii
 import logging
 import sys
 import time
+import datetime
 import uuid
 
+from pathlib import Path
 import requests
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, session, make_response
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -28,12 +30,14 @@ import utils.csvparser as csvparser  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
+import utils.certificates as certs  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
+    # SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development
+    # workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Strict",
     DEBUG=True,  # some Flask specific configs
@@ -472,6 +476,137 @@ def get_mean_kinship(g_id):
     APP.logger.error("Could not fetch mean kinship data.")
     APP.logger.error("Error %s", response)
     return {}
+
+
+@APP.route("/api/certificates/issue/<i_number>")
+@login_required
+def issue_certificate(i_number):
+    """
+    Returns an issued pdf certificate of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+
+    if ind:
+        all_data = get_all_data(ind, user_id)
+        pdf_bytes = get_certificate(all_data)
+        date = datetime.datetime.utcnow()
+        date = date.strftime("%Y-%m-%d_%H%M%S%f")
+        object_name = f"{date}.pdf"
+        response = make_response(pdf_bytes.getvalue())
+        response.headers["Content-Type"] = "application/pdf"
+        response.headers["Content-Disposition"] = "inline; filename=%s" % object_name
+        return response
+
+    return jsonify({"response": "Individual not found"}, 404)
+
+
+def flatten_list_of_dcts(in_list):
+    """
+    Flattens a list of dictionaries
+    """
+    dct = {}
+    for item in in_list:
+        if item is not None:
+            dct.update(item)
+    return dct
+
+
+def get_all_data(ind, user_id):
+    """
+    Gets all data with regard to an individual inclusing its pedigree.
+    """
+    parent_keys = [
+        (1, "F"),
+        (1, "M"),
+        (2, "F"),
+        (2, "MF"),
+        (2, "FM"),
+        (2, "MM"),
+    ]
+    inds_data_lst = []
+
+    inds_data_lst.append(ind)
+    for level, a_type in parent_keys:
+        inds_data_lst.append(_get_parent(ind, user_id, level, a_type))
+
+    return flatten_list_of_dcts(inds_data_lst)
+
+
+def _get_parent(ind, user_id, ancestry_level, ancestry_type):
+    ancestries = {
+        (1, "F"): "father",
+        (1, "M"): "mother",
+        (2, "F"): "father",
+        (2, "MF"): "father",
+        (2, "FM"): "mother",
+        (2, "MM"): "mother",
+    }
+    try:
+        if ancestry_level == 1:
+            ancestor = ind.get(ancestries[(1, ancestry_type)], None)
+            idv = da.get_individual(ancestor["number"], user_id)
+
+        elif ancestry_level == 2:
+            ancestor = ind.get(ancestries[(1, ancestry_type[0])], None)
+            parent = da.get_individual(ancestor["number"], user_id)
+            grand_ancestor = parent.get(ancestries[(2, ancestry_type)], None)
+            idv = da.get_individual(grand_ancestor["number"], user_id)
+
+    except TypeError as ex:
+        print(ex)
+        return None
+
+    ndict = dict()
+    for key in idv.keys():
+        ndict[key] = ancestry_type + "_" + key
+
+    parent_ind = dict()
+    for old_key, val in idv.items():
+        parent_ind[ndict[old_key]] = val
+
+    return parent_ind
+
+
+def get_certificate(data):
+    """
+    Returns a pdf certificate of an individual.
+    """
+    # pylint: disable=R0914
+    qr_x_pos, qr_y_pos = 295, 795
+    # version 2 means size 42x42
+    qr_x_len, qr_y_len = 42, 42
+
+    certificate = certs.CertificateGenerator(
+        form=Path("/code/template.pdf"),
+        form_keys=certs.FORM_KEYS,
+    )
+
+    qr_code = certs.QRHandler(
+        link="https://herd.gotlandskaninen.se/",
+        size=(qr_x_len, qr_y_len),
+        pos={
+            "x0": qr_x_pos - qr_x_len,
+            "y0": qr_y_pos - qr_y_len,
+            "x1": qr_x_pos,
+            "y1": qr_y_pos,
+        },
+    )
+    # Unsigned bytes without qr code
+    unsigned_pdf_bytes = certificate.generate_certificate(form_data=data)
+
+    # Unsigned bytes with qr code
+    unsigned_pdf_bytes_qr = certificate.add_qrcode_to_certificate(
+        unsigned_pdf_bytes, qr_code
+    )
+
+    signer = certs.CertificateSigner(
+        cert_auth=Path("/code/ca.pem"),
+        private_key=Path("/code/key.pem"),
+        private_key_pass=None,
+    )
+    signed_bytes = signer.sign_certificate(unsigned_pdf_bytes_qr)
+    return signed_bytes
 
 
 @APP.route("/", defaults={"path": ""})
