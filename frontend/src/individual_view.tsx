@@ -13,7 +13,7 @@ import { useDataContext } from '@app/data_context'
 import { IndividualPedigree } from '@app/individual_pedigree'
 import { useUserContext } from '@app/user_context'
 import { IndividualEdit } from '@app/individual_edit'
-import { CertificateEdit, IndividualCert, IndividualCertificate } from './individual_certificate'
+import { IndividualCertificate } from './individual_certificate'
 
 const useStyles = makeStyles({
   body: {
