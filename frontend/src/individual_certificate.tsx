@@ -6,7 +6,6 @@ import { Autocomplete } from '@material-ui/lab';
 import DateFnsUtils from '@date-io/date-fns';
 
 import { IndividualView } from '@app/individual_view';
-import { CertificateSummary } from '@app/certificate_summary';
 import { get, patch, post } from '@app/communication';
 import { useUserContext } from '@app/user_context';
 import { useDataContext } from '@app/data_context';
@@ -135,9 +134,10 @@ export function IndividualCertificate({id}: {id: string }) {
       : userMessage('You do not have permission to edit this individual', 'error')
   }, [id, user])
 
-  //Fetch data for inddividuals parents
+  //Fetch data for individuals parents
   React.useEffect(() => {
     console.log(individual)
+    console.log("id", id)
       get(`/api/individual/${individual?.father?.number}`).then(
         (data: Individual) => {
           setFather(data)
@@ -158,7 +158,7 @@ export function IndividualCertificate({id}: {id: string }) {
           userMessage(error, 'error')
         }
       )
-  }, [individual])
+  }, [showSummary])
 
   //Fetch data for individuals grandparents on father's side
   React.useEffect(() => {
@@ -246,8 +246,18 @@ export function IndividualCertificate({id}: {id: string }) {
         return data
       }, 
       error => {
-        userMessage('Något gick fel.')
+        userMessage('Något gick fel.', 'error')
         return 'error'
+      }
+    )
+  }
+
+  async function issueCertificate(id: string) {
+    return await get(`/api/certificates/issue/${id}`).then(
+      data => {console.log("cert", data)
+      },
+      error => {
+        userMessage(error, 'error')
       }
     )
   }
@@ -287,14 +297,6 @@ export function IndividualCertificate({id}: {id: string }) {
                   variant={inputVariant}
                   value={individual.number ?? ''}
                   onChange={(event) => {updateIndividual('number', event.currentTarget.value)}}
-                />
-                <TextField
-                  disabled={!(isNew || canManage)}
-                  label="Certifikat" //should be generating a new number
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.certificate ?? ''}
-                  onChange={(event) => {updateIndividual('certificate', event.currentTarget.value)}}
                 />
               </div>
               <h2>Identitet</h2>
@@ -353,13 +355,13 @@ export function IndividualCertificate({id}: {id: string }) {
                 />
                 <TextField
                   disabled={!(isNew || canManage)}
-                  label="Färgantecking"
+                  label="Avvikande hårlag"
                   variant={inputVariant}
                   className={style.control}
                   multiline
                   rows={3}
-                  value={individual.color_note ?? ''}
-                  onChange={(event) => {updateIndividual('color_note', event.currentTarget.value)}}
+                  value={individual.hair_notes ?? ''}
+                  onChange={(event) => {updateIndividual('hair_notes', event.currentTarget.value)}}
                 />
               </div>
               <div className={style.flexRow}>
@@ -398,6 +400,16 @@ export function IndividualCertificate({id}: {id: string }) {
                     className={style.control}
                     variant={inputVariant}
                     margin="normal" />}
+                />
+              </div>
+              <div>
+              <TextField
+                  disabled={!(isNew || canManage)}
+                  label="Antal födda i kullen"
+                  className={style.control}
+                  variant={inputVariant}
+                  value={individual.litter ?? null}
+                  onChange={(event) => {updateIndividual('litter', event.currentTarget.value)}}
                 />
               </div>
               <TextField
@@ -530,6 +542,7 @@ export function IndividualCertificate({id}: {id: string }) {
                   disabled={isUserGood ? false : true}
                   onClick={() => {
                     save(individual);
+                    issueCertificate(id);
                     setShowSummary(false);
                     setShowComplete(true)
                   }}>                    
