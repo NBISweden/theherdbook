@@ -28,9 +28,9 @@
     "typescript": "^4.2.4"
   },
   "scripts": {
-    "start": "snowpack dev",
+    "start": "npx snowpack dev",
     "build": "./build.sh",
-    "build:snowpack": "snowpack build",
+    "build:snowpack": "npx snowpack build",
     "test": "jest"
   },
   "dependencies": {
