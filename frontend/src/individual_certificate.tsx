@@ -98,7 +98,6 @@ export function IndividualCertificate({id}: {id: string }) {
     const [fathersMother, setFathersMother] = React.useState(undefined as Individual | undefined)
     const [mothersFather, setMothersFather] = React.useState(undefined as Individual | undefined)
     const [mothersMother, setMothersMother] = React.useState(undefined as Individual | undefined)
-    const [isNew, setIsNew] = React.useState(!!id as boolean) // probably unnecessary in the cert form
     const [showForm, setShowForm] = React.useState(false as boolean)
     const [showSummary, setShowSummary] = React.useState(false as boolean)
     const [showComplete, setShowComplete] = React.useState(false as boolean)
@@ -109,7 +108,7 @@ export function IndividualCertificate({id}: {id: string }) {
     const { genebanks, colors } = useDataContext()
     const { popup } = useMessageContext()
     const {userMessage} = useMessageContext()
-    const canManage: boolean = React.useMemo(() => {
+    const canManage boolean = React.useMemo(() => {
         return user?.canEdit(individual?.genebank)
       }, [user, individual])
     const style  = useStyles()
@@ -123,7 +122,6 @@ export function IndividualCertificate({id}: {id: string }) {
         (data: Individual) => {
           console.log(data)
           setIndividual(data)
-          setIsNew(false)
           setShowForm(true)
         },
         error => {
@@ -301,7 +299,7 @@ export function IndividualCertificate({id}: {id: string }) {
               </div>
               <h2>Identitet</h2>
               <TextField
-                disabled={!(isNew || canManage)}
+                disabled={!canManage}
                 label="Namn"
                 className={style.control}
                 variant={inputVariant}
@@ -310,7 +308,7 @@ export function IndividualCertificate({id}: {id: string }) {
               />
               <div className={style.flexRow}>
                 <Autocomplete
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   options={sexOptions ?? []}
                   value={sexOptions.find(option => option.value == individual.sex) ?? sexOptions[sexOptions.length - 1]}
                   getOptionLabel={(option: OptionType) => option.label}
@@ -324,7 +322,7 @@ export function IndividualCertificate({id}: {id: string }) {
                   }}
                 />
                 <KeyboardDatePicker
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   autoOk
                   variant="inline"
                   className={style.control}
@@ -340,7 +338,7 @@ export function IndividualCertificate({id}: {id: string }) {
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   options={colorOptions ?? []}
                   value={colorOptions.find(option => option.value == individual.color) ?? colorOptions[0]}
                   getOptionLabel={(option: OptionType) => option.label}
@@ -354,7 +352,7 @@ export function IndividualCertificate({id}: {id: string }) {
                   }}
                 />
                 <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Avvikande hårlag"
                   variant={inputVariant}
                   className={style.control}
@@ -366,7 +364,7 @@ export function IndividualCertificate({id}: {id: string }) {
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Färg på buken"
                   className={style.control}
                   variant={inputVariant}
@@ -374,7 +372,7 @@ export function IndividualCertificate({id}: {id: string }) {
                   onChange={(event) => {updateIndividual('belly_color', event.currentTarget.value)}}
                 />
                 <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Ögonfärg"
                   className={style.control}
                   variant={inputVariant}
@@ -384,7 +382,7 @@ export function IndividualCertificate({id}: {id: string }) {
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Klofärg(er)"
                   className={style.control}
                   variant={inputVariant}
@@ -392,7 +390,7 @@ export function IndividualCertificate({id}: {id: string }) {
                   onChange={(event) => {updateIndividual('claw_color', event.currentTarget.value)}}
                 />
                  <Autocomplete
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   options={photoOptions ?? []}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => <TextField {...params}
@@ -404,7 +402,7 @@ export function IndividualCertificate({id}: {id: string }) {
               </div>
               <div>
               <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Antal födda i kullen"
                   className={style.control}
                   variant={inputVariant}
@@ -498,7 +496,8 @@ export function IndividualCertificate({id}: {id: string }) {
           <p>Genbanksnummer: {mothersFather?.number}</p>
           <p>Namn: {mothersFather?.name}</p>
           <p>Färg/kännetecken: {mothersFather?.color}</p>
-        </div> <div>
+        </div> 
+        <div>
           <h3>Mormor</h3>
           <p>Genbanksnummer: {mothersMother?.number}</p>
           <p>Namn: {mothersMother?.name}</p>
