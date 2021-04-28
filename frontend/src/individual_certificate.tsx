@@ -108,7 +108,7 @@ export function IndividualCertificate({id}: {id: string }) {
     const { genebanks, colors } = useDataContext()
     const { popup } = useMessageContext()
     const {userMessage} = useMessageContext()
-    const canManage boolean = React.useMemo(() => {
+    const canManage: boolean = React.useMemo(() => {
         return user?.canEdit(individual?.genebank)
       }, [user, individual])
     const style  = useStyles()
