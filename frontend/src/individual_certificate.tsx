@@ -169,7 +169,6 @@ export function IndividualCertificate({ id }: { id: string }) {
           "error"
         );
   }, [id, user]);
-
   /**
    * Updates a single field in `individual`.
    *
@@ -416,6 +415,44 @@ export function IndividualCertificate({ id }: { id: string }) {
                     disabled={!canManage}
                     label="Färg på buken"
                     className={style.control}
+                    inputVariant={inputVariant}
+                    label="Födelsedatum"
+                    format={dateFormat}
+                    value={individual.birth_date ?? ""}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {
+                      value && updateIndividual("birth_date", value);
+                    }}
+                  />
+                </div>
+                <div className={style.flexRow}>
+                  <Autocomplete
+                    disabled={!canManage}
+                    options={colorOptions ?? []}
+                    value={
+                      colorOptions.find(
+                        (option) => option.value == individual.color
+                      ) ?? colorOptions[0]
+                    }
+                    getOptionLabel={(option: OptionType) => option.label}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Färg"
+                        className={style.control}
+                        variant={inputVariant}
+                        margin="normal"
+                      />
+                    )}
+                    onChange={(event: any, newValue: OptionType | null) => {
+                      updateIndividual("color", newValue?.value ?? "");
+                    }}
+                  />
+                  <TextField
+                    disabled={!canManage}
+                    label="Avvikande hårlag"
                     variant={inputVariant}
                     value={individual.belly_color ?? ""}
                     onChange={(event) => {
