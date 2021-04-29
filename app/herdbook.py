@@ -519,7 +519,7 @@ def get_all_data(ind, user_id):
     parent_keys = [
         (1, "F"),
         (1, "M"),
-        (2, "F"),
+        (2, "FF"),
         (2, "MF"),
         (2, "FM"),
         (2, "MM"),
@@ -537,7 +537,7 @@ def _get_parent(ind, user_id, ancestry_level, ancestry_type):
     ancestries = {
         (1, "F"): "father",
         (1, "M"): "mother",
-        (2, "F"): "father",
+        (2, "FF"): "father",
         (2, "MF"): "father",
         (2, "FM"): "mother",
         (2, "MM"): "mother",
