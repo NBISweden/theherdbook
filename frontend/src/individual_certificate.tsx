@@ -288,7 +288,7 @@ export function IndividualCertificate({ id }: { id: string }) {
     );
   }
 
-  async function issueCertificate(id: string) {
+  /*  async function issueCertificate(id: string) {
     return await get(`/api/certificates/issue/${id}`).then(
       (data) => {
         console.log("cert", data);
@@ -297,7 +297,29 @@ export function IndividualCertificate({ id }: { id: string }) {
         userMessage(error, "error");
       }
     );
-  }
+  } */
+
+  const issueCertificate = (id: string) => {
+    async function get(url: string) {
+      const resp = await fetch(url, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return await resp.json();
+    }
+    get(`/api/certificates/issue/${id}`).then(
+      (data) => {
+        console.log(test);
+        console.log("cert", data);
+      },
+      (error) => {
+        userMessage(error, "error");
+      }
+    );
+  };
 
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
