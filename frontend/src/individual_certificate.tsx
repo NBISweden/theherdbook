@@ -276,20 +276,16 @@ export function IndividualCertificate({ id }: { id: string }) {
   } */
 
   const issueCertificate = (id: string) => {
-    async function get(url: string) {
-      const resp = await fetch(url, {
-        method: "GET",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      return await resp.json();
-    }
-    get(`/api/certificates/issue/${id}`).then(
+    fetch(`/api/certificates/issue/${id}`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+      },
+    }).then(
       (data) => {
-        console.log(test);
         console.log("cert", data);
+        setCertificateUrl(data.url);
       },
       (error) => {
         userMessage(error, "error");
