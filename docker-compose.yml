@@ -20,7 +20,7 @@ services:
               - ghcr.io/nbisweden/herdbook_frontend
         volumes:
             - ./frontend:/home/node/app/
-            - /app/node_modules
+            - /home/node/app/node_modules
     main:
         image: herdbook_main
         build:

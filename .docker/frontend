@@ -7,5 +7,7 @@ WORKDIR /home/node/app
 RUN chown node:node package*.json
 
 USER node
-RUN npm install && npm run build && npx snowpack prepare
-CMD npm --version && npm run start
+RUN npm install && npm run build
+VOLUME /home/node/app/node_modules
+
+CMD npm --version && npx snowpack dev
