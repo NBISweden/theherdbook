@@ -477,17 +477,21 @@ def get_mean_kinship(g_id):
 @APP.route("/api/testbreed", methods=["POST"])
 def testbreed():
     payload = request.json
-    APP.logger.info(f'Testbreed calculation input {payload}')
-    if ('male' in payload) and ('female' in payload):
+    APP.logger.info(f"Testbreed calculation input {payload}")
+    if ("male" in payload) and ("female" in payload):
         kinship_matrix = get_kinship(request.json["genebankId"])
-        offspring_coi = kinship_matrix[payload["male"]][payload["female"]]*100
-    # One/both of the parents not registrered, thus not present in the kinship matrix
+        offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
+    # One/both parents not registrered, thus not present in the kinship matrix
     else:
-        url = 'http://{host}:{port}/testbreed/'.format(host=settings.rapi.host, port=settings.rapi.port)
-        response = requests.post(url, data=payload)
-        offspring_coi = response.json()['calculated_coi'][0]*100
-    payload['offspringCOI'] = round(offspring_coi,2)
-    APP.logger.info(f'Testbreed calculation result {payload}')
+        response = requests.post(
+            "http://{}:{}/testbreed/".format(
+                settings.rapi.host, settings.rapi.port
+            ),
+            data=payload,
+        )
+        offspring_coi = response.json()["calculated_coi"][0]
+    payload["offspringCOI"] = round(offspring_coi * 100, 2)
+    APP.logger.info(f"Testbreed calculation result {payload}")
     return payload
 
 
