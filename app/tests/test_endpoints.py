@@ -1,34 +1,36 @@
 #!/usr/bin/env python3
 """
 Unit tests for the herdbook endpoints.
+
+isort:skip_file
 """
 # Fairly lax pylint settings as we want to test a lot of things
 
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-statements
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-statements
 
 import base64
 import unittest
-
 from datetime import datetime
 
-import requests
 import flask
+import requests
 
-#pylint: disable=import-error
+# pylint: disable=import-error
 import utils.database as db
 from herdbook import APP
 from tests.database_test import DatabaseTest
 
 HOST = "http://localhost:4200"
 
-#pylint: disable=too-few-public-methods
+
+# pylint: disable=too-few-public-methods
 class FlaskTest(DatabaseTest):
     """
     Starts and stops the flask application so that endpoints can be tested.
     """
 
-    #pylint: disable=invalid-name
+    # pylint: disable=invalid-name
     def setUp(self):
         """
         Starts the flask APP on port `self.PORT`.
@@ -38,6 +40,7 @@ class FlaskTest(DatabaseTest):
         APP.static_folder = "../frontend/"
         self.app = APP.test_client()
         super().setUp()
+
 
 class TestEndpoints(FlaskTest):
     """
@@ -50,10 +53,7 @@ class TestEndpoints(FlaskTest):
         """
 
         try:
-            self.assertEqual(
-                requests.get(HOST + '/').status_code,
-                200
-                )
+            self.assertEqual(requests.get(HOST + "/").status_code, 200)
         except requests.exceptions.ConnectionError:
             self.skipTest("Server not running")
 
@@ -124,19 +124,20 @@ class TestEndpoints(FlaskTest):
         # not logged in
         self.assertEqual(self.app.get("/api/breeding").get_json(), None)
 
+        # jscpd:ignore-start
         with self.app as context:
             # login
-            context.post("/api/login", json={"username": self.admin.email,
-                                             "password": "pass"})
+            context.post(
+                "/api/login", json={"username": self.admin.email, "password": "pass"}
+            )
             # register a valid breeding event
             response = context.get("/api/breeding/%s" % self.herds[0].herd)
 
             breeding = db.Breeding.get(self.breeding[-1].id)
-            expected = {'breedings': [
-                breeding.as_dict()
-            ]}
+            expected = {"breedings": [breeding.as_dict()]}
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), expected)
+        # jscpd:ignore-end
 
     def test_request_loader_breeding(self):
         """
@@ -149,22 +150,28 @@ class TestEndpoints(FlaskTest):
         # not logged in
         self.assertEqual(self.app.get("/api/breeding/%s" % herd).get_json(), None)
 
-        self.assertEqual(self.app.get("/api/breeding/%s" % herd,
-                                      headers=[('Authorization',
-                                                'somethingwrong')]).get_json(), None)
+        self.assertEqual(
+            self.app.get(
+                "/api/breeding/%s" % herd, headers=[("Authorization", "somethingwrong")]
+            ).get_json(),
+            None,
+        )
 
-        auth_head = base64.encodebytes(bytes(self.admin.email, 'utf-8') + b':pass').strip()
+        auth_head = base64.encodebytes(
+            bytes(self.admin.email, "utf-8") + b":pass"
+        ).strip()
 
-        expected_breedings = {'breedings': [
-            db.Breeding.get(self.breeding[-1].id).as_dict()
-        ]}
+        expected_breedings = {
+            "breedings": [db.Breeding.get(self.breeding[-1].id).as_dict()]
+        }
 
-        response = self.app.get("/api/breeding/%s" % herd,
-                                headers=[('Authorization', b'Basic '+auth_head)])
+        response = self.app.get(
+            "/api/breeding/%s" % herd,
+            headers=[("Authorization", b"Basic " + auth_head)],
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), expected_breedings)
-
 
     def test_register_breeding(self):
         """
@@ -174,21 +181,26 @@ class TestEndpoints(FlaskTest):
         data_access.register_breeding function, as to avoid too much redundancy.
         """
 
-        valid_form = {'father': self.individuals[0].number,
-                      'mother': self.individuals[1].number,
-                      'date': datetime.today().strftime('%Y-%m-%d')}
+        valid_form = {
+            "father": self.individuals[0].number,
+            "mother": self.individuals[1].number,
+            "date": datetime.today().strftime("%Y-%m-%d"),
+        }
 
         # not logged in
         self.assertEqual(self.app.get("/api/breeding").get_json(), None)
 
+        # jscpd:ignore-start
         with self.app as context:
             # login
-            context.post("/api/login", json={"username": self.admin.email,
-                                             "password": "pass"})
+            context.post(
+                "/api/login", json={"username": self.admin.email, "password": "pass"}
+            )
             # register a valid breeding event
             response = context.post("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.get_json(), {'status': 'success'})
+            self.assertEqual(response.get_json(), {"status": "success"})
+        # jscpd:ignore-end
 
     def test_register_birth(self):
         """
@@ -198,22 +210,24 @@ class TestEndpoints(FlaskTest):
         data_access.register_birth function, as to avoid too much redundancy.
         """
 
-        valid_form = {'id': self.breeding[0].id,
-                      'date': datetime.today().strftime('%Y-%m-%d'),
-                      'litter': 4}
+        valid_form = {
+            "id": self.breeding[0].id,
+            "date": datetime.today().strftime("%Y-%m-%d"),
+            "litter": 4,
+        }
 
         # not logged in
-        self.assertEqual(self.app.post("/api/birth",
-                                       json=valid_form).get_json(), None)
+        self.assertEqual(self.app.post("/api/birth", json=valid_form).get_json(), None)
 
         with self.app as context:
             # login
-            context.post("/api/login", json={"username": self.admin.email,
-                                             "password": "pass"})
+            context.post(
+                "/api/login", json={"username": self.admin.email, "password": "pass"}
+            )
             # register a valid breeding event
             response = context.post("/api/birth", json=valid_form)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.get_json(), {'status': 'success'})
+            self.assertEqual(response.get_json(), {"status": "success"})
 
     def test_update_breeding(self):
         """
@@ -223,22 +237,26 @@ class TestEndpoints(FlaskTest):
         data_access.update_breeding function, as to avoid too much redundancy.
         """
 
-        valid_form = {'id': self.breeding[0].id,
-                      'birth_date': datetime.today().strftime('%Y-%m-%d'),
-                      'litter_size': 4}
+        valid_form = {
+            "id": self.breeding[0].id,
+            "birth_date": datetime.today().strftime("%Y-%m-%d"),
+            "litter_size": 4,
+        }
 
         # not logged in
-        self.assertEqual(self.app.post("/api/breeding",
-                                       json=valid_form).get_json(), None)
+        self.assertEqual(
+            self.app.post("/api/breeding", json=valid_form).get_json(), None
+        )
 
         with self.app as context:
             # login
-            context.post("/api/login", json={"username": self.admin.email,
-                                             "password": "pass"})
+            context.post(
+                "/api/login", json={"username": self.admin.email, "password": "pass"}
+            )
             # register a valid breeding event
             response = context.patch("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.get_json(), {'status': 'success'})
+            self.assertEqual(response.get_json(), {"status": "success"})
 
 
 if __name__ == "__main__":
