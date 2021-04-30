@@ -484,9 +484,7 @@ def testbreed():
     # One/both parents not registrered, thus not present in the kinship matrix
     else:
         response = requests.post(
-            "http://{}:{}/testbreed/".format(
-                settings.rapi.host, settings.rapi.port
-            ),
+            "http://{}:{}/testbreed/".format(settings.rapi.host, settings.rapi.port),
             data=payload,
         )
         offspring_coi = response.json()["calculated_coi"][0]
