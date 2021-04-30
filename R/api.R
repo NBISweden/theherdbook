@@ -240,7 +240,15 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
 }
 
 #* @post /testbreed/
-testbreed <- function(req){
+testbreed <- function(req, update_data="FALSE"){
+  if(update_data){
+    MOD_change<-get_modifications_digest(genebank_id)
+    if(get(paste0("MOD_",genebank_id))!= MOD_change)
+    {
+      assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
+      update_data(genebank_id)
+    }
+  }
   body <- req$argsBody
   Pedi <- get(paste0("PEDI_",body$genebankId))
   if (is.null(Pedi)) {

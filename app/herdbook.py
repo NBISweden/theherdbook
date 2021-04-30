@@ -200,28 +200,9 @@ def manage_herd():
     status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.add_herd(form, session.get("user_id", None))
-        update_r_api_data()
     elif request.method == "PATCH":
         status = da.update_herd(form, session.get("user_id", None))
-        update_r_api_data()
     return jsonify(status)
-
-
-def update_r_api_data():
-    """
-    Used to update the R-API data structures from the sql server
-    when data related to the herds is added or modified
-    """
-    response = requests.get('http://{}:{}/update-db/'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port),
-                            params={})
-    if response.status_code != 200:
-        APP.logger.error("Could not update R-API data structures from sql server")
-        APP.logger.error("Error %s", response)
-    else:
-        APP.logger.info("Updated R-API data structures from sql server")
-    return
 
 
 @APP.route("/api/breeding/<h_id>")
@@ -251,10 +232,8 @@ def register_breeding():
     status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.register_breeding(form, session.get("user_id", None))
-        update_r_api_data()
     if request.method == "PATCH":
         status = da.update_breeding(form, session.get("user_id", None))
-        update_r_api_data()
     return jsonify(status)
 
 
@@ -273,7 +252,6 @@ def register_birth():
     status = {"status": "error", "message": "Unknown request"}
     if request.method == "POST":
         status = da.register_birth(form, session.get("user_id", None))
-        update_r_api_data()
     return jsonify(status)
 
 
@@ -389,10 +367,8 @@ def edit_user():
     form = request.json
     if request.method == "PATCH":
         retval = da.update_individual(form, session.get("user_id", None))
-        update_r_api_data()
     if request.method == "POST":
         retval = da.add_individual(form, session.get("user_id", None))
-        update_r_api_data()
     return jsonify(retval)
 
 
