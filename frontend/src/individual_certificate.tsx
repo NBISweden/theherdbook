@@ -134,6 +134,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
+  const [certificateUrl, setCertificateUrl] = React.useState("");
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { popup } = useMessageContext();
@@ -288,7 +289,7 @@ export function IndividualCertificate({ id }: { id: string }) {
     );
   }
 
-  /*  async function issueCertificate(id: string) {
+  /*    async function issueCertificate(id: string) {
     return await get(`/api/certificates/issue/${id}`).then(
       (data) => {
         console.log("cert", data);
@@ -300,20 +301,16 @@ export function IndividualCertificate({ id }: { id: string }) {
   } */
 
   const issueCertificate = (id: string) => {
-    async function get(url: string) {
-      const resp = await fetch(url, {
-        method: "GET",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      return await resp.json();
-    }
-    get(`/api/certificates/issue/${id}`).then(
+    fetch(`/api/certificates/issue/${id}`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+      },
+    }).then(
       (data) => {
-        console.log(test);
         console.log("cert", data);
+        setCertificateUrl(data.url);
       },
       (error) => {
         userMessage(error, "error");
@@ -687,6 +684,9 @@ export function IndividualCertificate({ id }: { id: string }) {
       ) : individual && showComplete ? (
         <>
           <h1>Här är ditt certifikat!</h1>
+          <a target="_blank" href={certificateUrl}>
+            Open
+          </a>
         </>
       ) : (
         <></>
