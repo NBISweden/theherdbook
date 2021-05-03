@@ -1,8 +1,8 @@
-import * as React from 'react'
+import * as React from "react";
 
-import {get} from '@app/communication'
+import { get } from "@app/communication";
 
-import {Color, DataContext, Genebank, NameID} from "@app/data_context_global"
+import { Color, DataContext, Genebank, NameID } from "@app/data_context_global";
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -15,28 +15,34 @@ import {Color, DataContext, Genebank, NameID} from "@app/data_context_global"
  * Exports the context variables and functions to be used by other components
  */
 export function useDataContext(): DataContext {
-  return React.useContext(DataContext)
+  return React.useContext(DataContext);
 }
 
-export function WithDataContext(props: {children: React.ReactNode}) {
-  const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>)
-  const [users, setUsers] = React.useState([] as Array<NameID>)
-  const [colors, setColors] = React.useState({} as {[genebank: string]:Color[]})
+export function WithDataContext(props: { children: React.ReactNode }) {
+  const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>);
+  const [users, setUsers] = React.useState([] as Array<NameID>);
+  const [colors, setColors] = React.useState(
+    {} as { [genebank: string]: Color[] }
+  );
 
-  async function fetchAndSet(url: string, set: Function, field: string | undefined = undefined) {
+  async function fetchAndSet(
+    url: string,
+    set: Function,
+    field: string | undefined = undefined
+  ) {
     return await get(url).then(
-      data => {
+      (data) => {
         if (!data) {
           return false;
         }
         set(field ? data[field] : data);
         return true;
       },
-      error => {
+      (error) => {
         console.error(error);
         return false;
       }
-    )
+    );
   }
 
   /**
@@ -49,31 +55,42 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    * @param index if index is set - the base data is assumed to be an array, and
    *     that the target field should be set as `data[0].field = <update>`
    */
-  async function lazyLoad(url: string, field: string, set: Function, index: number | null = null) {
+  async function lazyLoad(
+    url: string,
+    field: string,
+    set: Function,
+    index: number | null = null
+  ) {
     return await get(url).then(
-      data => {
+      (data) => {
         if (!data) {
           return false;
         }
         set((base: any) => {
           let update;
-          if (index == null) { // object update
-            update = {...base}
-            update[field] = Object.keys(data).includes(field) ? data[field] : data
-          } else { // array update
-            update = [...base]
-            update[index] = {...update[index]}
-            update[index][field] = Object.keys(data).includes(field) ? data[field] : data
+          if (index == null) {
+            // object update
+            update = { ...base };
+            update[field] = Object.keys(data).includes(field)
+              ? data[field]
+              : data;
+          } else {
+            // array update
+            update = [...base];
+            update[index] = { ...update[index] };
+            update[index][field] = Object.keys(data).includes(field)
+              ? data[field]
+              : data;
           }
-          return update
-        })
-        return true
+          return update;
+        });
+        return true;
       },
-      error => {
+      (error) => {
         console.error(error);
         return false;
       }
-    )
+    );
   }
 
   /**
@@ -82,30 +99,32 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    * `false` otherwise.
    */
   async function getGenebanks() {
-    return await get('/api/genebanks').then(
-      data => {
+    return await get("/api/genebanks").then(
+      (data) => {
         if (!data) {
           return false;
         }
         // note that individuals aren't loaded, and send a request to load them
-        const genebankData = data['genebanks'].map((g: Genebank) => {
-          g.individuals = []
-          return g
-        })
-        setGenebanks(genebankData)
+        const genebankData = data["genebanks"].map((g: Genebank) => {
+          g.individuals = [];
+          return g;
+        });
+        setGenebanks(genebankData);
         genebankData.forEach((g: Genebank, i: number) => {
-          lazyLoad(`/api/genebank/${g.id}/individuals`,
-                   'individuals',
-                   setGenebanks,
-                   i)
+          lazyLoad(
+            `/api/genebank/${g.id}/individuals`,
+            "individuals",
+            setGenebanks,
+            i
+          );
         });
         return true;
       },
-      error => {
+      (error) => {
         console.error(error);
         return false;
       }
-    )
+    );
   }
 
   /**
@@ -114,13 +133,13 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    * otherwise.
    */
   async function getUsers() {
-    return fetchAndSet('/api/manage/users', setUsers, 'users')
+    return fetchAndSet("/api/manage/users", setUsers, "users");
   }
   /**
    * Fetches all legal colors for all genebanks.
    */
   async function getColors() {
-    return fetchAndSet('/api/colors', setColors)
+    return fetchAndSet("/api/colors", setColors);
   }
 
   /**
@@ -131,34 +150,39 @@ export function WithDataContext(props: {children: React.ReactNode}) {
    *     `individuals`, the string `all` to load all data, or the string `none`
    *     to unload all data.
    */
-  const loadData = React.useMemo(() => async function loadData(data: string | Array<string>) {
-    let updates: Array<Promise<boolean>> = []
-    if (data == 'none') {
-      setGenebanks([])
-    }
-    if (data == 'all' || data.includes('genebanks')) {
-      updates.push(getGenebanks())
-    }
-    if (data == 'all' || data.includes('users')) {
-      updates.push(getUsers())
-    }
-    if (data == 'all' || data.includes('colors')) {
-      updates.push(getColors())
-    }
+  const loadData = React.useMemo(
+    () =>
+      async function loadData(data: string | Array<string>) {
+        let updates: Array<Promise<boolean>> = [];
+        if (data == "none") {
+          setGenebanks([]);
+        }
+        if (data == "all" || data.includes("genebanks")) {
+          updates.push(getGenebanks());
+        }
+        if (data == "all" || data.includes("users")) {
+          updates.push(getUsers());
+        }
+        if (data == "all" || data.includes("colors")) {
+          updates.push(getColors());
+        }
 
-    return await Promise.all(updates).then(statuses => {
-      return statuses.reduce((a,b) => a && b, true)
-    })
-  }, [])
+        return await Promise.all(updates).then((statuses) => {
+          return statuses.reduce((a, b) => a && b, true);
+        });
+      },
+    []
+  );
 
   React.useEffect(() => {
-    loadData('all')
-  }, [])
+    loadData("all");
+  }, []);
 
   return (
-    <DataContext.Provider value={{genebanks, users, colors, setGenebanks, setUsers, loadData}}>
+    <DataContext.Provider
+      value={{ genebanks, users, colors, setGenebanks, setUsers, loadData }}
+    >
       {props.children}
     </DataContext.Provider>
-  )
+  );
 }
-
