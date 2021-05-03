@@ -200,7 +200,7 @@ export function IndividualView({ id }: { id: string }) {
                   color="primary"
                   onClick={() => popup(<IndividualEdit id={id} />)}
                 >
-                  Redigera individen
+                  Redigera individ
                 </Button>
               )}
               {user?.canEdit(id) && (

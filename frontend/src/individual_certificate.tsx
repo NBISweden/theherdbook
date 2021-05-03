@@ -138,6 +138,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
+  const [previewUrl, setPreviewUrl] = React.useState("");
   const [certificateUrl, setCertificateUrl] = React.useState("");
   const [numPages, setNumPages] = React.useState(null); // pdf-library stuff
   const [pageNumber, setPageNumber] = React.useState(1); // pdf-library stuff
@@ -149,6 +150,21 @@ export function IndividualCertificate({ id }: { id: string }) {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
   const style = useStyles();
+
+  // Limited version of the individual to be used for the preview
+  const previewIndividual = {
+    claw_color: individual?.claw_color,
+    belly_color: individual?.belly_color,
+    color: individual?.color,
+    eye_color: individual?.eye_color,
+    birth_date: individual?.birth_date,
+    hair_notes: individual?.hair_notes,
+    name: individual?.name,
+    litter: individual?.litter,
+    notes: individual?.notes,
+    sex: individual?.sex,
+    genebank: individual?.genebank,
+  };
 
   /**
    * Fetch individual data from the backend
@@ -294,6 +310,25 @@ export function IndividualCertificate({ id }: { id: string }) {
       }
     );
   }
+
+  const previewCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/issue/${id}`, {
+      body: JSON.stringify(content),
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+      },
+    }).then(
+      (data) => {
+        console.log("cert", data);
+        setPreviewUrl(data.url);
+      },
+      (error) => {
+        userMessage(error, "error");
+      }
+    );
+  };
 
   const issueCertificate = (id: string) => {
     fetch(`/api/certificates/issue/${id}`, {
@@ -547,9 +582,10 @@ export function IndividualCertificate({ id }: { id: string }) {
                 onClick={() => {
                   setShowForm(false);
                   setShowSummary(true);
+                  previewCertificate(id, previewIndividual);
                 }}
               >
-                {"Nästa steg"}
+                {"Förhandsgranska"}
               </Button>
             </div>
           </MuiPickersUtilsProvider>
@@ -562,67 +598,24 @@ export function IndividualCertificate({ id }: { id: string }) {
       ) : individual && showSummary ? (
         <>
           <h1>Är allt korrekt?</h1>
-          <div>
-            <h2>Identitet</h2>
-            <p>Ras: {individual.genebank}</p>
-            <p>Namn: {individual.name} </p>
-            <p>Genbanksnummer: {individual.number} </p>
-            <p>Kön: {individual.sex} </p>
-            <p>Födelsedatum: {individual.birth_date} </p>
-            <p>Foto finns: </p>
-            <p>Färg/kännetecken: {individual.color} </p>
-            <p>Avvikande hårlag: {individual.hair_notes}</p>
-            <p>Färg på buken: {individual.belly_color} </p>
-            <p>Ögonfärg: {individual.eye_color} </p>
-            <p>Klofärg(er): {individual.claw_color} </p>
-            <p>Antal totalt födda i kullen: {individual.litter} </p>
-            <p>Antal levande i kullen: </p>
-            <p>Övriga upplysningar: {individual.notes}</p>
-          </div>
-          <div>
-            <h2>Härstammning</h2>
-            <div>
-              <h3>Far</h3>
-              <p>Genbanksnummer: {father?.number}</p>
-              <p>Namn: {father?.name}</p>
-              <p>Färg/kännetecken: {father?.color}</p>
-            </div>
-            <div>
-              <h3>Mor</h3>
-              <p>Genbanksnummer: {mother?.number}</p>
-              <p>Namn: {mother?.name}</p>
-              <p>Färg/kännetecken: {mother?.color}</p>
-            </div>
-            <div>
-              <h3>Farfar</h3>
-              <p>Genbanksnummer: {fathersFather?.number}</p>
-              <p>Namn: {fathersFather?.name}</p>
-              <p>Färg/kännetecken: {fathersFather?.color}</p>
-            </div>{" "}
-            <div>
-              <h3>Farmor</h3>
-              <p>Genbanksnummer: {fathersMother?.number}</p>
-              <p>Namn: {fathersMother?.name}</p>
-              <p>Färg/kännetecken: {fathersMother?.color}</p>
-            </div>
-            <div>
-              <h3>Morfar</h3>
-              <p>Genbanksnummer: {mothersFather?.number}</p>
-              <p>Namn: {mothersFather?.name}</p>
-              <p>Färg/kännetecken: {mothersFather?.color}</p>
-            </div>
-            <div>
-              <h3>Mormor</h3>
-              <p>Genbanksnummer: {mothersMother?.number}</p>
-              <p>Namn: {mothersMother?.name}</p>
-              <p>Färg/kännetecken: {mothersMother?.color}</p>
-            </div>
-          </div>
+          <Document
+            file={{ url: certificateUrl }}
+            onLoadSuccess={onDocumentLoadSuccess}
+            style={{ border: "2px solid black" }}
+            renderAnnotationLayer={true}
+          >
+            <Page pageNumber={pageNumber} />
+          </Document>
+          <p>
+            Page {pageNumber} of {numPages}
+          </p>
+
           <div>
             <h2>Bekräftelse</h2>
             <p>
               För att intyga att allt är korrekt, ange ditt användernamn eller
-              e-postadress och ditt lösenord igen.
+              e-postadress och ditt lösenord igen. Vill du göra ändringar, kan
+              du gå tillbaka.
             </p>
             <TextField
               id="username"
@@ -683,24 +676,9 @@ export function IndividualCertificate({ id }: { id: string }) {
         </>
       ) : individual && showComplete ? (
         <>
-          <h1>Här är ditt certifikat!</h1>
-          <Document
-            file={{ url: certificateUrl }}
-            onLoadSuccess={onDocumentLoadSuccess}
-            style={{ border: "2px solid black" }}
-            renderAnnotationLayer={true}
-            /*             renderInteractiveForms={true}
-            renderTextLayer={true}
-            renderMode="svg" */
-          >
-            <Page pageNumber={pageNumber} />
-          </Document>
-          <p>
-            Page {pageNumber} of {numPages}
-          </p>
-
+          <h1>Certifikatet är klart!</h1>
           <a target="_blank" href={certificateUrl}>
-            Open
+            Öppna i ny flik.
           </a>
         </>
       ) : (
