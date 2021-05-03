@@ -1165,6 +1165,7 @@ def migrate_1_to_2():
             version=2, comment="Fix schema history table", applied=datetime.now()
         ).execute()
 
+
 def migrate_2_to_3():
     """
     Migrate between schema version 2 and 3.
@@ -1172,21 +1173,23 @@ def migrate_2_to_3():
 
     with DATABASE.atomic():
 
-        cols = [x.name for x in DATABASE.get_columns('hbuser')]
+        cols = [x.name for x in DATABASE.get_columns("hbuser")]
 
-        if 'password_hash' in cols:
+        if "password_hash" in cols:
             # Go through hbuser and fill in authenticators from the old data.
-            pw_cursor = DATABASE.execute_sql('select user_id,password_hash from hbuser')
+            pw_cursor = DATABASE.execute_sql("select user_id,password_hash from hbuser")
 
             for user_data in pw_cursor.fetchmany():
-                auth = Authenticators(user=user_data[0], auth='password', auth_data=user_data[1])
+                auth = Authenticators(
+                    user=user_data[0], auth="password", auth_data=user_data[1]
+                )
                 auth.save()
-            migrate(
-                DATABASE_MIGRATOR.drop_column(
-                    'hbuser', 'password_hash'
-                ))
-        SchemaHistory.insert( # pylint: disable=E1120
-            version=3, comment="Remove password_hash from hbuser", applied=datetime.now()).execute()
+            migrate(DATABASE_MIGRATOR.drop_column("hbuser", "password_hash"))
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=3,
+            comment="Remove password_hash from hbuser",
+            applied=datetime.now(),
+        ).execute()
 
 
 def check_migrations():
@@ -1221,7 +1224,7 @@ def check_migrations():
 
 
 try:
-    #pylint: disable=import-error
+    # pylint: disable=import-error
     import utils.settings as settings
 
     set_database(

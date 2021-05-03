@@ -5,16 +5,16 @@ database.
 
 # pylint: disable=too-many-lines
 
-import uuid
 import logging
 import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import JOIN, DoesNotExist, IntegrityError, fn
+from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, fn
 
 # pylint: disable=import-error
 
 from utils.database import DB_PROXY as DATABASE  # isort:skip
+from utils.database import Authenticators  # isort: skip
 from utils.database import Bodyfat  # isort: skip
 from utils.database import Breeding  # isort: skip
 from utils.database import Colour  # isort: skip
@@ -38,9 +38,10 @@ def validate_date(date_string):
     if not date_string:
         raise ValueError("Date missing")
     try:
-        return datetime.strptime(date_string, '%Y-%m-%d')
+        return datetime.strptime(date_string, "%Y-%m-%d")
     except ValueError as date_except:
-        raise ValueError('Date must be formatted as yyyy-mm-dd.') from date_except
+        raise ValueError("Date must be formatted as yyyy-mm-dd.") from date_except
+
 
 # User functions
 
@@ -110,15 +111,18 @@ def register_user(email, password, username=None, validated=False, privileges=No
 
     try:
         # If we have a password authenticator already, update it instead of creating a new.
-        authenticator = Authenticators.select().where(
-            (Authenticators.user == user.id) &
-            (Authenticators.auth == 'password')).get()
+        authenticator = (
+            Authenticators.select()
+            .where(
+                (Authenticators.user == user.id) & (Authenticators.auth == "password")
+            )
+            .get()
+        )
         authenticator.auth_data = generate_password_hash(password)
     except DoesNotExist:
         authenticator = Authenticators(
-            user=user.id,
-            auth='password',
-            auth_data=generate_password_hash(password))
+            user=user.id, auth="password", auth_data=generate_password_hash(password)
+        )
     with DATABASE.atomic():
         authenticator.save()
 
@@ -135,11 +139,20 @@ def authenticate_user(name, password):
         return None
     try:
         with DATABASE.atomic():
-            user_info = User.select().where((User.email == name) | (User.username == name)).get()
+            user_info = (
+                User.select()
+                .where((User.email == name) | (User.username == name))
+                .get()
+            )
             if user_info:
-                authenticator = Authenticators.select().where(
-                    (Authenticators.auth == 'password') &
-                    (Authenticators.user == user_info.id)).get()
+                authenticator = (
+                    Authenticators.select()
+                    .where(
+                        (Authenticators.auth == "password")
+                        & (Authenticators.user == user_info.id)
+                    )
+                    .get()
+                )
         if check_password_hash(authenticator.auth_data, password):
             logging.info("Login from %s", name)
             return user_info
@@ -149,6 +162,7 @@ def authenticate_user(name, password):
         check_password_hash("This-always-fails", password)
     logging.info("Failed login attempt for %s", name)
     return None
+
 
 def change_password(active_user, changed_user, form):
     """
@@ -161,10 +175,15 @@ def change_password(active_user, changed_user, form):
 
     if not active_user.is_admin:
         try:
-            authenticator = Authenticators.select().where(
-                (Authenticators.user == changed_user) &
-                (Authenticators.auth == 'password')).get()
-            if not check_password_hash(authenticator.auth_data, form['oldpassword']):
+            authenticator = (
+                Authenticators.select()
+                .where(
+                    (Authenticators.user == changed_user)
+                    & (Authenticators.auth == "password")
+                )
+                .get()
+            )
+            if not check_password_hash(authenticator.auth_data, form["oldpassword"]):
                 # Incorrect password supplied
                 return None
         except PeeweeException:
@@ -174,19 +193,26 @@ def change_password(active_user, changed_user, form):
 
     try:
         # If we have a password authenticator already, update it instead of creating a new.
-        authenticator = Authenticators.select().where(
-            (Authenticators.user == changed_user) &
-            (Authenticators.auth == 'password')).get()
-        authenticator.auth_data = generate_password_hash(form['newpassword'])
+        authenticator = (
+            Authenticators.select()
+            .where(
+                (Authenticators.user == changed_user)
+                & (Authenticators.auth == "password")
+            )
+            .get()
+        )
+        authenticator.auth_data = generate_password_hash(form["newpassword"])
     except DoesNotExist:
         authenticator = Authenticators(
             user=changed_user,
-            auth='password',
-            auth_data=generate_password_hash(form['password']))
+            auth="password",
+            auth_data=generate_password_hash(form["password"]),
+        )
     with DATABASE.atomic():
         authenticator.save()
 
     return True
+
 
 def authenticate_with_credentials(method, ident):
     """
@@ -198,9 +224,14 @@ def authenticate_with_credentials(method, ident):
         return None
     try:
         with DATABASE.atomic():
-            authenticator = Authenticators.select().where(
-                (Authenticators.auth == method) &
-                (Authenticators.auth_data == ident)).get()
+            authenticator = (
+                Authenticators.select()
+                .where(
+                    (Authenticators.auth == method)
+                    & (Authenticators.auth_data == ident)
+                )
+                .get()
+            )
         if authenticator:
             user_info = User.select().where((User.id == authenticator.user)).get()
 
@@ -212,6 +243,7 @@ def authenticate_with_credentials(method, ident):
 
     logging.info("Failed login attempt for service %s persistent id %s", method, ident)
     return None
+
 
 def link_account(user, method, ident):
     """
@@ -226,9 +258,14 @@ def link_account(user, method, ident):
 
     try:
         with DATABASE.atomic():
-            authenticator = Authenticators.select().where(
-                (Authenticators.auth == method) &
-                (Authenticators.auth_data == ident)).get()
+            authenticator = (
+                Authenticators.select()
+                .where(
+                    (Authenticators.auth == method)
+                    & (Authenticators.auth_data == ident)
+                )
+                .get()
+            )
         if authenticator:
             # Someone else has this identity registered, do not allow the same external identity
             # for multiple users
@@ -237,26 +274,28 @@ def link_account(user, method, ident):
         pass
 
     try:
-        authenticator = Authenticators(
-            user=user.id,
-            auth=method,
-            auth_data=ident)
+        authenticator = Authenticators(user=user.id, auth=method, auth_data=ident)
         with DATABASE.atomic():
             authenticator.save()
         logging.info("Linked %s to %s persistent id %s", user.username, method, ident)
         return user
     except PeeweeException as auth_except:
-        logging.info("Error (%s) while linking %s to %s persistent id %s",
-                     auth_except,
-                     user.username,
-                     method,
-                     ident)
+        logging.info(
+            "Error (%s) while linking %s to %s persistent id %s",
+            auth_except,
+            user.username,
+            method,
+            ident,
+        )
 
-    logging.info("Failed link attempt for user %s service %s persistent id %s",
-                 user.username,
-                 method,
-                 ident)
+    logging.info(
+        "Failed link attempt for user %s service %s persistent id %s",
+        user.username,
+        method,
+        ident,
+    )
     return None
+
 
 def unlink_account(user, method):
     """
@@ -268,8 +307,8 @@ def unlink_account(user, method):
     try:
         with DATABASE.atomic():
             Authenticators.delete().where(
-                (Authenticators.user == user.id) &
-                (Authenticators.auth == method)).execute()
+                (Authenticators.user == user.id) & (Authenticators.auth == method)
+            ).execute()
 
         return True
     except DoesNotExist:
@@ -277,6 +316,7 @@ def unlink_account(user, method):
 
     logging.info("Failed to unlink idenities for service %s user %d", method, user.id)
     return None
+
 
 def linked_accounts(user):
     """
@@ -287,8 +327,8 @@ def linked_accounts(user):
     try:
         with DATABASE.atomic():
             auths = Authenticators.select().where(
-                (Authenticators.user == user.id) &
-                (Authenticators.auth != 'password'))
+                (Authenticators.user == user.id) & (Authenticators.auth != "password")
+            )
 
         return [x.auth for x in auths]
     except DoesNotExist:
@@ -296,6 +336,7 @@ def linked_accounts(user):
 
     logging.info("Failed to list linked idenities for user %d", user.id)
     return None
+
 
 def fetch_user_info(user_id):
     """
@@ -394,13 +435,14 @@ def update_user(form, user_uuid=None):
         return {"status": "error", "message": f"malformed request: {form}"}
 
     # Check permissions - allow users to update e-mail only
-    if (not (user.is_admin or user.is_manager)
-            or (form.get("validated") or form.get("username"))):
-        return  {"status": "error", "message": "forbidden"}
+    if not (user.is_admin or user.is_manager) or (
+        form.get("validated") or form.get("username")
+    ):
+        return {"status": "error", "message": "forbidden"}
 
     if not (user.is_admin or user.is_manager):
         # Mark user supplied e-mail as false
-        form['validated'] = False
+        form["validated"] = False
 
     # check target user
     try:
@@ -743,7 +785,7 @@ def form_to_individual(form, user=None):
     if "colour" in form:
         try:
             with DATABASE.atomic():
-                form['colour'] = Colour.get(Colour.name == form['colour'])
+                form["colour"] = Colour.get(Colour.name == form["colour"])
         except DoesNotExist as colour_except:
             raise ValueError(f"Unknown color: '{form['colour']}''") from colour_except
 
@@ -751,17 +793,20 @@ def form_to_individual(form, user=None):
     if "origin_herd" in form:
         try:
             with DATABASE.atomic():
-                form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
+                form["origin_herd"] = Herd.get(Herd.herd == form["origin_herd"]["herd"])
         except DoesNotExist as herd_except:
             raise ValueError(
-                f"Unknown origin herd: '{form['origin_herd']['herd']}''") from herd_except
+                f"Unknown origin herd: '{form['origin_herd']['herd']}''"
+            ) from herd_except
 
     # parents
     for parent in ["mother", "father"]:
         if parent in form:
             try:
                 with DATABASE.atomic():
-                    form[parent] = Individual.get(Individual.number == form[parent]['number'])
+                    form[parent] = Individual.get(
+                        Individual.number == form[parent]["number"]
+                    )
             except DoesNotExist as parent_except:
                 raise ValueError("Invalid parents") from parent_except
 

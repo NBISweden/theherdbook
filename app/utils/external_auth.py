@@ -6,13 +6,14 @@ Provides helper function needed for external authentication.
 import configparser
 import os
 import time
+import typing
 
-import flask_dance.contrib.twitter
 import flask_dance.contrib.google
+import flask_dance.contrib.twitter
 
-CONFIGFILE = os.environ.get('AUTHCONFIGFILE', '/config/auth.ini')
+CONFIGFILE = os.environ.get("AUTHCONFIGFILE", "/config/auth.ini")
 
-_active = [] # pylint: disable = invalid-name
+_active: typing.List[str] = []  # pylint: disable = invalid-name
 
 
 def available_methods():
@@ -36,9 +37,9 @@ def setup(app):
     config.read(CONFIGFILE)
 
     for engine in config.sections():
-        if engine == 'twitter':
+        if engine == "twitter":
             setup_twitter(app, config)
-        if engine == 'google':
+        if engine == "google":
             setup_google(app, config)
 
 
@@ -48,14 +49,14 @@ def setup_twitter(app, config):
     """
     danceengine = flask_dance.contrib.twitter
     blueprint = danceengine.make_twitter_blueprint(
-        api_key=config['twitter']['key'],
-        api_secret=config['twitter']['secret'],
-        login_url='',
-        redirect_url='/api/login/twitter'
+        api_key=config["twitter"]["key"],
+        api_secret=config["twitter"]["secret"],
+        login_url="",
+        redirect_url="/api/login/twitter",
     )
 
     app.register_blueprint(blueprint, url_prefix="/api/login/twitter/back")
-    _active.append('twitter')
+    _active.append("twitter")
 
 
 def twitter_authorized():
@@ -74,15 +75,16 @@ def twitter_persistent():
     if not accountr.ok:
         return None
 
-    screenname = accountr.json()['screen_name']
+    screenname = accountr.json()["screen_name"]
 
     userr = flask_dance.contrib.twitter.twitter.get(
-        "users/lookup.json?screen_name=%s" % screenname)
+        "users/lookup.json?screen_name=%s" % screenname
+    )
 
     if not userr.ok or len(userr.json()) != 1:
         return None
 
-    return userr.json()[0]['id']
+    return userr.json()[0]["id"]
 
 
 def setup_google(app, config):
@@ -91,15 +93,15 @@ def setup_google(app, config):
     """
     danceengine = flask_dance.contrib.google
     blueprint = danceengine.make_google_blueprint(
-        client_id=config['google']['key'],
-        client_secret=config['google']['secret'],
-        login_url='',
-        redirect_url='/api/login/google',
-        scope=["openid"]
+        client_id=config["google"]["key"],
+        client_secret=config["google"]["secret"],
+        login_url="",
+        redirect_url="/api/login/google",
+        scope=["openid"],
     )
 
     app.register_blueprint(blueprint, url_prefix="/api/login/google/back")
-    _active.append('google')
+    _active.append("google")
 
 
 def google_authorized():
@@ -116,7 +118,7 @@ def google_persistent():
     userr = flask_dance.contrib.google.google.get("/oauth2/v2/userinfo")
     if not userr.ok or len(userr.json()) == 0:
         return None
-    return userr.json()['id']
+    return userr.json()["id"]
 
 
 def authorized(app, method):
@@ -124,14 +126,14 @@ def authorized(app, method):
     Return whatever we have authenticated and authorized through the specified method.
     """
 
-    auth = {'twitter': twitter_authorized,
-            'google': google_authorized}
+    auth = {"twitter": twitter_authorized, "google": google_authorized}
 
     try:
         token = app.blueprints[method].token
         if token and (
-                ('expires_in' in token and token['expires_in'] < 0) or
-                ('expires_at' in token and token['expires_at'] < time.time())):
+            ("expires_in" in token and token["expires_in"] < 0)
+            or ("expires_at" in token and token["expires_at"] < time.time())
+        ):
             del app.blueprints[method].token
     except KeyError:
         pass
@@ -143,7 +145,6 @@ def get_persistent(method):
     """
     Get the persistent identifier for the specified method.
     """
-    pers = {'twitter': twitter_persistent,
-            'google': google_persistent}
+    pers = {"twitter": twitter_persistent, "google": google_persistent}
 
     return pers[method]()

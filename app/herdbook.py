@@ -13,8 +13,9 @@ import sys
 import time
 import uuid
 
+import flask_session
 import requests
-from flask import Flask, jsonify, request, session
+from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -36,8 +37,8 @@ APP.secret_key = uuid.uuid4().hex
 APP.config.update(
     #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Strict',
-    SESSION_TYPE='filesystem',
+    SESSION_COOKIE_SAMESITE="Strict",
+    SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="filesystem",
     CACHE_DIR="/tmp",
@@ -141,7 +142,11 @@ def get_users():
     return jsonify(users=users)
 
 
-@APP.route("/api/manage/user/", defaults={'u_id':False}, methods=["GET", "UPDATE", "PATCH", "POST"])
+@APP.route(
+    "/api/manage/user/",
+    defaults={"u_id": False},
+    methods=["GET", "UPDATE", "PATCH", "POST"],
+)
 @APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "PATCH", "POST"])
 @login_required
 def manage_user(u_id):
@@ -161,7 +166,7 @@ def manage_user(u_id):
         # If not provided, default to current user.
         u_id = current_user.id
         if form:
-            form['id'] = u_id
+            form["id"] = u_id
 
     if request.method == "GET":
         retval = da.get_user(u_id, session.get("user_id", None))
@@ -171,7 +176,8 @@ def manage_user(u_id):
         retval = da.add_user(form, session.get("user_id", None))
     return jsonify(retval)
 
-@APP.route("/api/manage/setpassword/", defaults={'u_id':False}, methods=["POST"])
+
+@APP.route("/api/manage/setpassword/", defaults={"u_id": False}, methods=["POST"])
 @APP.route("/api/manage/setpassword/<u_id>", methods=["POST"])
 def change_userpassword(u_id):
     """
@@ -180,13 +186,12 @@ def change_userpassword(u_id):
     """
 
     if request.method != "POST":
-        return abort(400) # Makes the linter happy
+        return abort(400)  # Makes the linter happy
 
     form = request.json
 
     if not current_user.is_authenticated:
-        return abort(403) # Makes the linter happy
-
+        return abort(403)  # Makes the linter happy
 
     if not u_id:
         u_id = current_user.id
@@ -319,6 +324,7 @@ def login_handler():
         login_user(user)
     return get_user()
 
+
 @APP.route("/api/login/<string:service>", methods=["GET", "POST"])
 def external_login_handler(service):
     """
@@ -326,15 +332,14 @@ def external_login_handler(service):
     available responds with a list of the enabled services.
     """
 
-    if service == 'available':
+    if service == "available":
         return jsonify(utils.external_auth.available_methods())
 
     if not session.get("link_account") and current_user.is_authenticated:
         return get_user()
 
     if not utils.external_auth.authorized(APP, service):
-        APP.logger.debug("Need to do external auth for service %s" %
-                         service)
+        APP.logger.debug("Need to do external auth for service %s" % service)
         return redirect(url_for("%s.login" % service))
 
     # Hack to reuse the same external handler for both linking and login
@@ -346,17 +351,22 @@ def external_login_handler(service):
     user = da.authenticate_with_credentials(service, persistent_id)
 
     if user:
-        APP.logger.info("Logging in user %s (#%d) by persistent id %s for service %s" %
-                        (user.username, user.id, persistent_id, service))
+        APP.logger.info(
+            "Logging in user %s (#%d) by persistent id %s for service %s"
+            % (user.username, user.id, persistent_id, service)
+        )
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
     else:
-        APP.logger.info("No user linked to persistent id %s for service %s" %
-                        (persistent_id, service))
+        APP.logger.info(
+            "No user linked to persistent id %s for service %s"
+            % (persistent_id, service)
+        )
         # FIXME: Return error code?
 
     return get_user()
+
 
 @APP.route("/api/link/<string:service>", methods=["GET", "POST"])
 def external_link_handler(service):
@@ -367,11 +377,11 @@ def external_link_handler(service):
 
     if service == "reset":
         if session.get("link_account"):
-            del session['link_account']
+            del session["link_account"]
         return "reset"
 
     if not current_user.is_authenticated:
-        return 'null' # FIXME: error code instead?
+        return "null"  # FIXME: error code instead?
 
     if not utils.external_auth.authorized(APP, service):
         # Not authorized? Go back to login
@@ -383,9 +393,10 @@ def external_link_handler(service):
 
     if not linked:
         # Not linked
-        return "null" # FIXME: error code instead?
+        return "null"  # FIXME: error code instead?
 
     return "%d" % current_user.id
+
 
 @APP.route("/api/linked", methods=["GET", "POST"])
 def external_linked_accounts_handler():
@@ -395,14 +406,15 @@ def external_linked_accounts_handler():
     # Something odd
 
     if not current_user.is_authenticated:
-        return 'null' # FIXME: Return error code instead?
+        return "null"  # FIXME: Return error code instead?
 
     linked = da.linked_accounts(current_user)
 
     if not linked:
-        return "null" # FIXME: error code instead?
+        return "null"  # FIXME: error code instead?
 
     return jsonify(linked)
+
 
 @APP.route("/api/unlink/<string:service>", methods=["GET", "POST"])
 def external_unlink_handler(service):
@@ -412,7 +424,7 @@ def external_unlink_handler(service):
     # Something odd
 
     if not current_user.is_authenticated:
-        return 'null' # FIXME: 403 instead?
+        return "null"  # FIXME: 403 instead?
 
     unlinked = da.unlink_account(current_user, service)
     if not unlinked:
