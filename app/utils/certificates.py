@@ -17,18 +17,18 @@ FORM_KEYS = {
     "IdRas": "genebank_id",
     "IdGenbanksNummer": "genebank_id",
     "IdFärg": "colour",
-    "IdÖvriga": "notes",  # Fix death, color and hair notes
+    "IdÖvriga": "notes",  # color and hair notes
     "IdÅrKullIndivid": "name",  # Fix
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
-    "IdAntalFödda": "name",  # Fix
-    "IdAntalLevande": "name",  # Fix
-    "IdHårlag": "name",  # Fix
+    "IdAntalFödda": "litter",
+    "IdAntalLevande": "litter",  # Birth table: calculate new rabbits based on breeding event. check after six weeks if alive
+    "IdHårlag": "name",  # Fix Nose hair colour
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",
     "IdFödelseDatum": "birth_date",
-    "IdFotoFinns": "name",  # Fix
-    "IdNamn": "name",
+    "IdFotoFinns": "photos",  # Fix Left right and up. Checkbox.
+    "IdNamn": "name", # herdname + ind name(?) Pending decision
     "FarGenbanksNummer": "F_genebank_id",
     "FarÅrKullIndivid": "F_number",
     "MorGenbanksNummer": "M_genebank_id",
@@ -54,10 +54,10 @@ FORM_KEYS = {
     "FarmorFärg": "FM_colour",
     "MormorFärg": "MM_colour",
     "Nummer": "number",
-    "IntygasAv": "name",  # Fix
-    "IntygasNummer": "certificate",
-    "IntygasDatum": "name",  # Fix
-    "IntygasPlats": "name",  # Fix
+    "IntygasAv": "user_id",  # Username
+    "IntygasNummer": "certificate", # Herd id of rabbit individual (Without herd identifier) G/M
+    "IntygasDatum": "issue_date",  # Day of signature
+    "IntygasPlats": "name",  # Physical id (Only in cert?)
 }
 
 
