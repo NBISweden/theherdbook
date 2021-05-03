@@ -1,11 +1,11 @@
-## npm v7
-The project uses npm v7 as package manager since this has useful 
-features  such as automatically installing peer dependencies. 
+# npm v7
+The project uses npm v7 as package manager since this has useful
+features  such as automatically installing peer dependencies.
 
-Consider [changing default directory](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally#manually-change-npms-default-directory) before installing npm v7 (and 
-when using npm in general) to avoid EACCES permissions errors. To 
-get npm v7 run: 
-```
+Consider [changing default directory](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally#manually-change-npms-default-directory) before installing npm v7 (and
+when using npm in general) to avoid EACCES permissions errors. To
+get npm v7 run:
+```console
 npm install -g npm@7
 ```
 
@@ -15,23 +15,23 @@ You might need to restart your terminal afterwards
 
 Install the dependencies by running:
 
-```
+```console
 npm install
 ```
 
 ## Building
 
 There is as script to build and bundle to the dist/ directory:
-```
+```console
 npm run build
 ```
 
 ## Running locally
 
-```
+```console
 npm run start
 ```
 
-Note that it is recommended to do frontend development by running 
-the Docker containers instead since backend functionality is 
-required for a lot of the frontend functionality
+Note that it is recommended to do frontend development by running
+the Docker containers instead since backend functionality is
+required for a lot of the frontend functionality.

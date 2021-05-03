@@ -6,5 +6,5 @@ module.exports = {
   ...require('@snowpack/app-scripts-react/jest.config.js')(),
   roots: ['<rootDir>'],
   modulePaths: ['<rootDir>'],
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
-};
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths)
+}

@@ -7,44 +7,43 @@ database.
 
 import uuid
 import logging
-
+import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import PeeweeException, DoesNotExist, IntegrityError, fn, JOIN
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
+from peewee import JOIN, DoesNotExist, IntegrityError, fn
 
-#pylint: disable=import-error
-from utils.database import (
-    DB_PROXY as DATABASE,
-    Bodyfat,
-    Breeding,
-    Colour,
-    Genebank,
-    Herd,
-    HerdTracking,
-    Individual,
-    User,
-    Weight,
-    Authenticators
-)
+# pylint: disable=import-error
+
+from utils.database import DB_PROXY as DATABASE  # isort:skip
+from utils.database import Bodyfat  # isort: skip
+from utils.database import Breeding  # isort: skip
+from utils.database import Colour  # isort: skip
+from utils.database import Genebank  # isort: skip
+from utils.database import Herd  # isort: skip
+from utils.database import HerdTracking  # isort: skip
+from utils.database import Individual  # isort: skip
+from utils.database import User  # isort: skip
+from utils.database import Weight  # isort: skip
+
+from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
+
 
 # Helper functions
+
 
 def validate_date(date_string):
     """
     Validates a date string and returns a datetime object or raises ValueError.
     """
     if not date_string:
-        raise ValueError('Date missing')
+        raise ValueError("Date missing")
     try:
         return datetime.strptime(date_string, '%Y-%m-%d')
     except ValueError as date_except:
         raise ValueError('Date must be formatted as yyyy-mm-dd.') from date_except
 
 # User functions
+
 
 def add_user(form, user_uuid=None):
     """
@@ -81,6 +80,7 @@ def add_user(form, user_uuid=None):
 
     user = register_user(email, password, username, validated)
     return {"status": "created", "data": user.id}
+
 
 def register_user(email, password, username=None, validated=False, privileges=None):
     """
@@ -123,6 +123,7 @@ def register_user(email, password, username=None, validated=False, privileges=No
         authenticator.save()
 
     return user
+
 
 def authenticate_user(name, password):
     """
@@ -306,6 +307,7 @@ def fetch_user_info(user_id):
     except DoesNotExist:
         return None
 
+
 def get_users(user_uuid=None):
     """
     Returns all users that the logged in user has access to. This is all users
@@ -326,6 +328,7 @@ def get_users(user_uuid=None):
         return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
     except DoesNotExist:
         return None
+
 
 def get_user(user_id, user_uuid=None):
     """
@@ -350,15 +353,17 @@ def get_user(user_id, user_uuid=None):
     except DoesNotExist:
         return {"status": "error", "message": "Unknown user"}
 
-    return {"status": "success",
-            "data": {
-                "id": target.id,
-                "email": target.email,
-                "username": target.username,
-                "validated": target.validated,
-                "privileges": target.privileges,
-                }
-            }
+    return {
+        "status": "success",
+        "data": {
+            "id": target.id,
+            "email": target.email,
+            "username": target.username,
+            "validated": target.validated,
+            "privileges": target.privileges,
+        },
+    }
+
 
 def update_user(form, user_uuid=None):
     """
@@ -380,11 +385,12 @@ def update_user(form, user_uuid=None):
 
     logging.warning("a")
     # Check data
-    if (not isinstance(form, dict)
-            or not form.get("id", None)
-            or not form.get("email", None)
-            or form.get("validated") not in [True, False]
-       ):
+    if (
+        not isinstance(form, dict)
+        or not form.get("id", None)
+        or not form.get("email", None)
+        or form.get("validated") not in [True, False]
+    ):
         return {"status": "error", "message": f"malformed request: {form}"}
 
     # Check permissions - allow users to update e-mail only
@@ -413,9 +419,10 @@ def update_user(form, user_uuid=None):
     if updated:
         with DATABASE.atomic():
             target_user.save()
-        return  {"status": "updated"}
+        return {"status": "updated"}
 
     return {"status": "unchanged"}
+
 
 def update_role(operation, user_uuid=None):
     """
@@ -442,19 +449,23 @@ def update_role(operation, user_uuid=None):
     # Check data
     valid = True
     message = "malformed request"
-    if (not isinstance(operation, dict)
-            or operation.get("action", {}) not in ["add", "remove"]
-            or (not isinstance(operation.get("user", ""), int)
-                and not operation.get("user", "").isdigit()
-                )
-       ):
+    if (
+        not isinstance(operation, dict)
+        or operation.get("action", {}) not in ["add", "remove"]
+        or (
+            not isinstance(operation.get("user", ""), int)
+            and not operation.get("user", "").isdigit()
+        )
+    ):
         valid = False
-    elif (operation.get("role", {}) not in ["owner", "manager", "specialist"]
-          or (operation["role"] in ["manager", "specialist"]
-              and not operation.get("genebank")
-             )
-          or (operation["role"] in ["owner"] and not operation.get("herd"))
-         ):
+    elif (
+        operation.get("role", {}) not in ["owner", "manager", "specialist"]
+        or (
+            operation["role"] in ["manager", "specialist"]
+            and not operation.get("genebank")
+        )
+        or (operation["role"] in ["owner"] and not operation.get("herd"))
+    ):
         valid = False
 
     # Check permissions
@@ -500,7 +511,9 @@ def update_role(operation, user_uuid=None):
             updated = True
     return {"status": "updated" if updated else "unchanged"}
 
+
 # Genebank functions
+
 
 def get_colors():
     """
@@ -511,10 +524,14 @@ def get_colors():
     }
     """
     with DATABASE.atomic():
-        return {genebank.name: [{'id': color.id, 'name': color.name}
-                                for color
-                                in Colour.select().where(Colour.genebank == genebank)]
-                for genebank in Genebank.select()}
+        return {
+            genebank.name: [
+                {"id": color.id, "name": color.name}
+                for color in Colour.select().where(Colour.genebank == genebank)
+            ]
+            for genebank in Genebank.select()
+        }
+
 
 def get_genebank(genebank_id, user_uuid=None):
     """
@@ -526,6 +543,7 @@ def get_genebank(genebank_id, user_uuid=None):
         return None
 
     return user.get_genebank(genebank_id)
+
 
 def get_genebanks(user_uuid=None):
     """
@@ -544,7 +562,9 @@ def get_genebanks(user_uuid=None):
 
     return data
 
+
 # Herd functions
+
 
 def get_herd(herd_id, user_uuid=None):
     """
@@ -569,6 +589,7 @@ def get_herd(herd_id, user_uuid=None):
     except DoesNotExist:
         return data
 
+
 def add_herd(form, user_uuid):
     """
     Adds a new herd, defined by `form`, into the database, if the given `user`
@@ -583,23 +604,24 @@ def add_herd(form, user_uuid):
     user = fetch_user_info(user_uuid)
     if user is None:
         return {"status": "error", "message": "Not logged in"}
-    if not (user.is_admin or (user.is_manager and form['genebank'] in user.is_manager)):
+    if not (user.is_admin or (user.is_manager and form["genebank"] in user.is_manager)):
         return {"status": "error", "message": "Forbidden"}
 
     with DATABASE.atomic():
         try:
-            Herd.select().where(Herd.herd == form['herd']).get()
+            Herd.select().where(Herd.herd == form["herd"]).get()
             return {"status": "error", "message": "herd ID already exists"}
         except (DoesNotExist, KeyError):
             pass
-        if 'id' in form:
-            del form['id']
+        if "id" in form:
+            del form["id"]
         herd = Herd(**form)
         try:
             herd.save()
         except IntegrityError:
             return {"status": "error", "message": "missing data"}
         return {"status": "success"}
+
 
 def update_herd(form, user_uuid):
     """
@@ -620,11 +642,13 @@ def update_herd(form, user_uuid):
                 if hasattr(herd, key):
                     setattr(herd, key, value)
             herd.save()
-        return  {"status": "updated"}
+        return {"status": "updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
 
+
 # Individual functions
+
 
 def get_individual(individual_id, user_uuid=None):
     """
@@ -636,15 +660,21 @@ def get_individual(individual_id, user_uuid=None):
         return None
     try:
         with DATABASE.atomic():
-            individual = Individual.select().where(Individual.number == individual_id).get()
-        if individual and individual.current_herd.genebank.id in user.accessible_genebanks:
+            individual = (
+                Individual.select().where(Individual.number == individual_id).get()
+            )
+        if (
+            individual
+            and individual.current_herd.genebank.id in user.accessible_genebanks
+        ):
             return individual.as_dict()
         return None
     except DoesNotExist:
         return None
 
+
 # Feel free to clean this up!
-#pylint: disable=too-many-branches
+# pylint: disable=too-many-branches
 def form_to_individual(form, user=None):
     """
     Individual data is split over a number of tables; Individual, HerdTracking,
@@ -659,7 +689,7 @@ def form_to_individual(form, user=None):
     """
 
     # check user permissions
-    if not user.can_edit(form['number']):
+    if not user.can_edit(form["number"]):
         raise PermissionError
 
     # check if the individual exists in the datbase
@@ -671,31 +701,46 @@ def form_to_individual(form, user=None):
 
     # If the form has an id - make sure that it points to the same individual as
     # the number.
-    if 'id' in form and form['id'] != individual.id:
+    if "id" in form and form["id"] != individual.id:
         raise ValueError("Number can not be updated")
 
-    can_manage = user and (user.is_admin or \
-                          user.is_manager and \
-                          individual.current_herd.genebank_id in user.is_manager)
+    can_manage = user and (
+        user.is_admin
+        or user.is_manager
+        and individual.current_herd.genebank_id in user.is_manager
+    )
 
-    admin_fields = ['certificate', 'name', 'sex', 'birth_date', 'colour_note',
-                    'mother', 'father', 'colour']
+    admin_fields = [
+        "certificate",
+        "name",
+        "sex",
+        "birth_date",
+        "colour_note",
+        "mother",
+        "father",
+        "colour",
+    ]
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            if 'number' in form[admin_field]: # parents
-                changed = form[admin_field]['number'] != getattr(individual, admin_field).number
-            elif admin_field == 'colour':
+            if "number" in form[admin_field]:  # parents
+                changed = (
+                    form[admin_field]["number"]
+                    != getattr(individual, admin_field).number
+                )
+            elif admin_field == "colour":
                 changed = form[admin_field] != individual.colour.name
             else:
-                changed = f'{form[admin_field]}' != f'{getattr(individual, admin_field)}'
+                changed = (
+                    f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
+                )
 
             if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
     # Colour is stored as name in the form, but needs to be converted to id
-    if 'colour' in form:
+    if "colour" in form:
         try:
             with DATABASE.atomic():
                 form['colour'] = Colour.get(Colour.name == form['colour'])
@@ -703,7 +748,7 @@ def form_to_individual(form, user=None):
             raise ValueError(f"Unknown color: '{form['colour']}''") from colour_except
 
     # fetch the origin herd
-    if 'origin_herd' in form:
+    if "origin_herd" in form:
         try:
             with DATABASE.atomic():
                 form['origin_herd'] = Herd.get(Herd.herd == form['origin_herd']['herd'])
@@ -712,7 +757,7 @@ def form_to_individual(form, user=None):
                 f"Unknown origin herd: '{form['origin_herd']['herd']}''") from herd_except
 
     # parents
-    for parent in ['mother', 'father']:
+    for parent in ["mother", "father"]:
         if parent in form:
             try:
                 with DATABASE.atomic():
@@ -724,11 +769,11 @@ def form_to_individual(form, user=None):
     # object.
     for key in vars(Individual).keys():
         if key in form:
-            if key.startswith('_'):
+            if key.startswith("_"):
                 continue
-            if key and key.endswith('date'):
+            if key and key.endswith("date"):
                 try:
-                    date_val = datetime.strptime(form[key], '%Y-%m-%d').date()
+                    date_val = datetime.strptime(form[key], "%Y-%m-%d").date()
                     setattr(individual, key, date_val)
                 except TypeError:
                     setattr(individual, key, form[key])
@@ -736,6 +781,7 @@ def form_to_individual(form, user=None):
                 setattr(individual, key, form[key])
 
     return individual
+
 
 def add_individual(form, user_uuid):
     """
@@ -754,7 +800,7 @@ def add_individual(form, user_uuid):
         return {"status": "error", "message": "Not logged in"}
     try:
         with DATABASE.atomic():
-            herd = Herd.get(Herd.herd == form['herd'])
+            herd = Herd.get(Herd.herd == form["herd"])
     except DoesNotExist:
         return {"status": "error", "message": "Individual must have a valid herd"}
 
@@ -764,16 +810,17 @@ def add_individual(form, user_uuid):
     try:
         individual = form_to_individual(form, user)
     except ValueError as exception:
-        return {"status": "error", "message": f'{exception}'}
-    if 'weights' in form:
-        update_weights(individual, form['weights'])
-    if 'bodyfat' in form:
-        update_bodyfat(individual, form['bodyfat'])
+        return {"status": "error", "message": f"{exception}"}
+    if "weights" in form:
+        update_weights(individual, form["weights"])
+    if "bodyfat" in form:
+        update_bodyfat(individual, form["bodyfat"])
 
     # TODO: also create herd tracking values
 
     individual.save()
-    return  {"status": "success", "message": "Individual Created"}
+    return {"status": "success", "message": "Individual Created"}
+
 
 def update_individual(form, user_uuid):
     """
@@ -784,30 +831,31 @@ def update_individual(form, user_uuid):
     if user is None:
         return {"status": "error", "message": "Not logged in"}
 
-    if not user.can_edit(form['number']):
+    if not user.can_edit(form["number"]):
         return {"status": "error", "message": "Forbidden"}
 
-    if form['herd'] and isinstance(form['herd'], dict):
-        form['herd'] = form['herd'].get('herd', None)
-    if not Herd.select().where(Herd.herd == form['herd']).exists():
+    if form["herd"] and isinstance(form["herd"], dict):
+        form["herd"] = form["herd"].get("herd", None)
+    if not Herd.select().where(Herd.herd == form["herd"]).exists():
         return {"status": "error", "message": "Individual must have a valid herd"}
 
     try:
         try:
             individual = form_to_individual(form, user)
         except ValueError as exception:
-            return {"status": "error", "message": f'{exception}'}
-        if 'weights' in form:
-            update_weights(individual, form['weights'])
-        if 'bodyfat' in form:
-            update_bodyfat(individual, form['bodyfat'])
+            return {"status": "error", "message": f"{exception}"}
+        if "weights" in form:
+            update_weights(individual, form["weights"])
+        if "bodyfat" in form:
+            update_bodyfat(individual, form["bodyfat"])
 
         # TODO: also update herd tracking
 
         individual.save()
-        return  {"status": "success", "message": "Individual Updated"}
+        return {"status": "success", "message": "Individual Updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
+
 
 def update_weights(individual, weights):
     """
@@ -817,22 +865,28 @@ def update_weights(individual, weights):
     [{weight: <float>, date: 'yyyy-mm-dd'}, [...]]
     """
     with DATABASE.atomic():
-        current_weights = Weight.select() \
-                                .where(Weight.individual == individual.id)
-        current_list = [(w.weight_date.strftime('%Y-%m-%d'), w.weight) for w in current_weights]
-        new_list = [(w['date'], w['weight']) for w in weights]
+        current_weights = Weight.select().where(Weight.individual == individual.id)
+        current_list = [
+            (w.weight_date.strftime("%Y-%m-%d"), w.weight) for w in current_weights
+        ]
+        new_list = [(w["date"], w["weight"]) for w in weights]
 
         # check for current measurements to delete
         for weight in current_list:
             if weight not in new_list:
-                Weight.delete().where(Weight.individual == individual, \
-                                      Weight.weight_date == weight[0], \
-                                      Weight.weight == weight[1]).execute()
+                Weight.delete().where(
+                    Weight.individual == individual,
+                    Weight.weight_date == weight[0],
+                    Weight.weight == weight[1],
+                ).execute()
 
         # check for new measurements to add
         for weight in new_list:
             if weight not in current_list:
-                Weight(individual=individual, weight_date=weight[0], weight=weight[1]).save()
+                Weight(
+                    individual=individual, weight_date=weight[0], weight=weight[1]
+                ).save()
+
 
 def update_bodyfat(individual, bodyfat):
     """
@@ -842,28 +896,34 @@ def update_bodyfat(individual, bodyfat):
     [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
     """
     with DATABASE.atomic():
-        logging.warning('bodyfat: %s', bodyfat)
-        current_bodyfat = Bodyfat.select() \
-                                 .where(Bodyfat.individual == individual.id)
-        current_list = [(b.bodyfat_date.strftime('%Y-%m-%d'), b.bodyfat) for b in current_bodyfat]
-        new_list = [(b['date'], b['bodyfat']) for b in bodyfat]
+        logging.warning("bodyfat: %s", bodyfat)
+        current_bodyfat = Bodyfat.select().where(Bodyfat.individual == individual.id)
+        current_list = [
+            (b.bodyfat_date.strftime("%Y-%m-%d"), b.bodyfat) for b in current_bodyfat
+        ]
+        new_list = [(b["date"], b["bodyfat"]) for b in bodyfat]
 
         # check for current measurements to delete
         for measure in current_list:
             if measure not in new_list:
-                Bodyfat.delete().where(Bodyfat.individual == individual, \
-                                       Bodyfat.bodyfat_date == measure[0], \
-                                       Bodyfat.bodyfat == measure[1]).execute()
+                Bodyfat.delete().where(
+                    Bodyfat.individual == individual,
+                    Bodyfat.bodyfat_date == measure[0],
+                    Bodyfat.bodyfat == measure[1],
+                ).execute()
 
         # check for new measurements to add
         for measure in new_list:
             if measure not in current_list:
-                if measure[1] not in ['low', 'normal', 'high']:
-                    logging.error('Unknown bodyfat level: %s', measure[1])
+                if measure[1] not in ["low", "normal", "high"]:
+                    logging.error("Unknown bodyfat level: %s", measure[1])
                 else:
-                    Bodyfat(individual=individual,
-                            bodyfat_date=measure[0],
-                            bodyfat=measure[1]).save()
+                    Bodyfat(
+                        individual=individual,
+                        bodyfat_date=measure[0],
+                        bodyfat=measure[1],
+                    ).save()
+
 
 def get_individuals(genebank_id, user_uuid=None):
     """
@@ -875,15 +935,17 @@ def get_individuals(genebank_id, user_uuid=None):
         return None  # not logged in
     try:
         # Rank all herdtracking values by individual and date
-        current_herd = \
-            HerdTracking.select(HerdTracking.herd.alias('herd'),
-                                HerdTracking.herd_tracking_date.alias('ht_date'),
-                                HerdTracking.individual.alias('i_id'),
-                                fn.RANK().over(
-                                    order_by=[HerdTracking.herd_tracking_date \
-                                              .desc()],
-                                    partition_by=[HerdTracking.individual]
-                                ).alias('rank'))
+        current_herd = HerdTracking.select(
+            HerdTracking.herd.alias("herd"),
+            HerdTracking.herd_tracking_date.alias("ht_date"),
+            HerdTracking.individual.alias("i_id"),
+            fn.RANK()
+            .over(
+                order_by=[HerdTracking.herd_tracking_date.desc()],
+                partition_by=[HerdTracking.individual],
+            )
+            .alias("rank"),
+        )
         # count children for individuals. This can be done in two ways - total
         # number of children, or number of children that is available in the
         # database.
@@ -892,53 +954,53 @@ def get_individuals(genebank_id, user_uuid=None):
         #                          .where((Breeding.father == Individual.id) |
         #                                 (Breeding.mother == Individual.id))
 
-        #pylint: disable=invalid-name
+        # pylint: disable=invalid-name
         Children = Individual.alias()
-        children_in_db = Children.select(fn.COUNT(Children.id)) \
-                                 .join(Breeding) \
-                                 .where((Breeding.father == Individual.id) |
-                                        (Breeding.mother == Individual.id))
+        children_in_db = (
+            Children.select(fn.COUNT(Children.id))
+            .join(Breeding)
+            .where(
+                (Breeding.father == Individual.id) | (Breeding.mother == Individual.id)
+            )
+        )
 
         # use the children in the database for the result
         children = children_in_db
 
-        #pylint: disable=invalid-name
+        # pylint: disable=invalid-name
         Father = Individual.alias()
         Mother = Individual.alias()
         # Join all the needed tables
-        g_query = Individual.select(Individual,
-                                    Breeding,
-                                    Colour.id.alias('color_id'),
-                                    Colour.name.alias('color_name'),
-                                    Father.id.alias('father_id'),
-                                    Father.name.alias('father_name'),
-                                    Father.number.alias('father_number'),
-                                    Mother.id.alias('mother_id'),
-                                    Mother.name.alias('mother_name'),
-                                    Mother.number.alias('mother_number'),
-                                    current_herd.c.ht_date,
-                                    Herd.id.alias('herd_id'),
-                                    Herd.herd,
-                                    Herd.herd_name,
-                                    Herd.is_active.alias('herd_active'),
-                                    Genebank.name.alias('genebank_name'),
-                                    children.alias('children'),
-                                    ) \
-                            .join(Breeding) \
-                            .join(Father, JOIN.LEFT_OUTER,
-                                  on=(Father.id == Breeding.father_id)
-                                  ) \
-                            .join(Mother, JOIN.LEFT_OUTER,
-                                  on=(Mother.id == Breeding.mother_id)
-                                  ) \
-                            .join(Colour, JOIN.LEFT_OUTER,
-                                  on=(Individual.colour_id == Colour.id)) \
-                            .join(current_herd,
-                                  on=(Individual.id == current_herd.c.i_id)) \
-                            .join(Herd, on=(Herd.id == current_herd.c.herd)) \
-                            .join(Genebank, on=(Herd.genebank == Genebank.id)) \
-                            .where(current_herd.c.rank == 1) \
-                            .where(Genebank.id == genebank_id)
+        g_query = (
+            Individual.select(
+                Individual,
+                Breeding,
+                Colour.id.alias("color_id"),
+                Colour.name.alias("color_name"),
+                Father.id.alias("father_id"),
+                Father.name.alias("father_name"),
+                Father.number.alias("father_number"),
+                Mother.id.alias("mother_id"),
+                Mother.name.alias("mother_name"),
+                Mother.number.alias("mother_number"),
+                current_herd.c.ht_date,
+                Herd.id.alias("herd_id"),
+                Herd.herd,
+                Herd.herd_name,
+                Herd.is_active.alias("herd_active"),
+                Genebank.name.alias("genebank_name"),
+                children.alias("children"),
+            )
+            .join(Breeding)
+            .join(Father, JOIN.LEFT_OUTER, on=(Father.id == Breeding.father_id))
+            .join(Mother, JOIN.LEFT_OUTER, on=(Mother.id == Breeding.mother_id))
+            .join(Colour, JOIN.LEFT_OUTER, on=(Individual.colour_id == Colour.id))
+            .join(current_herd, on=(Individual.id == current_herd.c.i_id))
+            .join(Herd, on=(Herd.id == current_herd.c.herd))
+            .join(Genebank, on=(Herd.genebank == Genebank.id))
+            .where(current_herd.c.rank == 1)
+            .where(Genebank.id == genebank_id)
+        )
 
         # individuals are considered invalid if they don't have a herd tracking
         # value newer than one year ago.
@@ -951,48 +1013,57 @@ def get_individuals(genebank_id, user_uuid=None):
             """
             if isinstance(value, date):
                 return value
-            return datetime.strptime(value, '%Y-%m-%d').date()
+            return datetime.strptime(value, "%Y-%m-%d").date()
 
         with DATABASE.atomic():
             # return as a list of certain fields
             return [
                 {
-                    "id": i['id'],
-                    "name": i['name'],
-                    "certificate": i['certificate'],
-                    "number": i['number'],
-                    "sex": i['sex'],
-                    "birth_date": i['birth_date'].strftime("%Y-%m-%d") \
-                                if i['birth_date'] else None,
-                    "death_date": i['death_date'].strftime("%Y-%m-%d") \
-                                if i['death_date'] else None,
-                    "death_note": i['death_note'],
-                    "litter": i['litter_size'],
-                    "notes": i['notes'],
-                    "color_note": i['colour_note'],
-                    "father": {"id": i["father_id"],
-                               "name": i["father_name"],
-                               "number": i["father_number"]},
-                    "mother": {"id": i["mother_id"],
-                               "name": i["mother_name"],
-                               "number": i["mother_number"]},
+                    "id": i["id"],
+                    "name": i["name"],
+                    "certificate": i["certificate"],
+                    "number": i["number"],
+                    "sex": i["sex"],
+                    "birth_date": i["birth_date"].strftime("%Y-%m-%d")
+                    if i["birth_date"]
+                    else None,
+                    "death_date": i["death_date"].strftime("%Y-%m-%d")
+                    if i["death_date"]
+                    else None,
+                    "death_note": i["death_note"],
+                    "litter": i["litter_size"],
+                    "notes": i["notes"],
+                    "color_note": i["colour_note"],
+                    "father": {
+                        "id": i["father_id"],
+                        "name": i["father_name"],
+                        "number": i["father_number"],
+                    },
+                    "mother": {
+                        "id": i["mother_id"],
+                        "name": i["mother_name"],
+                        "number": i["mother_number"],
+                    },
                     "color": {"id": i["color_id"], "name": i["color_name"]},
-                    "herd": {"id": i['herd_id'],
-                             "herd": i['herd'],
-                             "herd_name": i['herd_name']},
-                    "genebank": i['genebank_name'],
-                    "herd_active": i['herd_active'] or i['herd_active'] is None,
-                    "active": as_date(i['ht_date']) > max_report_time
-                              and (i['herd_active'] or i['herd_active'] is None)
-                              and i['death_date'] is None
-                              and not i['death_note'],
-                    "alive": i['death_date'] is None and not i['death_note'],
-                    "children": i['children'],
+                    "herd": {
+                        "id": i["herd_id"],
+                        "herd": i["herd"],
+                        "herd_name": i["herd_name"],
+                    },
+                    "genebank": i["genebank_name"],
+                    "herd_active": i["herd_active"] or i["herd_active"] is None,
+                    "active": as_date(i["ht_date"]) > max_report_time
+                    and (i["herd_active"] or i["herd_active"] is None)
+                    and i["death_date"] is None
+                    and not i["death_note"],
+                    "alive": i["death_date"] is None and not i["death_note"],
+                    "children": i["children"],
                 }
                 for i in g_query.dicts()
             ]
     except DoesNotExist:
         return []
+
 
 def get_all_individuals():
     """
@@ -1020,7 +1091,9 @@ def get_all_individuals():
     except DoesNotExist:
         return []
 
+
 # Breeding and birth functions
+
 
 def get_breeding_events(herd_id, user_uuid):
     """
@@ -1039,14 +1112,16 @@ def get_breeding_events(herd_id, user_uuid):
 
         parents = [i.id for i in herd.individuals]
         with DATABASE.atomic():
-            query = Breeding.select().where((Breeding.father_id << parents) |
-                                            (Breeding.mother_id << parents))
+            query = Breeding.select().where(
+                (Breeding.father_id << parents) | (Breeding.mother_id << parents)
+            )
 
             return [b.as_dict() for b in query]
     except DoesNotExist:
         logging.warning("Unknown herd %s", herd_id)
 
     return []
+
 
 def register_breeding(form, user_uuid):
     """
@@ -1074,41 +1149,47 @@ def register_breeding(form, user_uuid):
     errors = []
     # Check if the parents are valid
     try:
-        mother = Individual.get(Individual.number == form.get('mother', None))
+        mother = Individual.get(Individual.number == form.get("mother", None))
     except DoesNotExist:
-        errors += ['Unknown mother']
+        errors += ["Unknown mother"]
     try:
-        father = Individual.get(Individual.number == form.get('father', None))
+        father = Individual.get(Individual.number == form.get("father", None))
     except DoesNotExist:
-        errors += ['Unknown father']
+        errors += ["Unknown father"]
 
     if errors:
-        return {'status': 'error', 'message': ', '.join(errors)}
+        return {"status": "error", "message": ", ".join(errors)}
 
     # A user can insert a breeding event if they have permission to edit at
     # least one of the parents.
     if not (user.can_edit(mother.number) or user.can_edit(father.number)):
-        return {'status': 'error', 'message': 'Forbidden'}
+        return {"status": "error", "message": "Forbidden"}
 
     # check if the breeding date is valid
     try:
-        breed_date = validate_date(form.get('date', None))
+        breed_date = validate_date(form.get("date", None))
     except ValueError as error:
-        return {'status': 'error', 'message': str(error)}
+        return {"status": "error", "message": str(error)}
 
-    exists = Breeding.select().where(Breeding.father == father) \
-                                .where(Breeding.mother == mother) \
-                                .where(Breeding.breed_date == breed_date) \
-                                .count()
+    exists = (
+        Breeding.select()
+        .where(Breeding.father == father)
+        .where(Breeding.mother == mother)
+        .where(Breeding.breed_date == breed_date)
+        .count()
+    )
     if exists:
-        return {'status': 'error', 'message': 'Breeding already registered'}
+        return {"status": "error", "message": "Breeding already registered"}
 
     with DATABASE.atomic():
-        Breeding(father=father,
-                 mother=mother,
-                 breed_date=breed_date,
-                 breed_notes=form.get('notes', None)).save()
-        return {'status': 'success'}
+        Breeding(
+            father=father,
+            mother=mother,
+            breed_date=breed_date,
+            breed_notes=form.get("notes", None),
+        ).save()
+        return {"status": "success"}
+
 
 def register_birth(form, user_uuid):
     """
@@ -1134,45 +1215,47 @@ def register_birth(form, user_uuid):
         return {"status": "error", "message": "Not logged in"}
 
     try:
-        breeding = Breeding.get(form.get('id', None))
+        breeding = Breeding.get(form.get("id", None))
     except (DoesNotExist, KeyError):
         return {"status": "error", "message": "Breeding does not exist"}
 
     # A user can insert a breeding event if they have permission to edit at
     # least one of the parents.
-    if not (user.can_edit(breeding.mother.number) or \
-        user.can_edit(breeding.father.number)):
-        return {'status': 'error', 'message': 'Forbidden'}
+    if not (
+        user.can_edit(breeding.mother.number) or user.can_edit(breeding.father.number)
+    ):
+        return {"status": "error", "message": "Forbidden"}
 
     errors = []
     # check if the birth date is valid
     try:
-        birth_date = validate_date(form.get('date', None))
+        birth_date = validate_date(form.get("date", None))
     except ValueError as error:
         errors += [str(error)]
 
     # check if the litter size is valid
     try:
-        litter = int(form.get('litter', None))
+        litter = int(form.get("litter", None))
         if litter <= 0:
-            errors += ['Litter size must be larger than zero.']
-    except ValueError as error:
-        errors += ['Unknown litter size.']
-    except TypeError as error:
-        errors += ['Missing litter size.']
+            errors += ["Litter size must be larger than zero."]
+    except ValueError:
+        errors += ["Unknown litter size."]
+    except TypeError:
+        errors += ["Missing litter size."]
 
     if breeding.birth_date or breeding.birth_notes:
-        errors += ['Birth already registered.']
+        errors += ["Birth already registered."]
 
     if errors:
-        return {'status': 'error', 'message': ', '.join(errors)}
+        return {"status": "error", "message": ", ".join(errors)}
 
     with DATABASE.atomic():
         breeding.birth_date = birth_date
         breeding.litter_size = litter
-        breeding.birth_notes = form.get('notes', None)
+        breeding.birth_notes = form.get("notes", None)
         breeding.save()
-        return {'status': 'success'}
+        return {"status": "success"}
+
 
 def update_breeding(form, user_uuid):
     """
@@ -1202,48 +1285,49 @@ def update_breeding(form, user_uuid):
         return {"status": "error", "message": "Not logged in"}
 
     try:
-        breeding = Breeding.get(form['id'])
+        breeding = Breeding.get(form["id"])
     except (DoesNotExist, KeyError):
         return {"status": "error", "message": "Breeding does not exist"}
 
     # A user can insert a breeding event if they have permission to edit at
     # least one of the parents.
-    if not (user.can_edit(breeding.mother.number) or \
-        user.can_edit(breeding.father.number)):
-        return {'status': 'error', 'message': 'Forbidden'}
+    if not (
+        user.can_edit(breeding.mother.number) or user.can_edit(breeding.father.number)
+    ):
+        return {"status": "error", "message": "Forbidden"}
 
     errors = []
     # Check if the parents are valid
-    if 'mother' in form:
+    if "mother" in form:
         try:
-            breeding.mother = Individual.get(Individual.number == form['mother'])
+            breeding.mother = Individual.get(Individual.number == form["mother"])
         except DoesNotExist:
-            errors += ['Unknown mother']
-    if 'father' in form:
+            errors += ["Unknown mother"]
+    if "father" in form:
         try:
-            breeding.father = Individual.get(Individual.number == form['father'])
+            breeding.father = Individual.get(Individual.number == form["father"])
         except DoesNotExist:
-            errors += ['Unknown father']
+            errors += ["Unknown father"]
 
-    for adate in ['breed_date', 'birth_date']:
-        if adate in form:
+    for bdate in ["breed_date", "birth_date"]:
+        if bdate in form:
             try:
-                setattr(breeding, adate, validate_date(form[adate]))
+                setattr(breeding, bdate, validate_date(form[bdate]))
             except ValueError as error:
                 errors += [str(error)]
 
     # check if the litter size is valid
-    if 'litter_size' in form:
+    if "litter_size" in form:
         try:
-            breeding.litter_size = int(form['litter_size'])
+            breeding.litter_size = int(form["litter_size"])
             if breeding.litter_size <= 0:
-                errors += ['Litter size must be larger than zero.']
-        except ValueError as error:
-            errors += ['Unknown litter size.']
+                errors += ["Litter size must be larger than zero."]
+        except ValueError:
+            errors += ["Unknown litter size."]
 
     if errors:
-        return {'status': 'error', 'message': ', '.join(errors)}
+        return {"status": "error", "message": ", ".join(errors)}
 
     with DATABASE.atomic():
         breeding.save()
-        return {'status': 'success'}
+        return {"status": "success"}

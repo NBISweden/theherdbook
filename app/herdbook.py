@@ -6,31 +6,29 @@ The server uses Flask to serve a React frontend, and connect to a postgres
 database.
 """
 
-import sys
-import uuid
-import time
+import base64
+import binascii
 import logging
+import sys
+import time
+import uuid
 
-from flask import (
-    Flask,
-    jsonify,
-    request,
-    redirect,
-    session,
-    url_for,
-    abort
-)
-from flask_caching import Cache
-from flask_login import login_required, login_user, logout_user, current_user, LoginManager
 import requests
+from flask import Flask, jsonify, request, session
+from flask_caching import Cache
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 
-import utils.database as db
-import utils.data_access as da
-import utils.settings as settings
-import utils.csvparser as csvparser
-import utils.external_auth
-import flask_session
-
+import utils.csvparser as csvparser  # isort:skip
+import utils.external_auth  # isort:skip
+import utils.data_access as da  # isort:skip
+import utils.database as db  # isort:skip
+import utils.settings as settings  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -41,9 +39,9 @@ APP.config.update(
     SESSION_COOKIE_SAMESITE='Strict',
     SESSION_TYPE='filesystem',
     DEBUG=True,  # some Flask specific configs
-    CACHE_TYPE='filesystem',
-    CACHE_DIR='/tmp',
-    CACHE_DEFAULT_TIMEOUT=300
+    CACHE_TYPE="filesystem",
+    CACHE_DIR="/tmp",
+    CACHE_DEFAULT_TIMEOUT=300,
 )
 
 # pylint: disable=no-member
@@ -55,7 +53,7 @@ flask_session.Session().init_app(APP)
 
 CACHE = Cache(APP)
 LOGIN = LoginManager(APP)
-LOGIN.login_view = '/login'
+LOGIN.login_view = "/login"
 
 
 @APP.after_request
@@ -78,6 +76,38 @@ def after_request(response):
     return response
 
 
+@LOGIN.request_loader
+def load_user_from_request(request):
+
+    # Try to login using Basic Auth
+    api_key = request.headers.get("Authorization")
+    if api_key:
+        api_key = api_key.replace("Basic ", "", 1)
+        try:
+            api_key = base64.b64decode(api_key)
+        except (TypeError, binascii.Error):
+            return None
+
+        username = api_key[: api_key.find(b":")]
+        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
+
+        user = da.authenticate_user(username, password)
+
+        if user:
+            APP.logger.info("User %s logged in from request header", username)
+
+            session["user_id"] = user.uuid
+            session.modified = True
+            login_user(user)
+
+            return user
+
+        APP.logger.info("Failed login from header for %s", username)
+
+    # we are not logged in.
+    return None
+
+
 # pylint: disable=unused-argument
 @LOGIN.user_loader
 def load_user(u_id):
@@ -86,7 +116,7 @@ def load_user(u_id):
 
     Currently u_id is not required, since user is loaded from the session.
     """
-    user = da.fetch_user_info(session.get('user_id', None))
+    user = da.fetch_user_info(session.get("user_id", None))
     return user
 
 
@@ -447,19 +477,21 @@ def individual(i_number):
     if ind:
         try:
             ind["inbreeding"] = "%.2f" % (
-                get_ind_inbreeding(i_number, ind['genebank_id']) * 100)
-            ind["MK"] = "%.2f" % (get_ind_mean_kinship(
-                i_number, ind['genebank_id']) * 100)
+                get_ind_inbreeding(i_number, ind["genebank_id"]) * 100
+            )
+            ind["MK"] = "%.2f" % (
+                get_ind_mean_kinship(i_number, ind["genebank_id"]) * 100
+            )
         except requests.exceptions.ConnectionError as error:
-            APP.logger.error('%s', error)
-            ind["inbreeding"] = ind['inbreeding'] if 'inbreeding' in ind else None
+            APP.logger.error("%s", error)
+            ind["inbreeding"] = ind["inbreeding"] if "inbreeding" in ind else None
             ind["MK"] = None
     return jsonify(ind)
 
 
 @APP.route("/api/individual", methods=["PATCH", "POST"])
 @login_required
-def edit_user():
+def edit_individual():
     """
     Updates an individual on `PATCH`, or creates a new individual on `POST`.
 
@@ -500,11 +532,12 @@ def get_inbreeding(g_id):
     """
     Fetch ibreeding coefficient from R-API of the genebank given by `g_id`.
     """
-    response = requests.get('http://{}:{}/inbreeding/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/inbreeding/{}".format(
+            settings.rapi.host, settings.rapi.port, g_id
+        ),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
@@ -526,11 +559,10 @@ def get_kinship(g_id):
     """
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
     """
-    response = requests.get('http://{}:{}/kinship/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_kinship(response.content)
@@ -562,11 +594,12 @@ def get_mean_kinship(g_id):
     """
     Fetch the mean kinship matrix from R-api of the genebank given  by `g_id`.
     """
-    response = requests.get('http://{}:{}/meankinship/{}'
-                            .format(settings.rapi.host,
-                                    settings.rapi.port,
-                                    g_id),
-                            params={})
+    response = requests.get(
+        "http://{}:{}/meankinship/{}".format(
+            settings.rapi.host, settings.rapi.port, g_id
+        ),
+        params={},
+    )
 
     if response.status_code == 200:
         return csvparser.parse_csv(response.content)
@@ -585,21 +618,15 @@ def main(path):  # pylint: disable=unused-argument
     return APP.send_static_file("index.html")
 
 
-print(APP.url_map)
+# Connect to the database, or wait for database and then connect.
+while True:
+    APP.logger.info("Connecting to database.")  # pylint: disable=no-member
+    db.connect()
+    if db.is_connected():
+        break
+    time.sleep(4)
 
-
-if __name__ == "__main__":
-    # Connect to the database, or wait for database and then connect.
-    while True:
-        APP.logger.info("Connecting to database.")  # pylint: disable=no-member
-        db.connect()
-        if db.is_connected():
-            break
-        time.sleep(4)
-
-    # verify the database before starting the server.
-    if not db.verify():
-        APP.logger.error("Database has errors.")  # pylint: disable=no-member
-        sys.exit(1)
-
-    APP.run(host="0.0.0.0")
+# verify the database before starting the server.
+if not db.verify():
+    APP.logger.error("Database has errors.")  # pylint: disable=no-member
+    sys.exit(1)

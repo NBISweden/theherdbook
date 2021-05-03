@@ -1,111 +1,133 @@
 library(optiSel)
 library(nprcgenekeepr)
-library(DBI)
 library(digest)
+library(rjson)
+library(dplyr)
 
-#Only load the environment one
-pg_host   <- Sys.getenv("POSTGRES_HOST", "localhost")
-pg_dbname <- Sys.getenv("POSTGRES_DBNAME", "herdbook")
-pg_port   <- Sys.getenv("POSTGRES_PORT", "5432")
-pg_user   <- Sys.getenv("POSTGRES_USER", "herdbook")
-pg_passw  <- Sys.getenv("POSTGRES_PASSWORD", "insecure")
+# Load environment variables for configuration into global namespace
+api_base   <- Sys.getenv("API_BASE", "http://localhost:8080/api/")
+auth_header <- Sys.getenv("API_AUTH", "")
 
-# Returns a connection instance to a PG server
-connect_to_pg <- function() {
-  con <- dbConnect(RPostgres::Postgres(),dbname = get("pg_dbname"),
-                   host = get("pg_host"),
-                   port = get("pg_port"),
-                   user = get("pg_user"),
-                   password = get("pg_passw"))
-  return (con)
+#' Return any custom headers to use for API requests
+#'
+#' @return A vector with header values, header names are set as names.
+#' 
+our_headers <- function() {
+  tmp <- unlist(strsplit(auth_header, ":"))
+
+  if (length(tmp) == 1) {
+    name <- 'Authorization'
+  } else {
+    name <-tmp[1]
+    tmp <- tmp[2:length(tmp)]
+  }
+
+  ret <- c(tmp[1])
+  names(ret) <- c(name)
+  return (ret)
 }
 
-# Terminates a connection to a PG server
-disconnect_from_pg <- function(con) {
-  dbDisconnect(con)
-}
+#' Helper function to get a specific resource. Does request and json decoding
+#'
+#' @param resource The resource to get, will be appended to api_base.
+#' @return The deserialized JSON (as a list)
+get_resource <- function(resource) {
+  print(paste0("Fetching resource ", resource))
+  c <-url( paste0(api_base,resource), headers = our_headers())
 
-
-#Get available genebank ids in the database
-get_all_genebanks <- function(con) {
-  res <- dbSendQuery(con, "select genebank_id, name from genebank;")
-  genebanks <- dbFetch(res)
-  dbClearResult(res)
-  return (genebanks)
+  res <-fromJSON(paste(readLines(c), collapse=""))
+  close(c)
+  return (res)
 }
 
 #Return the digest of the current individuals in the corresponding genebank 
-get_modifications_digest <- function(con,genebank_id){
+get_modifications_digest <- function(genebank_id){
   #' Get digest of the current individuals in a given genebank
   #'
   #' @description This function calculate the digest of all the individual numbers of the given genebank.
   #'
-  #' @param con The connection object to to database.
   #' @param genebank_id The Genebank ID to get the individual number list from.
   #' @details If the digest changes we know we need to recalculate
 
-  res <- dbSendQuery(con, paste0("select i.number FROM individual i JOIN herd h ON (i.origin_herd_id = h.herd_id) WHERE h.genebank_id=",genebank_id)) 
-  individuals <- dbFetch(res)
-  dbClearResult(res)
+  individuals <- get_resource(paste0("genebank/",genebank_id,"/individuals"))
   return (digest(individuals))
 }
-?get_modifications_digest
 
-# Returns a data structure with selected individuals' ancestry information for genebank_id 
-# 1 Gotlandskanin 2, Mellerud
-#Format as pedigre using optiSel library
+#' Returns a pedigree for the specified genebank_id
+#'
+#' @param genebank_id - the genenbank to return pedigree for
+#'
+#' @return the pedigree for the specified genebank
+get_rabbits<-function(genebank_id){
+  rabbits <- get_all_individuals(genebank_id)
 
-get_rabbits<-function(con,genebank_id){
-  rabbits <- get_all_individuals(con,genebank_id)
-  names(rabbits)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
-  rabbits$Born_date<-rabbits$Born
-  rabbits$Born<-format(rabbits$Born_date, format="%Y")
-  Pedi <- optiSel::prePed(rabbits)
-  return(Pedi)
-}
-
-
-#Human readable version of all animals from the given genebank_id
-get_all_individuals <- function(con,genebank_id) {
-  res <- dbSendQuery(con, paste0("SELECT      i.number as Indiv, f.number as Sire, m.number as Dam, i.sex as Sex, i.birth_date as Born, 
-            (i.death_date IS NULL
-             AND (i.death_note = '' OR i.death_note IS NULL)
-             AND ih.herd_tracking_date > current_date - interval '1 year') AS is_active
-FROM        individual i
-LEFT JOIN   individual f ON (i.father_id = f.individual_id)
-LEFT JOIN   individual m ON (i.mother_id = m.individual_id)
-JOIN        (
-                SELECT DISTINCT ON (individual_id)
-                         individual_id,
-                         herd_id,
-                         herd_tracking_date
-                FROM     herd_tracking
-                ORDER BY individual_id, herd_tracking_date DESC
-            ) AS ih ON (ih.individual_id = i.individual_id)
-JOIN        herd h ON (ih.herd_id = h.herd_id)
-WHERE       h.genebank_id =",genebank_id))
-  individuals <- dbFetch(res)
-  dbClearResult(res)
-  return (individuals)
-
-}
-
-
-# Function to Preload data on startup
-update_preload_all_data <- function() {
-  con <- connect_to_pg()
-  genebanks<<-get_all_genebanks(con)
-  for(i in genebanks$genebank_id){
-    assign(paste0("MOD_",i),get_modifications_digest(con,i),envir = .GlobalEnv)
-    update_data(con,i)
+  if (is.null(rabbits) || (length(rabbits) == 0)) {
+     return(NULL)
   }
-  dbDisconnect(con)
+  
+   print("Calling optisel")
+
+   Pedi <- optiSel::prePed(rabbits)
+   print("Return from optisel")
+
+   return(Pedi)
 }
 
 
-#Update and calculate the Kinship matrix and inbreeding
-update_data <- function(con,genebank_id) {
-  Pedi<-get_rabbits(con,genebank_id)
+#' Get individuals for genebank_id in a format suitable for optisel
+#'
+#' @param genebank_id - the genebank to return rabbits for
+#' @return A dataframe suitable for feeding to 
+get_all_individuals <- function(genebank_id) {
+  js <- get_resource(paste0("genebank/",genebank_id,"/individuals"))
+  
+  tmp<-do.call('rbind', 
+        lapply(js$individuals, 
+               function(x) { 
+                 unlist(x)[c('number','father.number', 'mother.number','sex', 'birth_date','active')]
+               }
+          )
+    )
+   #Force columnames fix for mellerud data where first ind does not have father or mother. 
+   colnames(tmp)<-c('number','father.number', 'mother.number','sex', 'birth_date','active')
+   if (length(tmp) == 0) {
+   return(NULL)
+  }
+
+  df <- rename(
+    mutate(
+      mutate(data.frame(tmp),
+  	     Born = as.numeric(substr(birth_date, 1, 4)),
+	     .after=4),
+	   birth_date = NULL),
+    Indiv=number, Sire=father.number, Dam=mother.number, Sex=sex, is_active = active)
+
+  names(df)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
+  return (df)
+}
+
+
+#' Function to preload data on startup
+update_preload_all_data <- function() {
+  print("Getting available genebanks")
+  js <- get_resource("genebanks")
+
+  genebanks <<- c()
+  for(i in (js[1][[1]])){
+    assign(paste0("MOD_",i$id),get_modifications_digest(i$id),envir = .GlobalEnv)
+    update_data(i$id)
+    genebanks <<- append(genebanks, i$id)
+  }
+}
+
+
+#' Update and calculate the Kinship matrix and inbreeding
+update_data <- function(genebank_id) {
+  Pedi<-get_rabbits(genebank_id)
+  if (is.null(Pedi)) {
+      return (NULL)
+  }
+
   #Calculate Inbreeding and name it after genebank_id
   assign(paste0("IDB_",genebank_id),data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE),envir = .GlobalEnv)
   #Get current active population
@@ -117,28 +139,35 @@ update_data <- function(con,genebank_id) {
 
 #* @serializer csv
 #* @get /kinship/<genebank_id:int>
-calculate_kinship <- function(genebank_id, update_from_db="FALSE") {
-  if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
-  if(update_from_db){
-    con <- connect_to_pg()
-    MOD_change<-get_modifications_digest(con,genebank_id)
+calculate_kinship <- function(genebank_id, update_data="FALSE") {
+
+  summary(genebanks)
+  
+  if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
+  if(update_data){
+    MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
       assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
-      update_data(con,genebank_id)
+      update_data(genebank_id)
     }
-    dbDisconnect(con)
-  }
+   }
   return(as.data.frame(get(paste0("KIN_",genebank_id))))
 }
 
-#For Future use
-# Calculates founder Equivalents
-# @return The founder equivalents \code{FE = 1 / sum(p ^ 2)}, where \code{p}
-# is average number of descendants and \code{r} is the mean number of founder
-# alleles retained in the gene dropping experiment.
+#' For Future use
+#' Calculates founder Equivalents
+#'
+#' @return The founder equivalents \code{FE = 1 / sum(p ^ 2)}, where \code{p}
+#' is average number of descendants and \code{r} is the mean number of founder
+#' alleles retained in the gene dropping experiment.
 calculateFEFG <- function() {
   Pedi<-get_rabbits(genebank_id)
+
+  if (is.null(Pedi)) {
+     return
+  }
+
   ped<- data.frame(
     id = Pedi$Indiv,
     sire = Pedi$Sire,
@@ -151,61 +180,67 @@ calculateFEFG <- function() {
 }
 
 
-#Updated and reload the data structures from the sql server
+#' Update and reload the data structures from the sql server
 #* @get /update-db/
 update_data_cron <- function() {
-  con <- connect_to_pg()
-  for(i in genebanks$genebank_id){
-    MOD_change<-get_modifications_digest(con,i)
+  for(i in genebanks){
+    MOD_change<-get_modifications_digest(i)
     if(get(paste0("MOD_",i))!= MOD_change)
     {
       assign(paste0("MOD_",i),MOD_change,envir = .GlobalEnv)
-      update_data(con,i)
+      update_data(i)
       print(paste0("Updated genebank id: ",i))
     }
   }
-  dbDisconnect(con)
 }
 
+#' Return the inbreeding
+#'
+#' @param genebank_id - the genebank to get the inbreeding for
+#' @return - the inbreeding coefficents
+#' 
 #* @serializer csv
 #* @get /inbreeding/<genebank_id:int>
 inbreeding <- function(genebank_id,update_from_db="FALSE") {
-  if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
+  # jscpd:ignore-start
+  if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
   if(update_from_db ){
-    con <- connect_to_pg()
-    MOD_change<-get_modifications_digest(con,genebank_id)
+    MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
+      print(paste("Refreshing data for genebank", genebank_id))
       assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
-      update_data(con,genebank_id)
+      update_data(genebank_id)
     }
-    dbDisconnect(con)
   }
   return (get(paste0("IDB_",genebank_id)))
+  # jscpd:ignore-end
 }
 
 
+#' Return the mean kinship coeffecient
+#
+#' @param genebank to return MK for
+#' @return mean kinship coefficient
+#' 
 #* @serializer csv
 #* @get /meankinship/<genebank_id:int>
 meankinship <- function(genebank_id,update_from_db="FALSE") {
-  if(!(genebank_id %in% genebanks$genebank_id)){stop("must be a valid genebank_id")}
+  # jscpd:ignore-start
+  if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
   if(update_from_db ){
-    con <- connect_to_pg()
-    MOD_change<-get_modifications_digest(con,genebank_id)
+    MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
       assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
-      update_data(con,genebank_id)
+      update_data(genebank_id)
     }
-    dbDisconnect(con)
   }
   return(
     data.frame(number=names(get(paste0("MK_",genebank_id))), MK=get(paste0("MK_",genebank_id)), row.names=NULL)
   )
-
+  # jscpd:ignore-end
 }
-
 
 #RUN stuff and preload
 update_preload_all_data()
-

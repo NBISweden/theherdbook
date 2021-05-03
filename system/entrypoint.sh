@@ -6,7 +6,7 @@ yes '' | openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /code/key.p
 cp /code/cert.pem /code/ca.pem
 
 for p in {cert,key,ca}; do 
-  if [ -r /config/$p.pem ]; then
+  if [ -r "/config/$p.pem" ]; then
     echo "$p.pem supplied, copying"
     cp "/config/$p.pem" /code/
   fi
@@ -19,7 +19,7 @@ else
     openssl dhparam -out /code/dhparam.pem 2048 > /dev/null 2>/dev/null
 fi
 
-chown www-data.www-data /code/*.pem
+chown www-data:www-data /code/*.pem
 
 if getent hosts herdbook-frontend-devel >/dev/null; then
     # Development mode
