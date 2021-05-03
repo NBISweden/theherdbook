@@ -550,8 +550,9 @@ def issue_certificate(i_number):
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}, 401)
 
+    ind.update(**request.form)
+    da.update_individual(ind, session.get("user_id", None))
     data = get_certificate_data(ind, user_id)
-    data.update(**request.form)
     pdf_bytes = get_certificate(data)
     signer = certs.CertificateSigner(
         cert_auth=Path("/code/ca.pem"),
