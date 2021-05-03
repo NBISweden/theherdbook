@@ -120,7 +120,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
-  const [previewUrl, setPreviewUrl] = React.useState("");
+  const [previewUrl, setPreviewUrl] = React.useState();
   const [certificateUrl, setCertificateUrl] = React.useState("");
   const [numPages, setNumPages] = React.useState(null); // pdf-library stuff
   const [pageNumber, setPageNumber] = React.useState(1); // pdf-library stuff
@@ -222,22 +222,24 @@ export function IndividualCertificate({ id }: { id: string }) {
   }
 
   const previewCertificate = (id: string, content: any) => {
-    fetch(`/api/certificates/issue/${id}`, {
+    fetch(`/api/certificates/preview/${id}`, {
       body: JSON.stringify(content),
       method: "POST",
       credentials: "same-origin",
       headers: {
-        Accept: "application/pdf",
+        Accept: "application/octet-stream",
       },
-    }).then(
-      (data) => {
-        console.log("cert", data);
-        setPreviewUrl(data.url);
-      },
-      (error) => {
-        userMessage(error, "error");
-      }
-    );
+    })
+      .then((res) => res.arrayBuffer())
+      .then(
+        (data) => {
+          console.log("cert", data);
+          setPreviewUrl(data);
+        },
+        (error) => {
+          userMessage(error, "error");
+        }
+      );
   };
 
   const issueCertificate = (id: string) => {
@@ -507,9 +509,9 @@ export function IndividualCertificate({ id }: { id: string }) {
         </div>
       ) : individual && showSummary ? (
         <>
-          <h1>Är allt korrekt?</h1>
+          <h1>Är alla uppgifter korrekta?</h1>
           <Document
-            file={{ url: certificateUrl }}
+            file={previewUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             style={{ border: "2px solid black" }}
             renderAnnotationLayer={true}
@@ -587,7 +589,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       ) : individual && showComplete ? (
         <>
           <h1>Certifikatet är klart!</h1>
-          <a target="_blank" href={certificateUrl}>
+          <a target="_blank" href={previewUrl}>
             Öppna i ny flik.
           </a>
         </>
