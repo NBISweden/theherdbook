@@ -1,5 +1,9 @@
 import React from "react";
 
+import { Document, Page, pdfjs } from "react-pdf";
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+
 import {
   Button,
   CircularProgress,
@@ -135,6 +139,8 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
   const [certificateUrl, setCertificateUrl] = React.useState("");
+  const [numPages, setNumPages] = React.useState(null); // pdf-library stuff
+  const [pageNumber, setPageNumber] = React.useState(1); // pdf-library stuff
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { popup } = useMessageContext();
@@ -289,17 +295,6 @@ export function IndividualCertificate({ id }: { id: string }) {
     );
   }
 
-  /*    async function issueCertificate(id: string) {
-    return await get(`/api/certificates/issue/${id}`).then(
-      (data) => {
-        console.log("cert", data);
-      },
-      (error) => {
-        userMessage(error, "error");
-      }
-    );
-  } */
-
   const issueCertificate = (id: string) => {
     fetch(`/api/certificates/issue/${id}`, {
       method: "GET",
@@ -317,6 +312,11 @@ export function IndividualCertificate({ id }: { id: string }) {
       }
     );
   };
+
+  //pdf-library stuff
+  function onDocumentLoadSuccess({ numPages }) {
+    setNumPages(numPages);
+  }
 
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
@@ -684,6 +684,21 @@ export function IndividualCertificate({ id }: { id: string }) {
       ) : individual && showComplete ? (
         <>
           <h1>Här är ditt certifikat!</h1>
+          <Document
+            file={{ url: certificateUrl }}
+            onLoadSuccess={onDocumentLoadSuccess}
+            style={{ border: "2px solid black" }}
+            renderAnnotationLayer={true}
+            /*             renderInteractiveForms={true}
+            renderTextLayer={true}
+            renderMode="svg" */
+          >
+            <Page pageNumber={pageNumber} />
+          </Document>
+          <p>
+            Page {pageNumber} of {numPages}
+          </p>
+
           <a target="_blank" href={certificateUrl}>
             Open
           </a>
