@@ -508,7 +508,35 @@ def testbreed():
     return {"offspringCOI": formatted_offspring_coi}
 
 
-@APP.route("/api/certificates/issue/<i_number>")
+@APP.route("/api/certificates/update/<i_number>", methods= ["POST"])
+@login_required
+def update_certificate(i_number):
+    """
+    Returns an updated pdf of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+
+    if ind:
+        data = get_certificate_data(ind, user_id)
+        data.update(**request.form)
+        pdf_bytes = get_certificate(data)
+        signer = certs.CertificateSigner(
+            cert_auth=Path("/code/ca.pem"),
+            private_key=Path("/code/key.pem"),
+            private_key_pass=None,
+        )
+        signed_bytes = signer.sign_certificate(pdf_bytes)
+        date = datetime.datetime.utcnow()
+        date = date.strftime("%Y-%m-%d_%H%M%S%f")
+        object_name = f"{date}.pdf"
+        return create_pdf_response(pdf_bytes=signed_bytes, obj_name=object_name)
+
+
+    return jsonify({"response": "Individual not found"}, 404)
+
+
+@APP.route("/api/certificates/issue/<i_number>", methods=["POST"])
 @login_required
 def issue_certificate(i_number):
     """
@@ -516,20 +544,62 @@ def issue_certificate(i_number):
     """
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_number, user_id)
+    if ind is None:
+        return jsonify({"response": "Individual not found"}, 404)
+    certificate_exists = ind.get("certificate", None)
+    if certificate_exists:
+        return jsonify({"response": "Certificate already exists"}, 401)
 
-    if ind:
-        all_data = get_all_data(ind, user_id)
-        pdf_bytes = get_certificate(all_data)
-        date = datetime.datetime.utcnow()
-        date = date.strftime("%Y-%m-%d_%H%M%S%f")
-        object_name = f"{date}.pdf"
-        response = make_response(pdf_bytes.getvalue())
-        response.headers["Content-Type"] = "application/pdf"
-        response.headers["Content-Disposition"] = "inline; filename=%s" % object_name
-        return response
+    data = get_certificate_data(ind, user_id)
+    data.update(**request.form)
+    pdf_bytes = get_certificate(data)
+    signer = certs.CertificateSigner(
+        cert_auth=Path("/code/ca.pem"),
+        private_key=Path("/code/key.pem"),
+        private_key_pass=None,
+    )
+    signed_bytes = signer.sign_certificate(pdf_bytes)
+    date = datetime.datetime.utcnow()
+    date = date.strftime("%Y-%m-%d_%H%M%S%f")
+    object_name = f"{date}.pdf"
+    return create_pdf_response(pdf_bytes=signed_bytes, obj_name=object_name)
 
-    return jsonify({"response": "Individual not found"}, 404)
 
+@APP.route("/api/certificates/preview/<i_number>", methods=["POST"])
+@login_required
+def preview_certificate(i_number):
+    """
+    Returns a preview of a pdf certificate of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+    if ind is None:
+        return jsonify({"response": "Individual not found"}, 404)
+
+    data = get_certificate_data(ind, user_id)
+    data.update(**request.form)
+    pdf_bytes = get_certificate(data)
+    return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
+
+
+def create_pdf_response(pdf_bytes, obj_name):
+    response = make_response(pdf_bytes.getvalue())
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = "inline; filename=%s" % obj_name
+    return response
+
+
+def upload_certificate():
+    return 1
+
+def check_certificate_exists():
+    return 0
+
+def verify_certificate_checksum():
+    return 0
+
+def check_certificate_number():
+    return 0
 
 def flatten_list_of_dcts(in_list):
     """
@@ -542,9 +612,9 @@ def flatten_list_of_dcts(in_list):
     return dct
 
 
-def get_all_data(ind, user_id):
+def get_certificate_data(ind, user_id):
     """
-    Gets all data with regard to an individual inclusing its pedigree.
+    Gets all data needed to issue a certificate.
     """
     parent_keys = [
         (1, "F"),
@@ -554,13 +624,18 @@ def get_all_data(ind, user_id):
         (2, "FM"),
         (2, "MM"),
     ]
-    inds_data_lst = []
 
-    inds_data_lst.append(ind)
+    date = datetime.datetime.utcnow()
+    date = date.strftime("D:%Y%m%d%H%M%S+00'00'")
+    extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
+    ind["notes"] = "\n".join([str(ind.get("notes", "")), str(ind.get("colour_note", "")), str(ind.get("hair_notes", ""))])
+    cert_data_lst = []
+    cert_data_lst.append(ind)
+    cert_data_lst.append(extra_data)
     for level, a_type in parent_keys:
-        inds_data_lst.append(_get_parent(ind, user_id, level, a_type))
+        cert_data_lst.append(_get_parent(ind, user_id, level, a_type))
 
-    return flatten_list_of_dcts(inds_data_lst)
+    return flatten_list_of_dcts(cert_data_lst)
 
 
 def _get_parent(ind, user_id, ancestry_level, ancestry_type):
@@ -630,13 +705,7 @@ def get_certificate(data):
         unsigned_pdf_bytes, qr_code
     )
 
-    signer = certs.CertificateSigner(
-        cert_auth=Path("/code/ca.pem"),
-        private_key=Path("/code/key.pem"),
-        private_key_pass=None,
-    )
-    signed_bytes = signer.sign_certificate(unsigned_pdf_bytes_qr)
-    return signed_bytes
+    return unsigned_pdf_bytes_qr
 
 
 @APP.route("/", defaults={"path": ""})
