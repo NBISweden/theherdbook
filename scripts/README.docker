@@ -61,8 +61,8 @@ Mode of operation:
 Typical invocation:
 
 	./load-docker-compose.sh \
-	    -g kanindata-gotland-v11.xlxs herd-registry-gotland.xlsx \
-	    -m kanindata-mellerud-v5.xlxs
+	    -g kanindata-gotland-v11.xlxs -G herd-registry-gotland.xlsx \
+	    -m kanindata-mellerud-v5.xlxs -M herd-registry-mellerud.xlsx
 
 
 See also: ./load-docker-compose.sh -h
