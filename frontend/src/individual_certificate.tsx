@@ -114,24 +114,6 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
-  const [father, setFather] = React.useState(
-    undefined as Individual | undefined
-  );
-  const [mother, setMother] = React.useState(
-    undefined as Individual | undefined
-  );
-  const [fathersFather, setFathersFather] = React.useState(
-    undefined as Individual | undefined
-  );
-  const [fathersMother, setFathersMother] = React.useState(
-    undefined as Individual | undefined
-  );
-  const [mothersFather, setMothersFather] = React.useState(
-    undefined as Individual | undefined
-  );
-  const [mothersMother, setMothersMother] = React.useState(
-    undefined as Individual | undefined
-  );
   const [showForm, setShowForm] = React.useState(false as boolean);
   const [showSummary, setShowSummary] = React.useState(false as boolean);
   const [showComplete, setShowComplete] = React.useState(false as boolean);
