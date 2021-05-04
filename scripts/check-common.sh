@@ -14,11 +14,10 @@ END_SQL
 
 echo 'Bad individual numbers (all genebanks):'
 echo '(numbers not corresponding to year of birth)'
-# Numbers need to be on the form "XXXX-YYZZ" where
-# "YY" corresponds to the first two digits of
-# the year of birth.  Or, "XXXX-YZZZ" where "Y"
-# corresponds to the first digit of the year of
-# birth.
+# Numbers need to be on the form "XXXX-YYZZ" where "YY"
+# corresponds to the first two digits of the year of birth.
+# Or, "XXXX-YZZZ" where "Y" corresponds to the first digit
+# of the year of birth.
 psql --quiet <<-'END_SQL'
 	SELECT	i.number, b.birth_date
 	FROM	individual i
@@ -35,4 +34,4 @@ psql --quiet <<-'END_SQL'
 				cast(date_part('year', b.birth_date) as text),
 				4, 1),
 		'%');
-		
+END_SQL
