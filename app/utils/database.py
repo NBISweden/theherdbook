@@ -52,8 +52,6 @@ def set_test_database(name):
 
     DATABASE_MIGRATOR = SqliteMigrator(DATABASE)
 
-    check_migrations()
-
 
 def set_database(name, host=None, port=None, user=None, password=None):
     """
@@ -1223,16 +1221,5 @@ def check_migrations():
         ).scalar()
 
 
-try:
-    # pylint: disable=import-error
-    import utils.settings as settings
-
-    set_database(
-        settings.postgres.name,
-        settings.postgres.host,
-        settings.postgres.port,
-        settings.postgres.user,
-        settings.postgres.password,
-    )
-except ModuleNotFoundError:
-    logging.warning("No settings file found. Database must be set manually")
+if is_connected():
+    check_migrations()
