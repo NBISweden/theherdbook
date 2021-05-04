@@ -32,6 +32,8 @@ import {
   ServerMessage,
 } from "@app/data_context_global";
 
+//Styles for the form. A lot similar to the ones in individual_edit.
+//Find a different solution to avoid repetetive code.
 const useStyles = makeStyles({
   adminPane: {
     width: "100%",
@@ -114,16 +116,21 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  //States for conditional rendering
   const [showForm, setShowForm] = React.useState(false as boolean);
   const [showSummary, setShowSummary] = React.useState(false as boolean);
   const [showComplete, setShowComplete] = React.useState(false as boolean);
+  //States for authentication
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
+  //States for API-requests
   const [previewUrl, setPreviewUrl] = React.useState(undefined as unknown);
   const [certificateUrl, setCertificateUrl] = React.useState("");
-  const [numPages, setNumPages] = React.useState(null); // pdf-library stuff
-  const [pageNumber, setPageNumber] = React.useState(1); // pdf-library stuff
+  //States to make pdf-preview-library work
+  const [numPages, setNumPages] = React.useState(null);
+  const [pageNumber, setPageNumber] = React.useState(1);
+
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { popup } = useMessageContext();
@@ -134,7 +141,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const style = useStyles();
 
   // Limited version of the individual to be used for the preview
-  const individualCertificateFields = {
+  const certificateData = {
     claw_color: individual?.claw_color,
     belly_color: individual?.belly_color,
     color: individual?.color,
@@ -182,31 +189,7 @@ export function IndividualCertificate({ id }: { id: string }) {
     individual && setIndividual({ ...individual, [field]: value });
   };
 
-  /**
-   * Sends a request to save the current data in the database. Returns a
-   * ServerMessage.
-   *
-   * @param data The Individual data to save.
-   */
-  const save = (data: Individual) => {
-    const postData = { ...data };
-    patch("/api/individual", postData).then(
-      (retval: ServerMessage) => {
-        switch (retval.status) {
-          case "success":
-            userMessage(retval.message ?? "Individual updated", "success");
-            break;
-          default:
-            userMessage(retval.message ?? "something went wrong", "error");
-        }
-      },
-      (error) => {
-        userMessage("" + error, "error");
-        console.error(error);
-      }
-    );
-  };
-
+  // Used to activate the button for ordering the certificate
   async function authenticate(username: string, password: string) {
     return await post("/api/login", { username, password }).then(
       (data) => {
@@ -220,6 +203,8 @@ export function IndividualCertificate({ id }: { id: string }) {
     );
   }
 
+  // Returns a preview of the certificate that will be shown as an image
+  // using the React-pdf library.
   const previewCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/preview/${id}`, {
       body: JSON.stringify(content),
@@ -241,6 +226,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       );
   };
 
+  // Returns the signed certificate.
   const issueCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/issue/${id}`, {
       body: JSON.stringify(content),
@@ -266,7 +252,8 @@ export function IndividualCertificate({ id }: { id: string }) {
       });
   };
 
-  //pdf-library stuff
+  // This function is necessary to make the previw work.
+  // Built into the library.
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
@@ -567,7 +554,7 @@ export function IndividualCertificate({ id }: { id: string }) {
                 onClick={() => {
                   setShowForm(false);
                   setShowSummary(true);
-                  previewCertificate(id, individualCertificateFields);
+                  previewCertificate(id, certificateData);
                 }}
               >
                 {"Förhandsgranska"}
@@ -595,7 +582,6 @@ export function IndividualCertificate({ id }: { id: string }) {
           <p>
             Page {pageNumber} of {numPages}
           </p>
-
           <div>
             <h2>Bekräftelse</h2>
             <p>
@@ -631,15 +617,13 @@ export function IndividualCertificate({ id }: { id: string }) {
             >
               {"Bekräfta"}
             </Button>
-
             <p>Jag intyger att alla uppgifter är korrekta.</p>
             <Button
               variant="contained"
               color="primary"
               disabled={isUserGood ? false : true}
               onClick={() => {
-                save(individual);
-                issueCertificate(id, individualCertificateFields);
+                issueCertificate(id, certificateData);
                 setShowSummary(false);
                 setShowComplete(true);
               }}
