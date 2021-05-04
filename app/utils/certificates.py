@@ -257,7 +257,7 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
 
 
 def get_certificate_signer():
-    signer = certs.CertificateSigner(
+    signer = CertificateSigner(
         cert_auth=Path("/code/ca.pem"),
         private_key=Path("/code/key.pem"),
         private_key_pass=None,

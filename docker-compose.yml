@@ -60,19 +60,17 @@ services:
             - type: bind
               source: ./R
               target: /code
-              version: "3"
-              services:
-    s3:
+    s3backend:
         command: server /data
-        container_name: s3
+        container_name: s3backend
         environment:
-        - MINIO_ACCESS_KEY=accesskeytest
-        - MINIO_SECRET_KEY=secretkeytest
+            - MINIO_ACCESS_KEY=accesskeytest
+            - MINIO_SECRET_KEY=secretkeytest
         healthcheck:
-        test: ["CMD", "curl", "-fkq", "http://localhost:9000/minio/health/live"]
-        interval: 5s
-        timeout: 20s
-        retries: 3
+            test: ["CMD", "curl", "-fkq", "http://localhost:9000/minio/health/live"]
+            interval: 5s
+            timeout: 20s
+            retries: 3
         image: minio/minio:RELEASE.2021-04-18T19-26-29Z
         ports:
-        - "9000:9000"
+            - "9000:9000"
