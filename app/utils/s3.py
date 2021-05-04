@@ -3,6 +3,7 @@ S3 client handler.
 """
 from pathlib import Path
 import boto3
+from botocore.errorfactory import ClientError
 import botocore
 
 
@@ -121,25 +122,39 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         Returns whether an object exists in a bucket or not.
         """
         try:
-            self.s3_client.get_object(Bucket=self.bucket, Key=object_name)
-        except Exception as ex:
-            raise ex
+            self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
+        except ClientError as ex:
+            print(ex)
+            return False
 
         return True
 
+    def check_folder_exists(self, prefix):
+        """
+        Returns whether a logical folder has been created or not.
+        """
+        try:
+            result = self.s3_client.list_objects_v2(
+                Bucket=self.bucket, Prefix=prefix
+            )
 
-@staticmethod()
+        except Exception as ex:
+            raise ex
+
+        return "Contents" in result.keys()
+
+
 def get_s3_client():
     """
     Returns a S3 client instance.
     """
     s3_client = S3Handler(
         bucket="test",
-        endpoint="http://127.0.0.1:9000",
+        endpoint="http://s3backend:9000",
         region="us-east-1",
         secret_key="secretkeytest",
         access_key="accesskeytest",
-        verify=None,
+        verify=False,
         cert=None,
         private_key=None,
     )
