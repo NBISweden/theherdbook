@@ -584,13 +584,7 @@ def sign_data(pdf_bytes):
     """
     Returns digitally signed pdf bytes.
     """
-    signer = certs.CertificateSigner(
-        cert_auth=Path("/code/ca.pem"),
-        private_key=Path("/code/key.pem"),
-        private_key_pass=None,
-    )
-    signed_bytes = signer.sign_certificate(pdf_bytes)
-    return signed_bytes
+    return certs.get_certificate_signer().sign_certificate(pdf_bytes)
 
 
 def upload_certificate():
