@@ -134,7 +134,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const style = useStyles();
 
   // Limited version of the individual to be used for the preview
-  const previewIndividual = {
+  const individualCertificateFields = {
     claw_color: individual?.claw_color,
     belly_color: individual?.belly_color,
     color: individual?.color,
@@ -241,24 +241,29 @@ export function IndividualCertificate({ id }: { id: string }) {
       );
   };
 
-  const issueCertificate = (id: string) => {
-    fetch(`/api/certificates/update/${id}`, {
+  const issueCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/issue/${id}`, {
+      body: JSON.stringify(content),
       method: "POST",
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
       },
     })
-      .then((res) => res.blob())
-      .then(
-        (blob) => {
-          setCertificateUrl(window.URL.createObjectURL(blob));
-          console.log(certificateUrl);
-        },
-        (error) => {
-          userMessage(error, "error");
+      .then((res) => {
+        if (res.status === 401) {
+          userMessage("Kaninen har redan ett certifikat.", "error");
+        } else {
+          res.blob();
         }
-      );
+      })
+      .then((blob) => {
+        setCertificateUrl(window.URL.createObjectURL(blob));
+        console.log(certificateUrl);
+      })
+      .catch((error) => {
+        userMessage(error, "error");
+      });
   };
 
   //pdf-library stuff
@@ -562,7 +567,7 @@ export function IndividualCertificate({ id }: { id: string }) {
                 onClick={() => {
                   setShowForm(false);
                   setShowSummary(true);
-                  previewCertificate(id, previewIndividual);
+                  previewCertificate(id, individualCertificateFields);
                 }}
               >
                 {"Förhandsgranska"}
@@ -570,7 +575,7 @@ export function IndividualCertificate({ id }: { id: string }) {
             </div>
           </MuiPickersUtilsProvider>
         </div>
-      ) : !individual && !showSummary ? (
+      ) : !individual ? (
         <div className={style.loading}>
           <h2>Loading data</h2>
           <CircularProgress />
@@ -583,6 +588,7 @@ export function IndividualCertificate({ id }: { id: string }) {
             onLoadSuccess={onDocumentLoadSuccess}
             style={{ border: "2px solid black" }}
             renderAnnotationLayer={true}
+            loading={<CircularProgress />}
           >
             <Page pageNumber={pageNumber} />
           </Document>
@@ -633,7 +639,7 @@ export function IndividualCertificate({ id }: { id: string }) {
               disabled={isUserGood ? false : true}
               onClick={() => {
                 save(individual);
-                issueCertificate(id);
+                issueCertificate(id, individualCertificateFields);
                 setShowSummary(false);
                 setShowComplete(true);
               }}
@@ -658,7 +664,14 @@ export function IndividualCertificate({ id }: { id: string }) {
         <>
           <h1>Certifikatet är klart!</h1>
           <a target="_blank" href={certificateUrl} download={individual.number}>
-            Download
+            <Button variant="contained" color="primary">
+              {"Ladda ner"}
+            </Button>
+          </a>
+          <a target="_blank" href={certificateUrl}>
+            <Button variant="contained" color="primary">
+              {"Öppna i ny flik"}
+            </Button>
           </a>
         </>
       ) : (
