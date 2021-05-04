@@ -571,6 +571,9 @@ def preview_certificate(i_number):
 
 
 def create_pdf_response(pdf_bytes, obj_name):
+    """
+    Returns a http response containing the pdf as body.
+    """
     response = make_response(pdf_bytes.getvalue())
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = "inline; filename=%s" % obj_name
@@ -578,6 +581,9 @@ def create_pdf_response(pdf_bytes, obj_name):
 
 
 def sign_data(pdf_bytes):
+    """
+    Returns digitally signed pdf bytes.
+    """
     signer = certs.CertificateSigner(
         cert_auth=Path("/code/ca.pem"),
         private_key=Path("/code/key.pem"),
@@ -588,18 +594,30 @@ def sign_data(pdf_bytes):
 
 
 def upload_certificate():
+    """
+    TODO
+    """
     return 1
 
 
 def check_certificate_exists():
+    """
+    TODO
+    """
     return 0
 
 
 def verify_certificate_checksum():
+    """
+    TODO
+    """
     return 0
 
 
 def check_certificate_number():
+    """
+    TODO
+    """
     return 0
 
 
