@@ -32,6 +32,7 @@ import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
 import utils.certificates as certs  # isort:skip
+import utils.s3 as s3  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -587,18 +588,27 @@ def sign_data(pdf_bytes):
     return certs.get_certificate_signer().sign_certificate(pdf_bytes)
 
 
-def upload_certificate():
+def download_certificate(certificate_number, date):
     """
     TODO
     """
-    return 1
 
 
-def check_certificate_exists():
+def upload_certificate(pdf_bytes, certificate_number, object_name):
     """
-    TODO
+    Triggers a S3 certificate upload
     """
-    return 0
+    return s3.get_s3_client().put_object(
+        bucket_file_name=f"{certificate_number}/{object_name}", file_data=pdf_bytes
+    )
+
+
+def check_certificate_exists(certificate_number, checksum):
+    """
+    Returns a boolean value specifying if a certificate version already exists in S3.
+    """
+    cert_checksums = s3.get_s3_client().list_object_checksums(prefix=certificate_number)
+    return checksum in cert_checksums
 
 
 def verify_certificate_checksum():
