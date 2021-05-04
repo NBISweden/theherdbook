@@ -521,17 +521,10 @@ def update_certificate(i_number):
         data = get_certificate_data(ind, user_id)
         data.update(**request.form)
         pdf_bytes = get_certificate(data)
-        signer = certs.CertificateSigner(
-            cert_auth=Path("/code/ca.pem"),
-            private_key=Path("/code/key.pem"),
-            private_key_pass=None,
-        )
-        signed_bytes = signer.sign_certificate(pdf_bytes)
         date = datetime.datetime.utcnow()
         date = date.strftime("%Y-%m-%d_%H%M%S%f")
         object_name = f"{date}.pdf"
-        return create_pdf_response(pdf_bytes=signed_bytes, obj_name=object_name)
-
+        return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=object_name)
 
     return jsonify({"response": "Individual not found"}, 404)
 
@@ -554,16 +547,10 @@ def issue_certificate(i_number):
     da.update_individual(ind, session.get("user_id", None))
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
-    signer = certs.CertificateSigner(
-        cert_auth=Path("/code/ca.pem"),
-        private_key=Path("/code/key.pem"),
-        private_key_pass=None,
-    )
-    signed_bytes = signer.sign_certificate(pdf_bytes)
     date = datetime.datetime.utcnow()
     date = date.strftime("%Y-%m-%d_%H%M%S%f")
     object_name = f"{date}.pdf"
-    return create_pdf_response(pdf_bytes=signed_bytes, obj_name=object_name)
+    return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=object_name)
 
 
 @APP.route("/api/certificates/preview/<i_number>", methods=["POST"])
@@ -590,17 +577,31 @@ def create_pdf_response(pdf_bytes, obj_name):
     return response
 
 
+def sign_data(pdf_bytes):
+    signer = certs.CertificateSigner(
+        cert_auth=Path("/code/ca.pem"),
+        private_key=Path("/code/key.pem"),
+        private_key_pass=None,
+    )
+    signed_bytes = signer.sign_certificate(pdf_bytes)
+    return signed_bytes
+
+
 def upload_certificate():
     return 1
+
 
 def check_certificate_exists():
     return 0
 
+
 def verify_certificate_checksum():
     return 0
 
+
 def check_certificate_number():
     return 0
+
 
 def flatten_list_of_dcts(in_list):
     """
@@ -629,7 +630,13 @@ def get_certificate_data(ind, user_id):
     date = datetime.datetime.utcnow()
     date = date.strftime("D:%Y%m%d%H%M%S+00'00'")
     extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
-    ind["notes"] = "\n".join([str(ind.get("notes", "")), str(ind.get("colour_note", "")), str(ind.get("hair_notes", ""))])
+    ind["notes"] = "\n".join(
+        [
+            str(ind.get("notes", "")),
+            str(ind.get("colour_note", "")),
+            str(ind.get("hair_notes", "")),
+        ]
+    )
     cert_data_lst = []
     cert_data_lst.append(ind)
     cert_data_lst.append(extra_data)
