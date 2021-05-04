@@ -11,6 +11,7 @@ import binascii
 import logging
 import sys
 import time
+import random
 import datetime
 import uuid
 
@@ -518,16 +519,24 @@ def update_certificate(i_number):
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_number, user_id)
 
-    if ind:
+    if ind is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    certificate_exists = ind.get("certificate", None)
+    if certificate_exists and check_certificate_s3(object_name=ind["number"]):
         data = get_certificate_data(ind, user_id)
         data.update(**request.form)
         pdf_bytes = get_certificate(data)
-        date = datetime.datetime.utcnow()
-        date = date.strftime("%Y-%m-%d_%H%M%S%f")
-        object_name = f"{date}.pdf"
-        return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=object_name)
+        uploaded = upload_certificate(
+           pdf_bytes=pdf_bytes.getvalue(), certificate_number=ind["certificate"], prefix=ind["number"]
+        )
 
-    return jsonify({"response": "Individual not found"}), 404
+        if uploaded:
+            return create_pdf_response(
+                pdf_bytes=sign_data(pdf_bytes), obj_name=f'{ind["certificate"]}.pdf'
+            )
+
+    return jsonify({"response": "Certificate was not updated"}), 404
 
 
 @APP.route("/api/certificates/issue/<i_number>", methods=["POST"])
@@ -544,14 +553,22 @@ def issue_certificate(i_number):
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
-    ind.update(**request.form)
+    ## TODO: Make sure this is unique
+    cert_number = str(random.randint(50001, 99999))
+    ind.update(**request.form, certificate=cert_number)
     da.update_individual(ind, session.get("user_id", None))
+
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
-    date = datetime.datetime.utcnow()
-    date = date.strftime("%Y-%m-%d_%H%M%S%f")
-    object_name = f"{date}.pdf"
-    return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=object_name)
+    ind_number = ind["number"]
+    uploaded = upload_certificate(
+        pdf_bytes=pdf_bytes.getvalue()(), certificate_number=cert_number, prefix=ind_number
+    )
+
+    if uploaded:
+        return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=f"{cert_number}.pdf")
+
+    return jsonify({"response": "Certificate could not be uploaded"}), 400
 
 
 @APP.route("/api/certificates/preview/<i_number>", methods=["POST"])
@@ -594,21 +611,28 @@ def download_certificate(certificate_number, date):
     """
 
 
-def upload_certificate(pdf_bytes, certificate_number, object_name):
+def upload_certificate(pdf_bytes, prefix, certificate_number):
     """
     Triggers a S3 certificate upload
     """
     return s3.get_s3_client().put_object(
-        bucket_file_name=f"{certificate_number}/{object_name}", file_data=pdf_bytes
+        bucket_file_name=f"{prefix}/{certificate_number}.pdf", file_data=pdf_bytes
     )
 
 
-def check_certificate_exists(certificate_number, checksum):
+def check_certificate_version_exists(certificate_number, checksum):
     """
     Returns a boolean value specifying if a certificate version already exists in S3.
     """
     cert_checksums = s3.get_s3_client().list_object_checksums(prefix=certificate_number)
     return checksum in cert_checksums
+
+
+def check_certificate_s3(object_name):
+    """
+    Returns a boolean value specifying if any certificate already exists in S3.
+    """
+    return s3.get_s3_client().check_folder_exists(prefix=object_name)
 
 
 def verify_certificate_checksum():
