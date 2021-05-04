@@ -28,7 +28,7 @@ FORM_KEYS = {
     "IdKön": "sex",
     "IdFödelseDatum": "birth_date",
     "IdFotoFinns": "photos",  # Fix Left right and up. Checkbox.
-    "IdNamn": "name", # herdname + ind name(?) Pending decision
+    "IdNamn": "name",  # herdname + ind name(?) Pending decision
     "FarGenbanksNummer": "F_genebank_id",
     "FarÅrKullIndivid": "F_number",
     "MorGenbanksNummer": "M_genebank_id",
@@ -55,7 +55,7 @@ FORM_KEYS = {
     "MormorFärg": "MM_colour",
     "Nummer": "number",
     "IntygasAv": "user_id",  # Username
-    "IntygasNummer": "certificate", # Herd id of rabbit individual (Without herd identifier) G/M
+    "IntygasNummer": "certificate",  # Herd id of rabbit individual (Without herd identifier) G/M
     "IntygasDatum": "issue_date",  # Day of signature
     "IntygasPlats": "name",  # Physical id (Only in cert?)
 }
@@ -254,6 +254,16 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
         cert_auth = load_pem_x509_certificate(ca_data)
 
         return private_key, cert_auth
+
+
+@staticmethod(f)
+def get_certificate_signer():
+    signer = certs.CertificateSigner(
+        cert_auth=Path("/code/ca.pem"),
+        private_key=Path("/code/key.pem"),
+        private_key_pass=None,
+    )
+    return signer
 
 
 class CertificateVerifier:  # pylint: disable=too-few-public-methods
