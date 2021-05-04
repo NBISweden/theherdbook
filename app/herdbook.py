@@ -335,6 +335,9 @@ def external_login_handler(service):
     if service == "available":
         return jsonify(utils.external_auth.available_methods())
 
+    if service not in utils.external_auth.available_methods():
+        return "null"  # bad method
+
     if not session.get("link_account") and current_user.is_authenticated:
         return get_user()
 
@@ -379,6 +382,9 @@ def external_link_handler(service):
         if session.get("link_account"):
             del session["link_account"]
         return "reset"
+
+    if service not in utils.external_auth.available_methods():
+        return "null"  # bad method
 
     if not current_user.is_authenticated:
         return "null"  # FIXME: error code instead?
