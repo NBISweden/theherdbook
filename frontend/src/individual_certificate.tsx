@@ -120,7 +120,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
-  const [previewUrl, setPreviewUrl] = React.useState();
+  const [previewUrl, setPreviewUrl] = React.useState(undefined as unknown);
   const [certificateUrl, setCertificateUrl] = React.useState("");
   const [numPages, setNumPages] = React.useState(null); // pdf-library stuff
   const [pageNumber, setPageNumber] = React.useState(1); // pdf-library stuff
@@ -242,21 +242,23 @@ export function IndividualCertificate({ id }: { id: string }) {
   };
 
   const issueCertificate = (id: string) => {
-    fetch(`/api/certificates/issue/${id}`, {
-      method: "GET",
+    fetch(`/api/certificates/update/${id}`, {
+      method: "POST",
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
       },
-    }).then(
-      (data) => {
-        console.log("cert", data);
-        setCertificateUrl(data.url);
-      },
-      (error) => {
-        userMessage(error, "error");
-      }
-    );
+    })
+      .then((res) => res.blob())
+      .then(
+        (blob) => {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          console.log(certificateUrl);
+        },
+        (error) => {
+          userMessage(error, "error");
+        }
+      );
   };
 
   //pdf-library stuff
@@ -655,8 +657,8 @@ export function IndividualCertificate({ id }: { id: string }) {
       ) : individual && showComplete ? (
         <>
           <h1>Certifikatet är klart!</h1>
-          <a target="_blank" href={previewUrl}>
-            Öppna i ny flik.
+          <a target="_blank" href={certificateUrl} download={individual.number}>
+            Download
           </a>
         </>
       ) : (
