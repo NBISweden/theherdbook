@@ -526,7 +526,7 @@ def update_certificate(i_number):
         object_name = f"{date}.pdf"
         return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=object_name)
 
-    return jsonify({"response": "Individual not found"}, 404)
+    return jsonify({"response": "Individual not found"}), 404
 
 
 @APP.route("/api/certificates/issue/<i_number>", methods=["POST"])
@@ -538,10 +538,10 @@ def issue_certificate(i_number):
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_number, user_id)
     if ind is None:
-        return jsonify({"response": "Individual not found"}, 404)
+        return jsonify({"response": "Individual not found"}), 404
     certificate_exists = ind.get("certificate", None)
     if certificate_exists:
-        return jsonify({"response": "Certificate already exists"}, 401)
+        return jsonify({"response": "Certificate already exists"}), 400
 
     ind.update(**request.form)
     da.update_individual(ind, session.get("user_id", None))
@@ -562,7 +562,7 @@ def preview_certificate(i_number):
     user_id = session.get("user_id", None)
     ind = da.get_individual(i_number, user_id)
     if ind is None:
-        return jsonify({"response": "Individual not found"}, 404)
+        return jsonify({"response": "Individual not found"}), 404
 
     data = get_certificate_data(ind, user_id)
     data.update(**request.form)
