@@ -84,22 +84,20 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
 
         return obj_data
 
-    def put_object(self, bucket_file_name=None, file_data=None):
+    def put_object(self, file_name=None, file_data=None):
         """
         Uploads bytes to a S3 object.
         """
-        if bucket_file_name is None or not isinstance(bucket_file_name, str):
+        if file_name is None or not isinstance(file_name, str):
             return False
         try:
-            self.s3_client.put_object(
-                Body=file_data, Bucket=self.bucket, Key=bucket_file_name
-            )
+            self.s3_client.put_object(Body=file_data, Bucket=self.bucket, Key=file_name)
         except Exception as ex:
             raise ex
 
         return True
 
-    def head_object(self, object_name, etag=""):
+    def head_object(self, object_name):
         """
         Returns whether an object exists in a bucket or not.
         """
