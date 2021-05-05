@@ -597,11 +597,12 @@ def check_certificate_s3(ind_number):
     return s3.get_s3_client().head_object(object_name=f"{ind_number}/certificate.pdf", etag="")
 
 
-def verify_certificate_checksum():
+def verify_certificate_checksum(object_name, checksum):
     """
-    TODO
+    Returns whether a certificate exists with the given checksum.
     """
-    return 0
+    return s3.get_s3_client().head_object(object_name, etag=checksum)
+
 
 
 def check_certificate_number():
