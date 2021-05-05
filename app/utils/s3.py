@@ -99,31 +99,17 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
 
         return True
 
-    def head_object(self, object_name, etag=None):
+    def head_object(self, object_name, etag=""):
         """
-        Returns whether an object exists in a bucket or not.
+        Returns whether an object exists in a bucket or not. If etag is supplied it will check if checksums match.
         """
         try:
-            self.s3_client.head_object(Bucket=self.bucket, Key=object_name, Ifmatch=etag)
+            self.s3_client.head_object(Bucket=self.bucket, Key=object_name, IfMatch=etag)
         except ClientError as ex:
             print(ex)
             return False
 
         return True
-
-    def check_folder_exists(self, prefix):
-        """
-        Returns whether a logical folder has been created or not.
-        """
-        try:
-            result = self.s3_client.list_objects_v2(
-                Bucket=self.bucket, Prefix=prefix
-            )
-
-        except Exception as ex:
-            raise ex
-
-        return "Contents" in result.keys()
 
 
 def get_s3_client():
