@@ -523,12 +523,12 @@ def update_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     certificate_exists = ind.get("certificate", None)
-    if certificate_exists and check_certificate_s3(object_name=ind["number"]):
+    if certificate_exists and check_certificate_s3(ind_number=ind["number"]):
         data = get_certificate_data(ind, user_id)
         data.update(**request.form)
         pdf_bytes = get_certificate(data)
         uploaded = upload_certificate(
-           pdf_bytes=pdf_bytes.getvalue(), certificate_number=ind["certificate"], prefix=ind["number"]
+           pdf_bytes=pdf_bytes.getvalue(), ind_number=ind["number"]
         )
 
         if uploaded:
@@ -562,7 +562,7 @@ def issue_certificate(i_number):
     pdf_bytes = get_certificate(data)
     ind_number = ind["number"]
     uploaded = upload_certificate(
-        pdf_bytes=pdf_bytes.getvalue()(), certificate_number=cert_number, prefix=ind_number
+        pdf_bytes=pdf_bytes.getvalue(), ind_number=ind_number
     )
 
     if uploaded:
@@ -611,20 +611,20 @@ def download_certificate(certificate_number, date):
     """
 
 
-def upload_certificate(pdf_bytes, prefix, certificate_number):
+def upload_certificate(pdf_bytes, ind_number):
     """
     Triggers a S3 certificate upload
     """
     return s3.get_s3_client().put_object(
-        bucket_file_name=f"{prefix}/{certificate_number}.pdf", file_data=pdf_bytes
+        bucket_file_name=f"{ind_number}.pdf", file_data=pdf_bytes
     )
 
 
-def check_certificate_s3(object_name):
+def check_certificate_s3(ind_number):
     """
     Returns a boolean value specifying if any certificate already exists in S3.
     """
-    return s3.get_s3_client().check_folder_exists(prefix=object_name)
+    return s3.get_s3_client().head_object(object_name=f"{ind_number}.pdf", etag="")
 
 
 def verify_certificate_checksum():
