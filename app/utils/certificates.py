@@ -302,3 +302,11 @@ class CertificateVerifier:  # pylint: disable=too-few-public-methods
         except AssertionError:
             print("PDF has an invalid signature")
             return False
+
+
+def get_certificate_verifier():
+
+    verifier = CertificateVerifier(
+        pkcs_ca=Path("/code/ca.pem"),
+    )
+    return verifier
