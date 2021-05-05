@@ -2,18 +2,24 @@
  * @file The IndividualView function provides information about a single
  * individual, including links to parents and progeny.
  */
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { Button, Tooltip} from '@material-ui/core'
-import { makeStyles } from '@material-ui/core/styles'
-import { useMessageContext } from '@app/message_context'
-import { get } from '@app/communication'
-import { Individual, herdLabel, DateValue, individualLabel, asLocale } from '@app/data_context_global'
-import { useDataContext } from '@app/data_context'
-import { IndividualPedigree } from '@app/individual_pedigree'
-import { useUserContext } from '@app/user_context'
-import { IndividualEdit } from '@app/individual_edit'
-import { IndividualCertificate } from './individual_certificate'
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button, Tooltip } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
+import { useMessageContext } from "@app/message_context";
+import { get } from "@app/communication";
+import {
+  Individual,
+  herdLabel,
+  DateValue,
+  individualLabel,
+  asLocale,
+} from "@app/data_context_global";
+import { useDataContext } from "@app/data_context";
+import { IndividualPedigree } from "@app/individual_pedigree";
+import { useUserContext } from "@app/user_context";
+import { IndividualEdit } from "@app/individual_edit";
+import { IndividualCertificate } from "./individual_certificate";
 
 const useStyles = makeStyles({
   body: {
@@ -112,76 +118,8 @@ export function IndividualView({ id }: { id: string }) {
         console.error(error);
         userMessage(error, "error");
       }
-    )
-  }, [id])
-
-  return <>
-    <div className={style.body}>
-      { individual ? <>
-        <div className={style.flexColumn}>
-          <div>
-            <h3>{individual?.name ?? individual.number}</h3>
-            <dl className={style.sameLine}>
-              <dt>Namn:</dt><dd>{individual?.name}</dd>
-              <dt>Nummer:</dt><dd>{individual?.number}</dd>
-              <dt>Certifikat:</dt><dd>{individual?.certificate}</dd>
-              <dt>Kön:</dt><dd>{individual?.sex}</dd>
-              <dt><Tooltip title="Inavelskoefficient"><span>F:</span></Tooltip></dt><dd>{individual?.inbreeding}%</dd>
-              <dt><Tooltip title="Genomsnittligt släktskap/ Mean Kinship"><span>MK:</span></Tooltip></dt><dd>{individual?.MK}%</dd>
-              <dt>Färg:</dt><dd>
-                {individual?.color}<br />
-                {individual?.color_note}
-              </dd>
-              <dt>Född:</dt><dd>
-                {individual?.birth_date
-                 ? asLocale(individual.birth_date)
-                 : '-'
-                 }
-                {individual?.death_date
-                 ? ` - Död: ${asLocale(individual.death_date)}`
-                 : ''
-                 }
-              </dd>
-              <dt>Kullstorlek:</dt><dd>{individual?.litter}</dd>
-              <dt>Vikt:</dt>
-              <dd>
-                {individual && individual.weights && individual.weights.length > 1
-                  && <ul className={style.herdList}>
-                    {individual.weights.sort((a: DateValue, b: DateValue) =>
-                                              new Date(a.date).getTime() - new Date(b.date).getTime())
-                                      .map((w: any, i) => {
-                                        return <li key={i}>
-                                          {`${asLocale(w.date)}: ${w.weight} kg`}
-                                        </li>
-                                      })
-                    }
-                  </ul>
-                }
-              </dd>
-              <dt>Anteckningar</dt><dd>{individual?.notes ?? '-'}</dd>
-            </dl>
-          </div>
-          {user?.canEdit(id) &&
-            <Button className={style.editButton}
-                    variant="contained"
-                    color="primary"
-                    onClick={() => popup(<IndividualEdit id={id} />)}
-              >
-              Redigera individ
-            </Button>
-          }
-          {user?.canEdit(id) &&
-            <Button className={style.editButton}
-                    variant="contained"
-                    color="primary"
-                    onClick={() => popup(<IndividualCertificate id={id} />)}
-              >
-              Hämta certifikat
-            </Button>
-          }
-          <div>
-            <h3>Besättningshistoria</h3>
-            <ul className={style.herdList}>
+    );
+  }, [id]);
 
   return (
     <>
