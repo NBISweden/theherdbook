@@ -99,30 +99,12 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
 
         return True
 
-    def list_object_checksums(self, prefix):
-        """
-        Returns a list with all checksums of objects inside a bucket.
-        """
-        objects = []
-
-        try:
-            bucket_list = self.s3_client.list_objects_v2(
-                Bucket=self.bucket, Prefix=prefix
-            )
-
-            for obj in bucket_list["Contents"]:
-                objects.append(obj["ETag"])
-        except Exception as ex:
-            raise ex
-
-        return objects
-
-    def head_object(self, object_name):
+    def head_object(self, object_name, etag=None):
         """
         Returns whether an object exists in a bucket or not.
         """
         try:
-            self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
+            self.s3_client.head_object(Bucket=self.bucket, Key=object_name, Ifmatch=etag)
         except ClientError as ex:
             print(ex)
             return False
