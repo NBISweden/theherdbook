@@ -590,14 +590,6 @@ def upload_certificate(pdf_bytes, prefix, certificate_number):
     )
 
 
-def check_certificate_version_exists(certificate_number, checksum):
-    """
-    Returns a boolean value specifying if a certificate version already exists in S3.
-    """
-    cert_checksums = s3.get_s3_client().list_object_checksums(prefix=certificate_number)
-    return checksum in cert_checksums
-
-
 def check_certificate_s3(object_name):
     """
     Returns a boolean value specifying if any certificate already exists in S3.
