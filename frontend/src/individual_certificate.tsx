@@ -53,6 +53,7 @@ const useStyles = makeStyles({
   flexRow: {
     display: "flex",
     flexDirection: "row",
+    alignItems: "end",
   },
   flexRowOrColumn: {
     display: "flex",
@@ -92,6 +93,8 @@ const useStyles = makeStyles({
   paneControls: {
     display: "flex",
     flexDirection: "row",
+    justifyContent: "space-between",
+    padding: "20px 0",
   },
   paneTitle: {
     position: "absolute",
@@ -215,15 +218,13 @@ export function IndividualCertificate({ id }: { id: string }) {
       },
     })
       .then((res) => res.arrayBuffer())
-      .then(
-        (data) => {
-          console.log("cert", data);
-          setPreviewUrl(data);
-        },
-        (error) => {
-          userMessage(error, "error");
-        }
-      );
+      .then((data) => {
+        console.log("cert", data);
+        setPreviewUrl(data);
+      })
+      .catch((error) => {
+        userMessage(error.message, "error");
+      });
   };
 
   // Returns the signed certificate.
@@ -237,18 +238,28 @@ export function IndividualCertificate({ id }: { id: string }) {
       },
     })
       .then((res) => {
-        if (res.status === 401) {
-          userMessage("Kaninen har redan ett certifikat.", "error");
+        if (res.status === 400) {
+          throw new Error(
+            "Certifikatet kunde inte utfärdas. Anledningen kan vara att kaninen redan har ett certifikat."
+          );
+        } else if (res.status === 404) {
+          throw new Error("Kaninen kunde inte hittas.");
+        } else res.blob();
+      })
+      .then((blob: unknown) => {
+        console.log(blob);
+        if (blob) {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          setShowSummary(false);
+          setShowComplete(true);
         } else {
-          res.blob();
+          throw new Error("Något gick fel.");
         }
       })
-      .then((blob) => {
-        setCertificateUrl(window.URL.createObjectURL(blob));
-        console.log(certificateUrl);
-      })
       .catch((error) => {
-        userMessage(error, "error");
+        {
+          userMessage(error.message, "error");
+        }
       });
   };
 
@@ -257,35 +268,6 @@ export function IndividualCertificate({ id }: { id: string }) {
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
-
-  async function issueCertificate(id: string) {
-    return await get(`/api/certificates/issue/${id}`).then(
-      (data) => {
-        console.log("cert", data);
-      },
-      (error) => {
-        userMessage(error, "error");
-      }
-    );
-  } */
-
-  const issueCertificate = (id: string) => {
-    fetch(`/api/certificates/issue/${id}`, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/pdf",
-      },
-    }).then(
-      (data) => {
-        console.log("cert", data);
-        setCertificateUrl(data.url);
-      },
-      (error) => {
-        userMessage(error, "error");
-      }
-    );
-  };
 
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
@@ -314,7 +296,12 @@ export function IndividualCertificate({ id }: { id: string }) {
 
   return (
     <>
-      {individual && showForm ? (
+      {!individual ? (
+        <div className={style.loading}>
+          <h2>Loading data</h2>
+          <CircularProgress />
+        </div>
+      ) : individual && showForm ? (
         <div className={style.form}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <div className={style.flexRowOrColumn}>
@@ -335,17 +322,34 @@ export function IndividualCertificate({ id }: { id: string }) {
                     }}
                   />
                 </div>
-                <h2>Identitet</h2>
-                <TextField
-                  disabled={!canManage}
-                  label="Namn"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.name ?? ""}
-                  onChange={(event) => {
-                    updateIndividual("name", event.currentTarget.value);
-                  }}
-                />
+                <div className={style.flexRow}>
+                  <TextField
+                    disabled={!canManage}
+                    label="Namn"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.name ?? ""}
+                    onChange={(event) => {
+                      updateIndividual("name", event.currentTarget.value);
+                    }}
+                  />
+                  <KeyboardDatePicker
+                    disabled={!canManage}
+                    autoOk
+                    variant="inline"
+                    className={style.control}
+                    inputVariant={inputVariant}
+                    label="Födelsedatum"
+                    format={dateFormat}
+                    value={individual.birth_date ?? ""}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {
+                      value && updateIndividual("birth_date", value);
+                    }}
+                  />
+                </div>
                 <div className={style.flexRow}>
                   <Autocomplete
                     disabled={!canManage}
@@ -369,20 +373,15 @@ export function IndividualCertificate({ id }: { id: string }) {
                       updateIndividual("sex", newValue?.value ?? "");
                     }}
                   />
-                  <KeyboardDatePicker
+                  <TextField
                     disabled={!canManage}
-                    autoOk
-                    variant="inline"
+                    label="Antal födda i kullen"
                     className={style.control}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? ""}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && updateIndividual("birth_date", value);
+                    variant={inputVariant}
+                    value={individual.litter ?? null}
+                    type="number"
+                    onChange={(event) => {
+                      updateIndividual("litter", +event.currentTarget.value);
                     }}
                   />
                 </div>
@@ -415,7 +414,7 @@ export function IndividualCertificate({ id }: { id: string }) {
                     variant={inputVariant}
                     className={style.control}
                     multiline
-                    rows={3}
+                    rows={1}
                     value={individual.hair_notes ?? ""}
                     onChange={(event) => {
                       updateIndividual("hair_notes", event.currentTarget.value);
@@ -427,44 +426,6 @@ export function IndividualCertificate({ id }: { id: string }) {
                     disabled={!canManage}
                     label="Färg på buken"
                     className={style.control}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? ""}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && updateIndividual("birth_date", value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    disabled={!canManage}
-                    options={colorOptions ?? []}
-                    value={
-                      colorOptions.find(
-                        (option) => option.value == individual.color
-                      ) ?? colorOptions[0]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Färg"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateIndividual("color", newValue?.value ?? "");
-                    }}
-                  />
-                  <TextField
-                    disabled={!canManage}
-                    label="Avvikande hårlag"
                     variant={inputVariant}
                     value={individual.belly_color ?? ""}
                     onChange={(event) => {
@@ -511,18 +472,7 @@ export function IndividualCertificate({ id }: { id: string }) {
                     )}
                   />
                 </div>
-                <div>
-                  <TextField
-                    disabled={!canManage}
-                    label="Antal födda i kullen"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.litter ?? null}
-                    onChange={(event) => {
-                      updateIndividual("litter", event.currentTarget.value);
-                    }}
-                  />
-                </div>
+                <div></div>
                 <TextField
                   label="Anteckningar"
                   variant={inputVariant}
@@ -546,8 +496,6 @@ export function IndividualCertificate({ id }: { id: string }) {
               >
                 {"Tillbaka"}
               </Button>
-            </div>
-            <div className={style.paneControls}>
               <Button
                 variant="contained"
                 color="primary"
@@ -561,11 +509,6 @@ export function IndividualCertificate({ id }: { id: string }) {
               </Button>
             </div>
           </MuiPickersUtilsProvider>
-        </div>
-      ) : !individual ? (
-        <div className={style.loading}>
-          <h2>Loading data</h2>
-          <CircularProgress />
         </div>
       ) : individual && showSummary ? (
         <>
@@ -610,26 +553,18 @@ export function IndividualCertificate({ id }: { id: string }) {
               onChange={(e) => setPassword(e.target.value)}
               fullWidth
             />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => authenticate(username, password)}
+            <div
+              className={style.paneControls}
+              style={{ justifyContent: "flex-end" }}
             >
-              {"Bekräfta"}
-            </Button>
-            <p>Jag intyger att alla uppgifter är korrekta.</p>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={isUserGood ? false : true}
-              onClick={() => {
-                issueCertificate(id, certificateData);
-                setShowSummary(false);
-                setShowComplete(true);
-              }}
-            >
-              {"Beställ certifikat"}
-            </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => authenticate(username, password)}
+              >
+                {"Bekräfta"}
+              </Button>
+            </div>
           </div>
           <div className={style.paneControls}>
             <Button
@@ -638,9 +573,22 @@ export function IndividualCertificate({ id }: { id: string }) {
               onClick={() => {
                 setShowForm(true);
                 setShowSummary(false);
+                setIsUserGood(false);
+                setUsername("");
+                setPassword("");
               }}
             >
               {"Tillbaka"}
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={isUserGood ? false : true}
+              onClick={() => {
+                issueCertificate(id, certificateData);
+              }}
+            >
+              {"Beställ certifikat"}
             </Button>
           </div>
         </>
