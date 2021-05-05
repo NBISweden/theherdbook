@@ -13,6 +13,7 @@ import sys
 import time
 import random
 import datetime
+import hashlib
 import uuid
 
 from pathlib import Path
@@ -497,13 +498,14 @@ def update_certificate(i_number):
         data = get_certificate_data(ind, user_id)
         data.update(**request.form)
         pdf_bytes = get_certificate(data)
+        signed_data = sign_data(pdf_bytes)
         uploaded = upload_certificate(
-           pdf_bytes=pdf_bytes.getvalue(), ind_number=ind["number"]
+            pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
         )
 
         if uploaded:
             return create_pdf_response(
-                pdf_bytes=sign_data(pdf_bytes), obj_name=f'{ind["certificate"]}.pdf'
+                pdf_bytes=signed_data, obj_name=f'{ind["certificate"]}.pdf'
             )
 
     return jsonify({"response": "Certificate was not updated"}), 404
@@ -524,19 +526,21 @@ def issue_certificate(i_number):
         return jsonify({"response": "Certificate already exists"}), 400
 
     ## TODO: Make sure this is unique
-    cert_number = str(random.randint(50001, 99999))
+    ##cert_number = str(random.randint(50001, 99999))
+    cert_number = "99999"
     ind.update(**request.form, certificate=cert_number)
     da.update_individual(ind, session.get("user_id", None))
 
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
     ind_number = ind["number"]
+    signed_data = sign_data(pdf_bytes)
     uploaded = upload_certificate(
-        pdf_bytes=pdf_bytes.getvalue(), ind_number=ind_number
+        pdf_bytes=signed_data.getvalue(), ind_number=ind_number
     )
 
     if uploaded:
-        return create_pdf_response(pdf_bytes=sign_data(pdf_bytes), obj_name=f"{cert_number}.pdf")
+        return create_pdf_response(pdf_bytes=signed_data, obj_name=f"{cert_number}.pdf")
 
     return jsonify({"response": "Certificate could not be uploaded"}), 400
 
@@ -558,6 +562,36 @@ def preview_certificate(i_number):
     return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
 
 
+@APP.route("/api/certificates/verify/<i_number>", methods=["POST"])
+@login_required
+def verify_certificate(i_number):
+    """
+    Returns whether an pdf certificate has been issued by us and matches our checksum.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+    if ind is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    uploaded_bytes = request.get_data()
+
+    checksum = hashlib.sha256(uploaded_bytes).hexdigest()
+    signed = verify_signature(uploaded_bytes)
+    present = verify_certificate_checksum(ind["number"], checksum=checksum)
+
+    if present and signed:
+        return jsonify({"response": "Certificate is valid"}), 200
+
+    return (
+        jsonify(
+            {
+                "response": "The uploaded certificate is not valid or does not belong to this individual"
+            }
+        ),
+        404,
+    )
+
+
 def create_pdf_response(pdf_bytes, obj_name):
     """
     Returns a http response containing the pdf as body.
@@ -575,10 +609,20 @@ def sign_data(pdf_bytes):
     return certs.get_certificate_signer().sign_certificate(pdf_bytes)
 
 
-def download_certificate(certificate_number, date):
+def verify_signature(pdf_bytes):
     """
-    TODO
+    Returns digitally signed pdf bytes.
     """
+    return certs.get_certificate_verifier().verify_signature(pdf_bytes)
+
+
+def get_certificate_checksum(ind_number):
+    """
+    Returns the bytes of the latest certificate
+    """
+    return hashlib.sha256(
+        s3.get_s3_client().get_object(f"{ind_number}.pdf")
+    ).hexdigest()
 
 
 def upload_certificate(pdf_bytes, ind_number):
@@ -586,7 +630,7 @@ def upload_certificate(pdf_bytes, ind_number):
     Triggers a S3 certificate upload
     """
     return s3.get_s3_client().put_object(
-        bucket_file_name=f"{ind_number}/certificate.pdf", file_data=pdf_bytes
+        file_name=f"{ind_number}/certificate.pdf", file_data=pdf_bytes
     )
 
 
@@ -594,22 +638,16 @@ def check_certificate_s3(ind_number):
     """
     Returns a boolean value specifying if any certificate already exists in S3.
     """
-    return s3.get_s3_client().head_object(object_name=f"{ind_number}/certificate.pdf", etag="")
+    return s3.get_s3_client().head_object(object_name=f"{ind_number}/certificate.pdf")
 
 
-def verify_certificate_checksum(object_name, checksum):
+def verify_certificate_checksum(ind_number, checksum):
     """
     Returns whether a certificate exists with the given checksum.
     """
-    return s3.get_s3_client().head_object(object_name, etag=checksum)
-
-
-
-def check_certificate_number():
-    """
-    TODO
-    """
-    return 0
+    s3_sum = get_certificate_checksum(ind_number)
+    print(s3_sum, checksum)
+    return s3_sum == checksum
 
 
 def flatten_list_of_dcts(in_list):
