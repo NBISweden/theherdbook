@@ -57,9 +57,13 @@ export interface Individual extends LimitedIndividual {
   herd_active: boolean;
   active: boolean;
   alive: boolean;
+  belly_color: string | null;
+  eye_color: string | null;
+  claw_color: string | null;
   inbreeding?: number;
   MK?: number;
   children?: number;
+  hair_notes: string;
 }
 
 export type PrivacyLevel = "private" | "authenticated" | "public" | null;

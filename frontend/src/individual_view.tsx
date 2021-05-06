@@ -19,6 +19,7 @@ import { useDataContext } from "@app/data_context";
 import { IndividualPedigree } from "@app/individual_pedigree";
 import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
+import { IndividualCertificate } from "./individual_certificate";
 
 const useStyles = makeStyles({
   body: {
@@ -200,6 +201,16 @@ export function IndividualView({ id }: { id: string }) {
                   onClick={() => popup(<IndividualEdit id={id} />)}
                 >
                   Redigera individ
+                </Button>
+              )}
+              {user?.canEdit(id) && (
+                <Button
+                  className={style.editButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() => popup(<IndividualCertificate id={id} />)}
+                >
+                  Beställ certifikat
                 </Button>
               )}
               <div>
