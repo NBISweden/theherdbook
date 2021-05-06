@@ -4,7 +4,7 @@ S3 client handler.
 from pathlib import Path
 import boto3
 import botocore
-import settings
+import utils.settings as settings
 
 
 class S3Handler:  # pylint: disable=too-many-instance-attributes
