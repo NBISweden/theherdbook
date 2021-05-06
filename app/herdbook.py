@@ -616,7 +616,7 @@ def upload_certificate(pdf_bytes, ind_number):
     Triggers a S3 certificate upload
     """
     return s3.get_s3_client().put_object(
-        bucket_file_name=f"{ind_number}.pdf", file_data=pdf_bytes
+        bucket_file_name=f"{ind_number}/certificate.pdf", file_data=pdf_bytes
     )
 
 
@@ -624,7 +624,7 @@ def check_certificate_s3(ind_number):
     """
     Returns a boolean value specifying if any certificate already exists in S3.
     """
-    return s3.get_s3_client().head_object(object_name=f"{ind_number}.pdf", etag="")
+    return s3.get_s3_client().head_object(object_name=f"{ind_number}/certificate.pdf", etag="")
 
 
 def verify_certificate_checksum():
