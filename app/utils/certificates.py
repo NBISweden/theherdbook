@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 import fitz
 import pdfrw
 import qrcode
+import utils.settings as settings
 
 
 FORM_KEYS = {
@@ -258,8 +259,8 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
 
 def get_certificate_signer():
     signer = CertificateSigner(
-        cert_auth=Path("/code/ca.pem"),
-        private_key=Path("/code/key.pem"),
+        cert_auth=settings.certs.ca,
+        private_key=settings.certs.private_key,
         private_key_pass=None,
     )
     return signer
@@ -307,6 +308,6 @@ class CertificateVerifier:  # pylint: disable=too-few-public-methods
 def get_certificate_verifier():
 
     verifier = CertificateVerifier(
-        pkcs_ca=Path("/code/ca.pem"),
+        pkcs_ca=settings.certs.ca,
     )
     return verifier
