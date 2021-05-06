@@ -14,6 +14,8 @@ import { WithUserContext } from "@app/user_context";
 import { UserInfo } from "@app/user_info";
 import { Login } from "@app/login";
 
+// jscpd:ignore-start
+
 test("login information set at mount (logged in)", async () => {
   fetch_mock.mockOnce(
     JSON.stringify({ email: "testuser@nbis.se", validated: false })
@@ -140,3 +142,5 @@ test("can be logged out", async () => {
   expect(screen.queryAllByText(/testuser@nbis.se/)).toHaveLength(0);
   expect(screen.queryAllByText(/anonymous/)).toHaveLength(1);
 });
+
+// jscpd:ignore-end
