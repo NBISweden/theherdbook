@@ -122,6 +122,7 @@ const asNode = (ind: Individual, x: number): Node => {
  * @param generations the number of generations to plot
  */
 export function calcPedigree(
+  // jscpd:ignore-start
   genebanks: Genebank[],
   id: string,
   generations: number = 1000
@@ -129,6 +130,7 @@ export function calcPedigree(
   let nodes: Node[] = [];
   let edges: Edge[] = [];
   const indData = getIndividual(genebanks, id);
+  // jscpd:ignore-end
 
   if (indData) {
     nodes.push(asNode(indData, edges.length));
@@ -172,6 +174,7 @@ export function calcPedigree(
 }
 
 export function calcPedigreeDan(
+  // jscpd:ignore-start
   genebanks: Genebank[],
   id: string,
   generations: number = 1000
@@ -179,6 +182,7 @@ export function calcPedigreeDan(
   let nodes: Node[] = [];
   let edges: Edge[] = [];
   const indData = getIndividual(genebanks, id);
+  // jscpd:ignore-end
 
   const visited = {} as Record<string, number>;
   const queue = [{ depth: 0, id }] as { depth: number; id: string }[];

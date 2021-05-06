@@ -168,7 +168,6 @@ export function BreedingForm({
                 allMales.find((option) => option.value == formState.father) ??
                 null
               }
-
               // jscpd:ignore-start
               getOptionLabel={(option: OptionType) => option.label}
               renderInput={(params) => (
