@@ -4,10 +4,20 @@
  * values.
  */
 
-import React from 'react'
-import { CircularProgress, makeStyles, TableHead, TableRow, TableCell,
-        TableSortLabel, TableContainer, Table, TablePagination, TableBody, Button,
-        } from '@material-ui/core';
+import React from "react";
+import {
+  CircularProgress,
+  makeStyles,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableSortLabel,
+  TableContainer,
+  Table,
+  TablePagination,
+  TableBody,
+  Button,
+} from "@material-ui/core";
 
 const useStyles = makeStyles({
   table: {
@@ -27,24 +37,24 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   functionLink: {
-    color: 'blue',
-    textDecoration: 'underline',
-    cursor: 'pointer',
+    color: "blue",
+    textDecoration: "underline",
+    cursor: "pointer",
   },
   sorted: {
     border: 0,
-    clip: 'rect(0 0 0 0)',
+    clip: "rect(0 0 0 0)",
     height: 1,
     margin: -1,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: 0,
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     width: 1,
   },
   bottomButton: {
-    float: 'left',
-  }
+    float: "left",
+  },
 });
 
 /**
@@ -56,12 +66,12 @@ export interface Column {
   field: any;
   label: string;
   sortBy?: string;
-  sortAs?: 'number' | 'numbers' | 'date' | undefined;
+  sortAs?: "number" | "numbers" | "date" | undefined;
   hidden?: boolean;
   numeric?: boolean;
   render?: Function;
 }
-type Order = 'asc' | 'desc'
+type Order = "asc" | "desc";
 
 /**
  * Sorts a list of individuals by the `orderBy` field and `order` direction, as
@@ -82,9 +92,15 @@ type Order = 'asc' | 'desc'
  * @param orderBy sub-field to order by for object values
  * @param order `asc` or `desc` for ascending or descending ordering
  */
-function columnSort(a: any, b: any,  column: Column, orderBy: string, order: Order ) {
+function columnSort(
+  a: any,
+  b: any,
+  column: Column,
+  orderBy: string,
+  order: Order
+) {
   // check direction
-  const direction = order == 'asc' ? 1 : -1
+  const direction = order == "asc" ? 1 : -1;
 
   // handle null and undefined objects as "directionless" (they sort last)
   // regardless of ordering
@@ -92,57 +108,56 @@ function columnSort(a: any, b: any,  column: Column, orderBy: string, order: Ord
     // sort undefined as less than defined
     return a == b ? 0 : b == undefined ? -1 : 1;
   }
-  let aVal = a[orderBy]
-  let bVal = b[orderBy]
+  let aVal = a[orderBy];
+  let bVal = b[orderBy];
 
   // handle null or undefined fields
   if (aVal == undefined || bVal == undefined) {
-    return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+    return aVal == bVal ? 0 : bVal == undefined ? -1 : 1;
   }
 
   // check if we need to sort some special way
   if (column?.sortBy) {
     if (Object.keys(aVal).includes(column.sortBy)) {
-      aVal = aVal[column?.sortBy]
+      aVal = aVal[column?.sortBy];
     }
     if (Object.keys(bVal).includes(column.sortBy)) {
-      bVal = bVal[column?.sortBy]
+      bVal = bVal[column?.sortBy];
     }
     // handle null or undefined fields again
     if (aVal == undefined || bVal == undefined) {
-      return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+      return aVal == bVal ? 0 : bVal == undefined ? -1 : 1;
     }
   }
 
   if (column?.sortAs) {
     // concatenate all numbers in the string
-    if (column.sortAs == 'number') {
-      aVal = isNaN(Number(aVal)) ? +aVal.replace(/[^0-9]/g, '') : Number(aVal)
-      bVal = isNaN(Number(bVal)) ? +bVal.replace(/[^0-9]/g, '') : Number(bVal)
+    if (column.sortAs == "number") {
+      aVal = isNaN(Number(aVal)) ? +aVal.replace(/[^0-9]/g, "") : Number(aVal);
+      bVal = isNaN(Number(bVal)) ? +bVal.replace(/[^0-9]/g, "") : Number(bVal);
     }
     // use first number as integer, all others as decimals
-    else if (column.sortAs == 'numbers') {
+    else if (column.sortAs == "numbers") {
       const f = (n: string) => {
-        const m = n.match(/([0-9]+)/g)
-        return m ? +`${m[0]}.${m.slice(1,).join('')}` : 0
-      }
-      aVal = f(aVal)
-      bVal = f(bVal)
-    }
-    else if (column.sortAs == 'date') {
-      aVal = aVal ? new Date(aVal) : 0
-      bVal = bVal ? new Date(bVal) : 0
+        const m = n.match(/([0-9]+)/g);
+        return m ? +`${m[0]}.${m.slice(1).join("")}` : 0;
+      };
+      aVal = f(aVal);
+      bVal = f(bVal);
+    } else if (column.sortAs == "date") {
+      aVal = aVal ? new Date(aVal) : 0;
+      bVal = bVal ? new Date(bVal) : 0;
     }
   }
 
   if (aVal > bVal) {
-    return direction
+    return direction;
   }
   if (aVal < bVal) {
-    return -direction
+    return -direction;
   }
 
-  return 0
+  return 0;
 }
 
 /**
@@ -156,66 +171,78 @@ function columnSort(a: any, b: any,  column: Column, orderBy: string, order: Ord
  *    className: any
  *    style: any
  */
-export function SortedTable({columns, data, ...props}: {columns: Column[], data: any[]} & Record<string, any>) {
-
+export function SortedTable({
+  columns,
+  data,
+  ...props
+}: { columns: Column[]; data: any[] } & Record<string, any>) {
   const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(props.rowsPerPage ?? 25);
-  const [selected, setSelected] = React.useState(null as number | null)
-  const [order, setOrder] = React.useState('desc' as Order);
+  const [selected, setSelected] = React.useState(null as number | null);
+  const [order, setOrder] = React.useState("desc" as Order);
   const [orderBy, setOrderBy] = React.useState(undefined as any);
 
   const tableData = React.useMemo(() => {
-      return data.map((row, i) => {return {tableId: i, ...row}})
-    }, [data]
-  )
+    return data.map((row, i) => {
+      return { tableId: i, ...row };
+    });
+  }, [data]);
   const visibleColumns = React.useMemo(() => {
-      return columns.filter(c => !c.hidden)
-    }, [columns]
-  )
+    return columns.filter((c) => !c.hidden);
+  }, [columns]);
 
   /**
    * Memoized list of data sorted by the columnSort function
    */
   const sortedData = React.useMemo(() => {
     // store column for reference
-    const column = columns.find(c => c.field == orderBy)
+    const column = columns.find((c) => c.field == orderBy);
     if (column) {
-      return tableData.sort((a, b) =>
-        columnSort(a, b, column, orderBy, order)
-      )
+      return tableData.sort((a, b) => columnSort(a, b, column, orderBy, order));
     }
     // return the unsorted data if the columnn isn't valid
-    return tableData
-  }, [tableData, orderBy, order])
+    return tableData;
+  }, [tableData, orderBy, order]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const handleRequestSort = (event: React.MouseEvent<unknown>, property: any) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+  const handleRequestSort = (
+    event: React.MouseEvent<unknown>,
+    property: any
+  ) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
-  const createSortHandler = (property: any) => (event: React.MouseEvent<unknown>) => {
+  const createSortHandler = (property: any) => (
+    event: React.MouseEvent<unknown>
+  ) => {
     handleRequestSort(event, property);
   };
 
-  return <>
-    <div className={props.className ?? styles.table} style={props.style ?? props.style}>
-      { data
-        ? <>
+  return (
+    <>
+      <div
+        className={props.className ?? styles.table}
+        style={props.style ?? props.style}
+      >
+        {data ? (
+          <>
             <TableContainer>
               <Table
                 aria-labelledby="tableTitle"
-                size={'medium'}
+                size={"medium"}
                 aria-label="enhanced table"
               >
                 <TableHead>
@@ -223,19 +250,21 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                     {visibleColumns.map((column) => (
                       <TableCell
                         key={column.field}
-                        align={column.numeric ? 'right' : 'left'}
-                        padding={'default'}
+                        align={column.numeric ? "right" : "left"}
+                        padding={"default"}
                         sortDirection={orderBy === column.field ? order : false}
                       >
                         <TableSortLabel
                           active={orderBy === column.field}
-                          direction={orderBy === column.field ? order : 'asc'}
+                          direction={orderBy === column.field ? order : "asc"}
                           onClick={createSortHandler(column.field)}
                         >
                           {column.label}
                           {orderBy === column.field ? (
                             <span className={styles.sorted}>
-                              {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                              {order === "desc"
+                                ? "sorted descending"
+                                : "sorted ascending"}
                             </span>
                           ) : null}
                         </TableSortLabel>
@@ -248,47 +277,53 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
                       return (
-                        <TableRow key={row.tableId}
+                        <TableRow
+                          key={row.tableId}
                           hover
                           selected={selected == row.tableId}
-                          onClick={props.onClick
-                                   ? () => {
-                                     if (selected == row.tableId) {
-                                       props.onClick(null)
-                                       setSelected(null)
-                                     } else {
-                                       props.onClick(row)
-                                       setSelected(row.tableId)
-                                     }
-                                   }
-                                   : () => {}}
+                          onClick={
+                            props.onClick
+                              ? () => {
+                                  if (selected == row.tableId) {
+                                    props.onClick(null);
+                                    setSelected(null);
+                                  } else {
+                                    props.onClick(row);
+                                    setSelected(row.tableId);
+                                  }
+                                }
+                              : () => {}
+                          }
                           tabIndex={-1}
                         >
-                          {visibleColumns.map(column => {
+                          {visibleColumns.map((column) => {
                             return (
                               <TableCell
                                 key={column.field}
-                                align={column.numeric ? 'right' : 'left'}
-                                >
-                                { column.render
+                                align={column.numeric ? "right" : "left"}
+                              >
+                                {column.render
                                   ? column.render(row)
                                   : row[column.field]}
                               </TableCell>
-                            )
+                            );
                           })}
                         </TableRow>
-                      )
+                      );
                     })}
                 </TableBody>
               </Table>
             </TableContainer>
-            { props.addButton
-              && <Button className={styles.bottomButton}
-                         variant='contained'
-                         color='primary'
-                         onClick={props.addButton}>
-                   Lägg till
-                 </Button> }
+            {props.addButton && (
+              <Button
+                className={styles.bottomButton}
+                variant="contained"
+                color="primary"
+                onClick={props.addButton}
+              >
+                Lägg till
+              </Button>
+            )}
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
@@ -299,13 +334,15 @@ export function SortedTable({columns, data, ...props}: {columns: Column[], data:
               onChangeRowsPerPage={handleChangeRowsPerPage}
             />
           </>
-        : <>
-          <div className={styles.loading}>
-            <h2>Laddar</h2>
-            <CircularProgress />
-          </div>
-        </>
-      }
-    </div>
-  </>
+        ) : (
+          <>
+            <div className={styles.loading}>
+              <h2>Laddar</h2>
+              <CircularProgress />
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
 }
