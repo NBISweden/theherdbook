@@ -33,7 +33,6 @@ import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { Autocomplete } from "@material-ui/lab";
 
-
 const useStyles = makeStyles({
   loading: {
     display: "flex",
@@ -450,22 +449,26 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 <div className={style.titleText}>Mått</div>
                 <h3>Vikter</h3>
                 <ul>
-                  {individual.weights &&
-                    individual.weights.map((w: DateWeight, i: number) => (
-                      <li key={i} className={style.measureList}>
-                        {`${asLocale(w.date)} - ${w.weight} kg`}
-                        <span className={style.listButton}>
-                          [
-                          <a
-                            className={style.scriptLink}
-                            onClick={() => removeMeasure("weights", i)}
-                          >
-                            Delete
-                          </a>
-                          ]
-                        </span>
-                      </li>
-                    ))}
+                  {
+                    // jscpd:ignore-start
+
+                    individual.weights &&
+                      individual.weights.map((w: DateWeight, i: number) => (
+                        <li key={i} className={style.measureList}>
+                          {`${asLocale(w.date)} - ${w.weight} kg`}
+                          <span className={style.listButton}>
+                            [
+                            <a
+                              className={style.scriptLink}
+                              onClick={() => removeMeasure("weights", i)}
+                            >
+                              Delete
+                            </a>
+                            ]
+                          </span>
+                        </li>
+                      ))
+                  }
                 </ul>
                 <div className={style.flexRow}>
                   <KeyboardDatePicker
@@ -479,9 +482,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     InputLabelProps={{
                       shrink: true,
                     }}
-                    onChange={(date, value) => {
-                      value && setWeightDate(value);
-                    }}
+                    onChange={
+                      (date, value) => {
+                        value && setWeightDate(value);
+                      }
+
+                      // jscpd:ignore-end
+                    }
                   />
                   <TextField
                     label="Vikt"
@@ -517,22 +524,26 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </Button>
                 <h3>Hull</h3>
                 <ul>
-                  {individual.bodyfat &&
-                    individual.bodyfat.map((b: DateBodyfat, i: number) => (
-                      <li key={i} className={style.measureList}>
-                        {`${asLocale(b.date)} - ${b.bodyfat}`}
-                        <span className={style.listButton}>
-                          [
-                          <a
-                            className={style.scriptLink}
-                            onClick={() => removeMeasure("bodyfat", i)}
-                          >
-                            Delete
-                          </a>
-                          ]
-                        </span>
-                      </li>
-                    ))}
+                  {
+                    // jscpd:ignore-start
+
+                    individual.bodyfat &&
+                      individual.bodyfat.map((b: DateBodyfat, i: number) => (
+                        <li key={i} className={style.measureList}>
+                          {`${asLocale(b.date)} - ${b.bodyfat}`}
+                          <span className={style.listButton}>
+                            [
+                            <a
+                              className={style.scriptLink}
+                              onClick={() => removeMeasure("bodyfat", i)}
+                            >
+                              Delete
+                            </a>
+                            ]
+                          </span>
+                        </li>
+                      ))
+                  }
                 </ul>
                 <div className={style.flexRow}>
                   <KeyboardDatePicker
@@ -546,9 +557,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     InputLabelProps={{
                       shrink: true,
                     }}
-                    onChange={(date, value) => {
-                      value && setHullDate(value);
-                    }}
+                    onChange={
+                      (date, value) => {
+                        value && setHullDate(value);
+                      }
+
+                      // jscpd:ignore-end
+                    }
                   />
                   <Autocomplete
                     options={bodyfatOptions ?? []}
