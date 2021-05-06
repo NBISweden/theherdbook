@@ -2,6 +2,7 @@
  * @file This file contains the UserForm function. This function is used to
  * change user information and permissions.
  */
+
 import React from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import {
@@ -381,14 +382,19 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                     getOptionSelected={(o: OptionType, v: OptionType) =>
                       o.value == v.value
                     }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Behörighet"
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
+                    renderInput={
+                      // jscpd:ignore-start
+
+                      (params) => (
+                        <TextField
+                          {...params}
+                          label="Behörighet"
+                          variant={inputVariant}
+                          margin="normal"
+                        />
+                      )
+                      // jscpd:ignore-end
+                    }
                     onChange={(event: any, newValue: OptionType | null) => {
                       newValue && setLevel(newValue);
                     }}
@@ -430,14 +436,18 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                     getOptionSelected={(o: OptionType, v: OptionType) =>
                       o.value == v.value
                     }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Besättning"
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
+                    renderInput={
+                      // jscpd:ignore-start
+                      (params) => (
+                        <TextField
+                          {...params}
+                          label="Besättning"
+                          variant={inputVariant}
+                          margin="normal"
+                        />
+                      )
+                      // jscpd:ignore-end
+                    }
                     onChange={(event: any, newValue: OptionType | null) => {
                       newValue && setHerd(newValue);
                     }}
