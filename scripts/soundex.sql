@@ -1,5 +1,4 @@
--- A function, soundex(), used by a couple of the healthchecks.
--- It computes the soundex value of a string.
+-- This computes the soundex value of a string.
 CREATE OR REPLACE FUNCTION soundex(input text) RETURNS text
 IMMUTABLE STRICT COST 500 LANGUAGE plpgsql
 AS $$

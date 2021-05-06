@@ -2,15 +2,15 @@
 Instance specific settings for the herdbook.
 """
 
-import os
 import logging
+import os
 from argparse import Namespace
 
 logging.info("Reading Environemt")
 
 postgres = Namespace()  # pylint: disable=C0103
-rapi = Namespace() # pylint: disable=C0103
-#Read configuration from environment variable
+rapi = Namespace()  # pylint: disable=C0103
+# Read configuration from environment variable
 
 postgres.name = os.environ.get("POSTGRES_DB", "herdbook")
 postgres.host = os.environ.get("POSTGRES_HOST", "herdbook-db")

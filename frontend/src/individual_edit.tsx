@@ -33,6 +33,7 @@ import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { Autocomplete } from "@material-ui/lab";
 
+
 const useStyles = makeStyles({
   loading: {
     display: "flex",
@@ -279,7 +280,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   <div className={style.paneTitle}>
                     Kan endast ändras av genbanksansvarig
                   </div>
-
                   <TextField
                     disabled
                     label="Nummer"

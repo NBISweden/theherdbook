@@ -2,7 +2,14 @@
 
 # Needs to be called by load.sh
 
-echo "Loading rabbits"
+# Checking for duplicate numbers before even attempting to load data.
+echo "Looking for duplicates"
+if csvcut -c 4 "$2" | sort | uniq -d | grep .; then
+	echo '!!! Duplicates found (see numbers above), aborting' >&2
+	exit 1
+fi
+
+echo 'Loading rabbits'
 
 csvsql  --db "$1" -I \
 	--tables g_data \
@@ -256,9 +263,9 @@ END_SQL
 
 done | psql  --quiet
 	    
-# Load tracking data for years 2000 through to 2020
+# Load tracking data for years 2000 through to 2021
 year=2000
-while [ "$year" -le 2020 ]; do
+while [ "$year" -le 2021 ]; do
 	column=$year
 
 	cat <<-END_SQL
@@ -317,6 +324,8 @@ psql --quiet <<-'END_SQL'
 	ORDER BY	i.individual_id;
 END_SQL
 
+# jscpd:ignore-start
+
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
 # $year (etc.)
@@ -346,9 +355,9 @@ while [ "$year" -le 2019 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
-# Load body fat data for years 2012 through to 2018
+# Load body fat data for years 2012 through to 2019
 year=2012
-while [ "$year" -le 2018 ]; do
+while [ "$year" -le 2019 ]; do
 	column="hull $year"
 
 	cat <<-END_SQL
@@ -371,6 +380,8 @@ if [ ! -f "$3" ]; then
 	# No herd info
 	exit 0
 fi
+
+# jscpd:ignore-end
 
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.
