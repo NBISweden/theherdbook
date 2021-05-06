@@ -23,7 +23,7 @@ FORM_KEYS = {
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
     "IdAntalFödda": "litter",
-    "IdAntalLevande": "litter",  # Birth table: calculate new rabbits based on breeding event. check after six weeks if alive
+    "IdAntalLevande": "litter",
     "IdHårlag": "name",  # Fix Nose hair colour
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",
@@ -258,6 +258,9 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
 
 
 def get_certificate_signer():
+    """
+    Return a pdf verifier for the certificates
+    """
     signer = CertificateSigner(
         cert_auth=settings.certs.ca,
         private_key=settings.certs.private_key,
@@ -306,6 +309,9 @@ class CertificateVerifier:  # pylint: disable=too-few-public-methods
 
 
 def get_certificate_verifier():
+    """
+    Return a pdf verifier for the certificates
+    """
 
     verifier = CertificateVerifier(
         pkcs_ca=settings.certs.ca,
