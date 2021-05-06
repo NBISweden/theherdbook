@@ -651,7 +651,7 @@ def get_certificate_checksum(ind_number):
     Returns the bytes of the latest certificate
     """
     return hashlib.sha256(
-        s3.get_s3_client().get_object(f"{ind_number}.pdf")
+        s3.get_s3_client().get_object(f"{ind_number}/certificate.pdf")
     ).hexdigest()
 
 
@@ -676,7 +676,6 @@ def verify_certificate_checksum(ind_number, checksum):
     Returns whether a certificate exists with the given checksum.
     """
     s3_sum = get_certificate_checksum(ind_number)
-    print(s3_sum, checksum)
     return s3_sum == checksum
 
 
