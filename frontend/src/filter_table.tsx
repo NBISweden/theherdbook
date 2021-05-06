@@ -3,19 +3,35 @@
  * wrapper around MaterialTable, with defaults for individual columns as well as
  * extra options for filtering.
  */
-import React from 'react'
-import {Edit} from '@material-ui/icons'
-import { CircularProgress, Checkbox,  makeStyles, FormControlLabel, TextField,
-        TableHead, TableRow, TableCell, TableSortLabel, TableContainer, Table,
-        TablePagination, TableBody, SvgIcon
-        } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import React from "react";
+import { Edit } from "@material-ui/icons";
+import {
+  CircularProgress,
+  Checkbox,
+  makeStyles,
+  FormControlLabel,
+  TextField,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableSortLabel,
+  TableContainer,
+  Table,
+  TablePagination,
+  TableBody,
+  SvgIcon,
+} from "@material-ui/core";
+import { Autocomplete } from "@material-ui/lab";
 
-import { asLocale, Individual, inputVariant, OptionType
-        } from '@app/data_context_global';
-import { IndividualView } from '@app/individual_view';
-import { HerdView } from '@app/herd_view'
-import { useMessageContext } from '@app/message_context';
+import {
+  asLocale,
+  Individual,
+  inputVariant,
+  OptionType,
+} from "@app/data_context_global";
+import { IndividualView } from "@app/individual_view";
+import { HerdView } from "@app/herd_view";
+import { useMessageContext } from "@app/message_context";
 
 // Define styles
 const useStyles = makeStyles({
@@ -37,24 +53,24 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   functionLink: {
-    color: 'blue',
-    textDecoration: 'underline',
-    cursor: 'pointer',
+    color: "blue",
+    textDecoration: "underline",
+    cursor: "pointer",
   },
   sorted: {
     border: 0,
-    clip: 'rect(0 0 0 0)',
+    clip: "rect(0 0 0 0)",
     height: 1,
     margin: -1,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: 0,
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     width: 1,
   },
   search: {
-    float: 'right',
-  }
+    float: "right",
+  },
 });
 
 /**
@@ -66,14 +82,14 @@ interface Column {
   field: keyof Individual;
   label: string;
   sortBy?: string;
-  sortAs?: 'number' | 'numbers' | 'date' | undefined;
+  sortAs?: "number" | "numbers" | "date" | undefined;
   hidden?: boolean;
   numeric?: boolean;
   render?: Function;
 }
-type Order = 'asc' | 'desc'
-type Filter = {field: keyof(Individual), label: string, active?: boolean}
-type Action = ((event: any, rowData: Individual | Individual[]) => {})
+type Order = "asc" | "desc";
+type Filter = { field: keyof Individual; label: string; active?: boolean };
+type Action = (event: any, rowData: Individual | Individual[]) => {};
 
 /**
  * Sorts a list of individuals by the `orderBy` field and `order` direction, as
@@ -94,11 +110,16 @@ type Action = ((event: any, rowData: Individual | Individual[]) => {})
  * @param orderBy sub-field to order by for object values
  * @param order `asc` or `desc` for ascending or descending ordering
  */
-function individualSort(a: Individual, b: Individual,  column: Column,
-    orderBy: keyof Individual, order: Order ) {
+function individualSort(
+  a: Individual,
+  b: Individual,
+  column: Column,
+  orderBy: keyof Individual,
+  order: Order
+) {
   {
     // check direction
-    const direction = order == 'asc' ? 1 : -1
+    const direction = order == "asc" ? 1 : -1;
 
     // handle null and undefined objects as "directionless" (they sort last)
     // regardless of ordering
@@ -106,57 +127,56 @@ function individualSort(a: Individual, b: Individual,  column: Column,
       // sort undefined as less than defined
       return a == b ? 0 : b == undefined ? -1 : 1;
     }
-    let aVal = a[orderBy]
-    let bVal = b[orderBy]
+    let aVal = a[orderBy];
+    let bVal = b[orderBy];
 
     // handle null or undefined fields
     if (aVal == undefined || bVal == undefined) {
-      return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+      return aVal == bVal ? 0 : bVal == undefined ? -1 : 1;
     }
 
     // check if we need to sort some special way
     if (column?.sortBy) {
       if (Object.keys(aVal).includes(column.sortBy)) {
-        aVal = aVal[column?.sortBy]
+        aVal = aVal[column?.sortBy];
       }
       if (Object.keys(bVal).includes(column.sortBy)) {
-        bVal = bVal[column?.sortBy]
+        bVal = bVal[column?.sortBy];
       }
       // handle null or undefined fields again
       if (aVal == undefined || bVal == undefined) {
-        return aVal == bVal ? 0 : bVal == undefined ? -1 : 1
+        return aVal == bVal ? 0 : bVal == undefined ? -1 : 1;
       }
     }
 
     if (column?.sortAs) {
       // concatenate all numbers in the string
-      if (column.sortAs == 'number') {
-        aVal = +aVal.replace(/[^0-9]/g, '')
-        bVal = +bVal.replace(/[^0-9]/g, '')
+      if (column.sortAs == "number") {
+        aVal = +aVal.replace(/[^0-9]/g, "");
+        bVal = +bVal.replace(/[^0-9]/g, "");
       }
       // use first number as integer, all others as decimals
-      else if (column.sortAs == 'numbers') {
+      else if (column.sortAs == "numbers") {
         const f = (n: string) => {
-          const m = n.match(/([0-9]+)/g)
-          return m ? +`${m[0]}.${m.slice(1,).join('')}` : 0
-        }
-        aVal = f(aVal)
-        bVal = f(bVal)
-      }
-      else if (column.sortAs == 'date') {
-        aVal = aVal ? new Date(aVal) : 0
-        bVal = bVal ? new Date(bVal) : 0
+          const m = n.match(/([0-9]+)/g);
+          return m ? +`${m[0]}.${m.slice(1).join("")}` : 0;
+        };
+        aVal = f(aVal);
+        bVal = f(bVal);
+      } else if (column.sortAs == "date") {
+        aVal = aVal ? new Date(aVal) : 0;
+        bVal = bVal ? new Date(bVal) : 0;
       }
     }
 
     if (aVal > bVal) {
-      return direction
+      return direction;
     }
     if (aVal < bVal) {
-      return -direction
+      return -direction;
     }
 
-    return 0
+    return 0;
   }
 }
 
@@ -168,21 +188,26 @@ function individualSort(a: Individual, b: Individual,  column: Column,
  * @param search search term to compare against
  * @param columns which columns to consider when filtering
  */
-function searchFilter(individual: Individual, search: string, columns: Column[]) {
-  let searchResult = false
-  const searchRegExp = new RegExp(search, 'i')
+function searchFilter(
+  individual: Individual,
+  search: string,
+  columns: Column[]
+) {
+  let searchResult = false;
+  const searchRegExp = new RegExp(search, "i");
   for (let column of columns) {
     if (!individual[column.field]) {
-      continue
+      continue;
     }
-    const value = column.sortBy ? `${individual[column.field][column.sortBy]}`
-                                : `${individual[column.field]}`
+    const value = column.sortBy
+      ? `${individual[column.field][column.sortBy]}`
+      : `${individual[column.field]}`;
     if (value.match(searchRegExp)) {
-      searchResult = true
-      break
+      searchResult = true;
+      break;
     }
   }
-  return searchResult
+  return searchResult;
 }
 
 /**
@@ -190,76 +215,144 @@ function searchFilter(individual: Individual, search: string, columns: Column[])
  * Optionally `filters` or `action` (along with `actionIcon` and `actionLabel`)
  * can be set to further customize the table.
  */
-export function FilterTable({individuals, title = '', filters = [],
-    action = undefined, actionIcon = Edit, actionLabel='Redigera'}:
-    {individuals: Individual[], title: string, filters: Filter[],
-      action: Action | undefined, actionIcon: any, actionLabel: string}) {
-
-  const { popup } = useMessageContext()
+export function FilterTable({
+  individuals,
+  title = "",
+  filters = [],
+  action = undefined,
+  actionIcon = Edit,
+  actionLabel = "Redigera",
+}: {
+  individuals: Individual[];
+  title: string;
+  filters: Filter[];
+  action: Action | undefined;
+  actionIcon: any;
+  actionLabel: string;
+}) {
+  const { popup } = useMessageContext();
   const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
-  const [order, setOrder] = React.useState('desc' as Order);
-  const [orderBy, setOrderBy] = React.useState('birth_date' as keyof Individual);
-  const [search, setSearch] = React.useState('' as string)
-  const [currentFilters, setFilters] = React.useState(filters)
+  const [order, setOrder] = React.useState("desc" as Order);
+  const [orderBy, setOrderBy] = React.useState(
+    "birth_date" as keyof Individual
+  );
+  const [search, setSearch] = React.useState("" as string);
+  const [currentFilters, setFilters] = React.useState(filters);
 
   const allColumns: Column[] = [
-    {field: 'herd', label: 'Besättning', sortAs: 'number', sortBy: 'herd',
-      action: (rowData:any) => popup(<HerdView id={rowData.herd['herd']} />, `/herd/${rowData.herd['herd']}`),
-      render: (rowData:any) =>
-        <a className={styles.functionLink}
-          onClick={() => popup(<HerdView id={rowData.herd['herd']} />, `/herd/${rowData.herd['herd']}`)}
-          >
-          {rowData.herd['herd']}
+    {
+      field: "herd",
+      label: "Besättning",
+      sortAs: "number",
+      sortBy: "herd",
+      action: (rowData: any) =>
+        popup(
+          <HerdView id={rowData.herd["herd"]} />,
+          `/herd/${rowData.herd["herd"]}`
+        ),
+      render: (rowData: any) => (
+        <a
+          className={styles.functionLink}
+          onClick={() =>
+            popup(
+              <HerdView id={rowData.herd["herd"]} />,
+              `/herd/${rowData.herd["herd"]}`
+            )
+          }
+        >
+          {rowData.herd["herd"]}
         </a>
+      ),
     },
-    {field: 'name', label: 'Namn'},
-    {field: 'certificate', label: 'Certifikat', hidden: true},
-    {field: 'number', label: 'Nummer', sortAs: 'numbers',
-      render: (rowData:any) =>
-        <a className={styles.functionLink}
-          onClick={() => popup(<IndividualView id={rowData.number} />, `/individual/${rowData.number}`)}
-          >
+    { field: "name", label: "Namn" },
+    { field: "certificate", label: "Certifikat", hidden: true },
+    {
+      field: "number",
+      label: "Nummer",
+      sortAs: "numbers",
+      render: (rowData: any) => (
+        <a
+          className={styles.functionLink}
+          onClick={() =>
+            popup(
+              <IndividualView id={rowData.number} />,
+              `/individual/${rowData.number}`
+            )
+          }
+        >
           {rowData.number}
         </a>
+      ),
     },
-    {field: 'sex', label: 'Kön'},
-    {field: 'birth_date', label: 'Födelsedatum', sortAs: 'date',
-      render: (rowData:any) => asLocale(rowData['birth_date'])
+    { field: "sex", label: "Kön" },
+    {
+      field: "birth_date",
+      label: "Födelsedatum",
+      sortAs: "date",
+      render: (rowData: any) => asLocale(rowData["birth_date"]),
     },
-    {field: 'death_date', label: 'Dödsdatum', hidden: true, sortAs: 'date',
-      render: (rowData:any) => asLocale(rowData['death_date'])
+    {
+      field: "death_date",
+      label: "Dödsdatum",
+      hidden: true,
+      sortAs: "date",
+      render: (rowData: any) => asLocale(rowData["death_date"]),
     },
-    {field: 'death_note', label: 'Dödsanteckning', hidden: true},
-    {field: 'children', label: 'Ungar', numeric: true},
-    {field: 'mother', label: 'Moder', sortBy: 'number', sortAs: 'numbers',
-      render: (rowData:any) =>
-      <a className={styles.functionLink}
-        onClick={() => popup(<IndividualView id={rowData.mother['number']} />, `/individual/${rowData.mother['number']}`)}
+    { field: "death_note", label: "Dödsanteckning", hidden: true },
+    { field: "children", label: "Ungar", numeric: true },
+    {
+      field: "mother",
+      label: "Moder",
+      sortBy: "number",
+      sortAs: "numbers",
+      render: (rowData: any) => (
+        <a
+          className={styles.functionLink}
+          onClick={() =>
+            popup(
+              <IndividualView id={rowData.mother["number"]} />,
+              `/individual/${rowData.mother["number"]}`
+            )
+          }
         >
-        {rowData.mother['number']}
-      </a>
+          {rowData.mother["number"]}
+        </a>
+      ),
     },
-    {field: 'father', label: 'Fader', sortBy: 'number', sortAs: 'numbers',
-      render: (rowData:any) =>
-      <a className={styles.functionLink}
-        onClick={() => popup(<IndividualView id={rowData.father['number']} />, `/individual/${rowData.father['number']}`)}
+    {
+      field: "father",
+      label: "Fader",
+      sortBy: "number",
+      sortAs: "numbers",
+      render: (rowData: any) => (
+        <a
+          className={styles.functionLink}
+          onClick={() =>
+            popup(
+              <IndividualView id={rowData.father["number"]} />,
+              `/individual/${rowData.father["number"]}`
+            )
+          }
         >
-        {rowData.father['number']}
-      </a>
+          {rowData.father["number"]}
+        </a>
+      ),
     },
-    {field: 'color', label: 'Färg', sortBy: 'name',
-      render: (rowData:any) => rowData.color['name']
+    {
+      field: "color",
+      label: "Färg",
+      sortBy: "name",
+      render: (rowData: any) => rowData.color["name"],
     },
-    {field: 'color_note', label: 'Färganteckning', hidden: true},
-  ]
+    { field: "color_note", label: "Färganteckning", hidden: true },
+  ];
 
-  const [columns, setColumns] = React.useState(allColumns)
+  const [columns, setColumns] = React.useState(allColumns);
   const visibleColumns = React.useMemo(() => {
-      return columns.filter(c => !c.hidden)
-    }, [columns]
-  )
+    return columns.filter((c) => !c.hidden);
+  }, [columns]);
 
   const updateColumns = (values: any[]) => {
     const newColumns = [...columns];
@@ -270,16 +363,16 @@ export function FilterTable({individuals, title = '', filters = [],
       } else {
         c.hidden = true;
       }
-    })
-    setColumns(newColumns)
-  }
+    });
+    setColumns(newColumns);
+  };
 
   /**
    * Memoized list holding all individuals that pass the current filter(s).
    */
   const filteredIndividuals: Individual[] = React.useMemo(() => {
     if (!individuals) {
-      return []
+      return [];
     }
     return individuals.filter((i: Individual) => {
       for (let filter of currentFilters) {
@@ -289,116 +382,137 @@ export function FilterTable({individuals, title = '', filters = [],
       }
 
       if (search) {
-        return searchFilter(i, search, visibleColumns)
+        return searchFilter(i, search, visibleColumns);
       }
 
-      return true
-    })
-  }, [currentFilters, individuals, search])
+      return true;
+    });
+  }, [currentFilters, individuals, search]);
 
   /**
    * Memoized list of individuals sorted by the individualSort function
    */
   const sortedIndividuals = React.useMemo(() => {
     // store column for reference
-    const column = allColumns.find(c => c.field == orderBy)
+    const column = allColumns.find((c) => c.field == orderBy);
     if (column) {
       return filteredIndividuals.sort((a, b) =>
         individualSort(a, b, column, orderBy, order)
-      )
+      );
     }
-    return []
-  }, [filteredIndividuals, orderBy, order])
+    return [];
+  }, [filteredIndividuals, orderBy, order]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  const handleRequestSort = (event: React.MouseEvent<unknown>, property: keyof Individual) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+  const handleRequestSort = (
+    event: React.MouseEvent<unknown>,
+    property: keyof Individual
+  ) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
-  const createSortHandler = (property: keyof Individual) => (event: React.MouseEvent<unknown>) => {
+  const createSortHandler = (property: keyof Individual) => (
+    event: React.MouseEvent<unknown>
+  ) => {
     handleRequestSort(event, property);
   };
 
-  return <>
-    <div>
-      <Autocomplete
-        multiple
-        className={styles.columnLabel}
-        options={columns.map((v: any) => {return {value: v.field, label: v.label}})}
-        value={columns.filter((v: any) => !v.hidden).map((v: any) => {
-            return {value: v.field, label: v.label}
-          })
-        }
-        getOptionLabel={(option: OptionType) => option.label}
-        getOptionSelected={(option: OptionType, value: OptionType) => option.value == value.value}
-        renderInput={(params) => <TextField {...params}
-          label='Kolumner'
-          variant={inputVariant}
-          margin="normal" />}
+  return (
+    <>
+      <div>
+        <Autocomplete
+          multiple
+          className={styles.columnLabel}
+          options={columns.map((v: any) => {
+            return { value: v.field, label: v.label };
+          })}
+          value={columns
+            .filter((v: any) => !v.hidden)
+            .map((v: any) => {
+              return { value: v.field, label: v.label };
+            })}
+          getOptionLabel={(option: OptionType) => option.label}
+          getOptionSelected={(option: OptionType, value: OptionType) =>
+            option.value == value.value
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Kolumner"
+              variant={inputVariant}
+              margin="normal"
+            />
+          )}
           onChange={(event: any, newValues: OptionType[] | null) => {
-          newValues && updateColumns(newValues)
-        }}
-      />
-    </div>
-    <div className={styles.table}>
-      { individuals
-        ? <>
-            {currentFilters.map(filter =>
-              <FormControlLabel key={filter.field}
-                control={<Checkbox
-                          name={filter.field}
-                          checked={filter.active ?? false}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            filter.active = e.target.checked
-                            setFilters([...currentFilters])
-                          }}
-                          />}
+            newValues && updateColumns(newValues);
+          }}
+        />
+      </div>
+      <div className={styles.table}>
+        {individuals ? (
+          <>
+            {currentFilters.map((filter) => (
+              <FormControlLabel
+                key={filter.field}
+                control={
+                  <Checkbox
+                    name={filter.field}
+                    checked={filter.active ?? false}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      filter.active = e.target.checked;
+                      setFilters([...currentFilters]);
+                    }}
+                  />
+                }
                 label={filter.label}
               />
-            )}
+            ))}
 
             <TextField
               className={styles.search}
               label="Sök"
               variant={inputVariant}
-              onChange={(e) => setSearch(e.currentTarget.value)}/>
+              onChange={(e) => setSearch(e.currentTarget.value)}
+            />
             <TableContainer>
               <Table
                 aria-labelledby="tableTitle"
-                size={'medium'}
+                size={"medium"}
                 aria-label="enhanced table"
               >
                 <TableHead>
                   <TableRow>
-                    { action && <TableCell>
-                      {actionLabel}
-                    </TableCell>}
+                    {action && <TableCell>{actionLabel}</TableCell>}
                     {visibleColumns.map((column) => (
                       <TableCell
                         key={column.field}
-                        align={column.numeric ? 'right' : 'left'}
-                        padding={'default'}
+                        align={column.numeric ? "right" : "left"}
+                        padding={"default"}
                         sortDirection={orderBy === column.field ? order : false}
                       >
                         <TableSortLabel
                           active={orderBy === column.field}
-                          direction={orderBy === column.field ? order : 'asc'}
+                          direction={orderBy === column.field ? order : "asc"}
                           onClick={createSortHandler(column.field)}
                         >
                           {column.label}
                           {orderBy === column.field ? (
                             <span className={styles.sorted}>
-                              {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                              {order === "desc"
+                                ? "sorted descending"
+                                : "sorted ascending"}
                             </span>
                           ) : null}
                         </TableSortLabel>
@@ -411,32 +525,29 @@ export function FilterTable({individuals, title = '', filters = [],
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, index) => {
                       return (
-                        <TableRow key={row.number}
-                          hover
-                          tabIndex={-1}
-                        >
-                          { action && (
+                        <TableRow key={row.number} hover tabIndex={-1}>
+                          {action && (
                             <TableCell
                               className={styles.functionLink}
                               onClick={(event) => action && action(event, row)}
-                              >
+                            >
                               <SvgIcon component={actionIcon} />
                             </TableCell>
                           )}
-                          {visibleColumns.map(column => {
+                          {visibleColumns.map((column) => {
                             return (
                               <TableCell
                                 key={column.field}
-                                align={column.numeric ? 'right' : 'left'}
-                                >
-                                { column.render
+                                align={column.numeric ? "right" : "left"}
+                              >
+                                {column.render
                                   ? column.render(row)
                                   : row[column.field]}
                               </TableCell>
-                            )
+                            );
                           })}
                         </TableRow>
-                      )
+                      );
                     })}
                 </TableBody>
               </Table>
@@ -451,13 +562,15 @@ export function FilterTable({individuals, title = '', filters = [],
               onChangeRowsPerPage={handleChangeRowsPerPage}
             />
           </>
-        : <>
-          <div className={styles.loading}>
-            <h2>Loading Individuals</h2>
-            <CircularProgress />
-          </div>
-        </>
-      }
-    </div>
-  </>
+        ) : (
+          <>
+            <div className={styles.loading}>
+              <h2>Loading Individuals</h2>
+              <CircularProgress />
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
 }
