@@ -5,6 +5,7 @@ from pathlib import Path
 import boto3
 from botocore.errorfactory import ClientError
 import botocore
+import utils.settings as settings
 
 
 class S3Handler:  # pylint: disable=too-many-instance-attributes
@@ -104,10 +105,9 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         Returns whether an object exists in a bucket or not. If etag is supplied it will check if checksums match.
         """
         try:
-            self.s3_client.head_object(Bucket=self.bucket, Key=object_name, IfMatch=etag)
-        except ClientError as ex:
-            print(ex)
-            return False
+            res = self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
+        except Exception as ex:
+            raise ex
 
         return True
 
@@ -117,13 +117,13 @@ def get_s3_client():
     Returns a S3 client instance.
     """
     s3_client = S3Handler(
-        bucket="test",
-        endpoint="http://s3backend:9000",
-        region="us-east-1",
-        secret_key="secretkeytest",
-        access_key="accesskeytest",
-        verify=False,
-        cert=None,
-        private_key=None,
+        bucket=settings.s3.bucket,
+        endpoint=settings.s3.endpoint,
+        region=settings.s3.region,
+        secret_key=settings.s3.secret_key,
+        access_key=settings.s3.access_key,
+        verify=settings.s3.verify,
+        cert=settings.s3.cert,
+        private_key=settings.s3.private_key,
     )
     return s3_client
