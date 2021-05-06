@@ -3,9 +3,8 @@ S3 client handler.
 """
 from pathlib import Path
 import boto3
-from botocore.errorfactory import ClientError
 import botocore
-import utils.settings as settings
+import settings
 
 
 class S3Handler:  # pylint: disable=too-many-instance-attributes
@@ -102,10 +101,10 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
 
     def head_object(self, object_name, etag=""):
         """
-        Returns whether an object exists in a bucket or not. If etag is supplied it will check if checksums match.
+        Returns whether an object exists in a bucket or not.
         """
         try:
-            res = self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
+            self.s3_client.head_object(Bucket=self.bucket, Key=object_name)
         except Exception as ex:
             raise ex
 
