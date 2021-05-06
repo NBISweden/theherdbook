@@ -1,14 +1,14 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import styled, * as sc from 'styled-components'
-import CssBaseline from '@material-ui/core/CssBaseline';
-import {makeStyles} from '@material-ui/core/styles';
-import {BrowserRouter} from 'react-router-dom'
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import styled, * as sc from "styled-components";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import { makeStyles } from "@material-ui/core/styles";
+import { BrowserRouter } from "react-router-dom";
 
-import {WithUserContext} from '@app/user_context'
-import {WithDataContext} from '@app/data_context'
-import {WithMessageContext} from '@app/message_context'
-import {Navigation} from '@app/navigation'
+import { WithUserContext } from "@app/user_context";
+import { WithDataContext } from "@app/data_context";
+import { WithMessageContext } from "@app/message_context";
+import { Navigation } from "@app/navigation";
 
 const CSS = sc.createGlobalStyle`
   html, #root {
@@ -23,24 +23,25 @@ const CSS = sc.createGlobalStyle`
     margin: 1cm;
     margin-bottom: 0.1cm;
   }
-`
+`;
 
-const Main =
+const Main = (
   <>
     <CssBaseline />
     <BrowserRouter>
       <WithDataContext>
         <WithUserContext>
           <WithMessageContext>
-              <Navigation/>
+            <Navigation />
           </WithMessageContext>
         </WithUserContext>
       </WithDataContext>
     </BrowserRouter>
-    <CSS/>
+    <CSS />
   </>
+);
 
-ReactDOM.render(Main, document.querySelector('#root'))
+ReactDOM.render(Main, document.querySelector("#root"));
 
 // https://www.snowpack.dev/#hot-module-replacement
-import.meta?.hot?.accept() // Dan: OK to ignore esbuild warning on this line
+import.meta?.hot?.accept(); // Dan: OK to ignore esbuild warning on this line

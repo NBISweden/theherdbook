@@ -2,85 +2,97 @@
  * @file This file contains the Manage function. This page is used for managing
  * users and herds.
  */
-import React, { useState } from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import Paper from '@material-ui/core/Paper';
+import React, { useState } from "react";
+import { makeStyles } from "@material-ui/core/styles";
+import Paper from "@material-ui/core/Paper";
 import { Switch, Route, useLocation, useHistory } from "react-router-dom";
 
-import { useDataContext } from '@app/data_context'
-import { Genebank, NameID, herdLabel, userLabel, OptionType, inputVariant,
-        LimitedHerd } from '@app/data_context_global';
-import { Button, Checkbox, FormControlLabel, TextField } from '@material-ui/core';
-import { HerdForm } from '@app/herdForm';
-import { UserForm } from '@app/userForm';
-import { Autocomplete } from '@material-ui/lab';
+import { useDataContext } from "@app/data_context";
+import {
+  Genebank,
+  NameID,
+  herdLabel,
+  userLabel,
+  OptionType,
+  inputVariant,
+  LimitedHerd,
+} from "@app/data_context_global";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  TextField,
+} from "@material-ui/core";
+import { HerdForm } from "@app/herdForm";
+import { UserForm } from "@app/userForm";
+import { Autocomplete } from "@material-ui/lab";
 
 const useStyles = makeStyles({
   main: {
-    width: '100%',
-    height: '100%',
-    margin: '0',
-    padding: '10px',
+    width: "100%",
+    height: "100%",
+    margin: "0",
+    padding: "10px",
   },
   controls: {
-    padding: '15px',
+    padding: "15px",
   },
   leftControls: {
-    maxWidth: '40%',
-    minHeight: '50px',
+    maxWidth: "40%",
+    minHeight: "50px",
   },
   rightControls: {
-    float: 'right',
-    width: '40%',
+    float: "right",
+    width: "40%",
   },
   hidden: {
-    display: 'none',
+    display: "none",
   },
   inputForm: {
-    width: '100%',
-    padding: '10px',
-    margin: '10px 0',
-    minHeight: '200px',
-  }
+    width: "100%",
+    padding: "10px",
+    margin: "10px 0",
+    minHeight: "200px",
+  },
 });
 
 /**
  * Provides management forms for users and herds.
  */
 export function Manage() {
-  const styles = useStyles()
-  const {genebanks, users} = useDataContext()
+  const styles = useStyles();
+  const { genebanks, users } = useDataContext();
 
-  const history = useHistory()
-  const location = useLocation()
+  const history = useHistory();
+  const location = useLocation();
 
-  const [topic, setTopic] = useState(undefined as string | undefined)
-  const [genebank, setGenebank] = useState(undefined as string | undefined)
-  const [target, setTarget] = useState(undefined as string | undefined)
-  const [options, setOptions] = useState([] as any[])
-  const [selected, setSelected] = useState(null as any)
-  const [showInactive, setShowInactive] = useState(false)
+  const [topic, setTopic] = useState(undefined as string | undefined);
+  const [genebank, setGenebank] = useState(undefined as string | undefined);
+  const [target, setTarget] = useState(undefined as string | undefined);
+  const [options, setOptions] = useState([] as any[]);
+  const [selected, setSelected] = useState(null as any);
+  const [showInactive, setShowInactive] = useState(false);
   const genebankValue = React.useMemo(() => {
-    if (topic == 'user' || !genebanks) {
-      return null
+    if (topic == "user" || !genebanks) {
+      return null;
     }
-    const genebank = genebanks.find(g => g.name == topic)
+    const genebank = genebanks.find((g) => g.name == topic);
     if (genebank) {
-      return {value: genebank.name, label: genebank.name}
+      return { value: genebank.name, label: genebank.name };
     }
-    return null
-  }, [genebanks, topic])
+    return null;
+  }, [genebanks, topic]);
 
   /**
    * Set the options of the main select box to the list of current users.
    */
   const setUserOptions = () => {
     const userOptions: OptionType[] = users.map((u: NameID) => {
-      return {value: '' + u.id, label: userLabel(u)}
+      return { value: "" + u.id, label: userLabel(u) };
     });
-    userOptions.push({value: 'new', label: 'New User'})
+    userOptions.push({ value: "new", label: "New User" });
     setOptions(userOptions);
-  }
+  };
 
   /**
    * Set the options to the main select box to the herds of the genebank
@@ -89,15 +101,15 @@ export function Manage() {
    * @param name the name of the genebank to set options from
    */
   const setHerdOptions = (name: string) => {
-    const dataset = genebanks.find((g: Genebank) => g.name == name)
+    const dataset = genebanks.find((g: Genebank) => g.name == name);
     if (dataset) {
       const herdOptions: OptionType[] = dataset.herds.map((h: LimitedHerd) => {
-        return {value: h.herd, label: herdLabel(h)}
-      })
-      herdOptions.push({value: 'new', label: 'New Herd'})
-      setOptions(herdOptions)
+        return { value: h.herd, label: herdLabel(h) };
+      });
+      herdOptions.push({ value: "new", label: "New Herd" });
+      setOptions(herdOptions);
     }
-  }
+  };
 
   /**
    * tries to set the current selected item in the main select box from the
@@ -110,167 +122,198 @@ export function Manage() {
    */
   const parseTarget = (category: string, path: string) => {
     if (!path) {
-      setSelected(undefined)
-      return
+      setSelected(undefined);
+      return;
     }
 
     let targetOption: any = null;
-    if (category == 'user' && path == 'new') {
-      targetOption = {value: 'new', label: 'New User'}
-    } else if (category == 'user' && isNaN(path)) {
+    if (category == "user" && path == "new") {
+      targetOption = { value: "new", label: "New User" };
+    } else if (category == "user" && isNaN(path)) {
       const targetUser = users.find((u: NameID) => u.id == +path);
       if (targetUser) {
-        targetOption = {value: targetUser.id, label: userLabel(targetUser)}
+        targetOption = { value: targetUser.id, label: userLabel(targetUser) };
       }
     } else if (path.length > 0 && !!path[0].match(/[a-z]/i)) {
-      const dataset = genebanks.find((g: Genebank) => g.name == category)
+      const dataset = genebanks.find((g: Genebank) => g.name == category);
       if (dataset) {
-        const targetHerd = dataset.herds.find((h: LimitedHerd) => h.herd == path)
+        const targetHerd = dataset.herds.find(
+          (h: LimitedHerd) => h.herd == path
+        );
         if (targetHerd) {
-          targetOption = {value: targetHerd.herd, label: herdLabel(targetHerd)}
+          targetOption = {
+            value: targetHerd.herd,
+            label: herdLabel(targetHerd),
+          };
         }
       }
     }
-    setSelected(targetOption)
-  }
+    setSelected(targetOption);
+  };
 
   const filtered = (options: OptionType[]) => {
-    if (showInactive || topic == 'user') {
+    if (showInactive || topic == "user") {
       return options;
     }
-    const genebank = genebanks.find(g => g.name == topic)
+    const genebank = genebanks.find((g) => g.name == topic);
     if (!genebank) {
       return options;
     }
     // make index just in case:
-    let activeIndex: {[herd: string]: boolean | null | undefined} = {}
-    genebank.herds.forEach(h => {
-      activeIndex[h.herd] = h.is_active
-    })
+    let activeIndex: { [herd: string]: boolean | null | undefined } = {};
+    genebank.herds.forEach((h) => {
+      activeIndex[h.herd] = h.is_active;
+    });
 
-    return options.filter(option => {
+    return options.filter((option) => {
       // Add special case for new herds
-      if (option.value == 'new') {
-        return true
+      if (option.value == "new") {
+        return true;
       }
-      return activeIndex[option.value]
-    })
-  }
+      return activeIndex[option.value];
+    });
+  };
 
   /**
    * Parses the current url to set the current options, users and (if possible)
    * selected item.
    */
   React.useEffect(() => {
-    const [_, pagepath, topicpath, selectpath] = location.pathname.split('/')
-    if (pagepath != 'manage' || !genebanks) {
+    const [_, pagepath, topicpath, selectpath] = location.pathname.split("/");
+    if (pagepath != "manage" || !genebanks) {
       return;
     }
     if (topicpath) {
-      setTopic(topicpath)
-      if (topicpath != 'user') {
+      setTopic(topicpath);
+      if (topicpath != "user") {
         setGenebank(topicpath);
       } else if (!genebank && genebanks.length > 0) {
-        setGenebank(genebanks[0].name)
+        setGenebank(genebanks[0].name);
       }
-      if (topicpath == 'user') {
+      if (topicpath == "user") {
         setUserOptions();
       } else {
         setHerdOptions(topicpath);
       }
     } else if (genebanks.length > 0) {
-      const defaultTopic = genebanks[0].name
-      setTopic(defaultTopic)
-      setGenebank(defaultTopic)
-      setHerdOptions(defaultTopic)
+      const defaultTopic = genebanks[0].name;
+      setTopic(defaultTopic);
+      setGenebank(defaultTopic);
+      setHerdOptions(defaultTopic);
     }
     if (selectpath) {
-      setTarget(selectpath)
-      parseTarget(topicpath, selectpath)
+      setTarget(selectpath);
+      parseTarget(topicpath, selectpath);
     }
+  }, [genebanks, users, location]);
 
-  }, [genebanks, users, location])
-
-
-  return <>
-    <Paper className={styles.main}>
-      <Paper className={styles.controls}>
-        <div>
-          <div className={styles.rightControls}>
-            <div className={topic == 'user' ? styles.hidden : undefined}>
-              <Autocomplete
-                options={genebanks ? genebanks.map((g: Genebank) => {
-                  return {value: g.name, label: g.name}}) : []
+  return (
+    <>
+      <Paper className={styles.main}>
+        <Paper className={styles.controls}>
+          <div>
+            <div className={styles.rightControls}>
+              <div className={topic == "user" ? styles.hidden : undefined}>
+                <Autocomplete
+                  options={
+                    genebanks
+                      ? genebanks.map((g: Genebank) => {
+                          return { value: g.name, label: g.name };
+                        })
+                      : []
+                  }
+                  value={genebankValue}
+                  getOptionLabel={(option: OptionType) => option.label}
+                  getOptionSelected={(o: OptionType, v: OptionType) =>
+                    o.value == v.value
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Genbank"
+                      variant={inputVariant}
+                      margin="normal"
+                    />
+                  )}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    newValue &&
+                      history.push(
+                        `/manage/${newValue.value}/${target ? target : ""}`
+                      );
+                  }}
+                />
+              </div>
+            </div>
+            <div className={styles.leftControls}>
+              <Button
+                variant="contained"
+                color={topic != "user" ? "primary" : "default"}
+                onClick={() =>
+                  history.push(`/manage/${genebank}/${target ? target : ""}`)
                 }
-                value={genebankValue}
-                getOptionLabel={(option: OptionType) => option.label}
-                getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
-                renderInput={(params) => <TextField {...params}
-                  label="Genbank"
-                  variant={inputVariant}
-                  margin="normal" />}
-                onChange={(event: any, newValue: OptionType | null) => {
-                  newValue && history.push(`/manage/${newValue.value}/${target ? target : ''}`)
-                }}
-              />
+              >
+                Herds
+              </Button>
+              <Button
+                variant="contained"
+                color={topic == "user" ? "primary" : "default"}
+                onClick={() =>
+                  history.push(`/manage/user/${target ? target : ""}`)
+                }
+              >
+                Users
+              </Button>
             </div>
           </div>
-          <div className={styles.leftControls}>
-            <Button
-              variant='contained'
-              color={topic != 'user' ? 'primary' : 'default'}
-              onClick={() => history.push(`/manage/${genebank}/${target ? target : ''}`)}>
-                Herds
-            </Button>
-            <Button
-              variant='contained'
-              color={topic == 'user' ? 'primary' : 'default'}
-              onClick={() => history.push(`/manage/user/${target ? target : ''}`)}>
-                Users
-            </Button>
-          </div>
-        </div>
 
-        <Autocomplete
-          options={filtered(options) ?? []}
-          value={selected}
-          getOptionLabel={(option: OptionType) => option.label}
-          getOptionSelected={(o: OptionType, v: OptionType) => o.value == v.value}
-          renderInput={(params) => <TextField {...params}
-            label={topic == 'user' ? 'Användare' : 'Besättning'}
-            variant={inputVariant}
-            margin="normal" />}
-          onChange={(event: any, newValue: OptionType | null) => {
-            newValue && history.push(`/manage/${topic}/${newValue.value}`)
-          }}
-        />
-        <FormControlLabel
-          disabled={topic == 'user'}
-          control={
-            <Checkbox
-              checked={showInactive}
-              onChange={(event) => setShowInactive(event.currentTarget.checked)}
-              color="primary"
+          <Autocomplete
+            options={filtered(options) ?? []}
+            value={selected}
+            getOptionLabel={(option: OptionType) => option.label}
+            getOptionSelected={(o: OptionType, v: OptionType) =>
+              o.value == v.value
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={topic == "user" ? "Användare" : "Besättning"}
+                variant={inputVariant}
+                margin="normal"
               />
-          }
-          label="Visa inaktiva"
+            )}
+            onChange={(event: any, newValue: OptionType | null) => {
+              newValue && history.push(`/manage/${topic}/${newValue.value}`);
+            }}
           />
+          <FormControlLabel
+            disabled={topic == "user"}
+            control={
+              <Checkbox
+                checked={showInactive}
+                onChange={(event) =>
+                  setShowInactive(event.currentTarget.checked)
+                }
+                color="primary"
+              />
+            }
+            label="Visa inaktiva"
+          />
+        </Paper>
+
+        {/* Only show the input form for the currently selected type */}
+        <Switch>
+          <Route path="/manage/user">
+            <Paper className={styles.inputForm}>
+              <UserForm id={selected?.value} />
+            </Paper>
+          </Route>
+          <Route path="/manage/">
+            <Paper className={styles.inputForm}>
+              <HerdForm id={selected?.value} view={"form"} change={false} />
+            </Paper>
+          </Route>
+        </Switch>
       </Paper>
-
-      {/* Only show the input form for the currently selected type */}
-      <Switch>
-        <Route path="/manage/user">
-          <Paper className={styles.inputForm}>
-            <UserForm id={selected?.value}/>
-          </Paper>
-        </Route>
-        <Route path="/manage/">
-          <Paper className={styles.inputForm}>
-            <HerdForm id={selected?.value} view={'form'} change={false}/>
-          </Paper>
-        </Route>
-      </Switch>
-    </Paper>
-  </>
+    </>
+  );
 }
-
