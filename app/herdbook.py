@@ -528,10 +528,15 @@ def update_certificate(i_number):
         data = get_certificate_data(ind, user_id)
         data.update(**request.form)
         pdf_bytes = get_certificate(data)
-        signed_data = sign_data(pdf_bytes)
-        uploaded = upload_certificate(
-            pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
-        )
+
+        try:
+            signed_data = sign_data(pdf_bytes)
+            uploaded = upload_certificate(
+                pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
+            )
+        except Exception as ex:
+            print(ex)
+            return jsonify({"response": "Error processing your request"}), 400
 
         if uploaded:
             return create_pdf_response(
@@ -564,10 +569,15 @@ def issue_certificate(i_number):
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
     ind_number = ind["number"]
-    signed_data = sign_data(pdf_bytes)
-    uploaded = upload_certificate(
-        pdf_bytes=signed_data.getvalue(), ind_number=ind_number
-    )
+
+    try:
+        signed_data = sign_data(pdf_bytes)
+        uploaded = upload_certificate(
+            pdf_bytes=signed_data.getvalue(), ind_number=ind_number
+        )
+    except Exception as ex:
+        print(ex)
+        return jsonify({"response": "Error processing your request"}), 400
 
     if uploaded:
         return create_pdf_response(pdf_bytes=signed_data, obj_name=f"{cert_number}.pdf")
@@ -605,9 +615,13 @@ def verify_certificate(i_number):
 
     uploaded_bytes = request.get_data()
 
-    checksum = hashlib.sha256(uploaded_bytes).hexdigest()
-    signed = verify_signature(uploaded_bytes)
-    present = verify_certificate_checksum(ind["number"], checksum=checksum)
+    try:
+        checksum = hashlib.sha256(uploaded_bytes).hexdigest()
+        signed = verify_signature(uploaded_bytes)
+        present = verify_certificate_checksum(ind["number"], checksum=checksum)
+    except Exception as ex:
+        print(ex)
+        return jsonify({"response": "Error processing your request"}), 400
 
     if present and signed:
         return jsonify({"response": "Certificate is valid"}), 200
@@ -704,7 +718,7 @@ def get_certificate_data(ind, user_id):
     ]
 
     date = datetime.datetime.utcnow()
-    date = date.strftime("D:%Y%m%d%H%M%S+00'00'")
+    date = date.strftime("%Y-%m-%d")
     extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
     ind["notes"] = "\n".join(
         [
