@@ -11,7 +11,6 @@ import binascii
 import logging
 import sys
 import time
-import random
 import datetime
 import hashlib
 import uuid
@@ -534,7 +533,7 @@ def update_certificate(i_number):
             uploaded = upload_certificate(
                 pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
             )
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             print(ex)
             return jsonify({"response": "Error processing your request"}), 400
 
@@ -560,7 +559,6 @@ def issue_certificate(i_number):
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
-    ## TODO: Make sure this is unique
     ##cert_number = str(random.randint(50001, 99999))
     cert_number = "99999"
     ind.update(**request.form, certificate=cert_number)
@@ -575,7 +573,7 @@ def issue_certificate(i_number):
         uploaded = upload_certificate(
             pdf_bytes=signed_data.getvalue(), ind_number=ind_number
         )
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-except
         print(ex)
         return jsonify({"response": "Error processing your request"}), 400
 
@@ -619,7 +617,7 @@ def verify_certificate(i_number):
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
         signed = verify_signature(uploaded_bytes)
         present = verify_certificate_checksum(ind["number"], checksum=checksum)
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-except
         print(ex)
         return jsonify({"response": "Error processing your request"}), 400
 
@@ -628,9 +626,7 @@ def verify_certificate(i_number):
 
     return (
         jsonify(
-            {
-                "response": "The uploaded certificate is not valid or does not belong to this individual"
-            }
+            {"response": "The uploaded certificate is not valid for this individual"}
         ),
         404,
     )
