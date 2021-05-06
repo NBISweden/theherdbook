@@ -786,7 +786,7 @@ def get_certificate(data):
     )
 
     qr_code = certs.QRHandler(
-        link="https://herd.gotlandskaninen.se/",
+        link=settings.service.host,
         size=(qr_x_len, qr_y_len),
         pos={
             "x0": qr_x_pos - qr_x_len,
