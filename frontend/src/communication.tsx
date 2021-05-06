@@ -1,9 +1,9 @@
-import React from 'react'
-import { Herd } from '@app/data_context_global';
+import React from "react";
+import { Herd } from "@app/data_context_global";
 
-declare const process: {env: {NODE_ENV: string}}
+declare const process: { env: { NODE_ENV: string } };
 
-const credentials_policy = 'same-origin';
+const credentials_policy = "same-origin";
 
 /**
  * Creates a GET request to the given `url`, and returns the reply as json.
@@ -12,11 +12,11 @@ const credentials_policy = 'same-origin';
  */
 export async function get(url: string) {
   const resp = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     credentials: credentials_policy,
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
   });
   return await resp.json();
@@ -32,14 +32,13 @@ export async function get(url: string) {
 export async function post(url: string, content: any) {
   const resp = await fetch(url, {
     body: JSON.stringify(content),
-    method: 'POST',
+    method: "POST",
     credentials: credentials_policy,
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-  }
-  );
+  });
   return await resp.json();
 }
 
@@ -53,17 +52,15 @@ export async function post(url: string, content: any) {
 export async function patch(url: string, content: any) {
   const resp = await fetch(url, {
     body: JSON.stringify(content),
-    method: 'PATCH',
+    method: "PATCH",
     credentials: credentials_policy,
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-  }
-  );
+  });
   return await resp.json();
 }
-
 
 /**
  * Sends a request to update herd information with the information given in
@@ -74,16 +71,18 @@ export async function patch(url: string, content: any) {
  */
 export async function updateHerd(herd: Herd) {
   // replace empty strings with null values
-  Object.keys(herd).forEach((k: string) => {herd[k] = herd[k] == '' ? null : herd[k]})
-  return await patch('/api/manage/herd', herd).then(
-    data => {
+  Object.keys(herd).forEach((k: string) => {
+    herd[k] = herd[k] == "" ? null : herd[k];
+  });
+  return await patch("/api/manage/herd", herd).then(
+    (data) => {
       return data;
     },
-    error => {
+    (error) => {
       console.error(error);
-      return error
+      return error;
     }
-  )
+  );
 }
 
 /**
@@ -94,15 +93,17 @@ export async function updateHerd(herd: Herd) {
  */
 export async function createHerd(herd: Herd) {
   // replace empty strings with null values
-  const postData = {...herd};
-  Object.keys(postData).forEach((k: string) => {postData[k] = postData[k] == '' ? null : postData[k]})
-  return await post('/api/manage/herd', postData).then(
-    data => {
+  const postData = { ...herd };
+  Object.keys(postData).forEach((k: string) => {
+    postData[k] = postData[k] == "" ? null : postData[k];
+  });
+  return await post("/api/manage/herd", postData).then(
+    (data) => {
       return data;
     },
-    error => {
+    (error) => {
       console.error(error);
-      return error
+      return error;
     }
-  )
+  );
 }
