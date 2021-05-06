@@ -4,6 +4,7 @@ Instance specific settings for the herdbook.
 
 import logging
 import os
+from pathlib import Path
 from argparse import Namespace
 
 logging.info("Reading Environment")
@@ -11,7 +12,11 @@ logging.info("Reading Environment")
 postgres = Namespace()  # pylint: disable=C0103
 rapi = Namespace()  # pylint: disable=C0103
 s3 = Namespace()  # pylint: disable=C0103
+certs = Namespace()  # pylint: disable=C0103
 # Read configuration from environment variable
+
+certs.private_key = Path("/code/key.pem")
+certs.ca = Path("/code/ca.pem")
 
 postgres.name = os.environ.get("POSTGRES_DB", "herdbook")
 postgres.host = os.environ.get("POSTGRES_HOST", "herdbook-db")
