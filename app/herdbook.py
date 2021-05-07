@@ -480,7 +480,7 @@ def get_mean_kinship(g_id):
     return {}
 
 
-@APP.route("/api/certificates/update/<i_number>", methods=["POST"])
+@APP.route("/api/certificates/update/<i_number>", methods=["PATCH"])
 @login_required
 def update_certificate(i_number):
     """
