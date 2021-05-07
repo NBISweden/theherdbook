@@ -109,9 +109,9 @@ function activeIndividuals(genebank: Genebank | undefined, sex: string){
 }
 
 /**
- * Simple form where mother and father can be chosen out of the active 
- * females and males in chosen genebank. All individuals are searchable, but the 
- * amount of individuals to display can be configured through filterOptions. 
+ * Form where mother or female grandparents and father or male grandparents
+ * can be chosen out of the active females and males in the chosen genebank.
+ * The chosen ancestors will be used to calculate coefficient of inbreeding
  */
 export function InbreedingForm() {
   const style = useStyles()

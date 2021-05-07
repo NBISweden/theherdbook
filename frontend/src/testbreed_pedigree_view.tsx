@@ -1,3 +1,7 @@
+/**
+ * @file This file provides a pedigree where users can configure the amount
+ * of generation to show and if common ancestors should be highlighed
+ */
 import React from 'react'
 import { Autocomplete } from '@material-ui/lab'
 import { TextField, FormControlLabel, Switch } from '@material-ui/core'

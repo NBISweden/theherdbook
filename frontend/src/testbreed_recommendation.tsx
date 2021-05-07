@@ -1,8 +1,7 @@
 /**
- * @file This file shows the calculated COI and resulting recommendations based on that COI. 
- * All coefficientOfInbreeding logic/info is only a template of how it could function when 
- * we have possibility to calculate the coefficient Current numbers and recommendations 
- * are more or less humbug
+ * @file This file displays the calculated coefficient of inbreeding (COI) 
+ * of the offspring of chosen ancestors and the resulting recommendations
+ * based on that COI.
  */
 import React from 'react'
 import { AppBar, Box, Tabs, Tab, Tooltip, CircularProgress, Table, TableBody, TableHead, TableRow, TableCell } from '@material-ui/core'
@@ -66,7 +65,13 @@ const useStyles = makeStyles({
   }
 })
 
-// TODO, write docstring when functon is legitimate
+/**
+ * Requests backend to get calculated coefficient of inbreeding (COI)
+ * based on the chosen ancestors. The COI is displayed, as well as
+ * recommendations based on how the COI compares to the genebank specific
+ * threshold. In addition, a pedigree is available where users can see the
+ * pedigree of the chosen ancestors and highlight their common ancestors
+ */
 export function InbreedingRecommendation({chosenAncestors, genebankId}
   : {chosenAncestors: testBreedIndividuals, genebankId: number | undefined}) {
   const style = useStyles()
@@ -77,6 +82,8 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
     generationsOptions.push(i)
   }
   
+  // Send request with chosen ancestors to /api/testbreed to
+  // get COI of their potential offspring
   React.useEffect(() => {
     setOffspringCOI(undefined)
     let payload = {genebankId: genebankId}
