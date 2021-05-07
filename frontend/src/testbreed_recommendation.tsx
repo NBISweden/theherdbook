@@ -97,7 +97,7 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
     }, [chosenAncestors])
 
   //TODO, error handling
-  let sufficientGenerations = true
+  let calculationError = false
   //TODO, change depending on genebankId
   let thresholdCOI = 4.5
   let beneficialCOI = offspringCOI? offspringCOI <= thresholdCOI : false
@@ -110,8 +110,8 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
 
   let recommendationText
   let recommendationSymbol
-  if (!sufficientGenerations) {
-    recommendationText = 'För få generationer tillgängliga för att göra tillförlitlig beräkning av inavelskoefficient'
+  if (calculationError) {
+    recommendationText = 'Något gick fel i beräkningen'
     recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   } else if (beneficialCOI) {
     recommendationText = 'Parning rekommenderas'
@@ -168,25 +168,27 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
                 <Tab label="Släktträd för potentiell avkomma" value='pedigree'/>
             </Tabs>
           </AppBar>
-          <TabPanel value={activeTab} index='COI'>
-            <Table className={style.inbreedCoefficient} size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell className={style.tableCell}></TableCell>
-                  <TableCell className={style.tableCell} align="left">Beräknad för avkomma</TableCell>
-                  <TableCell className={style.tableCell} align="left">Rekommenderat värde</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+            <TabPanel value={activeTab} index='COI'>
+            {!calculationError && 
+              <Table className={style.inbreedCoefficient} size="small">
+                <TableHead>
                   <TableRow>
-                    <TableCell className={style.tableCell} component="th" scope="row">
-                      Inavelskoefficient
-                    </TableCell>
-                    <TableCell className={style.tableCell} align="left">{offspringCOI}</TableCell>
-                    <TableCell className={style.tableCell} align="left">{thresholdCOI}</TableCell>
+                    <TableCell className={style.tableCell}></TableCell>
+                    <TableCell className={style.tableCell} align="left">Beräknad för avkomma</TableCell>
+                    <TableCell className={style.tableCell} align="left">Rekommenderat värde</TableCell>
                   </TableRow>
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                    <TableRow>
+                      <TableCell className={style.tableCell} component="th" scope="row">
+                        Inavelskoefficient
+                      </TableCell>
+                      <TableCell className={style.tableCell} align="left">{offspringCOI}</TableCell>
+                      <TableCell className={style.tableCell} align="left">{thresholdCOI}</TableCell>
+                    </TableRow>
+                </TableBody>
+              </Table> 
+              }
           <p className={style.recommendation}> {recommendationSymbol} {recommendationText} </p>
        </TabPanel>
        <TabPanel value={activeTab} index='pedigree'>
