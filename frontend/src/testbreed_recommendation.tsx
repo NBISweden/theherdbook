@@ -19,6 +19,13 @@ import { testBreedIndividuals } from '@app/testbreed_form'
 import { TestbreedPedigreView } from '@app/testbreed_pedigree_view'
 
 const useStyles = makeStyles({
+  container: {
+    display: 'block',
+    width: '80vw',
+    height: '70vh',
+    minWidth: '400px',
+    minHeight: '500px'
+  },
   loading: {
     display: "flex",
     flexDirection: "column",
@@ -26,7 +33,7 @@ const useStyles = makeStyles({
     alignItems: "center",
   },
   inbreedCoefficient: {
-    width: '30%',
+    width: '45%',
     marginTop: '30px',
     borderStyle: 'solid',
     borderColor: '#d3d3d3',
@@ -34,10 +41,13 @@ const useStyles = makeStyles({
   },
   tableCell: {
     padding: '5px',
+    fontSize: '1.25em'
+
   },
   recommendation: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    fontSize: '1.30em'
   },
   fillWidth: {
     width: '100%',
@@ -53,11 +63,6 @@ const useStyles = makeStyles({
   },
   toggle: {
     margin: '5px 0px 5px 0px',
-  },
-  //TODO, make this responsive and not ugly hardcoded
-  test: {
-    height: '900px',
-    width: '1500px',
   }
 })
 
@@ -147,7 +152,7 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
 
   return <>
     {offspringCOI ?
-    <div className={style.test}>
+    <div className={style.container}>
         <h1> Provparning {mother} och {father}</h1>
           <AppBar position="static" color="default">
             <Tabs
