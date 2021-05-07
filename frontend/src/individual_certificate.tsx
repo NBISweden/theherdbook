@@ -115,7 +115,13 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualCertificate({ id }: { id: string }) {
+export function IndividualCertificate({
+  id,
+  action,
+}: {
+  id: string;
+  action: string;
+}) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
