@@ -594,7 +594,9 @@ export function IndividualCertificate({
                 issueCertificate(id, certificateData);
               }}
             >
-              {"Beställ certifikat"}
+              {action == "issue"
+                ? "Beställ certifikat"
+                : "Uppdatera certifikat"}
             </Button>
           </div>
         </>
