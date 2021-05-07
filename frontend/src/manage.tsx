@@ -129,7 +129,7 @@ export function Manage() {
     let targetOption: any = null;
     if (category == "user" && path == "new") {
       targetOption = { value: "new", label: "New User" };
-    } else if (category == "user" && isNaN(path)) {
+    } else if (category == "user" && !isNaN(+path)) {
       const targetUser = users.find((u: NameID) => u.id == +path);
       if (targetUser) {
         targetOption = { value: targetUser.id, label: userLabel(targetUser) };
