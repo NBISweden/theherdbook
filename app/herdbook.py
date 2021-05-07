@@ -623,6 +623,8 @@ def verify_certificate(i_number):
 
     if present and signed:
         return jsonify({"response": "Certificate is valid"}), 200
+    elif not present and signed:
+        return jsonify({"response": "Certificate valid but file not present"}), 202
 
     return (
         jsonify(
