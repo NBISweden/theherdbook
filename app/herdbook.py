@@ -510,7 +510,7 @@ def testbreed():
     return {"offspringCOI": formatted_offspring_coi}
 
 
-@APP.route("/api/certificates/update/<i_number>", methods= ["POST"])
+d@APP.route("/api/certificates/update/<i_number>", methods=["PATCH"])
 @login_required
 def update_certificate(i_number):
     """
