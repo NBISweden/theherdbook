@@ -422,6 +422,7 @@ def kinship(g_id):
     """
     return jsonify(get_kinship(str(g_id)))
 
+
 @CACHE.cached(timeout=KINSHIP_LIFETIME, key_prefix="R-api")
 def get_kinship(g_id):
     """
