@@ -415,7 +415,6 @@ def get_inbreeding(g_id):
     return {}
 
 
-@CACHE.cached(timeout=KINSHIP_LIFETIME, key_prefix="R-api")
 @APP.route("/api/<int:g_id>/kinship/")
 def kinship(g_id):
     """
@@ -423,7 +422,7 @@ def kinship(g_id):
     """
     return jsonify(get_kinship(str(g_id)))
 
-
+@CACHE.cached(timeout=KINSHIP_LIFETIME, key_prefix="R-api")
 def get_kinship(g_id):
     """
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
