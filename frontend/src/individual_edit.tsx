@@ -1,22 +1,39 @@
-git /**
+/**
  * @file This file contains the IndividualEdit function. This function allows a
  * user (with the required permissions) to edit an individual given by `id`, or
  * add a new individual if `herdId` is given.
  */
-import React from 'react'
-import { makeStyles } from '@material-ui/core/styles';
-import { get, patch } from '@app/communication';
-import { asLocale, BodyFat, DateBodyfat, dateFormat, DateWeight, Individual,
-         individualLabel, inputVariant, LimitedIndividual, OptionType, ServerMessage,
-        } from '@app/data_context_global';
-import { useMessageContext } from '@app/message_context';
-import { Button, CircularProgress, InputAdornment, TextField,
-        } from '@material-ui/core';
-import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers'
-import DateFnsUtils from '@date-io/date-fns';
-import { useUserContext } from '@app/user_context';
-import { useDataContext } from '@app/data_context';
-import { Autocomplete } from '@material-ui/lab';
+import React from "react";
+import { makeStyles } from "@material-ui/core/styles";
+import { get, patch } from "@app/communication";
+import {
+  asLocale,
+  BodyFat,
+  DateBodyfat,
+  dateFormat,
+  DateWeight,
+  Individual,
+  individualLabel,
+  inputVariant,
+  LimitedIndividual,
+  OptionType,
+  ServerMessage,
+} from "@app/data_context_global";
+import { useMessageContext } from "@app/message_context";
+import {
+  Button,
+  CircularProgress,
+  InputAdornment,
+  TextField,
+} from "@material-ui/core";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from "@material-ui/pickers";
+import DateFnsUtils from "@date-io/date-fns";
+import { useUserContext } from "@app/user_context";
+import { useDataContext } from "@app/data_context";
+import { Autocomplete } from "@material-ui/lab";
 
 const useStyles = makeStyles({
   loading: {
@@ -254,20 +271,18 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
 
   // jscpd:ignore-start
 
-  return <>
-  {individual
-    ? <div className={style.form}>
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <div className={style.flexRowOrColumn}>
-            <div className={style.formPane}>
-              <div className={style.titleText}>
-                Redigera Individ
-              </div>
-              <div className={style.adminPane}>
-                <div className={style.paneTitle}>
-                  Kan endast ändras av genbanksansvarig
-                </div>
-
+  return (
+    <>
+      {individual ? (
+        <div className={style.form}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <div className={style.flexRowOrColumn}>
+              <div className={style.formPane}>
+                <div className={style.titleText}>Redigera Individ</div>
+                <div className={style.adminPane}>
+                  <div className={style.paneTitle}>
+                    Kan endast ändras av genbanksansvarig
+                  </div>
                   <TextField
                     disabled
                     label="Nummer"
@@ -504,7 +519,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   color="primary"
                   onClick={() => {
                     updateField("weights", [
-                      ...individual.weights,
+                      ...individual?.weights,
                       { date: weightDate, weight: weight },
                     ]);
                   }}
@@ -581,7 +596,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   color="primary"
                   onClick={() => {
                     updateField("bodyfat", [
-                      ...individual.bodyfat,
+                      ...individual?.bodyfat,
                       { date: hullDate, bodyfat: bodyfat as BodyFat },
                     ]);
                   }}
@@ -599,22 +614,15 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 {"Spara"}
               </Button>
             </div>
-          </div>
-          <div className={style.paneControls}>
-            <Button variant="contained"
-                    color="primary"
-                    onClick={() => save(individual)}>
-              {'Spara'}
-            </Button>
-          </div>
-        </MuiPickersUtilsProvider>
-      </div>
-    : <div className={style.loading}>
-        <h2>Loading data</h2>
-        <CircularProgress />
-      </div>
-  }
-  </>
-// jscpd:ignore-end
-
+          </MuiPickersUtilsProvider>
+        </div>
+      ) : (
+        <div className={style.loading}>
+          <h2>Loading data</h2>
+          <CircularProgress />
+        </div>
+      )}
+    </>
+  );
+  // jscpd:ignore-end
 }
