@@ -508,6 +508,7 @@ export function IndividualCertificate({
                 onClick={() => {
                   setShowForm(false);
                   setShowSummary(true);
+                  console.log("certificate data", certificateData);
                   previewCertificate(id, certificateData);
                 }}
               >

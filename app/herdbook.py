@@ -530,7 +530,7 @@ def issue_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
     certificate_exists = ind.get("certificate", None)
-    if certificate_exists:
+    if not certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
     ##cert_number = str(random.randint(50001, 99999))
