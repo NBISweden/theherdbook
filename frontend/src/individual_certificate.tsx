@@ -253,12 +253,14 @@ export function IndividualCertificate({
         } else res.blob();
       })
       .then((blob: unknown) => {
-        console.log(blob);
+        console.log("blob", blob);
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
         } else {
+          setShowSummary(false);
+          setShowComplete(true);
           throw new Error("Något gick fel.");
         }
       })
@@ -644,7 +646,7 @@ export function IndividualCertificate({
       ) : individual && showComplete ? (
         <>
           {action == "issue" ? (
-            <h1>Certifikatet är klart!</h1>
+            <h1>Certifikatet är nu klart!</h1>
           ) : (
             <h1>Certifikatet uppdaterades!</h1>
           )}
