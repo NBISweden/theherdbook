@@ -233,7 +233,7 @@ export function IndividualCertificate({
       });
   };
 
-  // Returns the signed certificate.
+  // Returns the signed, new certificate.
   const issueCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/issue/${id}`, {
       body: JSON.stringify(content),
@@ -259,6 +259,44 @@ export function IndividualCertificate({
           setShowSummary(false);
           setShowComplete(true);
         } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .catch((error) => {
+        {
+          userMessage(error.message, "error");
+        }
+      });
+  };
+
+  // Returns the updated certificate.
+  const updateCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/update/${id}`, {
+      body: JSON.stringify(content),
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+      },
+    })
+      .then((res) => {
+        if (res.status === 400) {
+          throw new Error(
+            "Vi har tekniska problem. Certifikatet kunde inte uppdateras."
+          );
+        } else if (res.status === 404) {
+          throw new Error("Kaninen kunde inte hittas.");
+        } else res.blob();
+      })
+      .then((blob: unknown) => {
+        console.log("blob", blob);
+        if (blob) {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          setShowSummary(false);
+          setShowComplete(true);
+        } else {
+          setShowSummary(false);
+          setShowComplete(true);
           throw new Error("Något gick fel.");
         }
       })
@@ -591,7 +629,9 @@ export function IndividualCertificate({
               color="primary"
               disabled={isUserGood ? false : true}
               onClick={() => {
-                issueCertificate(id, certificateData);
+                action == "issue"
+                  ? issueCertificate(id, certificateData)
+                  : updateCertificate(id, certificateData);
               }}
             >
               {action == "issue"
@@ -602,17 +642,27 @@ export function IndividualCertificate({
         </>
       ) : individual && showComplete ? (
         <>
-          <h1>Certifikatet är klart!</h1>
-          <a target="_blank" href={certificateUrl} download={individual.number}>
-            <Button variant="contained" color="primary">
-              {"Ladda ner"}
-            </Button>
-          </a>
-          <a target="_blank" href={certificateUrl}>
-            <Button variant="contained" color="primary">
-              {"Öppna i ny flik"}
-            </Button>
-          </a>
+          {action == "issue" ? (
+            <h1>Certifikatet är klart!</h1>
+          ) : (
+            <h1>Certifikatet uppdaterades!</h1>
+          )}
+          <div className={style.paneControls}>
+            <a
+              target="_blank"
+              href={certificateUrl}
+              download={individual.number}
+            >
+              <Button variant="contained" color="primary">
+                {"Ladda ner"}
+              </Button>
+            </a>
+            <a target="_blank" href={certificateUrl}>
+              <Button variant="contained" color="primary">
+                {"Öppna i ny flik"}
+              </Button>
+            </a>
+          </div>
         </>
       ) : (
         <></>
