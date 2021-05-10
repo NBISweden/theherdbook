@@ -212,7 +212,7 @@ export function IndividualView({ id }: { id: string }) {
                     popup(<IndividualCertificate id={id} action={"issue"} />)
                   }
                 >
-                  Skapa ny certifikat
+                  Skapa nytt certifikat
                 </Button>
               )}
               {user?.canEdit(id) && (
