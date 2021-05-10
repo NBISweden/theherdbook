@@ -59,9 +59,9 @@ class DatabaseTest(unittest.TestCase):
             genebank.save()
 
         self.colors = [
-            db.Colour.get_or_create(name="bleighe", genebank=self.genebanks[0])[0],
-            db.Colour.get_or_create(name="stgröhn", genebank=self.genebanks[0])[0],
-            db.Colour.get_or_create(name="bläåh", genebank=self.genebanks[1])[0],
+            db.Color.get_or_create(name="bleighe", genebank=self.genebanks[0])[0],
+            db.Color.get_or_create(name="stgröhn", genebank=self.genebanks[0])[0],
+            db.Color.get_or_create(name="bläåh", genebank=self.genebanks[1])[0],
         ]
         for color in self.colors:
             color.save()
@@ -146,7 +146,7 @@ class DatabaseTest(unittest.TestCase):
             db.Individual.get_or_create(
                 origin_herd=self.herds[0],
                 breeding=self.breeding[0],
-                colour=self.colors[0],
+                color=self.colors[0],
                 number="H1-1",
             )[0],
             db.Individual.get_or_create(

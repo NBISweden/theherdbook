@@ -236,14 +236,14 @@ class TestDatabase(DatabaseTest):
         self.assertDictEqual(h0_result, h0_expected)
         self.assertDictEqual(h1_result, h1_expected)
 
-    def test_colour(self):
+    def test_color(self):
         """
-        Checks the database.Colour class.
+        Checks the database.Color class.
 
         Currently there are no functions on this class to test, so we stick to
         verifying the table.
         """
-        self.assertTrue(db.Colour.table_exists())
+        self.assertTrue(db.Color.table_exists())
 
     def test_breeding(self):
         """
@@ -307,7 +307,7 @@ class TestDatabase(DatabaseTest):
 
         data["mother"] = mother
         data["father"] = father
-        data["colour"] = self.colors[0].name
+        data["color"] = self.colors[0].name
         data["weights"] = [
             {
                 "weight": self.weights[0].weight,
