@@ -13,6 +13,7 @@ import sys
 import time
 import uuid
 
+import apscheduler.schedulers.background
 import requests
 from flask import Flask, jsonify, request, session
 from flask_caching import Cache
@@ -48,6 +49,8 @@ APP.logger.setLevel(logging.INFO)
 CACHE = Cache(APP)
 LOGIN = LoginManager(APP)
 LOGIN.login_view = "/login"
+
+KINSHIP_LIFETIME = 300
 
 
 @APP.after_request
@@ -420,6 +423,7 @@ def kinship(g_id):
     return jsonify(get_kinship(str(g_id)))
 
 
+@CACHE.cached(timeout=KINSHIP_LIFETIME, key_prefix="R-api")
 def get_kinship(g_id):
     """
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
@@ -502,6 +506,25 @@ def main(path):  # pylint: disable=unused-argument
     return APP.send_static_file("index.html")
 
 
+def reload_kinship():
+    APP.logger.debug("Calling get_kinship to refresh cache if needed")
+    for p in da.get_all_genebanks():
+        try:
+            get_kinship(p.id)
+        except requests.exceptions.ConnectionError:
+            pass
+
+
+def initialize_app():
+    # Set up a background job to do reload if needed
+    # call often to minimize window
+    scheduler = apscheduler.schedulers.background.BackgroundScheduler()
+    scheduler.add_job(reload_kinship, trigger="interval", seconds=15)
+    scheduler.start()
+    APP.logger.info("Added background job to refresh kinship cache")
+    reload_kinship()
+
+
 # Connect to the database, or wait for database and then connect.
 while True:
     APP.logger.info("Connecting to database.")  # pylint: disable=no-member
@@ -514,3 +537,5 @@ while True:
 if not db.verify():
     APP.logger.error("Database has errors.")  # pylint: disable=no-member
     sys.exit(1)
+
+initialize_app()
