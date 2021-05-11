@@ -263,9 +263,9 @@ END_SQL
 
 done | psql  --quiet
 	    
-# Load tracking data for years 2000 through to 2020
+# Load tracking data for years 2000 through to 2021
 year=2000
-while [ "$year" -le 2020 ]; do
+while [ "$year" -le 2021 ]; do
 	column=$year
 
 	cat <<-END_SQL
@@ -355,9 +355,9 @@ while [ "$year" -le 2019 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
-# Load body fat data for years 2012 through to 2018
+# Load body fat data for years 2012 through to 2019
 year=2012
-while [ "$year" -le 2018 ]; do
+while [ "$year" -le 2019 ]; do
 	column="hull $year"
 
 	cat <<-END_SQL

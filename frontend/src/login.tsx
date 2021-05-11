@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
-import {
-  CircularProgress,
-  makeStyles,
-  Button,
-  Container,
-  TextField,
-} from "@material-ui/core";
+import { CircularProgress, makeStyles } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import TextField from "@material-ui/core/TextField";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
@@ -158,7 +154,7 @@ export function Login() {
     );
   }
 
-  return (
+  return user === null ? (
     <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title">
       <DialogTitle>Logga in</DialogTitle>
       <form onSubmit={submitLogin} onKeyDown={keydown}>
@@ -212,5 +208,9 @@ export function Login() {
         </DialogActions>
       </form>
     </Dialog>
+  ) : (
+    <div className={styles.loading}>
+      <CircularProgress />
+    </div>
   );
 }

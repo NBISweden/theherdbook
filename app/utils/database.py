@@ -500,7 +500,7 @@ class Individual(BaseModel):
             if self.breeding and self.breeding.father
             else None
         )
-        data["colour"] = self.colour.name if self.colour else None
+        data["color"] = self.colour.name if self.colour else None
         data["weights"] = [
             {"weight": w.weight, "date": w.weight_date.strftime("%Y-%m-%d")}
             for w in self.weight_set
