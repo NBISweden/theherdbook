@@ -532,7 +532,10 @@ def issue_certificate(i_number):
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
-    ind.update(**request.json, certificate=cert_number)
+    form = request.json
+    cert_number = ind["digital_certificate"]
+
+    ind.update(**form, certificate=cert_number)
     da.update_individual(ind, session.get("user_id", None))
 
     data = get_certificate_data(ind, user_id)
@@ -569,7 +572,7 @@ def preview_certificate(i_number):
     form = request.json
 
     data = get_certificate_data(ind, user_id)
-    data.update(**form)
+    data.update(**form, certificate=ind["digital_certificate"])
     pdf_bytes = get_certificate(data)
     return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
 
