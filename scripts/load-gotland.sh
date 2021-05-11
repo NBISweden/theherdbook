@@ -2,7 +2,14 @@
 
 # Needs to be called by load.sh
 
-echo "Loading rabbits"
+# Checking for duplicate numbers before even attempting to load data.
+echo "Looking for duplicates"
+if csvcut -c 4 "$2" | sort | uniq -d | grep .; then
+	echo '!!! Duplicates found (see numbers above), aborting' >&2
+	exit 1
+fi
+
+echo 'Loading rabbits'
 
 csvsql  --db "$1" -I \
 	--tables g_data \
@@ -165,7 +172,7 @@ psql --echo-errors --quiet <<-'END_SQL'
           d."Född" birth_date,
           MAX(d."Kull") litter_size
           FROM g_data d
-        GROUP BY (d."Far nr", d."Mor nr", d."Född")
+          GROUP BY (d."Far nr", d."Mor nr", d."Född")
       ) d
       JOIN individual father ON d."Far nr" = father.number
       JOIN individual mother ON d."Mor nr" = mother.number;
@@ -186,15 +193,6 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Född" = b.birth_date
   ) WHERE i.breeding_id IS NULL;
 
-	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Gotlandskanin'
-   ORDER BY i.individual_id;
 
    ---
    --- Create empty breeding events for any remaining individuals
@@ -216,9 +214,25 @@ psql --echo-errors --quiet <<-'END_SQL'
    END;
    $$;
 
+	-- Fix missing breeding birth_date entries
+	UPDATE	breeding
+	SET	birth_date = g."Född"
+	FROM	g_data g
+	JOIN	individual i ON (g."Nummer" = i.number)
+	WHERE	i.breeding_id = breeding.breeding_id
+	AND	birth_date IS NULL;
+
+	-- Initial herd tracking
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
+    FROM	genebank gb
+    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
+   WHERE	gb.name = 'Gotlandskanin'
+   ORDER BY i.individual_id;
+
 END_SQL
-
-
 
 # Fix table names for years.
 
@@ -249,9 +263,9 @@ END_SQL
 
 done | psql  --quiet
 	    
-# Load tracking data for years 2000 through to 2020
+# Load tracking data for years 2000 through to 2021
 year=2000
-while [ "$year" -le 2020 ]; do
+while [ "$year" -le 2021 ]; do
 	column=$year
 
 	cat <<-END_SQL
@@ -289,12 +303,13 @@ done | psql --quiet
 # Handle individuals that have disappeared from this genebank (animals
 # sold to external herds).  For each individual with "ny G" equal to
 # "0", figure out the most recent tracking date.  Add tracking info to
-# the "GX1" herd at the last of December of the year of that date.
+# the "GX1" herd at the last of December of the year *after* the year of
+# that date.
 psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
 		i.individual_id,
-		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer, 12, 31)
+		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer + 1, 12, 31)
 	FROM	herd h
 	JOIN	individual i ON (true)
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
@@ -308,6 +323,8 @@ psql --quiet <<-'END_SQL'
 	AND	d."ny G" = '0'
 	ORDER BY	i.individual_id;
 END_SQL
+
+# jscpd:ignore-start
 
 # For the weight and body fat data, we run similar SQL as above, but
 # with different values for $column, and different ranges of values for
@@ -338,9 +355,9 @@ while [ "$year" -le 2019 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
-# Load body fat data for years 2012 through to 2018
+# Load body fat data for years 2012 through to 2019
 year=2012
-while [ "$year" -le 2018 ]; do
+while [ "$year" -le 2019 ]; do
 	column="hull $year"
 
 	cat <<-END_SQL
@@ -359,6 +376,12 @@ while [ "$year" -le 2018 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
+if [ ! -f "$3" ]; then
+	# No herd info
+	exit 0
+fi
+
+# jscpd:ignore-end
 
 # The Gotland data set has herd names etc. in a separate Excel file.
 # Load that file separately.

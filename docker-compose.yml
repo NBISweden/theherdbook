@@ -20,7 +20,7 @@ services:
               - ghcr.io/nbisweden/herdbook_frontend
         volumes:
             - ./frontend:/home/node/app/
-            - /app/node_modules
+            - /home/node/app/node_modules
     main:
         image: herdbook_main
         build:
@@ -56,3 +56,8 @@ services:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
         image: herdbook_r-api
+        volumes:
+            - type: bind
+              source: ./R
+              target: /code
+ 

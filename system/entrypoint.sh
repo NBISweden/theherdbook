@@ -6,7 +6,7 @@ yes '' | openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /code/key.p
 cp /code/cert.pem /code/ca.pem
 
 for p in {cert,key,ca}; do 
-  if [ -r /config/$p.pem ]; then
+  if [ -r "/config/$p.pem" ]; then
     echo "$p.pem supplied, copying"
     cp "/config/$p.pem" /code/
   fi

@@ -2,7 +2,15 @@
 
 # Needs to be called by load.sh
 
-# read the csv into a temprary table called 'data'
+# Checking for duplicate numbers before even attempting to load data.
+echo "Looking for duplicates"
+if csvcut -c 5 "$2" | sort | uniq -d | grep .; then
+	echo '!!! Duplicates found (see numbers above), aborting' >&2
+	exit 1
+fi
+
+echo 'Loading rabbits'
+
 csvsql  --db "$1" -I \
 	--tables m_data \
 	--overwrite \
@@ -139,15 +147,6 @@ psql --echo-errors --quiet <<-'END_SQL'
        AND d."Född" = b.birth_date
   ) WHERE i.breeding_id IS NULL;
 
-	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-  SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Mellerudskanin'
-   ORDER BY i.individual_id;
 
    ---
    --- Create empty breeding events for any remaining individuals
@@ -168,6 +167,24 @@ psql --echo-errors --quiet <<-'END_SQL'
      END LOOP;
    END;
    $$;
+
+	-- Fix missing breeding birth_date entries
+	UPDATE  breeding
+	SET     birth_date = m."Född"
+	FROM    m_data m
+	JOIN    individual i ON (m."Nummer" = i.number)
+	WHERE   i.breeding_id = breeding.breeding_id
+	AND     birth_date IS NULL;
+
+	-- Initial herd tracking
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+  SELECT	i.origin_herd_id, i.individual_id, b.birth_date
+    FROM	genebank gb
+    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
+   WHERE	gb.name = 'Mellerudskanin'
+   ORDER BY i.individual_id;
 
 END_SQL
 
@@ -249,4 +266,60 @@ psql --quiet <<-'END_SQL'
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Mellerudskanin';
+END_SQL
+
+if [ ! -f "$3" ]; then 
+    # No herd info
+    exit 0
+fi
+
+# read the csv into a temprary table called 'm_data2'
+csvsql  --db "$1" -I \
+	--tables m_data2 \
+	--overwrite \
+	--insert "$3"
+
+psql --echo-errors --quiet <<-'END_SQL'
+	UPDATE m_data2 SET "Genbanknr." = REPLACE("Genbanknr.",'-','');
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE NUMERIC USING "Genbanknr."::numeric;
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE INTEGER USING "Genbanknr."::integer;
+	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE VARCHAR(9);
+	UPDATE m_data2 SET "Genbanknr." = CONCAT('M', "Genbanknr.")
+	       WHERE "Genbanknr." IS NOT NULL AND "Genbanknr." NOT LIKE 'M%';
+
+	UPDATE herd h
+	SET herd_name = (
+		SELECT MAX("Gårdsnamn")
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.herd_name IS NULL;
+
+	UPDATE herd h
+	SET name = (
+		SELECT MAX("Namn")
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.name IS NULL;
+
+	UPDATE herd h
+	SET is_active = (
+		SELECT "status" = 'A'
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT 1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.is_active IS NULL;
 END_SQL
