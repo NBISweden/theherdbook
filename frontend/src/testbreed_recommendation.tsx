@@ -75,6 +75,7 @@ const useStyles = makeStyles({
 export function InbreedingRecommendation({chosenAncestors, genebankId}
   : {chosenAncestors: testBreedIndividuals, genebankId: number | undefined}) {
   const style = useStyles()
+  const {userMessage} = useMessageContext()
   const [offspringCOI, setOffspringCOI] = React.useState(undefined as number | undefined)
   const [activeTab, setActiveTab] = React.useState('COI' as TabValue)
   let generationsOptions: number[] = []
@@ -98,8 +99,8 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
         console.log('R-api data', data)
       },
       error => {
-      console.error(error);
-      userMessage(error, 'error')
+        console.error(error)
+        userMessage('Something went wrong', 'error')
       } )
     }, [chosenAncestors])
 

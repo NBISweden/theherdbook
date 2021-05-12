@@ -483,11 +483,16 @@ def testbreed():
         offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
     # One/both parents not registrered, thus not present in the kinship matrix
     else:
-        response = requests.post(
-            "http://{}:{}/testbreed/".format(settings.rapi.host, settings.rapi.port),
-            data=payload,
-        )
-        offspring_coi = response.json()["calculated_coi"][0]
+        try:
+            response = requests.post(
+                "http://{}:{}/testbreed/".format(settings.rapi.host, settings.rapi.port),
+                data=payload,
+            )
+            offspring_coi = response.json()["calculated_coi"][0]
+        except Exception as ex:  # pylint: disable=broad-except
+            APP.logger.error(ex)
+            return jsonify({"error": "Error processing your request"}), 500
+    
     payload["offspringCOI"] = round(offspring_coi * 100, 2)
     APP.logger.info(f"Testbreed calculation result {payload}")
     return payload
