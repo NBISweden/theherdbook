@@ -9,14 +9,6 @@ import VpnKeyIcon from "@material-ui/icons/VpnKey";
 import MeetingRoom from "@material-ui/icons/MeetingRoom";
 import GroupIcon from "@material-ui/icons/Group";
 
-import { makeStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
-import HomeIcon from '@material-ui/icons/Home';
-import AccountBalanceIcon from '@material-ui/icons/AccountBalance';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
-import MeetingRoom from '@material-ui/icons/MeetingRoom';
-import GroupIcon from '@material-ui/icons/Group';
-
 import { Login } from "@app/login";
 import { Genebanks } from "@app/genebanks";
 import { HerdView } from "@app/herd_view";
