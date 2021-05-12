@@ -504,7 +504,11 @@ def update_certificate(i_number):
                 pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
             )
         except Exception as ex:  # pylint: disable=broad-except
+<<<<<<< HEAD
             print(ex)
+=======
+            APP.logger.info("Unexpected error while updating certificate "+str(ex))
+>>>>>>> f5ec3f7b670984825fb38a7c0ccb62ae78a0539d
             return jsonify({"response": "Error processing your request"}), 400
 
         if uploaded:
@@ -537,6 +541,10 @@ def issue_certificate(i_number):
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
     ind_number = ind["number"]
+<<<<<<< HEAD
+=======
+    uploaded = False
+>>>>>>> f5ec3f7b670984825fb38a7c0ccb62ae78a0539d
 
     try:
         signed_data = sign_data(pdf_bytes)
@@ -582,13 +590,21 @@ def verify_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     uploaded_bytes = request.get_data()
+<<<<<<< HEAD
+=======
+    present, signed = False, False
+>>>>>>> f5ec3f7b670984825fb38a7c0ccb62ae78a0539d
 
     try:
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
         signed = verify_signature(uploaded_bytes)
         present = verify_certificate_checksum(ind["number"], checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
+<<<<<<< HEAD
         print(ex)
+=======
+        APP.logger.info("Unexpected error while verifying certificate "+str(ex))
+>>>>>>> f5ec3f7b670984825fb38a7c0ccb62ae78a0539d
         return jsonify({"response": "Error processing your request"}), 400
 
     if present and signed:
@@ -622,6 +638,7 @@ def sign_data(pdf_bytes):
 
 
 def verify_signature(pdf_bytes):
+<<<<<<< HEAD
     """
     Returns digitally signed pdf bytes.
     """
@@ -632,6 +649,18 @@ def get_certificate_checksum(ind_number):
     """
     Returns the bytes of the latest certificate
     """
+=======
+    """
+    Returns digitally signed pdf bytes.
+    """
+    return certs.get_certificate_verifier().verify_signature(pdf_bytes)
+
+
+def get_certificate_checksum(ind_number):
+    """
+    Returns the bytes of the latest certificate
+    """
+>>>>>>> f5ec3f7b670984825fb38a7c0ccb62ae78a0539d
     return hashlib.sha256(
         s3.get_s3_client().get_object(f"{ind_number}/certificate.pdf")
     ).hexdigest()
