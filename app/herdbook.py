@@ -504,7 +504,7 @@ def update_certificate(i_number):
                 pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
             )
         except Exception as ex:  # pylint: disable=broad-except
-            print(ex)
+            APP.logger.info("Unexpected error while updating certificate "+str(ex))
             return jsonify({"response": "Error processing your request"}), 400
 
         if uploaded:
