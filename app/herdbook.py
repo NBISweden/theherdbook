@@ -567,6 +567,7 @@ def issue_certificate(i_number):
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
     ind_number = ind["number"]
+    uploaded = False
 
     try:
         signed_data = sign_data(pdf_bytes)
@@ -612,6 +613,7 @@ def verify_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     uploaded_bytes = request.get_data()
+    present, signed = False, False
 
     try:
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
