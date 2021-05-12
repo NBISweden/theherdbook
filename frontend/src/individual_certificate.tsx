@@ -208,6 +208,7 @@ export function IndividualCertificate({
       credentials: "same-origin",
       headers: {
         Accept: "application/octet-stream",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => res.arrayBuffer())
