@@ -618,7 +618,7 @@ def verify_certificate(i_number):
         signed = verify_signature(uploaded_bytes)
         present = verify_certificate_checksum(ind["number"], checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
-        print(ex)
+        APP.logger.info("Unexpected error while verifying certificate "+str(ex))
         return jsonify({"response": "Error processing your request"}), 400
 
     if present and signed:
