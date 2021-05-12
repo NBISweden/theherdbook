@@ -9,6 +9,7 @@ from endesive.pdf import cms
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 import fitz
+import logging
 import pdfrw
 import qrcode
 import utils.settings as settings
@@ -110,14 +111,14 @@ class CertificateGenerator:
         """
         Fills the PDF form with the data provided in form_data.
         """
-        print("Adding data to certificate...")
+        logging.debug("Adding data to certificate...")
         reader = pdfrw.PdfReader(self.form)
         writer = pdfrw.PdfWriter(version="1.7", compress=False)
 
         for page in reader.pages:
             annotations = page["/Annots"]
             if annotations is None:
-                print("There are no annotations in this PDF")
+                logging.debug("There are no annotations in this PDF")
                 continue
 
             for annotation in annotations:
@@ -142,13 +143,13 @@ class CertificateGenerator:
         """
         Adds the qr code to the PDF in the desired location.
         """
-        print("Adding qrcode to PDF...")
+        logging.debug("Adding qrcode to PDF...")
 
         try:
             file_handle = fitz.open(stream=pdf_bytes, filetype="pdf")
             page = file_handle[0]
         except BaseException:
-            print("Failed to read PDF data")
+            logging.debug("Failed to read PDF data")
             raise
 
         page.insertImage(
@@ -170,13 +171,13 @@ class CertificateGenerator:
         """
         Utility for retrieving all annotations of the pdf.
         """
-        print("Fetching keys of all fields...")
+        logging.debug("Fetching keys of all fields...")
         annots = []
         reader = pdfrw.PdfReader(self.form)
         for page in reader.pages:
             annotations = page["/Annots"]
             if annotations is None:
-                print("There are no field annotations in this PDF")
+                logging.debug("There are no field annotations in this PDF")
                 continue
 
             for annotation in annotations:
@@ -289,7 +290,7 @@ class CertificateVerifier:  # pylint: disable=too-few-public-methods
                 trusted_cert = ca_cert.read()
                 trusted_cert_pems.append(trusted_cert)
         except BaseException:
-            print("Error loading certificate authority for verification")
+            logging.debug("Error loading certificate authority for verification")
             raise
         return trusted_cert_pems
 
@@ -301,10 +302,10 @@ class CertificateVerifier:  # pylint: disable=too-few-public-methods
         try:
             hash_ok, signature_ok, cert_ok = pdf.verify(pdf_bytes, self.trusted_ca)
             assert all((hash_ok, signature_ok, cert_ok))
-            print("PDF has a valid signature")
+            logging.debug("PDF has a valid signature")
             return True
         except AssertionError:
-            print("PDF has an invalid signature")
+            logging.debug("PDF has an invalid signature")
             return False
 
 
