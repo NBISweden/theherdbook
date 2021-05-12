@@ -4,6 +4,7 @@ S3 client handler.
 from pathlib import Path
 import boto3
 import botocore
+import logging
 import utils.settings as settings
 
 
@@ -65,10 +66,10 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         print(vars(self))
 
         try:
-            print("Creating %s bucket" % bucket)
+            logging.debug("Creating %s bucket" % bucket)
             self.s3_client.create_bucket(Bucket=self.bucket)
         except self.s3_client.exceptions.BucketAlreadyOwnedByYou as ex:
-            print("Bucket already exists: %s" % ex)
+            logging.debug("Bucket already exists: %s" % ex)
 
     def get_object(self, bucket_object_name):
         """
