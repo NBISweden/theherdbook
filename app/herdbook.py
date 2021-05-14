@@ -500,9 +500,9 @@ def testbreed():
             APP.logger.error(ex)
             return jsonify({"error": "Error processing your request"}), 500
 
-    payload["offspringCOI"] = round(offspring_coi * 100, 2)
-    APP.logger.info(f"Testbreed calculation result {payload}")
-    return payload
+    formatted_offspring_coi = round(offspring_coi * 100, 2)
+    APP.logger.info(f"Testbreed calculation result {formatted_offspring_coi}")
+    return {'offspringCOI': formatted_offspring_coi}
 
 
 @APP.route("/", defaults={"path": ""})
