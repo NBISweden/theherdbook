@@ -219,7 +219,6 @@ export function IndividualCertificate({ id }: { id: string }) {
     })
       .then((res) => res.arrayBuffer())
       .then((data) => {
-        console.log("cert", data);
         setPreviewUrl(data);
       })
       .catch((error) => {
@@ -235,6 +234,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -244,15 +244,54 @@ export function IndividualCertificate({ id }: { id: string }) {
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+        } else {
+          return res.blob();
+        }
       })
-      .then((blob: unknown) => {
-        console.log(blob);
+      .then((blob) => {
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
         } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .catch((error) => {
+        {
+          userMessage(error.message, "error");
+        }
+      });
+  };
+
+  // Returns the updated certificate.
+  const updateCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/update/${id}`, {
+      body: JSON.stringify(content),
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+      },
+    })
+      .then((res) => {
+        if (res.status === 400) {
+          throw new Error(
+            "Vi har tekniska problem. Certifikatet kunde inte uppdateras."
+          );
+        } else if (res.status === 404) {
+          throw new Error("Kaninen kunde inte hittas.");
+        } else res.blob();
+      })
+      .then((blob: unknown) => {
+        console.log("blob", blob);
+        if (blob) {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          setShowSummary(false);
+          setShowComplete(true);
+        } else {
+          setShowSummary(false);
+          setShowComplete(true);
           throw new Error("Något gick fel.");
         }
       })
