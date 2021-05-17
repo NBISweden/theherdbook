@@ -226,7 +226,6 @@ export function IndividualCertificate({
     })
       .then((res) => res.arrayBuffer())
       .then((data) => {
-        console.log("cert", data);
         setPreviewUrl(data);
       })
       .catch((error) => {
@@ -242,6 +241,7 @@ export function IndividualCertificate({
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -251,17 +251,16 @@ export function IndividualCertificate({
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+        } else {
+          return res.blob();
+        }
       })
-      .then((blob: unknown) => {
-        console.log("blob", blob);
+      .then((blob) => {
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
         } else {
-          setShowSummary(false);
-          setShowComplete(true);
           throw new Error("Något gick fel.");
         }
       })
