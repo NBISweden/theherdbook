@@ -237,7 +237,11 @@ export function IndividualCertificate({
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
       })
       .then((blob: unknown) => {
         console.log(blob);
@@ -264,6 +268,7 @@ export function IndividualCertificate({
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -272,10 +277,16 @@ export function IndividualCertificate({
             "Vi har tekniska problem. Certifikatet kunde inte uppdateras."
           );
         } else if (res.status === 404) {
-          throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+          throw new Error(
+            "Kaninen eller dess certifikat kunde inte hittas i databasen."
+          );
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
       })
-      .then((blob: unknown) => {
+      .then((blob) => {
         console.log("blob", blob);
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
