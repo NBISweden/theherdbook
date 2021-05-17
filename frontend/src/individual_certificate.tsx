@@ -225,7 +225,6 @@ export function IndividualCertificate({
     })
       .then((res) => res.arrayBuffer())
       .then((data) => {
-        console.log("cert", data);
         setPreviewUrl(data);
       })
       .catch((error) => {
@@ -241,6 +240,7 @@ export function IndividualCertificate({
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -257,7 +257,6 @@ export function IndividualCertificate({
         }
       })
       .then((blob: unknown) => {
-        console.log(blob);
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
