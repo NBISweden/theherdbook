@@ -493,24 +493,26 @@ def update_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     certificate_exists = ind.get("certificate", None)
-    if certificate_exists and check_certificate_s3(ind_number=ind["number"]):
-        data = get_certificate_data(ind, user_id)
-        data.update(**request.json)
-        pdf_bytes = get_certificate(data)
+    uploaded = False
 
-        try:
+    try:
+        present = check_certificate_s3(ind_number=ind["number"])
+        if certificate_exists and present:
+            data = get_certificate_data(ind, user_id)
+            data.update(**request.json)
+            pdf_bytes = get_certificate(data)
             signed_data = sign_data(pdf_bytes)
             uploaded = upload_certificate(
                 pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            APP.logger.info("Unexpected error while updating certificate "+str(ex))
-            return jsonify({"response": "Error processing your request"}), 400
+    except Exception as ex:  # pylint: disable=broad-except
+        APP.logger.info("Unexpected error while updating certificate " + str(ex))
+        return jsonify({"response": "Error processing your request"}), 404
 
-        if uploaded:
-            return create_pdf_response(
-                pdf_bytes=signed_data, obj_name=f'{ind["certificate"]}.pdf'
-            )
+    if uploaded:
+        return create_pdf_response(
+            pdf_bytes=signed_data, obj_name=f'{ind["certificate"]}.pdf'
+        )
 
     return jsonify({"response": "Certificate was not updated"}), 404
 
@@ -590,7 +592,7 @@ def verify_certificate(i_number):
         signed = verify_signature(uploaded_bytes)
         present = verify_certificate_checksum(ind["number"], checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info("Unexpected error while verifying certificate "+str(ex))
+        APP.logger.info("Unexpected error while verifying certificate " + str(ex))
         return jsonify({"response": "Error processing your request"}), 400
 
     if present and signed:
