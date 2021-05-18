@@ -633,14 +633,20 @@ export function IndividualCertificate({
               color="primary"
               disabled={isUserGood ? false : true}
               onClick={() => {
-                action == "issue"
-                  ? issueCertificate(id, certificateData)
-                  : updateCertificate(id, certificateData);
+                switch (action) {
+                  case "issue":
+                    issueCertificate(id, certificateData);
+                    break;
+                  case "update":
+                    updateCertificate(id, certificateData);
+                }
               }}
             >
               {action == "issue"
                 ? "Beställ certifikat"
-                : "Uppdatera certifikat"}
+                : "update"
+                ? "Uppdatera certifikat"
+                : "Fortsätt"}
             </Button>
           </div>
         </>
