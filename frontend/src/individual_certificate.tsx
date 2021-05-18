@@ -287,7 +287,6 @@ export function IndividualCertificate({
         }
       })
       .then((blob) => {
-        console.log("blob", blob);
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
