@@ -244,7 +244,7 @@ export function IndividualCertificate({
           throw new Error("Något gick fel.");
         }
       })
-      .then((blob: unknown) => {
+      .then((blob) => {
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
@@ -292,8 +292,6 @@ export function IndividualCertificate({
           setShowSummary(false);
           setShowComplete(true);
         } else {
-          setShowSummary(false);
-          setShowComplete(true);
           throw new Error("Något gick fel.");
         }
       })
