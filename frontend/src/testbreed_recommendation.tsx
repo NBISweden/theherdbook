@@ -121,10 +121,10 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
     recommendationText = 'Något gick fel i beräkningen'
     recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
   } else if (beneficialCOI) {
-    recommendationText = 'Parning rekommenderas'
+    recommendationText = 'Föreningen rekommenderar parningen'
     recommendationSymbol = <CheckCircleSharpIcon  style={{ color: '#4CB950', paddingRight: '4px' }}/>
   } else {
-    recommendationText = 'Parning rekommenderas ej'
+    recommendationText = 'Föreningen rekommenderar EJ parningen'
     recommendationSymbol = <CancelSharpIcon style={{ color: '#F44304', paddingRight: '4px'}} />
 
   }
