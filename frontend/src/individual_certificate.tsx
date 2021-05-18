@@ -272,11 +272,7 @@ export function IndividualCertificate({
       },
     })
       .then((res) => {
-        if (res.status === 400) {
-          throw new Error(
-            "Vi har tekniska problem. Certifikatet kunde inte uppdateras."
-          );
-        } else if (res.status === 404) {
+        if (res.status === 404) {
           throw new Error(
             "Kaninen eller dess certifikat kunde inte hittas i databasen."
           );
