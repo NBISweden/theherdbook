@@ -106,7 +106,7 @@ export function InbreedingRecommendation({chosenAncestors, genebankId}
 
   //TODO, error handling
   let calculationError = false
-  let thresholdCOI = genebankId === 1 ? 4.5 : 15
+  let thresholdCOI = genebankId === 1 ? 4 : 15
   let beneficialCOI = offspringCOI? offspringCOI <= thresholdCOI : false
 
   let mother = chosenAncestors['female'] ? individualLabel(chosenAncestors['female']) : 
