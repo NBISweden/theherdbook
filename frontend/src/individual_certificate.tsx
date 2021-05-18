@@ -263,7 +263,7 @@ export function IndividualCertificate({
           setShowSummary(false);
           setShowComplete(true);
         } else {
-          throw new Error("Något gick fel.");
+          throw new Error("Något gick fel (det här borde inte hända).");
         }
       })
       .catch((error) => {
