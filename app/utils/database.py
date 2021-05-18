@@ -34,7 +34,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 4
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -351,14 +351,14 @@ def remove_fields_by_privacy(data, access_level):
     return data
 
 
-class Colour(BaseModel):
+class Color(BaseModel):
     """
     Table for colors.
 
     This table keep tracks of the available color types of animals.
     """
 
-    id = AutoField(primary_key=True, column_name="colour_id")
+    id = AutoField(primary_key=True, column_name="color_id")
     name = CharField(50)
     comment = CharField(50, null=True)
     genebank = ForeignKeyField(Genebank)
@@ -412,8 +412,8 @@ class Individual(BaseModel):
     certificate = CharField(20, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
-    colour = ForeignKeyField(Colour, null=True)
-    colour_note = CharField(100, null=True)
+    color = ForeignKeyField(Color, null=True)
+    color_note = CharField(100, null=True)
     death_date = DateField(null=True)
     death_note = CharField(50, null=True)
     notes = CharField(100, null=True)
@@ -458,7 +458,7 @@ class Individual(BaseModel):
     def as_dict(self):
         """
         Returns the objects key/value pair as a dictionary, including data from
-        the weight, colour, and bodyfat tables.
+        the weight, color, and bodyfat tables.
         """
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
@@ -495,7 +495,7 @@ class Individual(BaseModel):
             if self.breeding and self.breeding.father
             else None
         )
-        data["colour"] = self.colour.name if self.colour else None
+        data["color"] = self.color.name if self.color else None
         data["weights"] = [
             {"weight": w.weight, "date": w.weight_date.strftime("%Y-%m-%d")}
             for w in self.weight_set
@@ -1006,7 +1006,7 @@ class SchemaHistory(BaseModel):
 MODELS = [
     Genebank,
     Herd,
-    Colour,
+    Color,
     Breeding,
     Individual,
     IndividualFile,
@@ -1097,6 +1097,8 @@ def verify(try_init=True):
     Initialize the database, verify the tables in the database, and verify that
     we can select on each table.
     """
+    check_migrations()
+
     all_ok = True
     for model in MODELS:
         if model.table_exists():
@@ -1157,6 +1159,64 @@ def migrate_1_to_2():
             )
         SchemaHistory.insert(  # pylint: disable=E1120
             version=2, comment="Fix schema history table", applied=datetime.now()
+        ).execute()
+
+
+def migrate_2_to_3():
+    """
+    Migrate between schema version 2 and 3.
+    """
+
+    with DATABASE.atomic():
+
+        tables = DATABASE.get_tables()
+
+        if "colour" in tables:
+            migrate(DATABASE_MIGRATOR.rename_table("colour", "color"))
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=3, comment="colour is now color", applied=datetime.now()
+        ).execute()
+
+
+def migrate_3_to_4():
+    """
+    Migrate between schema version 3 and 4.
+    """
+
+    with DATABASE.atomic():
+
+        if (
+            "individual" not in DATABASE.get_tables()
+            or "color" not in DATABASE.get_tables()
+        ):
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=4,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("individual")]
+
+        if "colour_note" in cols:
+            migrate(
+                DATABASE_MIGRATOR.rename_column(
+                    "individual", "colour_note", "color_note"
+                )
+            )
+        if "colour_id" in cols:
+            migrate(
+                DATABASE_MIGRATOR.rename_column("individual", "colour_id", "color_id")
+            )
+
+        cols = [x.name for x in DATABASE.get_columns("color")]
+        if "colour_id" in cols:
+            migrate(DATABASE_MIGRATOR.rename_column("color", "colour_id", "color_id"))
+
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=4, comment="colour to color in fields", applied=datetime.now()
         ).execute()
 
 
