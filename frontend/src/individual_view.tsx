@@ -228,6 +228,26 @@ export function IndividualView({ id }: { id: string }) {
                   Uppdatera certifikat
                 </Button>
               )}
+<<<<<<< HEAD
+=======
+              {user?.canEdit(id) && (
+                <Button
+                  className={style.editButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() =>
+                    popup(
+                      <CertificateVerification
+                        id={id}
+                        individual={individual}
+                      />
+                    )
+                  }
+                >
+                  Verifiera certifikat
+                </Button>
+              )}
+>>>>>>> 3026416... Create component for certificate verification
               <div>
                 <h3>Besättningshistoria</h3>
                 <ul className={style.herdList}>
