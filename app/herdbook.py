@@ -493,13 +493,14 @@ def update_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     certificate_exists = ind.get("certificate", None)
+    form = request.json
     uploaded = False
 
     try:
         present = check_certificate_s3(ind_number=ind["number"])
         if certificate_exists and present:
             data = get_certificate_data(ind, user_id)
-            data.update(**request.json)
+            data.update(**form)
             pdf_bytes = get_certificate(data)
             signed_data = sign_data(pdf_bytes)
             uploaded = upload_certificate(
@@ -531,8 +532,6 @@ def issue_certificate(i_number):
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
-    ##cert_number = str(random.randint(50001, 99999))
-    cert_number = "99999"
     ind.update(**request.json, certificate=cert_number)
     da.update_individual(ind, session.get("user_id", None))
 
@@ -567,8 +566,10 @@ def preview_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
 
+    form = request.json
+
     data = get_certificate_data(ind, user_id)
-    data.update(**request.json)
+    data.update(**form)
     pdf_bytes = get_certificate(data)
     return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
 
