@@ -4,7 +4,6 @@ import { Button, CircularProgress } from "@material-ui/core";
 
 import { Individual } from "@app/data_context_global";
 import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
-import { readBuilderProgram } from "typescript";
 
 const useStyles = makeStyles({
   titleText: {
