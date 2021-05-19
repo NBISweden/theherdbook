@@ -115,7 +115,13 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualCertificate({ id }: { id: string }) {
+export function IndividualCertificate({
+  id,
+  action,
+}: {
+  id: string;
+  action: string;
+}) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
@@ -215,11 +221,11 @@ export function IndividualCertificate({ id }: { id: string }) {
       credentials: "same-origin",
       headers: {
         Accept: "application/octet-stream",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => res.arrayBuffer())
       .then((data) => {
-        console.log("cert", data);
         setPreviewUrl(data);
       })
       .catch((error) => {
@@ -227,7 +233,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       });
   };
 
-  // Returns the signed certificate.
+  // Returns the signed, new certificate.
   const issueCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/issue/${id}`, {
       body: JSON.stringify(content),
@@ -235,6 +241,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -244,10 +251,51 @@ export function IndividualCertificate({ id }: { id: string }) {
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
       })
-      .then((blob: unknown) => {
-        console.log(blob);
+      .then((blob) => {
+        if (blob) {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          setShowSummary(false);
+          setShowComplete(true);
+        } else {
+          throw new Error("Något gick fel (det här borde inte hända).");
+        }
+      })
+      .catch((error) => {
+        {
+          userMessage(error.message, "error");
+        }
+      });
+  };
+
+  // Returns the updated certificate.
+  const updateCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/update/${id}`, {
+      body: JSON.stringify(content),
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.status === 404) {
+          throw new Error(
+            "Kaninen eller dess certifikat kunde inte hittas i databasen."
+          );
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .then((blob) => {
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
@@ -585,26 +633,46 @@ export function IndividualCertificate({ id }: { id: string }) {
               color="primary"
               disabled={isUserGood ? false : true}
               onClick={() => {
-                issueCertificate(id, certificateData);
+                switch (action) {
+                  case "issue":
+                    issueCertificate(id, certificateData);
+                    break;
+                  case "update":
+                    updateCertificate(id, certificateData);
+                }
               }}
             >
-              {"Beställ certifikat"}
+              {action == "issue"
+                ? "Beställ certifikat"
+                : "update"
+                ? "Uppdatera certifikat"
+                : "Fortsätt"}
             </Button>
           </div>
         </>
       ) : individual && showComplete ? (
         <>
-          <h1>Certifikatet är klart!</h1>
-          <a target="_blank" href={certificateUrl} download={individual.number}>
-            <Button variant="contained" color="primary">
-              {"Ladda ner"}
-            </Button>
-          </a>
-          <a target="_blank" href={certificateUrl}>
-            <Button variant="contained" color="primary">
-              {"Öppna i ny flik"}
-            </Button>
-          </a>
+          {action == "issue" ? (
+            <h1>Certifikatet är klart!</h1>
+          ) : (
+            <h1>Certifikatet uppdaterades!</h1>
+          )}
+          <div className={style.paneControls}>
+            <a
+              target="_blank"
+              href={certificateUrl}
+              download={individual.number}
+            >
+              <Button variant="contained" color="primary">
+                {"Ladda ner"}
+              </Button>
+            </a>
+            <a target="_blank" href={certificateUrl}>
+              <Button variant="contained" color="primary">
+                {"Öppna i ny flik"}
+              </Button>
+            </a>
+          </div>
         </>
       ) : (
         <></>
