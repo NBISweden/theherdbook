@@ -890,6 +890,16 @@ def get_individuals(genebank_id, user_uuid=None):
         return []
 
 
+def get_all_genebanks():
+    """
+    Returns a list of all genebanks.
+    """
+    query = Genebank().select()
+
+    # Using a list comprehension here will turn the iterator into a list
+    return [g for g in query.execute()]  # pylint: disable=unnecessary-comprehension
+
+
 def get_all_individuals():
     """
     Returns the neccessary information about all individuals for computing genetic coefficients.
