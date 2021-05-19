@@ -569,13 +569,13 @@ def preview_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
 
+    data = get_certificate_data(ind, user_id)
+
     if request.method == "POST":
         form = request.json
-        data = get_certificate_data(ind, user_id)
         data.update(**form, certificate=ind["digital_certificate"])
         pdf_bytes = get_certificate(data)
     elif request.method == "GET":
-        data = get_certificate_data(ind, user_id)
         pdf_bytes = get_certificate(data)
 
     return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
