@@ -398,7 +398,6 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
-
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -410,6 +409,7 @@ class Individual(BaseModel):
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
+    digital_certificate = IntegerField(sequence="certificates_seq", unique=True, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
@@ -1090,6 +1090,10 @@ def init():
 
     with DATABASE.atomic():
         sh_bootstrap.save()
+
+    ## Create sequence to allow unique ids for digital certificates
+    if type(DATABASE) == PostgresqlDatabase:
+        DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
 
 
 def verify(try_init=True):

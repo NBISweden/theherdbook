@@ -208,9 +208,23 @@ export function IndividualView({ id }: { id: string }) {
                   className={style.editButton}
                   variant="contained"
                   color="primary"
-                  onClick={() => popup(<IndividualCertificate id={id} />)}
+                  onClick={() =>
+                    popup(<IndividualCertificate id={id} action={"issue"} />)
+                  }
                 >
-                  Beställ certifikat
+                  Skapa nytt certifikat
+                </Button>
+              )}
+              {user?.canEdit(id) && (
+                <Button
+                  className={style.editButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() =>
+                    popup(<IndividualCertificate id={id} action={"update"} />)
+                  }
+                >
+                  Uppdatera certifikat
                 </Button>
               )}
               <div>

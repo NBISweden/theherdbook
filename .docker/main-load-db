@@ -5,9 +5,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt buster-pgdg main 12" > /et
     apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y \
-    postgresql-client-12 xlsx2csv && \
+    postgresql-client-12 xlsx2csv swig python3-pykcs11 && \
     apt autoremove -y && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/*
 
 COPY app/requirements.txt /code/requirements.txt
 
