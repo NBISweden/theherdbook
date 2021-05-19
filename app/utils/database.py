@@ -1092,7 +1092,8 @@ def init():
         sh_bootstrap.save()
 
     ## Create sequence to allow unique ids for digital certificates
-    DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
+    if type(DATABASE) == PostgresqlDatabase:
+        DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
 
 
 def verify(try_init=True):
