@@ -398,9 +398,6 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
-## Create sequence to allow unique ids for digital certificates
-DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
-
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -1093,6 +1090,9 @@ def init():
 
     with DATABASE.atomic():
         sh_bootstrap.save()
+
+    ## Create sequence to allow unique ids for digital certificates
+    DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
 
 
 def verify(try_init=True):
