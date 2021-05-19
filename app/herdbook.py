@@ -535,8 +535,8 @@ def issue_certificate(i_number):
     form = request.json
     cert_number = ind["digital_certificate"]
 
-    ind.update(**form, certificate=cert_number)
-    da.update_individual(ind, session.get("user_id", None))
+    ind.certificate = cert_number
+    ind.save()
 
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
