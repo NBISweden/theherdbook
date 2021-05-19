@@ -227,6 +227,16 @@ export function IndividualView({ id }: { id: string }) {
                   Uppdatera certifikat
                 </Button>
               )}
+              {user?.canEdit(id) && (
+                <Button
+                  className={style.editButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() => popup(<CertificateVerification id={id} />)}
+                >
+                  Verifiera certifikat
+                </Button>
+              )}
               <div>
                 <h3>Besättningshistoria</h3>
                 <ul className={style.herdList}>
