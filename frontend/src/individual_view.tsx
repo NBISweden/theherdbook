@@ -232,7 +232,14 @@ export function IndividualView({ id }: { id: string }) {
                   className={style.editButton}
                   variant="contained"
                   color="primary"
-                  onClick={() => popup(<CertificateVerification id={id} />)}
+                  onClick={() =>
+                    popup(
+                      <CertificateVerification
+                        id={id}
+                        individual={individual}
+                      />
+                    )
+                  }
                 >
                   Verifiera certifikat
                 </Button>
