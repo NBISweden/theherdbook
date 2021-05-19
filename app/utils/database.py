@@ -409,7 +409,7 @@ class Individual(BaseModel):
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
-    digital_certificate = IntegerField(sequence="certificates_seq", unique=True)
+    digital_certificate = IntegerField(sequence="certificates_seq", unique=True, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
