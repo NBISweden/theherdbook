@@ -270,7 +270,7 @@ class TestDataAccess(DatabaseTest):
             },
             "unknown_color": {
                 "number": self.individuals[0].number,
-                "colour": "ultra-beige",
+                "color": "ultra-beige",
             },
             "unknown_origin": {
                 "number": self.individuals[0].number,
@@ -410,12 +410,12 @@ class TestDataAccess(DatabaseTest):
                 "death_date": dateformat(ind.death_date),
                 "litter": ind.breeding.litter_size,
                 "notes": ind.notes,
-                "color_note": ind.colour_note,
+                "color_note": ind.color_note,
                 "father": parent(ind.breeding.father),
                 "mother": parent(ind.breeding.mother),
                 "color": {
-                    "id": ind.colour.id if ind.colour else None,
-                    "name": ind.colour.name if ind.colour else None,
+                    "id": ind.color.id if ind.color else None,
+                    "name": ind.color.name if ind.color else None,
                 },
                 "herd": {
                     "id": ind.current_herd.id,
@@ -457,9 +457,7 @@ class TestDataAccess(DatabaseTest):
                     if has_parents
                     else "0",
                     "sex": "M" if individual.sex == "male" else "F",
-                    "phenotype": str(individual.colour.id)
-                    if individual.colour
-                    else "0",
+                    "phenotype": str(individual.color.id) if individual.color else "0",
                 }
             ]
 

@@ -17,7 +17,7 @@ from utils.database import DB_PROXY as DATABASE  # isort:skip
 from utils.database import Authenticators  # isort: skip
 from utils.database import Bodyfat  # isort: skip
 from utils.database import Breeding  # isort: skip
-from utils.database import Colour  # isort: skip
+from utils.database import Color  # isort: skip
 from utils.database import Genebank  # isort: skip
 from utils.database import Herd  # isort: skip
 from utils.database import HerdTracking  # isort: skip
@@ -569,7 +569,7 @@ def get_colors():
         return {
             genebank.name: [
                 {"id": color.id, "name": color.name}
-                for color in Colour.select().where(Colour.genebank == genebank)
+                for color in Color.select().where(Color.genebank == genebank)
             ]
             for genebank in Genebank.select()
         }
@@ -720,7 +720,7 @@ def get_individual(individual_id, user_uuid=None):
 def form_to_individual(form, user=None):
     """
     Individual data is split over a number of tables; Individual, HerdTracking,
-    Colour, Weight, and Bodyfat. This function takes a `form` dict (as returned
+    Color, Weight, and Bodyfat. This function takes a `form` dict (as returned
     by Individual.as_dict(), and as used in the frontend), verifies the data
     (where possible) and either creates a new Individual object or fetches an
     existing individual from the database and updates it with the information in
@@ -757,10 +757,10 @@ def form_to_individual(form, user=None):
         "name",
         "sex",
         "birth_date",
-        "colour_note",
+        "color_note",
         "mother",
         "father",
-        "colour",
+        "color",
     ]
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
@@ -771,8 +771,8 @@ def form_to_individual(form, user=None):
                     form[admin_field]["number"]
                     != getattr(individual, admin_field).number
                 )
-            elif admin_field == "colour":
-                changed = form[admin_field] != individual.colour.name
+            elif admin_field == "color":
+                changed = form[admin_field] != individual.color.name
             else:
                 changed = (
                     f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
@@ -781,13 +781,13 @@ def form_to_individual(form, user=None):
             if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
-    # Colour is stored as name in the form, but needs to be converted to id
-    if "colour" in form:
+    # Color is stored as name in the form, but needs to be converted to id
+    if "color" in form:
         try:
             with DATABASE.atomic():
-                form["colour"] = Colour.get(Colour.name == form["colour"])
-        except DoesNotExist as colour_except:
-            raise ValueError(f"Unknown color: '{form['colour']}''") from colour_except
+                form["color"] = Color.get(Color.name == form["color"])
+        except DoesNotExist:
+            raise ValueError(f"Unknown color: '{form['color']}''")
 
     # fetch the origin herd
     if "origin_herd" in form:
@@ -1020,8 +1020,8 @@ def get_individuals(genebank_id, user_uuid=None):
             Individual.select(
                 Individual,
                 Breeding,
-                Colour.id.alias("color_id"),
-                Colour.name.alias("color_name"),
+                Color.id.alias("color_id"),
+                Color.name.alias("color_name"),
                 Father.id.alias("father_id"),
                 Father.name.alias("father_name"),
                 Father.number.alias("father_number"),
@@ -1039,7 +1039,7 @@ def get_individuals(genebank_id, user_uuid=None):
             .join(Breeding)
             .join(Father, JOIN.LEFT_OUTER, on=(Father.id == Breeding.father_id))
             .join(Mother, JOIN.LEFT_OUTER, on=(Mother.id == Breeding.mother_id))
-            .join(Colour, JOIN.LEFT_OUTER, on=(Individual.colour_id == Colour.id))
+            .join(Color, JOIN.LEFT_OUTER, on=(Individual.color_id == Color.id))
             .join(current_herd, on=(Individual.id == current_herd.c.i_id))
             .join(Herd, on=(Herd.id == current_herd.c.herd))
             .join(Genebank, on=(Herd.genebank == Genebank.id))
@@ -1078,7 +1078,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     "death_note": i["death_note"],
                     "litter": i["litter_size"],
                     "notes": i["notes"],
-                    "color_note": i["colour_note"],
+                    "color_note": i["color_note"],
                     "father": {
                         "id": i["father_id"],
                         "name": i["father_name"],
@@ -1110,6 +1110,16 @@ def get_individuals(genebank_id, user_uuid=None):
         return []
 
 
+def get_all_genebanks():
+    """
+    Returns a list of all genebanks.
+    """
+    query = Genebank().select()
+
+    # Using a list comprehension here will turn the iterator into a list
+    return [g for g in query.execute()]  # pylint: disable=unnecessary-comprehension
+
+
 def get_all_individuals():
     """
     Returns the neccessary information about all individuals for computing genetic coefficients.
@@ -1130,7 +1140,7 @@ def get_all_individuals():
                     str(data["mother"]) if (data["mother"] and data["father"]) else "0"
                 )
                 ind["sex"] = "M" if data["sex"] == "male" else "F"
-                ind["phenotype"] = str(data["colour"]) if data["colour"] else "0"
+                ind["phenotype"] = str(data["color"]) if data["color"] else "0"
                 individuals_dict.append(ind)
             return individuals_dict
     except DoesNotExist:

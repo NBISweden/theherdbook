@@ -14,6 +14,7 @@ import time
 import uuid
 
 import flask_session
+import apscheduler.schedulers.background
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
@@ -35,7 +36,8 @@ APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    #   SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development workflow
+    # Disabled for now to simplify development workflow
+    #   SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Strict",
     SESSION_TYPE="filesystem",
@@ -55,6 +57,8 @@ flask_session.Session().init_app(APP)
 CACHE = Cache(APP)
 LOGIN = LoginManager(APP)
 LOGIN.login_view = "/login"
+
+KINSHIP_LIFETIME = 300
 
 
 @APP.after_request
@@ -573,6 +577,7 @@ def kinship(g_id):
     return jsonify(get_kinship(str(g_id)))
 
 
+@CACHE.memoize(timeout=KINSHIP_LIFETIME)
 def get_kinship(g_id):
     """
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
@@ -627,6 +632,32 @@ def get_mean_kinship(g_id):
     return {}
 
 
+@APP.route("/api/testbreed", methods=["POST"])
+def testbreed():
+    payload = request.json
+    APP.logger.info(f"Testbreed calculation input {payload}")
+    if ("male" in payload) and ("female" in payload):
+        kinship_matrix = get_kinship(request.json["genebankId"])
+        offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
+    # One/both parents not registrered, thus not present in the kinship matrix
+    else:
+        try:
+            response = requests.post(
+                "http://{}:{}/testbreed/".format(
+                    settings.rapi.host, settings.rapi.port
+                ),
+                data=payload,
+            )
+            offspring_coi = response.json()["calculated_coi"][0]
+        except Exception as ex:  # pylint: disable=broad-except
+            APP.logger.error(ex)
+            return jsonify({"error": "Error processing your request"}), 500
+
+    formatted_offspring_coi = round(offspring_coi * 100, 2)
+    APP.logger.info(f"Testbreed calculation result {formatted_offspring_coi}")
+    return {"offspringCOI": formatted_offspring_coi}
+
+
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
 def main(path):  # pylint: disable=unused-argument
@@ -634,6 +665,25 @@ def main(path):  # pylint: disable=unused-argument
     Serves the single-page webapp.
     """
     return APP.send_static_file("index.html")
+
+
+def reload_kinship():
+    APP.logger.debug("Calling get_kinship to refresh cache if needed")
+    for p in da.get_all_genebanks():
+        try:
+            get_kinship(p.id)
+        except requests.exceptions.ConnectionError:
+            pass
+
+
+def initialize_app():
+    # Set up a background job to do reload if needed
+    # call often to minimize window
+    scheduler = apscheduler.schedulers.background.BackgroundScheduler()
+    scheduler.add_job(reload_kinship, trigger="interval", seconds=15)
+    scheduler.start()
+    APP.logger.info("Added background job to refresh kinship cache")
+    reload_kinship()
 
 
 # Connect to the database, or wait for database and then connect.
@@ -648,3 +698,5 @@ while True:
 if not db.verify():
     APP.logger.error("Database has errors.")  # pylint: disable=no-member
     sys.exit(1)
+
+initialize_app()
