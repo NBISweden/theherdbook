@@ -80,12 +80,12 @@ psql --echo-errors --quiet <<-'END_SQL'
 	-- Genebank
 	INSERT INTO genebank (name) VALUES ('Gotlandskanin');
 
-	-- Gotland colours
+	-- Gotland colors
 	WITH genebank AS (
 		SELECT	genebank_id
 			FROM	genebank
      WHERE	name = 'Gotlandskanin'
-	), colour_data (c_id, name, comment) AS (
+	), color_data (c_id, name, comment) AS (
 			VALUES  (11, 'Svart', 'Kaninen ska vara helsvart'),
               (12, 'Vit albino', 'Ska ha röda ögon'),
               (13, 'Brun', 'Kan ha svarta inslag'),
@@ -123,9 +123,9 @@ psql --echo-errors --quiet <<-'END_SQL'
               (53, 'Svart med vit buk på särskilt sätt', 'Black & White, även otter'),
               (99, 'Allt annat', NULL)
 	)
-	INSERT INTO colour (colour_id, name, comment, genebank_id)
+	INSERT INTO color (color_id, name, comment, genebank_id)
 		SELECT c.c_id, c.name, c.comment, g.genebank_id
-			FROM genebank g, colour_data c;
+			FROM genebank g, color_data c;
 
 	-- Dummy herd for individuals sold outside of the genebank
 	INSERT INTO herd (genebank_id, herd, herd_name)
@@ -144,7 +144,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 	-- Stub individual data
 	INSERT INTO individual (origin_herd_id,
 		name, certificate, number, sex,
-		colour_id, colour_note, death_note, notes)
+		color_id, color_note, death_note, notes)
 	SELECT	h.herd_id,
 		d."Namn", d."Intyg", d."Nummer", d."Kön",
 		d."Färgnr", d."Färg", d."Död", d."Övrigt"
