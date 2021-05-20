@@ -1,4 +1,5 @@
 # The Herdbook
+
 The Herd Book Is a NBIS project Supporting the Swedish Board of Agriculture (Jordbruksverket) Action Plan for the Long-term
 Sustainable Management of Swedish Animal Genetic Resources 2010–2020.
 
@@ -14,9 +15,10 @@ book and spreading admin task to all local genebank holders.
 A site participating in the preservation program. These will typically
 have signed an agreement and have efforts in place to make sure there
 is no accidental breeding with other races. Have a local pool of animals that is the actual
-*in situ* genebank.
+_in situ_ genebank.
 
 ### Genebank = Genbank (Herdbook)
+
 Several different Herds of the same race will form a Genebank
 
 ### Herd owner = Besättningägare /Genbanksbesättningägare
@@ -60,7 +62,7 @@ docker-compose build
 docker-compose up
 ```
 
-After a few minutes  you should have your services up and running. If you run `docker ps` you will see  an output similiar to this one:
+After a few minutes you should have your services up and running. If you run `docker ps` you will see an output similiar to this one:
 
 ```console
 CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                                                                    NAMES
@@ -73,7 +75,7 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 To access the local server deployed open the [encryption-enabled interface](https://localhost:8443) in your browser. You will need to
 configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing
 this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled.
-In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
+In Firefox, when loading the url you can click on Advanced and add the exception suggested from the browser.
 You can also use [the interface without encryption](http://localhost:8080) to access the frontend.
 
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
@@ -100,3 +102,45 @@ time, this will be resolved before version 1.0 is finished.
 
 The tests will also run through `pytest` using github actions when pushing new
 code to github.
+
+## External authenticators
+
+### Google
+
+To set up Google authentication, visit the [developer console](https://console.cloud.google.com/) and select/create a project (dropdown next to the Google cloud platform in the upper left corner).
+
+When you have a project, you can select "Credentials" and use the "Create credentials" to create an OAuth client ID.
+
+Once selected, you will be told you need to configure the consent screen. You can choose "Internal" to only provide login for users within your organization or external, potentially allowing for access from any google account (but which may require verification).
+
+Once selected, you'll need to supply an application name (e.g. Herdbook) and a support contact. You also need to supply a developer contact (for Google) at the bottom.
+
+Once filled in, you can save and continue.
+
+Next, you'll need to select the scopes provided. Select "Add and remove scopes" and pick `openid`.
+
+Once done, select save and continue to finish configuration of the consent screen.
+
+As you now have the consent screen, you can again select Credentials and use Create new credential -> OAuth client ID.
+
+When asked for the application type, select "Web application".
+
+You will be asked for URLs. Under "Authorized redirect URI" you should provide
+
+https://YOURSITE/api/login/google/back/google/authorized
+
+where YOURSITE is any address your service can be accessed at.
+
+Once you've added all such URIs, you can select "Create".
+
+You will be presented with a box with "Your client ID" and "Your client secret", copy these.
+
+Create/edit `config/auth.ini` and add a `[google]` section where you provide your client ID as `key` and your secret as `secret`, e.g.
+
+```
+[google]
+key=YourIDHereLikelyEndsWith.apps.googleusercontent.com
+secret=YourClientSecretGoesHere
+```
+
+and restart the server, once this is done - you should see the option to login with Google.
