@@ -4,6 +4,7 @@ import { Button, CircularProgress } from "@material-ui/core";
 
 import { Individual } from "@app/data_context_global";
 import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
+import { readBuilderProgram } from "typescript";
 
 const useStyles = makeStyles({
   titleText: {
@@ -37,17 +38,30 @@ export function CertificateVerification({
   individual: Individual | undefined;
 }) {
   const [file, setFile] = React.useState(undefined as File | undefined);
+  const [binaryFile, setBinaryFile] = React.useState(
+    undefined as string | ArrayBuffer | undefined
+  );
   const style = useStyles();
 
   const verifyCertificate = (id: string) => {
-    fetch(`/api/certificates/verify/${id}`, {
-      body: file,
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) =>
+        setBinaryFile(event.target?.result ? event.target.result : undefined);
+      reader.readAsArrayBuffer(file);
+    }
+
+    if (binaryFile) {
+      console.log(binaryFile);
+      fetch(`/api/certificates/verify/${id}`, {
+        body: binaryFile,
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      }).then((res) => res.json);
+    }
   };
   return (
     <>
@@ -60,7 +74,9 @@ export function CertificateVerification({
         <input
           id="inputFile"
           type="file"
-          onChange={(event) => setFile(event.target.files[0])}
+          onChange={(event) =>
+            setFile(event.target.files ? event.target.files[0] : undefined)
+          }
           style={{ display: "none" }}
         />
         <label htmlFor="inputFile" className={style.label}>
@@ -74,7 +90,8 @@ export function CertificateVerification({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => console.log(file)}
+          onClick={() => verifyCertificate(id)}
+          disabled={file ? false : true}
         >
           Verifiera
         </Button>
