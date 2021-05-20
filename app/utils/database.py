@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import utils.settings as settings
 from flask_login import UserMixin
 from peewee import (
+    SQL,
     AutoField,
     BooleanField,
     CharField,
@@ -409,7 +410,15 @@ class Individual(BaseModel):
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
-    digital_certificate = IntegerField(sequence="certificates_seq", unique=True, null=True)
+
+    if type(DATABASE) == PostgresqlDatabase:
+        digital_certificate = IntegerField(
+            sequence="certificates_seq", unique=True, null=True
+            )
+    elif type(DATABASE) == SqliteDatabase:
+        digital_certificate = IntegerField(
+            unique=True, null=True, constraints=[SQL('AUTO_INCREMENT')]
+            )
     number = CharField(20)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
