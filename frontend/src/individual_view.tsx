@@ -20,6 +20,7 @@ import { IndividualPedigree } from "@app/individual_pedigree";
 import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
+import { CertificateVerification } from "./certificate_verification";
 
 const useStyles = makeStyles({
   body: {
