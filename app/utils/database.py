@@ -1246,6 +1246,7 @@ def migrate_4_to_5():
             version=5,
             comment="Remove password_hash from hbuser",
             applied=datetime.now(),
+        ).execute()
 
 
 def check_migrations():
