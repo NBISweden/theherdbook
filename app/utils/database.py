@@ -4,6 +4,7 @@ Database handler for 'the herdbook'.
 """
 # pylint: disable=too-many-lines
 
+from enum import unique
 import json
 import logging
 import re
@@ -1222,6 +1223,28 @@ def migrate_3_to_4():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=4, comment="colour to color in fields", applied=datetime.now()
         ).execute()
+
+
+def migrate_4_to_5():
+    """
+    Migrate between schema version 4 and 5.
+    """
+
+    if type(DATABASE_MIGRATOR) == PostgresqlMigrator:
+        DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
+
+        with DATABASE.atomic():
+            cols = [x.name for x in DATABASE.get_columns("individual")]
+
+            if "digital_certificate" not in cols:
+                migrate(
+                    DATABASE_MIGRATOR.add_column(
+                        "individual", "digital_certificate", IntegerField(null=True, unique=True, sequence="certificates_seq")
+                    )
+                )
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=5, comment="Set up digital certificate ids", applied=datetime.now()
+            ).execute()
 
 
 def check_migrations():
