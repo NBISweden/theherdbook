@@ -145,3 +145,11 @@ secret=YourClientSecretGoesHere
 ```
 
 and restart the server, once this is done - you should see the option to login with Google.
+
+If you want to support automatic creation of accounts from Google, also include
+
+```
+autocreate = yes
+```
+
+in the `[google]` section.
