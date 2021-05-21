@@ -128,7 +128,12 @@ export function Login() {
               if (data == null) {
                 userMessage("Identity not linked to any known user", "error");
               } else {
-                userMessage("Logged in as " + data["username"], "success");
+                userMessage(
+                  "Logged in as " + data["username"]
+                    ? data["username"]
+                    : data["email"],
+                  "success"
+                );
                 document.location = "/";
               }
             });
