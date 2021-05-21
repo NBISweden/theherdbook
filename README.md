@@ -153,3 +153,5 @@ autocreate = yes
 ```
 
 in the `[google]` section.
+
+In short, you need to set up OAuth 2.0 with the `openid` scope (and optionally the `.../userinfo.email` scope to allow automatic creation). Once you've done that, provide the `Client secret` as `secret` and `Client ID` as `key` in the `[google]` section in `auth.ini`.
