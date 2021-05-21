@@ -3,11 +3,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Button, CircularProgress } from "@material-ui/core";
 
 import { Individual } from "@app/data_context_global";
-<<<<<<< HEAD
 import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
 import { readBuilderProgram } from "typescript";
-=======
->>>>>>> 4d411c52f4c75f66304b006996b5c3f149e0fd4a
 
 const useStyles = makeStyles({
   titleText: {
@@ -16,7 +13,6 @@ const useStyles = makeStyles({
     padding: "0 20px",
     fontSize: "2.3em",
   },
-<<<<<<< HEAD
   fileInput: {
     display: "flex",
     flexDirection: "row",
@@ -32,8 +28,6 @@ const useStyles = makeStyles({
     justifyContent: "flex-end",
     margin: "20px 0",
   },
-=======
->>>>>>> 4d411c52f4c75f66304b006996b5c3f149e0fd4a
 });
 
 export function CertificateVerification({
@@ -43,7 +37,6 @@ export function CertificateVerification({
   id: string;
   individual: Individual | undefined;
 }) {
-<<<<<<< HEAD
   const [file, setFile] = React.useState(undefined as File | undefined);
   const [binaryFile, setBinaryFile] = React.useState(
     undefined as string | ArrayBuffer | undefined
@@ -70,11 +63,6 @@ export function CertificateVerification({
       }).then((res) => res.json);
     }
   };
-=======
-  const style = useStyles();
-
-  const verifyCertificate = (id: string) => {};
->>>>>>> 4d411c52f4c75f66304b006996b5c3f149e0fd4a
   return (
     <>
       <h1>Verifiera certifikat</h1>
@@ -82,7 +70,6 @@ export function CertificateVerification({
         Ladda upp ett digitalt certifikat för att se att det är signerat och
         finns i databasen.
       </p>
-<<<<<<< HEAD
       <div className={style.fileInput}>
         <input
           id="inputFile"
@@ -109,16 +96,6 @@ export function CertificateVerification({
           Verifiera
         </Button>
       </div>
-=======
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => verifyCertificate(id)}
-      >
-        Ladda upp certifikat
-        <input type="file" hidden></input>
-      </Button>
->>>>>>> 4d411c52f4c75f66304b006996b5c3f149e0fd4a
     </>
   );
 }
