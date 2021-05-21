@@ -1229,22 +1229,22 @@ def migrate_4_to_5():
     """
     Migrate between schema version 4 and 5.
     """
+    sequence = {}
+    with DATABASE.atomic():
+        if type(DATABASE_MIGRATOR) == PostgresqlMigrator:
+            sequence = {"sequence": "certificates_seq"}
+            DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
+        cols = [x.name for x in DATABASE.get_columns("individual")]
 
-    if type(DATABASE_MIGRATOR) == PostgresqlMigrator:
-        DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
-
-        with DATABASE.atomic():
-            cols = [x.name for x in DATABASE.get_columns("individual")]
-
-            if "digital_certificate" not in cols:
-                migrate(
-                    DATABASE_MIGRATOR.add_column(
-                        "individual", "digital_certificate", IntegerField(null=True, unique=True, sequence="certificates_seq")
-                    )
+        if "digital_certificate" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "individual", "digital_certificate", IntegerField(null=True, unique=True, **sequence)
                 )
-            SchemaHistory.insert(  # pylint: disable=E1120
-                version=5, comment="Set up digital certificate ids", applied=datetime.now()
-            ).execute()
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=5, comment="Set up digital certificate ids", applied=datetime.now()
+        ).execute()
 
 
 def check_migrations():
