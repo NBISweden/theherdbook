@@ -67,9 +67,6 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
 
-    if is_connected():
-        check_migrations()
-
 
 if "pytest" in sys.modules or "unittest" in sys.modules:
     logging.info("No settings for databse, using test database")
