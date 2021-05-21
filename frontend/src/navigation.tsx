@@ -14,11 +14,12 @@ import { Genebanks } from "@app/genebanks";
 import { HerdView } from "@app/herd_view";
 import { Manage } from "@app/manage";
 import { Owner } from "@app/owner";
+import { Settings } from "@app/settings";
 import { IndividualPedigree } from "@app/individual_pedigree";
 import { IndividualView } from "@app/individual_view";
 import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
-import { InbreedingForm } from '@app/testbreed_form'
+import { InbreedingForm } from "@app/testbreed_form";
 import * as ui from "@app/ui_utils";
 
 // Define styles for tab menu
@@ -72,13 +73,13 @@ export function Navigation() {
     {
       label: "Provparning",
       path: "/provparning",
-      component:  (
+      component: (
         <Restricted>
           <InbreedingForm />
         </Restricted>
       ),
       visible: is_logged_in,
-      icon: <AccountBalanceIcon />
+      icon: <AccountBalanceIcon />,
     },
     {
       label:
