@@ -359,18 +359,43 @@ def external_login_handler(service):
 
     if user:
         APP.logger.info(
-            "Logging in user %s (#%d) by persistent id %s for service %s"
-            % (user.username, user.id, persistent_id, service)
+            "Logging in user %s (%s - #%d) by persistent id %s for service %s"
+            % (user.username, user.email, user.id, persistent_id, service)
         )
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
-    else:
-        APP.logger.info(
-            "No user linked to persistent id %s for service %s"
-            % (persistent_id, service)
+        return get_user()
+
+    if not utils.external_auth.get_autocreate(service):
+        # No user - give up
+        return None
+
+    accountdetails = utils.external_auth.get_account_details(service)
+    user = da.register_user(accountdetails["email"], None, validated=True)
+
+    if not user:
+        APP.logger.error(
+            "Automatic registering of user with e-mail %s (persistent id %s) for service %s FAILED"
+            % (accountdetails["email"], persistent_id, service)
         )
-        # FIXME: Return error code?
+        return None
+
+    linked = da.link_account(user, service, persistent_id)
+
+    if not linked:
+        APP.logger.error(
+            "Linked of of user with e-mail %s (persistent id %s) for service %s FAILED"
+            % (accountdetails["email"], persistent_id, service)
+        )
+        return None
+
+    APP.logger.info(
+        "Automatically registered user with e-mail %s (persistent id %s) for service %s"
+        % (persistent_id, accountdetails["email"], service)
+    )
+
+    login_user(user)
 
     return get_user()
 

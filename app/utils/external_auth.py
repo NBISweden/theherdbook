@@ -14,6 +14,7 @@ import flask_dance.contrib.twitter
 CONFIGFILE = os.environ.get("AUTHCONFIGFILE", "/config/auth.ini")
 
 _active: typing.List[str] = []  # pylint: disable = invalid-name
+_autocreate: typing.List[str] = []  # pylint: disable = invalid-name
 
 
 def available_methods():
@@ -37,6 +38,9 @@ def setup(app):
     config.read(CONFIGFILE)
 
     for engine in config.sections():
+        if config.getboolean(engine, "autocreate", fallback=False):
+            _autocreate.append(engine)
+
         if engine == "twitter":
             setup_twitter(app, config)
         if engine == "google":
@@ -66,10 +70,7 @@ def twitter_authorized():
     return flask_dance.contrib.twitter.twitter.authorized
 
 
-def twitter_persistent():
-    """
-    Get the persistent identity for the user with twitter.
-    """
+def twitter_get_userobject():
     accountr = flask_dance.contrib.twitter.twitter.get("account/settings.json")
 
     if not accountr.ok:
@@ -84,7 +85,25 @@ def twitter_persistent():
     if not userr.ok or len(userr.json()) != 1:
         return None
 
-    return userr.json()[0]["id"]
+    return userr.json()
+
+
+def twitter_persistent():
+    """
+    Get the persistent identity for the user with twitter.
+    """
+    userobject = twitter_get_userobject()
+    if not userobject:
+        return None
+    return userobject[0]["id"]
+
+
+def twitter_details():
+    """
+    Get the account details for the user with twitter.
+    """
+    # Not yet supported
+    return None
 
 
 def setup_google(app, config):
@@ -97,7 +116,7 @@ def setup_google(app, config):
         client_secret=config["google"]["secret"],
         login_url="",
         redirect_url="/api/login/google",
-        scope=["openid"],
+        scope=["openid", "https://www.googleapis.com/auth/userinfo.email"],
     )
 
     app.register_blueprint(blueprint, url_prefix="/api/login/google/back")
@@ -119,6 +138,27 @@ def google_persistent():
     if not userr.ok or len(userr.json()) == 0:
         return None
     return userr.json()["id"]
+
+
+def google_details():
+    """
+    Return the e-mail
+    """
+
+    user = flask_dance.contrib.google.google.get("/oauth2/v2/userinfo")
+    if not user.ok or len(user.json()) == 0:
+        return None
+
+    userjson = user.json()
+
+    # Only care about verified addresses
+    if not "verified_email" in userjson or not userjson["verified_email"]:
+        return None
+
+    if "email" in userjson:
+        return {"email": userjson["email"], "name": userjson["name"]}
+
+    return None
 
 
 def authorized(app, method):
@@ -148,3 +188,21 @@ def get_persistent(method):
     pers = {"twitter": twitter_persistent, "google": google_persistent}
 
     return pers[method]()
+
+
+def get_autocreate(method):
+    """
+    Return the autocreate attribute for the specified method.
+    """
+    if method in _autocreate:
+        return True
+    return False
+
+
+def get_account_details(method):
+    """
+    Get the e-mail provided for the specified method (may not work)
+    """
+    ad = {"twitter": twitter_details, "google": google_details}
+
+    return ad[method]()
