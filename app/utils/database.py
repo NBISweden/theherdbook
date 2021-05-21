@@ -399,6 +399,7 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
+
 class Individual(BaseModel):
     """
     Table for individual animals.
@@ -410,7 +411,14 @@ class Individual(BaseModel):
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
-    digital_certificate = IntegerField(sequence="certificates_seq", unique=True, null=True)
+
+    if type(DATABASE) == PostgresqlDatabase:
+        digital_certificate = IntegerField(
+            sequence="certificates_seq", unique=True, null=True
+        )
+    elif type(DATABASE) == SqliteDatabase:
+        digital_certificate = IntegerField(unique=True, null=True)
+
     number = CharField(20)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
@@ -1094,7 +1102,9 @@ def init():
 
     ## Create sequence to allow unique ids for digital certificates
     if type(DATABASE) == PostgresqlDatabase:
-        DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
+        DATABASE.execute_sql(
+            """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""
+        )
 
 
 def verify(try_init=True):
@@ -1231,15 +1241,28 @@ def migrate_4_to_5():
     """
     sequence = {}
     with DATABASE.atomic():
+        if "individual" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=5,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
         if type(DATABASE_MIGRATOR) == PostgresqlMigrator:
             sequence = {"sequence": "certificates_seq"}
-            DATABASE.execute_sql('''CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE''')
+            DATABASE.execute_sql(
+                """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""
+            )
         cols = [x.name for x in DATABASE.get_columns("individual")]
 
         if "digital_certificate" not in cols:
             migrate(
                 DATABASE_MIGRATOR.add_column(
-                    "individual", "digital_certificate", IntegerField(null=True, unique=True, **sequence)
+                    "individual",
+                    "digital_certificate",
+                    IntegerField(null=True, unique=True, **sequence),
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
