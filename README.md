@@ -118,6 +118,7 @@ Once selected, you'll need to supply an application name (e.g. Herdbook) and a s
 Once filled in, you can save and continue.
 
 Next, you'll need to select the scopes provided. Select "Add and remove scopes" and pick `openid`.
+If you want to support automatic account creation, you also need to select ".../auth/userinfo.email"
 
 Once done, select save and continue to finish configuration of the consent screen.
 
