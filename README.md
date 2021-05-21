@@ -128,7 +128,7 @@ When asked for the application type, select "Web application".
 
 You will be asked for URLs. Under "Authorized redirect URI" you should provide
 
-https://YOURSITE/api/login/google/back/google/authorized
+[https://YOURSITE/api/login/google/back/google/authorized](https://YOURSITE/api/login/google/back/google/authorized)
 
 where YOURSITE is any address your service can be accessed at.
 
@@ -138,7 +138,7 @@ You will be presented with a box with "Your client ID" and "Your client secret",
 
 Create/edit `config/auth.ini` and add a `[google]` section where you provide your client ID as `key` and your secret as `secret`, e.g.
 
-```
+```lang-ini
 [google]
 key=YourIDHereLikelyEndsWith.apps.googleusercontent.com
 secret=YourClientSecretGoesHere
@@ -148,7 +148,7 @@ and restart the server, once this is done - you should see the option to login w
 
 If you want to support automatic creation of accounts from Google, also include
 
-```
+```lang-ini
 autocreate = yes
 ```
 

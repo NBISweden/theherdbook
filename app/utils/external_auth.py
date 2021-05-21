@@ -152,7 +152,7 @@ def google_details():
     userjson = user.json()
 
     # Only care about verified addresses
-    if not "verified_email" in userjson or not userjson["verified_email"]:
+    if "verified_email" not in userjson or not userjson["verified_email"]:
         return None
 
     if "email" in userjson:
