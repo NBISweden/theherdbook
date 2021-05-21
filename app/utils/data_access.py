@@ -109,6 +109,10 @@ def register_user(email, password, username=None, validated=False, privileges=No
     # Update to make sure to get the correct id
     user = User.select().where((User.email == email)).get()
 
+    # If no password is provided, don't create an authenticator
+    if not password:
+        return user
+
     try:
         # If we have a password authenticator already, update it instead of creating a new.
         authenticator = (
