@@ -1,6 +1,8 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Button, CircularProgress } from "@material-ui/core";
+import { Box, Button, CircularProgress } from "@material-ui/core";
+import { palette, borders } from "@material-ui/system";
+import { CheckCircle } from "@material-ui/icons";
 
 import { Individual } from "@app/data_context_global";
 import { styles } from "@material-ui/pickers/views/Calendar/Calendar";
@@ -25,7 +27,21 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
     justifyContent: "flex-end",
-    margin: "20px 0",
+    margin: "1em 0",
+  },
+  successBox: {
+    width: "100%",
+    padding: "1em",
+    margin: "2em 0",
+  },
+  successIcon: {
+    fill: "#388e3c", // same as success.dark in the default theme
+    marginLeft: "0.5em",
+  },
+  boxTitle: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
 
@@ -37,6 +53,7 @@ export function CertificateVerification({
   individual: Individual | undefined;
 }) {
   const [file, setFile] = React.useState(undefined as File | undefined);
+  const [certValid, setCertValid] = React.useState(false as boolean);
   const style = useStyles();
 
   const verifyCertificate = (id: string) => {
@@ -53,7 +70,11 @@ export function CertificateVerification({
           headers: {
             "Content-Type": "application/pdf",
           },
-        }).then((res) => res.json);
+        })
+          .then((res) => res.json)
+          .then((json) => {
+            setCertValid(true);
+          });
       };
       reader.readAsArrayBuffer(file);
     }
@@ -91,6 +112,25 @@ export function CertificateVerification({
           Verifiera
         </Button>
       </div>
+      {certValid ? (
+        <Box
+          border={3}
+          borderRadius={8}
+          borderColor="success.light"
+          className={style.successBox}
+        >
+          <div className={style.boxTitle}>
+            <h2>Certifikatet är giltig!</h2>
+            <CheckCircle className={style.successIcon} />
+          </div>
+          <p>
+            Dokumentet innehåller den senaste informationen om kaninen och finns
+            i vår databas.
+          </p>
+        </Box>
+      ) : (
+        <div></div>
+      )}
     </>
   );
 }
