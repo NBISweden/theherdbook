@@ -791,7 +791,7 @@ def get_certificate(data):
     qr_x_len, qr_y_len = 42, 42
 
     certificate = certs.CertificateGenerator(
-        form=Path("/code/template.pdf"),
+        form=settings.certs.template,
         form_keys=certs.FORM_KEYS,
     )
 
