@@ -261,6 +261,18 @@ export function CertificateVerification({
       ) : (
         <div></div>
       )}
+      <Document
+        file={previewUrl}
+        onLoadSuccess={onDocumentLoadSuccess}
+        renderAnnotationLayer={true}
+        loading={<CircularProgress />}
+      >
+        <Page
+          pageNumber={pageNumber}
+          className={style.preview}
+          width={previewWidth}
+        />
+      </Document>
     </>
   );
 }
