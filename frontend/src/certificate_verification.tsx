@@ -2,7 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box, Button, CircularProgress } from "@material-ui/core";
 import { palette, borders } from "@material-ui/system";
-import { CheckCircle, Error } from "@material-ui/icons";
+import { Cancel, CheckCircle, Error } from "@material-ui/icons";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import { Individual } from "@app/data_context_global";
@@ -31,7 +31,7 @@ const useStyles = makeStyles({
     justifyContent: "flex-end",
     margin: "1em 0",
   },
-  successBox: {
+  responseBox: {
     width: "100%",
     padding: "1em",
     margin: "2em 0",
@@ -40,8 +40,12 @@ const useStyles = makeStyles({
     fill: "#388e3c", // same as success.dark in the default theme
     marginLeft: "0.5em",
   },
-  errorIcon: {
+  warnIcon: {
     fill: "#ff9800", // same as warning.main in the default theme
+    marginLeft: "0.5em",
+  },
+  failIcon: {
+    fill: "#d32f2f", // same value as error.dark in the default theme
     marginLeft: "0.5em",
   },
   boxTitle: {
@@ -61,6 +65,7 @@ export function CertificateVerification({
   const [file, setFile] = React.useState(undefined as File | undefined);
   const [certValid, setCertValid] = React.useState(false as boolean);
   const [certOutdated, setCertOutdated] = React.useState(false as boolean);
+  const [certNotFound, setCertNotFound] = React.useState(false as boolean);
   //States to make pdf-preview-library work
   const [numPages, setNumPages] = React.useState(null);
   const [pageNumber, setPageNumber] = React.useState(1);
@@ -70,6 +75,9 @@ export function CertificateVerification({
   const { userMessage } = useMessageContext();
 
   const verifyCertificate = (id: string) => {
+    setCertValid(false);
+    setCertOutdated(false);
+    setCertNotFound(false);
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -83,13 +91,21 @@ export function CertificateVerification({
           headers: {
             "Content-Type": "application/pdf",
           },
-        }).then((res) => {
-          if (res.status === 200) {
-            setCertValid(true);
-          } else if (res.status === 202) {
-            setCertOutdated(true);
-          }
-        });
+        })
+          .then((res) => {
+            if (res.status === 200) {
+              setCertValid(true);
+            } else if (res.status === 202) {
+              setCertOutdated(true);
+            } else if (res.status === 404) {
+              setCertNotFound(true);
+            } else {
+              throw new Error("Något gick fel.");
+            }
+          })
+          .catch((error) => {
+            userMessage(error.message, "error");
+          });
       };
       reader.readAsArrayBuffer(file);
     }
@@ -158,15 +174,15 @@ export function CertificateVerification({
           border={3}
           borderRadius={8}
           borderColor="success.light"
-          className={style.successBox}
+          className={style.responseBox}
         >
           <div className={style.boxTitle}>
             <h2>Certifikatet är giltig!</h2>
             <CheckCircle className={style.successIcon} />
           </div>
           <p>
-            Dokumentet innehåller den senaste informationen om kaninen och finns
-            i vår databas.
+            Dokumentet innehåller den senaste informationen om{" "}
+            {individual?.name} och finns i vår databas.
           </p>
         </Box>
       ) : certOutdated ? (
@@ -174,16 +190,16 @@ export function CertificateVerification({
           border={3}
           borderRadius={8}
           borderColor="warning.light"
-          className={style.successBox}
+          className={style.responseBox}
         >
           <div className={style.boxTitle}>
             <h2>Certifikatet är inte aktuellt längre!</h2>
-            <Error className={style.errorIcon} />
+            <Error className={style.warnIcon} />
           </div>
           <p>
-            Certifikatet har en gång varit giltigt för kaninen men har
-            uppdaterats av den (tidigare) ägaren eller genbanksförvaltaren. Din
-            version är inte giltig längre.
+            Certifikatet har en gång varit giltigt för {individual?.name} men
+            har uppdaterats av den (tidigare) ägaren eller genbanksförvaltaren.
+            Din version är inte giltig längre.
           </p>
           <p>Kontakta genbanksförvaltaren för mer information.</p>
           <p>
@@ -198,6 +214,23 @@ export function CertificateVerification({
             Se senaste certifikat
           </Button>
         </Box>
+      ) : certNotFound ? (
+        <Box
+          border={3}
+          borderRadius={8}
+          borderColor="error.main"
+          className={style.responseBox}
+        >
+          <div className={style.boxTitle}>
+            <h2>Inget giltigt certifikat!</h2>
+            <Cancel className={style.failIcon} />
+          </div>
+          <p>
+            Dokumentet du laddade upp är inget giltigt certifikat eller matchar
+            inte {individual?.name}.
+          </p>
+          <p>Kontrollera att du laddat upp rätt fil.</p>
+        </Box>
       ) : (
         <div></div>
       )}
@@ -206,12 +239,9 @@ export function CertificateVerification({
         onLoadSuccess={onDocumentLoadSuccess}
         renderAnnotationLayer={true}
         loading={<CircularProgress />}
+        noData=""
       >
-        <Page
-          pageNumber={pageNumber}
-          className={style.preview}
-          width={previewWidth}
-        />
+        <Page pageNumber={pageNumber} width={previewWidth} />
       </Document>
     </>
   );
