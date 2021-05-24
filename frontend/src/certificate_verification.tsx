@@ -37,29 +37,25 @@ export function CertificateVerification({
   individual: Individual | undefined;
 }) {
   const [file, setFile] = React.useState(undefined as File | undefined);
-  const [binaryFile, setBinaryFile] = React.useState(
-    undefined as string | ArrayBuffer | undefined
-  );
   const style = useStyles();
 
   const verifyCertificate = (id: string) => {
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) =>
-        setBinaryFile(event.target?.result ? event.target.result : undefined);
+      reader.onload = (event) => {
+        const binaryFile = event.target?.result
+          ? event.target.result
+          : undefined;
+        fetch(`/api/certificates/verify/${id}`, {
+          body: binaryFile,
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/pdf",
+          },
+        }).then((res) => res.json);
+      };
       reader.readAsArrayBuffer(file);
-    }
-
-    if (binaryFile) {
-      console.log(binaryFile);
-      fetch(`/api/certificates/verify/${id}`, {
-        body: binaryFile,
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
-      }).then((res) => res.json);
     }
   };
   return (
