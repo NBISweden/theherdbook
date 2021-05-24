@@ -531,14 +531,14 @@ def issue_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
     certificate_exists = ind.get("certificate", None)
-    if certificate_exists:
+    if not certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
     form = request.json
     cert_number = ind["digital_certificate"]
 
-    ind.certificate = cert_number
-    ind.save()
+    ind.update(**form, certificate=cert_number)
+    da.update_individual(ind, session.get("user_id", None))
 
     data = get_certificate_data(ind, user_id)
     pdf_bytes = get_certificate(data)
