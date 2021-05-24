@@ -29,7 +29,7 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         """
         assert isinstance(bucket, str)
         self.bucket = bucket
-        assert isinstance(endpoint, str)
+        assert isinstance(endpoint, (str, type(None)))
         self.endpoint = endpoint
         assert isinstance(region, str)
         self.region = region
@@ -48,15 +48,18 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
             "connect_timeout": 40,
         }
 
+        use_ssl = False
+
         if cert and private_key:
             config_params["client_cert"] = (cert, private_key)
+            use_ssl = True
 
         config = botocore.client.Config(**config_params)
         self.s3_client = boto3.client(
             "s3",
             endpoint_url=self.endpoint,
             region_name=region,
-            use_ssl=self.endpoint.startswith("https"),
+            use_ssl=use_ssl,
             verify=verify,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
