@@ -32,6 +32,7 @@ services:
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
+            - ./.docker/main-api-variables.env
         ports:
             - 8080:8080
             - 8443:8443
