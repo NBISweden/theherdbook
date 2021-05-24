@@ -16,8 +16,9 @@ certs = Namespace()  # pylint: disable=C0103
 service = Namespace()  # pylint: disable=C0103
 # Read configuration from environment variable
 
-certs.private_key = Path("/code/key.pem")
-certs.ca = Path("/code/ca.pem")
+certs.private_key = Path("certs/key.pem")
+certs.ca = Path("certs/ca.pem")
+certs.template = Path("template.pdf")
 
 postgres.name = os.environ.get("POSTGRES_DB", "herdbook")
 postgres.host = os.environ.get("POSTGRES_HOST", "herdbook-db")
