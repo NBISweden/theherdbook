@@ -66,6 +66,7 @@ export function CertificateVerification({
   const [certValid, setCertValid] = React.useState(false as boolean);
   const [certOutdated, setCertOutdated] = React.useState(false as boolean);
   const [certNotFound, setCertNotFound] = React.useState(false as boolean);
+  const [showPdf, setShowPdf] = React.useState(false as boolean);
   //States to make pdf-preview-library work
   const [numPages, setNumPages] = React.useState(null);
   const [pageNumber, setPageNumber] = React.useState(1);
@@ -75,9 +76,6 @@ export function CertificateVerification({
   const { userMessage } = useMessageContext();
 
   const verifyCertificate = (id: string) => {
-    setCertValid(false);
-    setCertOutdated(false);
-    setCertNotFound(false);
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -163,7 +161,13 @@ export function CertificateVerification({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => verifyCertificate(id)}
+          onClick={() => {
+            setCertValid(false);
+            setCertOutdated(false);
+            setCertNotFound(false);
+            setShowPdf(false);
+            verifyCertificate(id);
+          }}
           disabled={file ? false : true}
         >
           Verifiera
@@ -209,7 +213,10 @@ export function CertificateVerification({
           <Button
             variant="outlined"
             color="primary"
-            onClick={() => getLatestCertificate(id)}
+            onClick={() => {
+              setShowPdf(true);
+              getLatestCertificate(id);
+            }}
           >
             Se senaste certifikat
           </Button>
@@ -234,15 +241,19 @@ export function CertificateVerification({
       ) : (
         <div></div>
       )}
-      <Document
-        file={previewUrl}
-        onLoadSuccess={onDocumentLoadSuccess}
-        renderAnnotationLayer={true}
-        loading={<CircularProgress />}
-        noData=""
-      >
-        <Page pageNumber={pageNumber} width={previewWidth} />
-      </Document>
+      {showPdf ? (
+        <Document
+          file={previewUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          renderAnnotationLayer={true}
+          loading={<CircularProgress />}
+          noData=""
+        >
+          <Page pageNumber={pageNumber} width={previewWidth} />
+        </Document>
+      ) : (
+        <div></div>
+      )}
     </>
   );
 }
