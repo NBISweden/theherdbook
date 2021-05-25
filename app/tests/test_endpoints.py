@@ -311,11 +311,30 @@ class TestEndpoints(FlaskTest):
             color = db.Individual.get(self.individuals[0].id).color.id
             self.assertEqual(color, 2)
 
-            # Verify an invalid certificate
+            # Get the preview of a unsigned certificate
+            unsigned_response = context.get(f"/api/certificates/preview/{individual}")
+            self.assertEqual(unsigned_response.status_code, 200)
+            self.assertEqual(unsigned_response.headers["Content-Type"], "application/pdf")
+
+            unsigned_response = context.post(
+                f"/api/certificates/preview/{individual}", json=valid_issue_form
+            )
+            self.assertEqual(unsigned_response.status_code, 200)
+            self.assertEqual(unsigned_response.headers["Content-Type"], "application/pdf")
+
+            # Verify using an unsigned certificate
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=unsigned_response.data
+            )
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(response.get_json(), {"response": "The uploaded certificate is not valid for this individual"})
+
+            # Verify using some random data
             response = context.post(
                 f"/api/certificates/verify/{individual}", data=b"some random bytes"
             )
             self.assertEqual(response.status_code, 404)
+            self.assertEqual(response.get_json(), {"response": "The uploaded certificate is not valid for this individual"})
 
             # Verify an old certificate
             response = context.post(
@@ -330,41 +349,6 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), {"response": "Certificate is valid"})
             mock.stop()
-
-    def test_certificate_preview(self):
-        """
-        Checks that the certificate preview endpoint works as intended.
-        """
-
-        individual = self.individuals[0].number
-
-        valid_form = {
-            "color_id": "2",
-        }
-
-        # not logged in
-        self.assertEqual(
-            self.app.post(f"/api/certificates/issue/{individual}").get_json(), None
-        )
-
-        self.assertEqual(
-            self.app.get(f"/api/certificates/preview/{individual}").get_json(), None
-        )
-
-        with self.app as context:
-            # login
-            context.post(
-                "/api/login", json={"username": self.admin.email, "password": "pass"}
-            )
-            response = context.get(f"/api/certificates/preview/{individual}")
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.headers["Content-Type"], "application/pdf")
-
-            response = context.post(
-                f"/api/certificates/preview/{individual}", json=valid_form
-            )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.headers["Content-Type"], "application/pdf")
 
 
 if __name__ == "__main__":
