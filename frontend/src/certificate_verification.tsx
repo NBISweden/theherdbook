@@ -202,10 +202,10 @@ export function CertificateVerification({
           </div>
           <p>
             Certifikatet har en gång varit giltigt för {individual?.name} men
-            har uppdaterats av den (tidigare) ägaren eller genbanksförvaltaren.
-            Din version är inte giltig längre.
+            har uppdaterats av den (tidigare) ägaren eller genbanksansvarig. Din
+            version är inte giltig längre.
           </p>
-          <p>Kontakta genbanksförvaltaren för mer information.</p>
+          <p>Kontakta genbanksansvarig för mer information.</p>
           <p>
             Du kan även kolla på det aktuella certifikatet och jämföra
             uppgifterna.
