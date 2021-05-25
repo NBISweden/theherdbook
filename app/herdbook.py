@@ -506,6 +506,8 @@ def update_certificate(i_number):
             uploaded = upload_certificate(
                 pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
             )
+            ind.update(**form)
+            da.update_individual(ind, session.get("user_id", None))
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while updating certificate " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
@@ -702,9 +704,9 @@ def get_certificate_data(ind, user_id):
     extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
     ind["notes"] = "\n".join(
         [
-            str(ind.get("notes", "")),
-            str(ind.get("colour_note", "")),
-            str(ind.get("hair_notes", "")),
+            "Notes: " + str(ind.get("notes", "")),
+            "Color notes: " + str(ind.get("color_note", "")),
+            "Hair notes: " + str(ind.get("hair_notes", "")),
         ]
     )
     cert_data_lst = []
@@ -761,7 +763,7 @@ def get_certificate(data):
     qr_x_len, qr_y_len = 42, 42
 
     certificate = certs.CertificateGenerator(
-        form=Path("/code/template.pdf"),
+        form=settings.certs.template,
         form_keys=certs.FORM_KEYS,
     )
 
