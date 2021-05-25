@@ -18,14 +18,14 @@ import utils.settings as settings
 FORM_KEYS = {
     "IdRas": "genebank_id",
     "IdGenbanksNummer": "genebank_id",
-    "IdFärg": "colour",
+    "IdFärg": "color",
     "IdÖvriga": "notes",  # color and hair notes
     "IdÅrKullIndivid": "name",  # Fix
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
     "IdAntalFödda": "litter",
     "IdAntalLevande": "litter",
-    "IdHårlag": "name",  # Fix Nose hair colour
+    "IdHårlag": "name",  # Fix Nose hair color
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",
     "IdFödelseDatum": "birth_date",
@@ -37,24 +37,24 @@ FORM_KEYS = {
     "MorÅrKullIndivid": "M_number",
     "FarNamn": "F_name",
     "MorNamn": "M_name",
-    "FarFärg": "F_colour",
-    "MorFärg": "M_colour",
+    "FarFärg": "F_color",
+    "MorFärg": "M_color",
     "FarfarGenbanksNummer": "FF_genebank_id",
     "FarfarÅrKullInvidid": "FF_number",
     "MorfarGenbanksNummer": "MF_genebank_id",
     "MorfarÅrKullIndivid": "MF_number",
     "FarfarNamn": "FF_name",
     "MorfarNamn": "MF_name",
-    "FarfarFärg": "FF_colour",
-    "MorfarFärg": "MF_colour",
+    "FarfarFärg": "FF_color",
+    "MorfarFärg": "MF_color",
     "FarmorGenbanksNummer": "FM_genebank_id",
     "FarmorÅrKullInvidid": "FM_number",
     "MormorGenbanksNummer": "MM_genebank_id",
     "MormorÅrKullIndivid": "MM_number",
     "FarmorNamn": "FM_name",
     "MormorNamn": "MM_name",
-    "FarmorFärg": "FM_colour",
-    "MormorFärg": "MM_colour",
+    "FarmorFärg": "FM_color",
+    "MormorFärg": "MM_color",
     "Nummer": "number",
     "IntygasAv": "user_id",  # Username
     "IntygasNummer": "certificate",  # Herd id of rabbit individual (Without herd identifier) G/M
