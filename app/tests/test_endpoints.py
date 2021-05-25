@@ -43,7 +43,6 @@ class FlaskTest(DatabaseTest):
         super().setUp()
 
 
-@mock_s3
 class TestEndpoints(FlaskTest):
     """
     Checks that all endpoints are valid.
@@ -267,9 +266,15 @@ class TestEndpoints(FlaskTest):
 
         individual = self.individuals[0].number
 
-        valid_form = {
-            "colour": "vitt",
+        valid_issue_form = {
+            "color_id": 3,
         }
+        valid_update_form = {
+            "color_id": 2,
+        }
+
+        mock = mock_s3()
+        mock.start()
 
         # not logged in
         self.assertEqual(
@@ -286,19 +291,25 @@ class TestEndpoints(FlaskTest):
             )
 
             # Issue a certificate
-            response = context.post(
-                f"/api/certificates/issue/{individual}", json=valid_form
+            first_pdf_response = context.post(
+                f"/api/certificates/issue/{individual}", json=valid_issue_form
             )
-            cert = db.Individual.get(self.individuals[0].id).certificate
-            self.assertEqual(cert, "G1310-2121")
-            self.assertEqual(response.headers["Content-Type"], "application/pdf")
+            certificate = db.Individual.get(self.individuals[0].id).certificate
+            self.assertEqual(certificate, "G1310-2121")
+            color = db.Individual.get(self.individuals[0].id).color.id
+            self.assertEqual(color, 3)
+            self.assertEqual(
+                first_pdf_response.headers["Content-Type"], "application/pdf"
+            )
 
             # Update a certificate
             pdf_response = context.patch(
-                f"/api/certificates/update/{individual}", json=valid_form
+                f"/api/certificates/update/{individual}", json=valid_update_form
             )
             self.assertEqual(pdf_response.status_code, 200)
             self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
+            color = db.Individual.get(self.individuals[0].id).color.id
+            self.assertEqual(color, 2)
 
             # Verify an invalid certificate
             response = context.post(
@@ -306,22 +317,29 @@ class TestEndpoints(FlaskTest):
             )
             self.assertEqual(response.status_code, 404)
 
+            # Verify an old certificate
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=first_pdf_response.data
+            )
+            self.assertEqual(response.status_code, 202)
+
             # Verify a valid certificate
             response = context.post(
                 f"/api/certificates/verify/{individual}", data=pdf_response.data
             )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), {"response": "Certificate is valid"})
+            mock.stop()
 
     def test_certificate_preview(self):
         """
-        Checks that certificate endpoints work as intended.
+        Checks that the certificate preview endpoint works as intended.
         """
 
         individual = self.individuals[0].number
 
         valid_form = {
-            "colour": "vitt",
+            "color_id": "2",
         }
 
         # not logged in
