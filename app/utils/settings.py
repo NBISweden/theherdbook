@@ -16,8 +16,9 @@ certs = Namespace()  # pylint: disable=C0103
 service = Namespace()  # pylint: disable=C0103
 # Read configuration from environment variable
 
-certs.private_key = Path("/code/key.pem")
-certs.ca = Path("/code/ca.pem")
+certs.private_key = Path("certs/key.pem")
+certs.ca = Path("certs/ca.pem")
+certs.template = Path("template.pdf")
 
 postgres.name = os.environ.get("POSTGRES_DB", "herdbook")
 postgres.host = os.environ.get("POSTGRES_HOST", "herdbook-db")
@@ -31,7 +32,7 @@ rapi.port = os.environ.get("RAPI_PORT", "31113")
 service.host = os.environ.get("HERDBOOK_HOST", "https://127.0.0.1:8443")
 
 s3.bucket = os.environ.get("S3_BUCKET", "test")
-s3.endpoint = os.environ.get("S3_BUCKET", "http://s3backend:9000")
+s3.endpoint = os.environ.get("S3_ENDPOINT", None)
 s3.region = os.environ.get("S3_REGION", "us-east-1")
 s3.secret_key = os.environ.get("S3_SECRETKEY", "secretkeytest")
 s3.access_key = os.environ.get("S3_ACCESSKEY", "accesskeytest")

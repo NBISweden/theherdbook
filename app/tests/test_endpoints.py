@@ -19,6 +19,7 @@ import requests
 # pylint: disable=import-error
 import utils.database as db
 from herdbook import APP
+from moto import mock_s3
 from tests.database_test import DatabaseTest
 
 HOST = "http://localhost:4200"
@@ -257,6 +258,111 @@ class TestEndpoints(FlaskTest):
             response = context.patch("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), {"status": "success"})
+
+    def test_certificate_ops(self):
+        """
+        Checks that certificate endpoints issuing, updating and verifying work as intended.
+        """
+
+        individual = self.individuals[0].number
+
+        valid_issue_form = {
+            "color_id": 3,
+        }
+        valid_update_form = {
+            "color_id": 2,
+        }
+
+        mock = mock_s3()
+        mock.start()
+
+        # not logged in
+        self.assertEqual(
+            self.app.post("/api/certificates/issue/{individual}").get_json(), None
+        )
+        self.assertEqual(
+            self.app.patch("/api/certificates/update/{individual}").get_json(), None
+        )
+
+        with self.app as context:
+            # login
+            context.post(
+                "/api/login", json={"username": self.admin.email, "password": "pass"}
+            )
+
+            # Issue a certificate
+            first_pdf_response = context.post(
+                f"/api/certificates/issue/{individual}", json=valid_issue_form
+            )
+            certificate = db.Individual.get(self.individuals[0].id).certificate
+            self.assertEqual(certificate, "G1310-2121")
+            color = db.Individual.get(self.individuals[0].id).color.id
+            self.assertEqual(color, 3)
+            self.assertEqual(
+                first_pdf_response.headers["Content-Type"], "application/pdf"
+            )
+
+            # Update a certificate
+            pdf_response = context.patch(
+                f"/api/certificates/update/{individual}", json=valid_update_form
+            )
+            self.assertEqual(pdf_response.status_code, 200)
+            self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
+            color = db.Individual.get(self.individuals[0].id).color.id
+            self.assertEqual(color, 2)
+
+            # Get the preview of a unsigned certificate
+            unsigned_response = context.get(f"/api/certificates/preview/{individual}")
+            self.assertEqual(unsigned_response.status_code, 200)
+            self.assertEqual(
+                unsigned_response.headers["Content-Type"], "application/pdf"
+            )
+
+            unsigned_response = context.post(
+                f"/api/certificates/preview/{individual}", json=valid_issue_form
+            )
+            self.assertEqual(unsigned_response.status_code, 200)
+            self.assertEqual(
+                unsigned_response.headers["Content-Type"], "application/pdf"
+            )
+
+            # Verify using an unsigned certificate
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=unsigned_response.data
+            )
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(
+                response.get_json(),
+                {
+                    "response": "The uploaded certificate is not valid for this individual"
+                },
+            )
+
+            # Verify using some random data
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=b"some random bytes"
+            )
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(
+                response.get_json(),
+                {
+                    "response": "The uploaded certificate is not valid for this individual"
+                },
+            )
+
+            # Verify an old certificate
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=first_pdf_response.data
+            )
+            self.assertEqual(response.status_code, 202)
+
+            # Verify a valid certificate
+            response = context.post(
+                f"/api/certificates/verify/{individual}", data=pdf_response.data
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), {"response": "Certificate is valid"})
+            mock.stop()
 
 
 if __name__ == "__main__":
