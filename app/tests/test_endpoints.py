@@ -314,27 +314,41 @@ class TestEndpoints(FlaskTest):
             # Get the preview of a unsigned certificate
             unsigned_response = context.get(f"/api/certificates/preview/{individual}")
             self.assertEqual(unsigned_response.status_code, 200)
-            self.assertEqual(unsigned_response.headers["Content-Type"], "application/pdf")
+            self.assertEqual(
+                unsigned_response.headers["Content-Type"], "application/pdf"
+            )
 
             unsigned_response = context.post(
                 f"/api/certificates/preview/{individual}", json=valid_issue_form
             )
             self.assertEqual(unsigned_response.status_code, 200)
-            self.assertEqual(unsigned_response.headers["Content-Type"], "application/pdf")
+            self.assertEqual(
+                unsigned_response.headers["Content-Type"], "application/pdf"
+            )
 
             # Verify using an unsigned certificate
             response = context.post(
                 f"/api/certificates/verify/{individual}", data=unsigned_response.data
             )
             self.assertEqual(response.status_code, 404)
-            self.assertEqual(response.get_json(), {"response": "The uploaded certificate is not valid for this individual"})
+            self.assertEqual(
+                response.get_json(),
+                {
+                    "response": "The uploaded certificate is not valid for this individual"
+                },
+            )
 
             # Verify using some random data
             response = context.post(
                 f"/api/certificates/verify/{individual}", data=b"some random bytes"
             )
             self.assertEqual(response.status_code, 404)
-            self.assertEqual(response.get_json(), {"response": "The uploaded certificate is not valid for this individual"})
+            self.assertEqual(
+                response.get_json(),
+                {
+                    "response": "The uploaded certificate is not valid for this individual"
+                },
+            )
 
             # Verify an old certificate
             response = context.post(
