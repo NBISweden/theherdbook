@@ -531,7 +531,7 @@ def issue_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
     certificate_exists = ind.get("certificate", None)
-    if not certificate_exists:
+    if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
     form = request.json
