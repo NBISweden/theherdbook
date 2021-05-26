@@ -97,9 +97,9 @@ export function CertificateVerification({
               setCertOutdated(true);
             } else if (res.status === 404) {
               setCertNotFound(true);
-            } else {
+            } /* else {
               throw new Error("Något gick fel.");
-            }
+            } */
           })
           .catch((error) => {
             userMessage(error.message, "error");
