@@ -2,7 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box, Button, CircularProgress } from "@material-ui/core";
 import { palette, borders } from "@material-ui/system";
-import { Cancel, CheckCircle, Error } from "@material-ui/icons";
+import { Cancel, CheckCircle, Warning } from "@material-ui/icons";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import { Individual } from "@app/data_context_global";
@@ -76,34 +76,41 @@ export function CertificateVerification({
   const { userMessage } = useMessageContext();
 
   const verifyCertificate = (id: string) => {
+    const postCertificate = (
+      id: string,
+      content: string | ArrayBuffer | undefined
+    ) => {
+      fetch(`/api/certificates/verify/${id}`, {
+        body: content,
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      })
+        .then((res) => {
+          if (res.status === 200) {
+            setCertValid(true);
+          } else if (res.status === 202) {
+            setCertOutdated(true);
+          } else if (res.status === 404) {
+            setCertNotFound(true);
+          } else {
+            throw new Error("Något gick fel.");
+          }
+        })
+        .catch((error) => {
+          userMessage(error.message, "error");
+        });
+    };
+
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const binaryFile = event.target?.result
           ? event.target.result
           : undefined;
-        fetch(`/api/certificates/verify/${id}`, {
-          body: binaryFile,
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/pdf",
-          },
-        })
-          .then((res) => {
-            if (res.status === 200) {
-              setCertValid(true);
-            } else if (res.status === 202) {
-              setCertOutdated(true);
-            } else if (res.status === 404) {
-              setCertNotFound(true);
-            } /* else {
-              throw new Error("Något gick fel.");
-            } */
-          })
-          .catch((error) => {
-            userMessage(error.message, "error");
-          });
+        postCertificate(id, binaryFile);
       };
       reader.readAsArrayBuffer(file);
     }
@@ -198,7 +205,7 @@ export function CertificateVerification({
         >
           <div className={style.boxTitle}>
             <h2>Certifikatet är inte aktuellt längre!</h2>
-            <Error className={style.warnIcon} />
+            <Warning className={style.warnIcon} />
           </div>
           <p>
             Certifikatet har en gång varit giltigt för {individual?.name} men
