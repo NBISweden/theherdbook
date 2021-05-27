@@ -8,9 +8,20 @@ import {
 import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
 
-import { dateFormat, inputVariant, OptionType } from "@app/data_context_global";
+import {
+  dateFormat,
+  inputVariant,
+  Individual,
+  OptionType,
+} from "@app/data_context_global";
 
-export function CertificateForm() {
+export function CertificateForm({
+  style,
+  individual,
+}: {
+  style: any;
+  individual: Individual;
+}) {
   return (
     <>
       <div className={style.form}>
