@@ -4,8 +4,8 @@ Instance specific settings for the herdbook.
 
 import logging
 import os
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
 logging.info("Reading Environment")
 
