@@ -3,13 +3,13 @@ PDF certificate handler
 """
 import datetime
 from pathlib import Path
+import logging
 from io import BytesIO
 from endesive import pdf
 from endesive.pdf import cms
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 import fitz
-import logging
 import pdfrw
 import qrcode
 import utils.settings as settings
@@ -57,7 +57,8 @@ FORM_KEYS = {
     "MormorFärg": "MM_color",
     "Nummer": "number",
     "IntygasAv": "user_id",  # Username
-    "IntygasNummer": "certificate",  # Herd id of rabbit individual (Without herd identifier) G/M
+    # Herd id of rabbit individual (Without herd identifier) G/M
+    "IntygasNummer": "certificate",
     "IntygasDatum": "issue_date",  # Day of signature
     "IntygasPlats": "name",  # Physical id (Only in cert?)
 }
