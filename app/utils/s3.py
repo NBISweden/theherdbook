@@ -2,9 +2,9 @@
 S3 client handler.
 """
 from pathlib import Path
+import logging
 import boto3
 import botocore
-import logging
 import utils.settings as settings
 
 
@@ -13,7 +13,7 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
     Encapsulates the R/W logic from/to a S3 endpoint.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         bucket,
         endpoint,
@@ -23,7 +23,7 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         verify,
         cert,
         private_key,
-    ):
+    ):  # pylint: disable=too-many-arguments
         """
         Constructor for initialising a S3 client.
         """
@@ -66,13 +66,11 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
             config=config,
         )
 
-        print(vars(self))
-
         try:
-            logging.debug("Creating %s bucket" % bucket)
+            logging.debug("Creating %s bucket", str(bucket))
             self.s3_client.create_bucket(Bucket=self.bucket)
         except self.s3_client.exceptions.BucketAlreadyOwnedByYou as ex:
-            logging.debug("Bucket already exists: %s" % ex)
+            logging.debug("Bucket already exists: %s", str(ex))
 
     def get_object(self, bucket_object_name):
         """

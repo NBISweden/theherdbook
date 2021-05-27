@@ -15,7 +15,6 @@ import datetime
 import hashlib
 import uuid
 
-from pathlib import Path
 import requests
 from flask import Flask, jsonify, request, session, make_response
 from flask_caching import Cache
