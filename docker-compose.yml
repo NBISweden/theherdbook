@@ -18,6 +18,8 @@ services:
             dockerfile: .docker/frontend
             cache_from:
               - ghcr.io/nbisweden/herdbook_frontend
+        environment:
+            - NODE_OPTIONS="--max-old-space-size=2048"
         volumes:
             - ./frontend:/home/node/app/
             - /home/node/app/node_modules
