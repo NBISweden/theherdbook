@@ -412,11 +412,11 @@ class Individual(BaseModel):
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
 
-    if type(DATABASE) == PostgresqlDatabase:
+    if isinstance(DATABASE, PostgresqlDatabase):
         digital_certificate = IntegerField(
             sequence="certificates_seq", unique=True, null=True
         )
-    elif type(DATABASE) == SqliteDatabase:
+    elif isinstance(DATABASE, SqliteDatabase):
         digital_certificate = IntegerField(unique=True, null=True)
 
     number = CharField(20)
@@ -1100,8 +1100,8 @@ def init():
     with DATABASE.atomic():
         sh_bootstrap.save()
 
-    ## Create sequence to allow unique ids for digital certificates
-    if type(DATABASE) == PostgresqlDatabase:
+    # Create sequence to allow unique ids for digital certificates
+    if isinstance(DATABASE, PostgresqlDatabase):
         DATABASE.execute_sql(
             """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""
         )
@@ -1250,7 +1250,7 @@ def migrate_4_to_5():
             ).execute()
             return
 
-        if type(DATABASE_MIGRATOR) == PostgresqlMigrator:
+        if isinstance(DATABASE_MIGRATOR, PostgresqlMigrator):
             sequence = {"sequence": "certificates_seq"}
             DATABASE.execute_sql(
                 """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""

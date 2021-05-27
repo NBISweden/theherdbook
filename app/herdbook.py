@@ -15,8 +15,11 @@ import datetime
 import hashlib
 import uuid
 
+<<<<<<< HEAD
 import apscheduler.schedulers.background
 from pathlib import Path
+=======
+>>>>>>> Try to make python linters happy
 import requests
 from flask import Flask, jsonify, request, session, make_response
 from flask_caching import Cache
@@ -510,7 +513,7 @@ def testbreed():
     return {"offspringCOI": formatted_offspring_coi}
 
 
-d@APP.route("/api/certificates/update/<i_number>", methods=["PATCH"])
+@APP.route("/api/certificates/update/<i_number>", methods=["PATCH"])
 @login_required
 def update_certificate(i_number):
     """
