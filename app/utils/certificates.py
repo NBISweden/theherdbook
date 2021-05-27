@@ -2,18 +2,19 @@
 PDF certificate handler
 """
 import datetime
-from pathlib import Path
 import logging
 from io import BytesIO
-from endesive import pdf
-from endesive.pdf import cms
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from pathlib import Path
+
 import fitz
 import pdfrw
 import qrcode
 import utils.settings as settings
 
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.x509 import load_pem_x509_certificate
+from endesive import pdf
+from endesive.pdf import cms
 
 FORM_KEYS = {
     "IdRas": "genebank_id",

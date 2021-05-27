@@ -1,8 +1,9 @@
 """
 S3 client handler.
 """
-from pathlib import Path
 import logging
+from pathlib import Path
+
 import boto3
 import botocore
 import utils.settings as settings
