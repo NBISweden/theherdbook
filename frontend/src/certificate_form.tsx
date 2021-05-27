@@ -19,9 +19,11 @@ import {
 export function CertificateForm({
   style,
   individual,
+  onUpdateIndividual,
 }: {
   style: any;
   individual: Individual;
+  onUpdateIndividual: any;
 }) {
   const { colors } = useDataContext();
   const colorOptions: OptionType[] = React.useMemo(() => {
@@ -49,6 +51,8 @@ export function CertificateForm({
   ]; //should be boolean but doesn't work together with the OptionType
   // also decide how this should be stored in the backend
 
+  const canManage = true; // only for development reasons. To be removed.
+
   return (
     <>
       <div className={style.form}>
@@ -67,7 +71,7 @@ export function CertificateForm({
                   variant={inputVariant}
                   value={individual.number ?? ""}
                   onChange={(event) => {
-                    updateIndividual("number", event.currentTarget.value);
+                    onUpdateIndividual("number", event.currentTarget.value);
                   }}
                 />
               </div>
@@ -79,7 +83,7 @@ export function CertificateForm({
                   variant={inputVariant}
                   value={individual.name ?? ""}
                   onChange={(event) => {
-                    updateIndividual("name", event.currentTarget.value);
+                    onUpdateIndividual("name", event.currentTarget.value);
                   }}
                 />
                 <KeyboardDatePicker
@@ -95,7 +99,7 @@ export function CertificateForm({
                     shrink: true,
                   }}
                   onChange={(date, value) => {
-                    value && updateIndividual("birth_date", value);
+                    value && onUpdateIndividual("birth_date", value);
                   }}
                 />
               </div>
@@ -119,7 +123,7 @@ export function CertificateForm({
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateIndividual("sex", newValue?.value ?? "");
+                    onUpdateIndividual("sex", newValue?.value ?? "");
                   }}
                 />
                 <TextField
@@ -130,7 +134,7 @@ export function CertificateForm({
                   value={individual.litter ?? null}
                   type="number"
                   onChange={(event) => {
-                    updateIndividual("litter", +event.currentTarget.value);
+                    onUpdateIndividual("litter", +event.currentTarget.value);
                   }}
                 />
               </div>
@@ -154,7 +158,7 @@ export function CertificateForm({
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
-                    updateIndividual("color", newValue?.value ?? "");
+                    onUpdateIndividual("color", newValue?.value ?? "");
                   }}
                 />
                 <TextField
@@ -166,7 +170,7 @@ export function CertificateForm({
                   rows={1}
                   value={individual.hair_notes ?? ""}
                   onChange={(event) => {
-                    updateIndividual("hair_notes", event.currentTarget.value);
+                    onUpdateIndividual("hair_notes", event.currentTarget.value);
                   }}
                 />
               </div>
@@ -178,7 +182,10 @@ export function CertificateForm({
                   variant={inputVariant}
                   value={individual.belly_color ?? ""}
                   onChange={(event) => {
-                    updateIndividual("belly_color", event.currentTarget.value);
+                    onUpdateIndividual(
+                      "belly_color",
+                      event.currentTarget.value
+                    );
                   }}
                 />
                 <TextField
@@ -188,7 +195,7 @@ export function CertificateForm({
                   variant={inputVariant}
                   value={individual.eye_color ?? ""}
                   onChange={(event) => {
-                    updateIndividual("eye_color", event.currentTarget.value);
+                    onUpdateIndividual("eye_color", event.currentTarget.value);
                   }}
                 />
               </div>
@@ -200,7 +207,7 @@ export function CertificateForm({
                   variant={inputVariant}
                   value={individual.claw_color ?? ""}
                   onChange={(event) => {
-                    updateIndividual("claw_color", event.currentTarget.value);
+                    onUpdateIndividual("claw_color", event.currentTarget.value);
                   }}
                 />
                 <Autocomplete
@@ -227,7 +234,7 @@ export function CertificateForm({
                 rows={4}
                 value={individual.notes ?? ""}
                 onChange={(event) => {
-                  updateIndividual("notes", event.currentTarget.value);
+                  onUpdateIndividual("notes", event.currentTarget.value);
                 }}
               />
             </div>

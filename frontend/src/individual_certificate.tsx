@@ -186,7 +186,7 @@ export function IndividualCertificate({ id }: { id: string }) {
    * @param field field name to update
    * @param value the new value of the field
    */
-  const updateIndividual = <T extends keyof Individual>(
+  const handleUpdateIndividual = <T extends keyof Individual>(
     field: T,
     value: Individual[T]
   ) => {
@@ -304,7 +304,11 @@ export function IndividualCertificate({ id }: { id: string }) {
         </div>
       ) : individual && showForm ? (
         <>
-          <CertificateForm style={style} />
+          <CertificateForm
+            style={style}
+            individual={individual}
+            onUpdateIndividual={handleUpdateIndividual}
+          />
           <div className={style.form}>
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
               <div className={style.flexRowOrColumn}>
