@@ -4,7 +4,6 @@ Database handler for 'the herdbook'.
 """
 # pylint: disable=too-many-lines
 
-from enum import unique
 import json
 import logging
 import re

@@ -8,11 +8,11 @@ database.
 
 import base64
 import binascii
+import datetime
+import hashlib
 import logging
 import sys
 import time
-import datetime
-import hashlib
 import uuid
 
 <<<<<<< HEAD
@@ -21,7 +21,7 @@ from pathlib import Path
 =======
 >>>>>>> Try to make python linters happy
 import requests
-from flask import Flask, jsonify, request, session, make_response
+from flask import Flask, jsonify, make_response, request, session
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
