@@ -73,5 +73,3 @@ services:
             timeout: 20s
             retries: 3
         image: minio/minio:RELEASE.2021-04-18T19-26-29Z
-        ports:
-            - "9000:9000"
