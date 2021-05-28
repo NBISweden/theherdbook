@@ -15,11 +15,7 @@ import sys
 import time
 import uuid
 
-<<<<<<< HEAD
 import apscheduler.schedulers.background
-from pathlib import Path
-=======
->>>>>>> Try to make python linters happy
 import requests
 from flask import Flask, jsonify, make_response, request, session
 from flask_caching import Cache
