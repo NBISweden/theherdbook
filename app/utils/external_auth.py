@@ -3,7 +3,9 @@
 Provides helper function needed for external authentication.
 """
 
+import base64
 import configparser
+import json
 import os
 import time
 import typing
@@ -15,6 +17,7 @@ CONFIGFILE = os.environ.get("AUTHCONFIGFILE", "/config/auth.ini")
 
 _active: typing.List[str] = []  # pylint: disable = invalid-name
 _autocreate: typing.List[str] = []  # pylint: disable = invalid-name
+_config: typing.Dict = {}
 
 
 def available_methods():
@@ -110,23 +113,77 @@ def setup_google(app, config):
     """
     Setup google authentication.
     """
+
+    hdparam = {}
+    scopes = [
+        "openid",
+    ]
+
+    if config["google"].get("autocreate", None):
+        scopes.append("https://www.googleapis.com/auth/userinfo.email")
+
+    if config["google"].get("domain", None):
+        hdparam["hosted_domain"] = config["google"]["domain"]
+        _config["googledomain"] = config["google"]["domain"]
+
+    if config["google"].get("herdattribute", None):
+        _config["googleherd"] = config["google"]["herdattribute"]
+        scopes.append("https://www.googleapis.com/auth/admin.directory.user.readonly")
+
     danceengine = flask_dance.contrib.google
     blueprint = danceengine.make_google_blueprint(
         client_id=config["google"]["key"],
         client_secret=config["google"]["secret"],
         login_url="",
         redirect_url="/api/login/google",
-        scope=["openid", "https://www.googleapis.com/auth/userinfo.email"],
+        scope=scopes,
+        **hdparam
     )
 
     app.register_blueprint(blueprint, url_prefix="/api/login/google/back")
     _active.append("google")
 
 
+def google_idtoken():
+    """
+    Extracts the idtoken from flask-dance and returns the payload.
+    We rely on flask-dance for verifying the signature.
+    """
+    if not flask_dance.contrib.google.google.token:
+        return None
+
+    return json.loads(
+        base64.decodebytes(
+            bytes(
+                flask_dance.contrib.google.google.token["id_token"].split(".")[1],
+                "ASCII",
+            )
+            + b"=="  # Add padding, extra padding is harmless, missing blows up
+        )
+    )
+
+
 def google_authorized():
     """
     Returns whatever we have authenticated/authorized with google.
     """
+
+    idtoken = google_idtoken()
+    if not idtoken:
+        return False
+
+    if "googleherd" in _config:
+        # Do we have an attribute specified for herd?
+        userinfo = flask_dance.contrib.google.google.get(
+            "https://admin.googleapis.com/admin/directory/v1/users/%s?projection=full&viewType=domain_public"
+            % idtoken["sub"]
+        )
+        print(userinfo.text)
+
+    if "googledomain" in _config:
+        if idtoken["hd"] != _config["googledomain"]:
+            return None
+
     return flask_dance.contrib.google.google.authorized
 
 
@@ -134,10 +191,13 @@ def google_persistent():
     """
     Return the persistent identifier for google.
     """
-    userr = flask_dance.contrib.google.google.get("/oauth2/v2/userinfo")
-    if not userr.ok or len(userr.json()) == 0:
+
+    idtoken = google_idtoken()
+
+    if not idtoken:
         return None
-    return userr.json()["id"]
+
+    return idtoken["sub"]
 
 
 def google_details():
@@ -145,18 +205,19 @@ def google_details():
     Return the e-mail
     """
 
-    user = flask_dance.contrib.google.google.get("/oauth2/v2/userinfo")
-    if not user.ok or len(user.json()) == 0:
-        return None
+    idtoken = google_idtoken()
 
-    userjson = user.json()
+    if not idtoken:
+        return None
 
     # Only care about verified addresses
-    if "verified_email" not in userjson or not userjson["verified_email"]:
+    if not idtoken.get("email_verified", False):
         return None
 
-    if "email" in userjson:
-        return {"email": userjson["email"], "name": userjson["name"]}
+    if "email" in idtoken:
+        return {
+            "email": idtoken["email"],
+        }
 
     return None
 
