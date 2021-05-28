@@ -19,10 +19,12 @@ import {
 export function CertificateForm({
   style,
   individual,
+  canManage,
   onUpdateIndividual,
 }: {
   style: any;
   individual: Individual;
+  canManage: boolean;
   onUpdateIndividual: any;
 }) {
   const { colors } = useDataContext();
@@ -50,8 +52,6 @@ export function CertificateForm({
     { value: "yes", label: "Ja" },
   ]; //should be boolean but doesn't work together with the OptionType
   // also decide how this should be stored in the backend
-
-  const canManage = true; // only for development reasons. To be removed.
 
   return (
     <>

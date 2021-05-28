@@ -307,6 +307,7 @@ export function IndividualCertificate({ id }: { id: string }) {
           <CertificateForm
             style={style}
             individual={individual}
+            canManage={canManage}
             onUpdateIndividual={handleUpdateIndividual}
           />
           <div className={style.paneControls}>
