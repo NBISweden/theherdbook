@@ -10,7 +10,6 @@ import fitz
 import pdfrw
 import qrcode
 import utils.settings as settings
-
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 from endesive import pdf
