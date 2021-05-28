@@ -265,6 +265,7 @@ export function IndividualCertificate({ id }: { id: string }) {
         </div>
       ) : individual && showForm ? (
         <>
+          <h1>Fyll i uppgifterna för certifikatet</h1>
           <CertificateForm
             style={style}
             individual={individual}

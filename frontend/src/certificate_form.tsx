@@ -59,7 +59,6 @@ export function CertificateForm({
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
-              <h1>Fyll i uppgifterna för certifikatet</h1>
               <div className={style.adminPane}>
                 <div className={style.paneTitle}>
                   Kan endast ändras av genbanksansvarig
