@@ -256,31 +256,6 @@ export function IndividualCertificate({ id }: { id: string }) {
     setNumPages(numPages);
   }
 
-  const colorOptions: OptionType[] = React.useMemo(() => {
-    if (
-      individual &&
-      colors &&
-      Object.keys(colors).includes(individual.genebank)
-    ) {
-      return colors[individual.genebank].map((c) => {
-        return { value: c.name, label: `${c.id} - ${c.name}` };
-      });
-    }
-    return [];
-  }, [colors, individual]);
-
-  const sexOptions = [
-    { value: "female", label: "Hona" },
-    { value: "male", label: "Hane" },
-    { value: "unknown", label: "Okänd" },
-  ];
-
-  const photoOptions = [
-    { value: "no", label: "Nej" },
-    { value: "yes", label: "Ja" },
-  ]; //should be boolean but doesn't work together with the OptionType
-  // also decide how this should be stored in the backend
-
   return (
     <>
       {!individual ? (
