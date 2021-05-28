@@ -126,7 +126,7 @@ export function IndividualCertificate({ id }: { id: string }) {
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
   const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank); // does this mean that only a genebank manager can manage? In that case it's used wrong here.
+    return user?.canEdit(individual?.genebank); // right now, only a genebank manager can issue certs. should be changed (in another branch/PR)
   }, [user, individual]);
   const style = useStyles();
 
