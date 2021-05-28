@@ -7,31 +7,17 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import {
   Button,
   CircularProgress,
-  FormControlLabel,
   makeStyles,
   TextField,
-  Typography,
 } from "@material-ui/core";
-import {
-  MuiPickersUtilsProvider,
-  KeyboardDatePicker,
-} from "@material-ui/pickers";
-import { Autocomplete } from "@material-ui/lab";
-import DateFnsUtils from "@date-io/date-fns";
 
 import { IndividualView } from "@app/individual_view";
 import { CertificateForm } from "@app/certificate_form";
-import { get, patch, post } from "@app/communication";
+import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
-import {
-  dateFormat,
-  Individual,
-  inputVariant,
-  OptionType,
-  ServerMessage,
-} from "@app/data_context_global";
+import { Individual, inputVariant, OptionType } from "@app/data_context_global";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
