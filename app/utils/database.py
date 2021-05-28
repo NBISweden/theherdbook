@@ -1101,9 +1101,9 @@ def init():
 
     # Create sequence to allow unique ids for digital certificates
     if isinstance(DATABASE, PostgresqlDatabase):
-        # pylint: disable=E501
+        # pylint: disable=C0301
         DATABASE.execute_sql(
-            """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""
+            """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""  # noqa: E501
         )
 
 
@@ -1252,9 +1252,9 @@ def migrate_4_to_5():
 
         if isinstance(DATABASE_MIGRATOR, PostgresqlMigrator):
             sequence = {"sequence": "certificates_seq"}
-            # pylint: disable=E501
+            # pylint: disable=C0301
             DATABASE.execute_sql(
-                """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""
+                """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""  # noqa: E501
             )
         cols = [x.name for x in DATABASE.get_columns("individual")]
 

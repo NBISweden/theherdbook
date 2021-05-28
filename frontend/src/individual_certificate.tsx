@@ -274,6 +274,7 @@ export function IndividualCertificate({
   };
 
   // Returns the updated certificate.
+  // jscpd:ignore-start
   const updateCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/update/${id}`, {
       body: JSON.stringify(content),
@@ -310,6 +311,7 @@ export function IndividualCertificate({
         }
       });
   };
+  // jscpd:ignore-end
 
   // This function is necessary to make the previw work.
   // Built into the library.
