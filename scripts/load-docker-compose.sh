@@ -13,6 +13,7 @@
 #	          -M herd-registry-mellerud.xlsx
 #
 
+# shellcheck disable=SC2266
 if	docker-compose -f ../dc-db-load.yml ps |
 	[[ $(grep -c -E '^herdbook-(db|main-load-db).*\<Up\>') -ne 2 ]]
 then

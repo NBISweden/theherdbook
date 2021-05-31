@@ -127,7 +127,8 @@ update_data <- function(genebank_id) {
   if (is.null(Pedi)) {
       return (NULL)
   }
-
+  #Save Pedi to reduce amount of request to db
+  assign(paste0("PEDI_",genebank_id), Pedi, envir = .GlobalEnv)
   #Calculate Inbreeding and name it after genebank_id
   assign(paste0("IDB_",genebank_id),data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE),envir = .GlobalEnv)
   #Get current active population
@@ -240,6 +241,46 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
     data.frame(number=names(get(paste0("MK_",genebank_id))), MK=get(paste0("MK_",genebank_id)), row.names=NULL)
   )
   # jscpd:ignore-end
+}
+
+#* @post /testbreed/
+testbreed <- function(req, update_data="FALSE"){
+  if(update_data){
+    MOD_change<-get_modifications_digest(genebank_id)
+    if(get(paste0("MOD_",genebank_id))!= MOD_change)
+    {
+      assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
+      update_data(genebank_id)
+    }
+  }
+  body <- req$argsBody
+  Pedi <- get(paste0("PEDI_",body$genebankId))
+  if (is.null(Pedi)) {
+      return (NULL)
+  }
+
+  if(!"female" %in% names(body)) {
+    mother_id <- paste(body$femaleGF, '+', body$femaleGM)
+    unregistered_female <- c(mother_id, body$femaleGF, body$femaleGM, NaN, NaN, NaN, TRUE, TRUE)
+    Pedi <- rbind(Pedi, unregistered_female)
+  } else {
+    mother_id <- body$female
+  }
+  if(!"male" %in% names(body)) {
+    father_id <- paste(body$maleGF, '+', body$maleGM)
+    unregistered_male <- c(father_id, body$maleGF, body$maleGM, NaN, NaN, NaN, TRUE, TRUE)
+    Pedi <- rbind(Pedi, unregistered_male)
+  } else {
+    father_id <- body$male
+  }
+
+  offspring_id <- paste(father_id, '+', mother_id)
+  potentialOffspring <- c(offspring_id, father_id, mother_id, NaN, NaN, NaN, TRUE, TRUE)
+  Pedi <- rbind(Pedi, potentialOffspring)
+  inbreed_calculation <- data.frame(number=Pedi[,1], Inbr=pedigree::calcInbreeding(Pedi[,1:3]), stringsAsFactors = FALSE)
+  calculated_coi <- inbreed_calculation[inbreed_calculation$number == offspring_id,2]
+
+  return(list(calculated_coi=calculated_coi))
 }
 
 #RUN stuff and preload

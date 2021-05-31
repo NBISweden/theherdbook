@@ -7,6 +7,7 @@ import {
   Individual,
   LimitedIndividual,
 } from "@app/data_context_global";
+import { testBreedIndividuals } from '@app/testbreed_form';
 
 type VisColor = {
   border: string;
@@ -21,7 +22,7 @@ export type Node = {
   shape: string;
   color: VisColor;
 };
-export type Edge = { id: string; from: string; to: string };
+export type Edge = { id: string; from: string; to: string, color?: string, width?: number, selectionWidth?: number };
 export type Pedigree = { nodes: Node[]; edges: Edge[] };
 
 /**
@@ -41,6 +42,23 @@ export function unique(xs: any[], key: string | undefined = undefined): any[] {
     return !duplicate;
   });
 }
+
+// TO DO: docstring and likely replace function unique in all pedigree calculations with uniqueAndCommonNodes
+export function uniqueAndCommonNodes(xs: any[], key: string | undefined = undefined): [any[], Set<any>]{
+  const seen = new Set()
+  let commonNodes = new Set<any>()
+  let uniqueNodes: any[]
+  uniqueNodes = xs.filter(x => {
+    const duplicate = key ? seen.has(x[key]) : seen.has(x)
+    key ? seen.add(x[key]) : seen.add(x)
+    if (duplicate) {
+      key ? commonNodes.add(x[key]) : commonNodes.add(x)
+    }
+    return !duplicate
+  })
+  return [uniqueNodes, commonNodes]
+}
+
 
 const indexes = new WeakMap<Genebank[], Record<string, Individual>>();
 
@@ -280,4 +298,169 @@ export function herdPedigree(
   edges = unique(edges, "id");
 
   return { nodes: nodes, edges: edges };
+}
+
+/**
+ * Return the edges that connect ancestor id to seeked descendant id
+ * @param edges the edges that make up the connections between the nodes in the pedigree
+ * @param ancestorId the ancestor id
+ * @param seekedDescendantId the child id
+ */
+export function getConnectingEdges(edges: Edge[], ancestorId:string, seekedDescendantId:string): Set<string> {
+  const getChildren = (edges: Edge[], parentId: string, seekedDescendantId: string) => {
+    let connectingEdges = new Set<string>()
+    let seekedFound: boolean = false
+    edges.forEach(edge => {
+      // Current node is a child to parentNode
+      if (edge.to == parentId) {
+        // Current node is the seeked node, add to connectingEdges
+        if (edge.from == seekedDescendantId) {
+          connectingEdges.add(edge.id)
+          seekedFound = true
+          return
+        } else {
+          let res = getChildren(edges, edge.from, seekedDescendantId)
+          // Descendant node connected to seeked node, add current node
+          if (res.seekedFound) {
+            connectingEdges.add(edge.id)
+            connectingEdges = new Set([...connectingEdges, ...res.connectingEdges])
+            seekedFound = true
+            return
+          }
+      }
+        }
+      }
+    )
+    return {connectingEdges: connectingEdges, seekedFound: seekedFound}
+  }
+
+  const finalRes = getChildren(edges, ancestorId, seekedDescendantId)
+  let finalConnectingEdges = finalRes.connectingEdges
+  return finalConnectingEdges
+}
+
+function ancestorsPedigree(genebanks: Genebank[], parents: LimitedIndividual[], offspringId: string, generations: number) {
+  let nodes: Node[] = []
+  let edges: Edge[] = []
+  parents.forEach((parent: LimitedIndividual) => {
+    edges.push({id: `${offspringId}-${parent.number}`,
+                                  from: offspringId,
+                                  to: parent.number})
+    //FEEDBACK, should it be optional to use calcPedigreeDan as well?
+    const pedigree = calcPedigree(genebanks, parent.number, generations)
+
+    nodes = [...nodes, ...pedigree.nodes]
+    edges = [...edges, ...pedigree.edges]
+
+  })
+  return {nodes, edges}
+}
+
+/**
+ * Returns the combined pedigree of the `chosenFemaleAncestors` and `chosenMaleAncestors` 
+ * from the data in `genebanks` that user wants to test breed. The potential new offspring
+ * and possible not registered parents, i.e, children of chosen grandparents, are added as
+ * node(s) in the pedigree
+ * @param genebanks the genebank data to use for pedigree generation
+ * @param chosenFemaleAncestors chosen mother or grandparents of not yet registered mother
+ * @param chosenMaleAncestors chosen father or grandparents of not yet registered father
+ * @param femaleGrandParents if a mother or grandparents are chosen
+ * @param maleGrandParents if a father of grandparents are chosen
+ * @param generations the number of generation to plot where the potential offspring is
+ * considered generation 0
+ * @returns 
+ */
+export function testBreedPedigree(genebanks: Genebank[], chosenAncestors: testBreedIndividuals, generations: number = 1000, showCommonAncestors: boolean): {pedigree: Pedigree, commonAncestors: boolean} {
+    let nodes: Node[] = []
+    let edges: Edge[] = []
+    
+    const pseudoNode = (id: string, label: string, shape: string, backgroundcolor: string) => {
+      return {id: id,
+      x: 0,
+      label: label,
+      shape: shape,
+      color:  {
+        border: 'darkgrey',
+        background: backgroundcolor,
+        highlight: {
+          border: 'grey',
+          background: '#b5aeab'
+        },
+        hover: {
+          border: 'black',
+          background: '#b5aeab'
+        }
+      }
+    }
+    }
+
+  let offspringNode = pseudoNode('13371337', 'Potentiell avkomma', 'triangle', '#e5dbd7')
+  nodes.push(offspringNode)
+
+  let maleAncestorsPedigree
+  let femaleAncestorsPedigree
+
+  //malePedigree
+  if(chosenAncestors['male']) {
+    maleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['male']], offspringNode.id, generations -1)
+  } else {
+    let offspringFather = pseudoNode('1337133711', 'Ej registrerad\nfar', 'box', '#d4ecfc')
+    nodes.push(offspringFather)
+    edges.push({id: `${offspringNode.id}-${offspringFather.id}`,
+                                    from: offspringNode.id,
+                                    to: offspringFather.id})
+    
+    maleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['maleGF'], chosenAncestors['maleGM']], offspringFather.id, generations -2)
+
+  }
+  //femalePedigree
+  if(chosenAncestors['female']) {
+    femaleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['female']], offspringNode.id, generations -1)
+  } else {
+    let offspringMother = pseudoNode('1337133700', 'Ej registrerad\nmor', 'oval', '#fce5e9')
+    nodes.push(offspringMother)
+    edges.push({id: `${offspringNode.id}-${offspringMother.id}`,
+                                    from: offspringNode.id,
+                                    to: offspringMother.id})
+    femaleAncestorsPedigree = ancestorsPedigree(genebanks, [chosenAncestors['femaleGF'], chosenAncestors['femaleGM']], offspringMother.id, generations -2)
+  }
+  nodes = [...nodes, ...femaleAncestorsPedigree.nodes, ...maleAncestorsPedigree.nodes]
+  edges = [...edges, ...femaleAncestorsPedigree.edges, ...maleAncestorsPedigree.edges]
+
+  // get the unique nodes and the ones that were duplicate
+  const [uniqueNodes, commonNodes] = uniqueAndCommonNodes(nodes, 'id')
+
+  // remove duplicate edges
+  const [uniqueEdges] = uniqueAndCommonNodes(edges, 'id')
+  
+  if (showCommonAncestors) {
+  // color nodes that are common ancestors
+  uniqueNodes.forEach(x => {
+    if (commonNodes.has(x['id'])) {
+      x.color.border = '#f24d0c'
+    }
+  })
+
+  // TODO, make this less ugly
+  // for each common ancestors, save edges from offspring to this ancestor
+  let edgesToColor = new Set()
+  commonNodes.forEach((nodeId: string) => {
+    let ancestorEdges = getConnectingEdges(uniqueEdges, nodeId, offspringNode.id)
+    edgesToColor = new Set([...edgesToColor, ...ancestorEdges])
+  })
+
+  // color the saved edges
+  uniqueEdges.forEach(x => {
+    if (edgesToColor.has(x['id'])) {
+      x.color = '#f24d0c'
+      x.selectionWidth = 2
+      x.width = 3
+      x.dashes = true
+  }
+  })
+}
+
+
+  return {pedigree: {nodes: uniqueNodes, edges: uniqueEdges}, commonAncestors: commonNodes.size > 0}
+
 }
