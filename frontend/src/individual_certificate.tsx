@@ -449,12 +449,13 @@ export function IndividualCertificate({
               target="_blank"
               href={certificateUrl}
               download={individual.number}
+              rel="noopener noreferrer"
             >
               <Button variant="contained" color="primary">
                 {"Ladda ner"}
               </Button>
             </a>
-            <a target="_blank" href={certificateUrl}>
+            <a target="_blank" href={certificateUrl} rel="noopener noreferrer">
               <Button variant="contained" color="primary">
                 {"Öppna i ny flik"}
               </Button>
