@@ -78,6 +78,18 @@ export function IndividualView({ id }: { id: string }) {
   );
   const { userMessage, popup } = useMessageContext();
 
+  // returns false if the individual has a paper cert (i.e. a cert number below 100000) or no cert at all (i.e. cert number null)
+  const individualHasDigitalCert: boolean = React.useMemo(() => {
+    if (
+      parseInt(
+        individual?.certificate ? individual.certificate : "99999",
+        10
+      ) >= 100000
+    ) {
+      return true;
+    } else return false;
+  }, [individual]);
+
   const children: Individual[] = React.useMemo(() => {
     if (
       !individual ||
@@ -204,7 +216,7 @@ export function IndividualView({ id }: { id: string }) {
                   Redigera individ
                 </Button>
               )}
-              {user?.canEdit(id) && (
+              {user?.canEdit(id) && !individualHasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -216,7 +228,7 @@ export function IndividualView({ id }: { id: string }) {
                   Skapa nytt certifikat
                 </Button>
               )}
-              {user?.canEdit(id) && (
+              {user?.canEdit(id) && individualHasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -228,7 +240,7 @@ export function IndividualView({ id }: { id: string }) {
                   Uppdatera certifikat
                 </Button>
               )}
-              {user?.canEdit(id) && (
+              {user?.canEdit(id) && individualHasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
