@@ -446,7 +446,6 @@ export function IndividualCertificate({
           )}
           <div className={style.paneControls}>
             <a
-              target="_blank"
               href={certificateUrl}
               download={individual.number}
               rel="noopener noreferrer"
