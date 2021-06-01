@@ -76,19 +76,23 @@ export function IndividualView({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
+  const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
 
-  // returns false if the individual has a paper cert (i.e. a cert number below 100000) or no cert at all (i.e. cert number null)
-  const individualHasDigitalCert: boolean = React.useMemo(() => {
-    if (
-      parseInt(
-        individual?.certificate ? individual.certificate : "99999",
-        10
-      ) >= 100000
-    ) {
-      return true;
-    } else return false;
-  }, [individual]);
+  //checks if the individual has a certificate, and if yes whether it's a paper or digital one
+  const getCertificateType = (individual: Individual) => {
+    if (individual.certificate === null) {
+      setHasPaperCert(false);
+      setHasDigitalCert(false);
+    } else if (parseInt(individual.certificate, 10) < 100000) {
+      setHasPaperCert(true);
+      setHasDigitalCert(false);
+    } else if (parseInt(individual.certificate, 10) >= 100000) {
+      setHasPaperCert(false);
+      setHasDigitalCert(true);
+    }
+  };
 
   const children: Individual[] = React.useMemo(() => {
     if (
@@ -126,13 +130,25 @@ export function IndividualView({ id }: { id: string }) {
    */
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
-      (data: Individual) => setIndividual(data),
+      (data: Individual) => {
+        setIndividual(data);
+      },
       (error) => {
         console.error(error);
         userMessage(error, "error");
       }
     );
   }, [id]);
+
+  //show the right buttons
+  React.useEffect(() => {
+    if (individual) {
+      getCertificateType(individual);
+    } else {
+      setHasPaperCert(false);
+      setHasDigitalCert(false);
+    }
+  }, [individual]);
 
   return (
     <>
@@ -216,7 +232,7 @@ export function IndividualView({ id }: { id: string }) {
                   Redigera individ
                 </Button>
               )}
-              {user?.canEdit(id) && !individualHasDigitalCert && (
+              {user?.canEdit(id) && !hasDigitalCert && !hasPaperCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -228,7 +244,7 @@ export function IndividualView({ id }: { id: string }) {
                   Skapa nytt certifikat
                 </Button>
               )}
-              {user?.canEdit(id) && individualHasDigitalCert && (
+              {user?.canEdit(id) && hasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -240,7 +256,7 @@ export function IndividualView({ id }: { id: string }) {
                   Uppdatera certifikat
                 </Button>
               )}
-              {user?.canEdit(id) && individualHasDigitalCert && (
+              {user?.canEdit(id) && hasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
