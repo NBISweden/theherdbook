@@ -108,10 +108,13 @@ export function CertificateVerification({
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const binaryFile = event.target?.result
-          ? event.target.result
-          : undefined;
-        postCertificate(id, binaryFile);
+        let binaryFile = undefined;
+        if (event.target?.result) {
+          binaryFile = event.target.result;
+          postCertificate(id, binaryFile);
+        } else {
+          userMessage("Filen kunde inte läsas.", "error");
+        }
       };
       reader.readAsArrayBuffer(file);
     }
