@@ -20,6 +20,7 @@ import { IndividualPedigree } from "@app/individual_pedigree";
 import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
+import { CertificateVerification } from "./certificate_verification";
 
 const useStyles = makeStyles({
   body: {
@@ -75,7 +76,23 @@ export function IndividualView({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
+  const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
+
+  //checks if the individual has a certificate, and if yes whether it's a paper or digital one
+  const getCertificateType = (individual: Individual) => {
+    if (individual.certificate === null) {
+      setHasPaperCert(false);
+      setHasDigitalCert(false);
+    } else if (parseInt(individual.certificate, 10) < 100000) {
+      setHasPaperCert(true);
+      setHasDigitalCert(false);
+    } else if (parseInt(individual.certificate, 10) >= 100000) {
+      setHasPaperCert(false);
+      setHasDigitalCert(true);
+    }
+  };
 
   const children: Individual[] = React.useMemo(() => {
     if (
@@ -113,13 +130,25 @@ export function IndividualView({ id }: { id: string }) {
    */
   React.useEffect(() => {
     get(`/api/individual/${id}`).then(
-      (data: Individual) => setIndividual(data),
+      (data: Individual) => {
+        setIndividual(data);
+      },
       (error) => {
         console.error(error);
         userMessage(error, "error");
       }
     );
   }, [id]);
+
+  //show the right buttons
+  React.useEffect(() => {
+    if (individual) {
+      getCertificateType(individual);
+    } else {
+      setHasPaperCert(false);
+      setHasDigitalCert(false);
+    }
+  }, [individual]);
 
   return (
     <>
@@ -203,7 +232,7 @@ export function IndividualView({ id }: { id: string }) {
                   Redigera individ
                 </Button>
               )}
-              {user?.canEdit(id) && (
+              {user?.canEdit(id) && !hasDigitalCert && !hasPaperCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -215,7 +244,7 @@ export function IndividualView({ id }: { id: string }) {
                   Skapa nytt certifikat
                 </Button>
               )}
-              {user?.canEdit(id) && (
+              {user?.canEdit(id) && hasDigitalCert && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -225,6 +254,23 @@ export function IndividualView({ id }: { id: string }) {
                   }
                 >
                   Uppdatera certifikat
+                </Button>
+              )}
+              {user?.canEdit(id) && hasDigitalCert && (
+                <Button
+                  className={style.editButton}
+                  variant="contained"
+                  color="primary"
+                  onClick={() =>
+                    popup(
+                      <CertificateVerification
+                        id={id}
+                        individual={individual}
+                      />
+                    )
+                  }
+                >
+                  Verifiera certifikat
                 </Button>
               )}
               <div>
