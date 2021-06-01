@@ -33,6 +33,7 @@ const useStyles = makeStyles({
   },
   responseBox: {
     width: "100%",
+    maxWidth: "65em",
     padding: "1em",
     margin: "2em 0",
   },
@@ -204,18 +205,21 @@ export function CertificateVerification({
           className={style.responseBox}
         >
           <div className={style.boxTitle}>
-            <h2>Certifikatet är inte aktuellt längre!</h2>
+            <h2>Certifikatet matchar inte {individual?.name}!</h2>
             <Warning className={style.warnIcon} />
           </div>
           <p>
-            Certifikatet har en gång varit giltigt för {individual?.name} men
-            har uppdaterats av den (tidigare) ägaren eller genbanksansvarig. Din
-            version är inte giltig längre.
+            Dokumentet du laddat upp är ett giltigt certifikat men är hör
+            antingen till en annan kanin eller är en föråldrad version. I så
+            fall kan certifikatet ha uppdaterats av den (tidigare) ägaren eller
+            genbanksansvarig.
           </p>
-          <p>Kontakta genbanksansvarig för mer information.</p>
           <p>
-            Du kan även kolla på det aktuella certifikatet och jämföra
-            uppgifterna.
+            Kontrollera att du laddat upp rätt fil eller kontakta
+            genbanksansvarig för mer information.
+          </p>
+          <p>
+            Du kan även se det aktuella certifikatet och jämföra uppgifterna.
           </p>
           <Button
             variant="outlined"
@@ -239,10 +243,7 @@ export function CertificateVerification({
             <h2>Inget giltigt certifikat!</h2>
             <Cancel className={style.failIcon} />
           </div>
-          <p>
-            Dokumentet du laddade upp är inget giltigt certifikat eller matchar
-            inte {individual?.name}.
-          </p>
+          <p>Dokumentet du laddade upp är inget giltigt certifikat.</p>
           <p>Kontrollera att du laddat upp rätt fil.</p>
         </Box>
       ) : (
@@ -261,18 +262,6 @@ export function CertificateVerification({
       ) : (
         <div></div>
       )}
-      <Document
-        file={previewUrl}
-        onLoadSuccess={onDocumentLoadSuccess}
-        renderAnnotationLayer={true}
-        loading={<CircularProgress />}
-      >
-        <Page
-          pageNumber={pageNumber}
-          className={style.preview}
-          width={previewWidth}
-        />
-      </Document>
     </>
   );
 }
