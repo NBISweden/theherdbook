@@ -69,7 +69,7 @@ for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 			csvname=${name%.xlsx}.csv
 
 			# Convert to CSV if CSV is missing or old
-			# shellcheck disable=SC2039
+			# shellcheck disable=SC2039,SC3013
 			if [ ! -s "$csvname" ] || [ ! -e "$csvname" ] || [ "$csvname" -ot "$name" ]
 			then
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2

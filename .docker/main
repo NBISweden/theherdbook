@@ -5,11 +5,10 @@ RUN mkdir -p /code
 COPY app/ /code/
 WORKDIR /code
 
-RUN pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
-
 RUN apt-get update && apt-get -y upgrade &&\
-    apt-get install -y supervisor nginx inotify-tools rsync
+    apt-get install -y supervisor nginx inotify-tools rsync swig python3-pykcs11
 
+RUN pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
 RUN pip3 install uwsgi
 
 # Mountpoint for backend

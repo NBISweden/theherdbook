@@ -8,6 +8,8 @@ database.
 
 import base64
 import binascii
+import datetime
+import hashlib
 import logging
 import sys
 import time
@@ -15,7 +17,7 @@ import uuid
 
 import apscheduler.schedulers.background
 import requests
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, make_response, request, session
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -29,13 +31,15 @@ import utils.csvparser as csvparser  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
+import utils.certificates as certs  # isort:skip
+import utils.s3 as s3  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
 APP.config.update(
-    # Disabled for now to simplify development workflow
-    #   SESSION_COOKIE_SECURE=True,
+    # SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development
+    # workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Strict",
     DEBUG=True,  # some Flask specific configs
@@ -503,6 +507,314 @@ def testbreed():
     formatted_offspring_coi = round(offspring_coi * 100, 2)
     APP.logger.info(f"Testbreed calculation result {formatted_offspring_coi}")
     return {"offspringCOI": formatted_offspring_coi}
+
+
+@APP.route("/api/certificates/update/<i_number>", methods=["PATCH"])
+@login_required
+def update_certificate(i_number):
+    """
+    Returns an updated pdf of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind_data = da.get_individual(i_number, user_id)
+    # get_individual currently returns a dict, not an individual
+    if ind_data is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    certificate_exists = ind_data.get("certificate", None)
+    form = request.json
+    uploaded = False
+
+    try:
+        present = check_certificate_s3(ind_number=ind_data["number"])
+        if certificate_exists and present:
+            cert_data = get_certificate_data(ind_data, user_id)
+            cert_data.update(**form)
+            pdf_bytes = get_certificate(cert_data)
+            signed_data = sign_data(pdf_bytes)
+            uploaded = upload_certificate(
+                pdf_bytes=signed_data.getvalue(), ind_number=ind_data["number"]
+            )
+            ind_data.update(**form)
+            da.update_individual(ind_data, session.get("user_id", None))
+    except Exception as ex:  # pylint: disable=broad-except
+        APP.logger.info("Unexpected error while updating certificate " + str(ex))
+        return jsonify({"response": "Error processing your request"}), 404
+
+    if uploaded:
+        return create_pdf_response(
+            pdf_bytes=signed_data, obj_name=f'{ind_data["certificate"]}.pdf'
+        )
+
+    return jsonify({"response": "Certificate was not updated"}), 404
+
+
+@APP.route("/api/certificates/issue/<i_number>", methods=["POST"])
+@login_required
+def issue_certificate(i_number):
+    """
+    Returns an issued pdf certificate of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind_data = da.get_individual(i_number, user_id)
+    # get_individual currently returns a dict, not an individual
+    if ind_data is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    certificate_exists = ind_data.get("certificate", None)
+    if certificate_exists:
+        return jsonify({"response": "Certificate already exists"}), 400
+
+    form = request.json
+    cert_number = ind_data["digital_certificate"]
+
+    ind_data.update(**form, certificate=cert_number)
+    da.update_individual(ind_data, session.get("user_id", None))
+
+    cert_data = get_certificate_data(ind_data, user_id)
+    pdf_bytes = get_certificate(cert_data)
+    ind_number = ind_data["number"]
+    uploaded = False
+
+    try:
+        signed_data = sign_data(pdf_bytes)
+        uploaded = upload_certificate(
+            pdf_bytes=signed_data.getvalue(), ind_number=ind_number
+        )
+    except Exception as ex:  # pylint: disable=broad-except
+        print(ex)
+        return jsonify({"response": "Error processing your request"}), 400
+
+    if uploaded:
+        return create_pdf_response(pdf_bytes=signed_data, obj_name=f"{cert_number}.pdf")
+
+    return jsonify({"response": "Certificate could not be uploaded"}), 400
+
+
+@APP.route("/api/certificates/preview/<i_number>", methods=["POST", "GET"])
+@login_required
+def preview_certificate(i_number):
+    """
+    Returns a preview of a pdf certificate of the individual given by `i_number`.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+    if ind is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    data = get_certificate_data(ind, user_id)
+
+    if request.method == "POST":
+        form = request.json
+        data.update(**form, certificate=ind["digital_certificate"])
+        pdf_bytes = get_certificate(data)
+    elif request.method == "GET":
+        pdf_bytes = get_certificate(data)
+
+    return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
+
+
+@APP.route("/api/certificates/verify/<i_number>", methods=["POST"])
+@login_required
+def verify_certificate(i_number):
+    """
+    Returns whether an pdf certificate has been issued by us and matches our checksum.
+    """
+    user_id = session.get("user_id", None)
+    ind = da.get_individual(i_number, user_id)
+    if ind is None:
+        return jsonify({"response": "Individual not found"}), 404
+
+    uploaded_bytes = request.get_data()
+    present, signed = False, False
+
+    try:
+        checksum = hashlib.sha256(uploaded_bytes).hexdigest()
+        signed = verify_signature(uploaded_bytes)
+        present = verify_certificate_checksum(ind["number"], checksum=checksum)
+    except Exception as ex:  # pylint: disable=broad-except
+        APP.logger.info("Unexpected error while verifying certificate " + str(ex))
+        return jsonify({"response": "Error processing your request"}), 400
+
+    if present and signed:
+        return jsonify({"response": "Certificate is valid"}), 200
+    elif not present and signed:
+        return jsonify({"response": "Certificate valid but file not present"}), 202
+
+    return (
+        jsonify({"response": "The uploaded certificate is not valid"}),
+        404,
+    )
+
+
+def create_pdf_response(pdf_bytes, obj_name):
+    """
+    Returns a http response containing the pdf as body.
+    """
+    response = make_response(pdf_bytes.getvalue())
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = "inline; filename=%s" % obj_name
+    return response
+
+
+def sign_data(pdf_bytes):
+    """
+    Returns digitally signed pdf bytes.
+    """
+    return certs.get_certificate_signer().sign_certificate(pdf_bytes)
+
+
+def verify_signature(pdf_bytes):
+    """
+    Returns digitally signed pdf bytes.
+    """
+    return certs.get_certificate_verifier().verify_signature(pdf_bytes)
+
+
+def get_certificate_checksum(ind_number):
+    """
+    Returns the bytes of the latest certificate
+    """
+    return hashlib.sha256(
+        s3.get_s3_client().get_object(f"{ind_number}/certificate.pdf")
+    ).hexdigest()
+
+
+def upload_certificate(pdf_bytes, ind_number):
+    """
+    Triggers a S3 certificate upload
+    """
+    return s3.get_s3_client().put_object(
+        file_name=f"{ind_number}/certificate.pdf", file_data=pdf_bytes
+    )
+
+
+def check_certificate_s3(ind_number):
+    """
+    Returns a boolean value specifying if any certificate already exists in S3.
+    """
+    return s3.get_s3_client().head_object(object_name=f"{ind_number}/certificate.pdf")
+
+
+def verify_certificate_checksum(ind_number, checksum):
+    """
+    Returns whether a certificate exists with the given checksum.
+    """
+    s3_sum = get_certificate_checksum(ind_number)
+    return s3_sum == checksum
+
+
+def flatten_list_of_dcts(in_list):
+    """
+    Flattens a list of dictionaries
+    """
+    dct = {}
+    for item in in_list:
+        if item is not None:
+            dct.update(item)
+    return dct
+
+
+def get_certificate_data(ind, user_id):
+    """
+    Gets all data needed to issue a certificate.
+    """
+    parent_keys = [
+        (1, "F"),
+        (1, "M"),
+        (2, "FF"),
+        (2, "MF"),
+        (2, "FM"),
+        (2, "MM"),
+    ]
+
+    date = datetime.datetime.utcnow()
+    date = date.strftime("%Y-%m-%d")
+    extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
+    ind["notes"] = "\n".join(
+        [
+            "Notes: " + str(ind.get("notes", "")),
+            "Color notes: " + str(ind.get("color_note", "")),
+            "Hair notes: " + str(ind.get("hair_notes", "")),
+        ]
+    )
+    cert_data_lst = []
+    cert_data_lst.append(ind)
+    cert_data_lst.append(extra_data)
+    for level, a_type in parent_keys:
+        cert_data_lst.append(_get_parent(ind, user_id, level, a_type))
+
+    return flatten_list_of_dcts(cert_data_lst)
+
+
+def _get_parent(ind, user_id, ancestry_level, ancestry_type):
+    ancestries = {
+        (1, "F"): "father",
+        (1, "M"): "mother",
+        (2, "FF"): "father",
+        (2, "MF"): "father",
+        (2, "FM"): "mother",
+        (2, "MM"): "mother",
+    }
+    try:
+        if ancestry_level == 1:
+            ancestor = ind.get(ancestries[(1, ancestry_type)], None)
+            idv = da.get_individual(ancestor["number"], user_id)
+
+        elif ancestry_level == 2:
+            ancestor = ind.get(ancestries[(1, ancestry_type[0])], None)
+            parent = da.get_individual(ancestor["number"], user_id)
+            grand_ancestor = parent.get(ancestries[(2, ancestry_type)], None)
+            idv = da.get_individual(grand_ancestor["number"], user_id)
+
+    except TypeError as ex:
+        print(ex)
+        return None
+
+    ndict = dict()
+    for key in idv.keys():
+        ndict[key] = ancestry_type + "_" + key
+
+    parent_ind = dict()
+    for old_key, val in idv.items():
+        parent_ind[ndict[old_key]] = val
+
+    return parent_ind
+
+
+def get_certificate(data):
+    """
+    Returns a pdf certificate of an individual.
+    """
+    # pylint: disable=R0914
+    qr_x_pos, qr_y_pos = 295, 795
+    # version 2 means size 42x42
+    qr_x_len, qr_y_len = 42, 42
+
+    certificate = certs.CertificateGenerator(
+        form=settings.certs.template,
+        form_keys=certs.FORM_KEYS,
+    )
+
+    qr_code = certs.QRHandler(
+        link=settings.service.host + "/individual/" + data["number"] + "/verify",
+        size=(qr_x_len, qr_y_len),
+        pos={
+            "x0": qr_x_pos - qr_x_len,
+            "y0": qr_y_pos - qr_y_len,
+            "x1": qr_x_pos,
+            "y1": qr_y_pos,
+        },
+    )
+    # Unsigned bytes without qr code
+    unsigned_pdf_bytes = certificate.generate_certificate(form_data=data)
+
+    # Unsigned bytes with qr code
+    unsigned_pdf_bytes_qr = certificate.add_qrcode_to_certificate(
+        unsigned_pdf_bytes, qr_code
+    )
+
+    return unsigned_pdf_bytes_qr
 
 
 @APP.route("/", defaults={"path": ""})

@@ -1,0 +1,8 @@
+[default]
+access_key = accesskeytest
+secret_key = secretkeytest
+check_ssl_certificate = False
+guess_mime_type = True
+host_base = http://127.0.0.1:9000
+host_bucket = test
+use_https = False
