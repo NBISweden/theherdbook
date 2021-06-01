@@ -333,9 +333,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(response.status_code, 404)
             self.assertEqual(
                 response.get_json(),
-                {
-                    "response": "The uploaded certificate is not valid"
-                },
+                {"response": "The uploaded certificate is not valid"},
             )
 
             # Verify using some random data
@@ -345,9 +343,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(response.status_code, 404)
             self.assertEqual(
                 response.get_json(),
-                {
-                    "response": "The uploaded certificate is not valid"
-                },
+                {"response": "The uploaded certificate is not valid"},
             )
 
             # Verify an old certificate

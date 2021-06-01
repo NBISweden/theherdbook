@@ -642,9 +642,7 @@ def verify_certificate(i_number):
         return jsonify({"response": "Certificate valid but file not present"}), 202
 
     return (
-        jsonify(
-            {"response": "The uploaded certificate is not valid"}
-        ),
+        jsonify({"response": "The uploaded certificate is not valid"}),
         404,
     )
 
