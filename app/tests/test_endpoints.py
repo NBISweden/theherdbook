@@ -334,7 +334,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(
                 response.get_json(),
                 {
-                    "response": "The uploaded certificate is not valid for this individual"
+                    "response": "The uploaded certificate is not valid"
                 },
             )
 
@@ -346,7 +346,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(
                 response.get_json(),
                 {
-                    "response": "The uploaded certificate is not valid for this individual"
+                    "response": "The uploaded certificate is not valid"
                 },
             )
 

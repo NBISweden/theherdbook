@@ -643,7 +643,7 @@ def verify_certificate(i_number):
 
     return (
         jsonify(
-            {"response": "The uploaded certificate is not valid for this individual"}
+            {"response": "The uploaded certificate is not valid"}
         ),
         404,
     )
