@@ -516,34 +516,34 @@ def update_certificate(i_number):
     Returns an updated pdf of the individual given by `i_number`.
     """
     user_id = session.get("user_id", None)
-    ind = da.get_individual(i_number, user_id)
-
-    if ind is None:
+    ind_data = da.get_individual(i_number, user_id)
+    # get_individual currently returns a dict, not an individual
+    if ind_data is None:
         return jsonify({"response": "Individual not found"}), 404
 
-    certificate_exists = ind.get("certificate", None)
+    certificate_exists = ind_data.get("certificate", None)
     form = request.json
     uploaded = False
 
     try:
-        present = check_certificate_s3(ind_number=ind["number"])
+        present = check_certificate_s3(ind_number=ind_data["number"])
         if certificate_exists and present:
-            data = get_certificate_data(ind, user_id)
-            data.update(**form)
-            pdf_bytes = get_certificate(data)
+            cert_data = get_certificate_data(ind_data, user_id)
+            cert_data.update(**form)
+            pdf_bytes = get_certificate(cert_data)
             signed_data = sign_data(pdf_bytes)
             uploaded = upload_certificate(
-                pdf_bytes=signed_data.getvalue(), ind_number=ind["number"]
+                pdf_bytes=signed_data.getvalue(), ind_number=ind_data["number"]
             )
-            ind.update(**form)
-            da.update_individual(ind, session.get("user_id", None))
+            ind_data.update(**form)
+            da.update_individual(ind_data, session.get("user_id", None))
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while updating certificate " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
         return create_pdf_response(
-            pdf_bytes=signed_data, obj_name=f'{ind["certificate"]}.pdf'
+            pdf_bytes=signed_data, obj_name=f'{ind_data["certificate"]}.pdf'
         )
 
     return jsonify({"response": "Certificate was not updated"}), 404
@@ -556,22 +556,24 @@ def issue_certificate(i_number):
     Returns an issued pdf certificate of the individual given by `i_number`.
     """
     user_id = session.get("user_id", None)
-    ind = da.get_individual(i_number, user_id)
-    if ind is None:
+    ind_data = da.get_individual(i_number, user_id)
+    # get_individual currently returns a dict, not an individual
+    if ind_data is None:
         return jsonify({"response": "Individual not found"}), 404
-    certificate_exists = ind.get("certificate", None)
+
+    certificate_exists = ind_data.get("certificate", None)
     if certificate_exists:
         return jsonify({"response": "Certificate already exists"}), 400
 
     form = request.json
-    cert_number = ind["digital_certificate"]
+    cert_number = ind_data["digital_certificate"]
 
-    ind.update(**form, certificate=cert_number)
-    da.update_individual(ind, session.get("user_id", None))
+    ind_data.update(**form, certificate=cert_number)
+    da.update_individual(ind_data, session.get("user_id", None))
 
-    data = get_certificate_data(ind, user_id)
-    pdf_bytes = get_certificate(data)
-    ind_number = ind["number"]
+    cert_data = get_certificate_data(ind_data, user_id)
+    pdf_bytes = get_certificate(cert_data)
+    ind_number = ind_data["number"]
     uploaded = False
 
     try:
