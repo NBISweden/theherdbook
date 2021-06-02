@@ -90,11 +90,10 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
-  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [
-    genebanks,
-    id,
-    algo,
-  ]);
+  const pedigree = React.useMemo(
+    () => herdPedigree(genebanks, id, 5, algo),
+    [genebanks, id, algo]
+  );
   const style = useStyles();
 
   React.useEffect(() => {
@@ -152,6 +151,7 @@ export function HerdView({ id }: { id: string | undefined }) {
         <TabPanel value={activeTab} index="list">
           {herdIndividuals.length ? (
             <FilterTable
+              id={id}
               individuals={herdIndividuals}
               title={"Individer i besättningen"}
               filters={[
