@@ -20,11 +20,13 @@ export function CertificateForm({
   style,
   individual,
   canManage,
+  canEdit,
   onUpdateIndividual,
 }: {
   style: any;
   individual: Individual;
   canManage: boolean;
+  canEdit: boolean;
   onUpdateIndividual: any;
 }) {
   const { colors } = useDataContext();
@@ -64,7 +66,7 @@ export function CertificateForm({
                   Kan endast ändras av genbanksansvarig
                 </div>
                 <TextField
-                  disabled
+                  disabled={!canManage}
                   label="Nummer"
                   className={style.control}
                   variant={inputVariant}
@@ -76,7 +78,7 @@ export function CertificateForm({
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -86,7 +88,7 @@ export function CertificateForm({
                   }}
                 />
                 <KeyboardDatePicker
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   autoOk
                   variant="inline"
                   className={style.control}
@@ -104,7 +106,7 @@ export function CertificateForm({
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   options={sexOptions ?? []}
                   value={
                     sexOptions.find(
@@ -126,7 +128,7 @@ export function CertificateForm({
                   }}
                 />
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Antal födda i kullen"
                   className={style.control}
                   variant={inputVariant}
@@ -139,7 +141,7 @@ export function CertificateForm({
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   options={colorOptions ?? []}
                   value={
                     colorOptions.find(
@@ -161,7 +163,7 @@ export function CertificateForm({
                   }}
                 />
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Avvikande hårlag"
                   variant={inputVariant}
                   className={style.control}
@@ -175,7 +177,7 @@ export function CertificateForm({
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Färg på buken"
                   className={style.control}
                   variant={inputVariant}
@@ -188,7 +190,7 @@ export function CertificateForm({
                   }}
                 />
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Ögonfärg"
                   className={style.control}
                   variant={inputVariant}
@@ -200,7 +202,7 @@ export function CertificateForm({
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   label="Klofärg(er)"
                   className={style.control}
                   variant={inputVariant}
@@ -210,7 +212,7 @@ export function CertificateForm({
                   }}
                 />
                 <Autocomplete
-                  disabled={!canManage}
+                  disabled={!canEdit}
                   options={photoOptions ?? []}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => (
@@ -226,6 +228,7 @@ export function CertificateForm({
               </div>
               <div></div>
               <TextField
+                disabled={!canEdit}
                 label="Anteckningar"
                 variant={inputVariant}
                 className={style.wideControl}

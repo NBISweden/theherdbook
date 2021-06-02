@@ -128,11 +128,13 @@ export function IndividualCertificate({
   const [pageNumber, setPageNumber] = React.useState(1);
 
   const { user } = useUserContext();
-  const { genebanks, colors } = useDataContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
   const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank); // right now, only a genebank manager can issue certs. should be changed (in another branch/PR)
+    return user?.canEdit(individual?.genebank);
+  }, [user, individual]);
+  const canEdit: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.number);
   }, [user, individual]);
   const style = useStyles();
 
@@ -320,6 +322,7 @@ export function IndividualCertificate({
             style={style}
             individual={individual}
             canManage={canManage}
+            canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
           />
           <div className={style.paneControls}>
