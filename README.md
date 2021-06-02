@@ -88,6 +88,27 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 ./run-with-prebuilt-images.sh
 ```
 
+### R-api services
+
+You also need to configure a user for the R server. This is done by providing an `Authorized` header to use as `API_AUTH`
+in `.docker/r-api-variables.env`. This header must provide credentials to see all individuals for which the R service
+will be used.
+
+You typically create a specific user for this:
+
+```console
+./register_user.sh rapiuser 'r-api@example.com', 'rapipassword'
+```
+
+You can then create the corresponding header as `Authorization: Basic $(echo -n rapiuser:rapipassword |base64)`
+so the line in `.docker/r-api-variables.env` might look something like:
+
+```console
+API_AUTH=Authorization: Basic dGVzdDp0ZXN0
+```
+
+The default file contains the credentials for the user `test`, password `test`.
+
 ## Loading data
 
 Data files are delivered out of band. Instructions for inital importing of data are available in `scripts/README.docker`.
