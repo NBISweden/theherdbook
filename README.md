@@ -73,13 +73,13 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 To access the local server deployed open the [encryption-enabled interface](https://localhost:8443) in your browser. You will need to
 configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing
 this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled.
-In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
+In Firefox, when loading the url you can click on Advanced and add the exception suggested from the browser.
 You can also use [the interface without encryption](http://localhost:8080) to access the frontend.
 
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
 
 ```console
-./register_user.sh 'user@domain.com', 'userpassword'
+./register_user.sh 'username' 'user@example.com', 'userpassword'
 ```
 
 All branches that are pushed to github has prebuilt images. To use the prebuilt images instead of building locally, use:
