@@ -23,34 +23,10 @@ import { CertificateDownload } from "./certificate_download";
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
 const useStyles = makeStyles({
-  adminPane: {
-    width: "100%",
-    padding: "15px 0 5px 10px",
-    border: "1px solid lightgrey",
-    position: "relative",
-    display: "flex",
-    flexDirection: "row",
-    background:
-      "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
-  },
   control: {
     margin: "5px",
     minWidth: "195px",
     paddingRight: "5px",
-  },
-  flexRow: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "end",
-  },
-  flexRowOrColumn: {
-    display: "flex",
-    flexDirection: "column",
-    overflowX: "hidden",
-    overflowY: "auto",
-    ["@media (min-width:600px)"]: {
-      flexDirection: "row",
-    },
   },
   form: {
     display: "flex",
@@ -58,19 +34,6 @@ const useStyles = makeStyles({
     overflow: "hidden",
     flexDirection: "column",
     width: "95%",
-  },
-  formPane: {
-    borderRight: "none",
-    minWidth: "410px",
-    ["@media (min-width:660px)"]: {
-      borderRight: "1px solid lightgrey",
-    },
-    paddingRight: "5px",
-    "&:last-child": {
-      paddingLeft: "5px",
-      paddingRight: "0",
-      borderRight: "none",
-    },
   },
   loading: {
     display: "flex",
@@ -83,23 +46,6 @@ const useStyles = makeStyles({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: "20px 0",
-  },
-  paneTitle: {
-    position: "absolute",
-    top: "0px",
-    left: "10px",
-  },
-  titleText: {
-    width: "100%",
-    borderBottom: "1px solid lightgrey",
-    padding: "0 20px",
-    fontSize: "2.3em",
-  },
-  wideControl: {
-    margin: "5px",
-    minWidth: "195px",
-    width: "100%",
-    paddingRight: "5px",
   },
 });
 
@@ -320,7 +266,6 @@ export function IndividualCertificate({
         <>
           <h1>Fyll i uppgifterna för certifikatet</h1>
           <CertificateForm
-            style={style}
             individual={individual}
             canManage={canManage}
             canEdit={canEdit}

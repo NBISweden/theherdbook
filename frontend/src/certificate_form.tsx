@@ -1,6 +1,6 @@
 import React from "react";
 
-import { TextField } from "@material-ui/core";
+import { makeStyles, TextField } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -16,20 +16,88 @@ import {
   OptionType,
 } from "@app/data_context_global";
 
+const useStyles = makeStyles({
+  adminPane: {
+    width: "100%",
+    padding: "15px 0 5px 10px",
+    border: "1px solid lightgrey",
+    position: "relative",
+    display: "flex",
+    flexDirection: "row",
+    background:
+      "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
+  },
+  control: {
+    margin: "5px",
+    minWidth: "195px",
+    paddingRight: "5px",
+  },
+  flexRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "end",
+  },
+  flexRowOrColumn: {
+    display: "flex",
+    flexDirection: "column",
+    overflowX: "hidden",
+    overflowY: "auto",
+    ["@media (min-width:600px)"]: {
+      flexDirection: "row",
+    },
+  },
+  form: {
+    display: "flex",
+    height: "100%",
+    overflow: "hidden",
+    flexDirection: "column",
+    width: "95%",
+  },
+  formPane: {
+    borderRight: "none",
+    minWidth: "410px",
+    ["@media (min-width:660px)"]: {
+      borderRight: "1px solid lightgrey",
+    },
+    paddingRight: "5px",
+    "&:last-child": {
+      paddingLeft: "5px",
+      paddingRight: "0",
+      borderRight: "none",
+    },
+  },
+  paneControls: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: "20px 0",
+  },
+  paneTitle: {
+    position: "absolute",
+    top: "0px",
+    left: "10px",
+  },
+  wideControl: {
+    margin: "5px",
+    minWidth: "195px",
+    width: "100%",
+    paddingRight: "5px",
+  },
+});
+
 export function CertificateForm({
-  style,
   individual,
   canManage,
   canEdit,
   onUpdateIndividual,
 }: {
-  style: any;
   individual: Individual;
   canManage: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
 }) {
   const { colors } = useDataContext();
+  const style = useStyles();
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
