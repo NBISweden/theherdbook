@@ -73,13 +73,13 @@ f62cebbc2e43        herdbook_main              "/bin/sh -c /entrypo…"   3 hour
 To access the local server deployed open the [encryption-enabled interface](https://localhost:8443) in your browser. You will need to
 configure the browser to allow self-signed localhost certificates. In Chrome, this can be done by accessing
 this property from the browser: `chrome://flags/#allow-insecure-localhost` and setting its vale to Enabled.
-In Firefox, when loading the url you can click on Advanced and  add the exception suggested from the browser.
+In Firefox, when loading the url you can click on Advanced and add the exception suggested from the browser.
 You can also use [the interface without encryption](http://localhost:8080) to access the frontend.
 
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
 
 ```console
-./register_user.sh 'user@domain.com', 'userpassword'
+./register_user.sh 'username' 'userpassword' 'user@example.com'
 ```
 
 All branches that are pushed to github has prebuilt images. To use the prebuilt images instead of building locally, use:
@@ -87,6 +87,27 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 ```console
 ./run-with-prebuilt-images.sh
 ```
+
+### R-api services
+
+You also need to configure a user for the R server. This is done by providing an `Authorized` header to use as `API_AUTH`
+in `.docker/r-api-variables.env`. This header must provide credentials to see all individuals for which the R service
+will be used.
+
+You typically create a specific user for this:
+
+```console
+./register_user.sh 'rapiuser' 'rapipassword' 'r-api@example.com'
+```
+
+You can then create the corresponding header as `Authorization: Basic $(echo -n rapiuser:rapipassword |base64)`
+so the line in `.docker/r-api-variables.env` might look something like:
+
+```console
+API_AUTH=Authorization: Basic dGVzdDp0ZXN0
+```
+
+The default file contains the credentials for the user `test`, password `test`.
 
 ## Loading data
 
