@@ -79,7 +79,7 @@ You can also use [the interface without encryption](http://localhost:8080) to ac
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
 
 ```console
-./register_user.sh 'username' 'user@example.com', 'userpassword'
+./register_user.sh 'username' 'userpassword' 'user@example.com'
 ```
 
 All branches that are pushed to github has prebuilt images. To use the prebuilt images instead of building locally, use:
@@ -97,7 +97,7 @@ will be used.
 You typically create a specific user for this:
 
 ```console
-./register_user.sh rapiuser 'r-api@example.com', 'rapipassword'
+./register_user.sh 'rapiuser' 'rapipassword' 'r-api@example.com'
 ```
 
 You can then create the corresponding header as `Authorization: Basic $(echo -n rapiuser:rapipassword |base64)`
