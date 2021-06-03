@@ -730,12 +730,21 @@ def get_certificate_data(ind, user_id):
 
     date = datetime.datetime.utcnow()
     date = date.strftime("%Y-%m-%d")
-    extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
+    herd = ind["origin_herd"]["herd"][1:]
+    genebank = ind["number"].split("-")
+    extra_data = {
+        "genebank_aki": genebank[1],
+        "genebank_number": genebank[0],
+        "herd": herd,
+        "user_id": user_id,
+        "issue_date": date,
+        "photos": False,
+    }
     ind["notes"] = "\n".join(
         [
-            "Notes: " + str(ind.get("notes", "")),
-            "Color notes: " + str(ind.get("color_note", "")),
-            "Hair notes: " + str(ind.get("hair_notes", "")),
+            str(ind.get("notes", "")),
+            "Färg upplysningar: " + str(ind.get("color_note", "")),
+            "Hår upplysningar: " + str(ind.get("hair_notes", "")),
         ]
     )
     cert_data_lst = []
@@ -778,6 +787,10 @@ def _get_parent(ind, user_id, ancestry_level, ancestry_type):
     parent_ind = dict()
     for old_key, val in idv.items():
         parent_ind[ndict[old_key]] = val
+
+    genebank = parent_ind[ancestry_type + "_" + "number"].split("-")
+    parent_ind[ancestry_type + "_" + "genebank_aki"] = genebank[1]
+    parent_ind[ancestry_type + "_" + "genebank_number"] = genebank[0]
 
     return parent_ind
 
