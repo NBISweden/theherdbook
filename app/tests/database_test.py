@@ -110,16 +110,16 @@ class DatabaseTest(unittest.TestCase):
 
         self.parents = [
             db.Individual.get_or_create(
-                origin_herd=self.herds[0], breeding=parent_breeding, number="P1"
+                origin_herd=self.herds[0], breeding=parent_breeding, number="P1-001"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[0], breeding=parent_breeding, number="P2"
+                origin_herd=self.herds[0], breeding=parent_breeding, number="P2-001"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[1], breeding=parent_breeding, number="P3"
+                origin_herd=self.herds[1], breeding=parent_breeding, number="P3-001"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[1], breeding=parent_breeding, number="P4"
+                origin_herd=self.herds[1], breeding=parent_breeding, number="P4-001"
             )[0],
         ]
         for parent in self.parents:

@@ -538,7 +538,7 @@ def update_certificate(i_number):
             ind_data.update(**form)
             da.update_individual(ind_data, session.get("user_id", None))
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info("Unexpected error while updating certificate " + str(ex))
+        APP.logger.info("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
@@ -730,7 +730,10 @@ def get_certificate_data(ind, user_id):
 
     date = datetime.datetime.utcnow()
     date = date.strftime("%Y-%m-%d")
-    herd = ind["origin_herd"]["herd"][1:]
+    herd = ind["herd"]
+    if type(herd) == dict:
+        herd = herd["herd"]
+
     genebank = ind["number"].split("-")
     extra_data = {
         "genebank_aki": genebank[1],
@@ -754,7 +757,6 @@ def get_certificate_data(ind, user_id):
         cert_data_lst.append(_get_parent(ind, user_id, level, a_type))
 
     return flatten_list_of_dcts(cert_data_lst)
-
 
 def _get_parent(ind, user_id, ancestry_level, ancestry_type):
     ancestries = {
