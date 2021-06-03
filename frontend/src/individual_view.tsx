@@ -4,7 +4,14 @@
  */
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button, Tooltip } from "@material-ui/core";
+import {
+  Button,
+  ButtonGroup,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from "@material-ui/core";
+import { ArrowForward } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import { useMessageContext } from "@app/message_context";
 import { get } from "@app/communication";
@@ -64,6 +71,9 @@ const useStyles = makeStyles({
   editButton: {
     marginTop: "15px",
   },
+  icon: {
+    marginLeft: "0.5em",
+  },
 });
 
 /**
@@ -78,6 +88,8 @@ export function IndividualView({ id }: { id: string }) {
   );
   const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
   const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
+  // state to control the certificate menu button
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
 
   //checks if the individual has a certificate, and if yes whether it's a paper or digital one
@@ -92,6 +104,15 @@ export function IndividualView({ id }: { id: string }) {
       setHasPaperCert(false);
       setHasDigitalCert(true);
     }
+  };
+
+  // funtions to control the certificate menu button
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   const children: Individual[] = React.useMemo(() => {
@@ -245,33 +266,57 @@ export function IndividualView({ id }: { id: string }) {
                 </Button>
               )}
               {user?.canEdit(id) && hasDigitalCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(<IndividualCertificate id={id} action={"update"} />)
-                  }
-                >
-                  Uppdatera certifikat
-                </Button>
-              )}
-              {user?.canEdit(id) && hasDigitalCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(
-                      <CertificateVerification
-                        id={id}
-                        individual={individual}
-                      />
-                    )
-                  }
-                >
-                  Verifiera certifikat
-                </Button>
+                <>
+                  <Button
+                    aria-controls="simple-menu"
+                    aria-haspopup="true"
+                    variant="contained"
+                    color="primary"
+                    className={style.editButton}
+                    onClick={handleClick}
+                  >
+                    Certifikat{" "}
+                    <ArrowForward fontSize="small" className={style.icon} />
+                  </Button>
+                  <Menu
+                    id="simple-menu"
+                    anchorEl={anchorEl}
+                    keepMounted
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                      }}
+                    >
+                      Ladda ner
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                        popup(
+                          <IndividualCertificate id={id} action={"update"} />
+                        );
+                      }}
+                    >
+                      Uppdatera
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                        popup(
+                          <CertificateVerification
+                            id={id}
+                            individual={individual}
+                          />
+                        );
+                      }}
+                    >
+                      Verifiera
+                    </MenuItem>
+                  </Menu>
+                </>
               )}
               <div>
                 <h3>Besättningshistoria</h3>
