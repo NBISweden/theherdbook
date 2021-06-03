@@ -21,6 +21,8 @@ services:
         volumes:
             - ./frontend:/home/node/app/
             - /home/node/app/node_modules
+        environment:
+            - NODE_OPTIONS="--max-old-space-size=2048"
     main:
         image: herdbook_main
         build:
