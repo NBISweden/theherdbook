@@ -8,7 +8,7 @@ const useStyles = makeStyles({
   paneControls: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-evenly",
     padding: "20px 0",
   },
 });
@@ -24,6 +24,7 @@ export function CertificateDownload({
 
   return (
     <>
+      <h1>Du kan nu ladda ner eller öppna certifikatet.</h1>
       <div className={style.paneControls}>
         <a
           href={certUrl}
