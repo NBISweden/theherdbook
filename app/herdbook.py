@@ -758,6 +758,7 @@ def get_certificate_data(ind, user_id):
 
     return flatten_list_of_dcts(cert_data_lst)
 
+
 def _get_parent(ind, user_id, ancestry_level, ancestry_type):
     ancestries = {
         (1, "F"): "father",
