@@ -119,6 +119,7 @@ export function IndividualView({ id }: { id: string }) {
     setAnchorEl(null);
   };
 
+  // function to download an existing certificate
   const downloadCertificate = () => {
     fetch(`/api/certificates/issue/${id}`, {
       method: "GET",
