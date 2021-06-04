@@ -312,7 +312,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(download_response.data, first_pdf_response.data)
 
             # Download a certificate from a non-existing individual
-            download_response = context.get(f"/api/certificates/issue/doesnotexist")
+            download_response = context.get("/api/certificates/issue/doesnotexist")
             self.assertEqual(download_response.status_code, 404)
 
             # Update a certificate
