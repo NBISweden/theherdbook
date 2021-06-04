@@ -7,30 +7,17 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import {
   Button,
   CircularProgress,
-  FormControlLabel,
   makeStyles,
   TextField,
-  Typography,
 } from "@material-ui/core";
-import {
-  MuiPickersUtilsProvider,
-  KeyboardDatePicker,
-} from "@material-ui/pickers";
-import { Autocomplete } from "@material-ui/lab";
-import DateFnsUtils from "@date-io/date-fns";
 
 import { IndividualView } from "@app/individual_view";
-import { get, patch, post } from "@app/communication";
+import { CertificateForm } from "@app/certificate_form";
+import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
-import {
-  dateFormat,
-  Individual,
-  inputVariant,
-  OptionType,
-  ServerMessage,
-} from "@app/data_context_global";
+import { Individual, inputVariant, OptionType } from "@app/data_context_global";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
@@ -115,7 +102,13 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualCertificate({ id }: { id: string }) {
+export function IndividualCertificate({
+  id,
+  action,
+}: {
+  id: string;
+  action: string;
+}) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
@@ -135,11 +128,13 @@ export function IndividualCertificate({ id }: { id: string }) {
   const [pageNumber, setPageNumber] = React.useState(1);
 
   const { user } = useUserContext();
-  const { genebanks, colors } = useDataContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
+  }, [user, individual]);
+  const canEdit: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.number);
   }, [user, individual]);
   const style = useStyles();
 
@@ -185,7 +180,7 @@ export function IndividualCertificate({ id }: { id: string }) {
    * @param field field name to update
    * @param value the new value of the field
    */
-  const updateIndividual = <T extends keyof Individual>(
+  const handleUpdateIndividual = <T extends keyof Individual>(
     field: T,
     value: Individual[T]
   ) => {
@@ -215,11 +210,11 @@ export function IndividualCertificate({ id }: { id: string }) {
       credentials: "same-origin",
       headers: {
         Accept: "application/octet-stream",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => res.arrayBuffer())
       .then((data) => {
-        console.log("cert", data);
         setPreviewUrl(data);
       })
       .catch((error) => {
@@ -227,7 +222,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       });
   };
 
-  // Returns the signed certificate.
+  // Returns the signed, new certificate.
   const issueCertificate = (id: string, content: any) => {
     fetch(`/api/certificates/issue/${id}`, {
       body: JSON.stringify(content),
@@ -235,6 +230,7 @@ export function IndividualCertificate({ id }: { id: string }) {
       credentials: "same-origin",
       headers: {
         Accept: "application/pdf",
+        "Content-Type": "application/json",
       },
     })
       .then((res) => {
@@ -244,10 +240,52 @@ export function IndividualCertificate({ id }: { id: string }) {
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
-        } else res.blob();
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
       })
-      .then((blob: unknown) => {
-        console.log(blob);
+      .then((blob) => {
+        if (blob) {
+          setCertificateUrl(window.URL.createObjectURL(blob));
+          setShowSummary(false);
+          setShowComplete(true);
+        } else {
+          throw new Error("Något gick fel (det här borde inte hända).");
+        }
+      })
+      .catch((error) => {
+        {
+          userMessage(error.message, "error");
+        }
+      });
+  };
+
+  // Returns the updated certificate.
+  // jscpd:ignore-start
+  const updateCertificate = (id: string, content: any) => {
+    fetch(`/api/certificates/update/${id}`, {
+      body: JSON.stringify(content),
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.status === 404) {
+          throw new Error(
+            "Kaninen eller dess certifikat kunde inte hittas i databasen."
+          );
+        } else if (res.status === 200) {
+          return res.blob();
+        } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .then((blob) => {
         if (blob) {
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
@@ -262,37 +300,13 @@ export function IndividualCertificate({ id }: { id: string }) {
         }
       });
   };
+  // jscpd:ignore-end
 
   // This function is necessary to make the previw work.
   // Built into the library.
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
-
-  const colorOptions: OptionType[] = React.useMemo(() => {
-    if (
-      individual &&
-      colors &&
-      Object.keys(colors).includes(individual.genebank)
-    ) {
-      return colors[individual.genebank].map((c) => {
-        return { value: c.name, label: `${c.id} - ${c.name}` };
-      });
-    }
-    return [];
-  }, [colors, individual]);
-
-  const sexOptions = [
-    { value: "female", label: "Hona" },
-    { value: "male", label: "Hane" },
-    { value: "unknown", label: "Okänd" },
-  ];
-
-  const photoOptions = [
-    { value: "no", label: "Nej" },
-    { value: "yes", label: "Ja" },
-  ]; //should be boolean but doesn't work together with the OptionType
-  // also decide how this should be stored in the backend
 
   return (
     <>
@@ -302,214 +316,38 @@ export function IndividualCertificate({ id }: { id: string }) {
           <CircularProgress />
         </div>
       ) : individual && showForm ? (
-        <div className={style.form}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <div className={style.flexRowOrColumn}>
-              <div className={style.formPane}>
-                <h1>Fyll i uppgifterna för certifikatet</h1>
-                <div className={style.adminPane}>
-                  <div className={style.paneTitle}>
-                    Kan endast ändras av genbanksansvarig
-                  </div>
-                  <TextField
-                    disabled
-                    label="Nummer"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.number ?? ""}
-                    onChange={(event) => {
-                      updateIndividual("number", event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <TextField
-                    disabled={!canManage}
-                    label="Namn"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.name ?? ""}
-                    onChange={(event) => {
-                      updateIndividual("name", event.currentTarget.value);
-                    }}
-                  />
-                  <KeyboardDatePicker
-                    disabled={!canManage}
-                    autoOk
-                    variant="inline"
-                    className={style.control}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? ""}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && updateIndividual("birth_date", value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    disabled={!canManage}
-                    options={sexOptions ?? []}
-                    value={
-                      sexOptions.find(
-                        (option) => option.value == individual.sex
-                      ) ?? sexOptions[sexOptions.length - 1]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Kön"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateIndividual("sex", newValue?.value ?? "");
-                    }}
-                  />
-                  <TextField
-                    disabled={!canManage}
-                    label="Antal födda i kullen"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.litter ?? null}
-                    type="number"
-                    onChange={(event) => {
-                      updateIndividual("litter", +event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    disabled={!canManage}
-                    options={colorOptions ?? []}
-                    value={
-                      colorOptions.find(
-                        (option) => option.value == individual.color
-                      ) ?? colorOptions[0]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Färg"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateIndividual("color", newValue?.value ?? "");
-                    }}
-                  />
-                  <TextField
-                    disabled={!canManage}
-                    label="Avvikande hårlag"
-                    variant={inputVariant}
-                    className={style.control}
-                    multiline
-                    rows={1}
-                    value={individual.hair_notes ?? ""}
-                    onChange={(event) => {
-                      updateIndividual("hair_notes", event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <TextField
-                    disabled={!canManage}
-                    label="Färg på buken"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.belly_color ?? ""}
-                    onChange={(event) => {
-                      updateIndividual(
-                        "belly_color",
-                        event.currentTarget.value
-                      );
-                    }}
-                  />
-                  <TextField
-                    disabled={!canManage}
-                    label="Ögonfärg"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.eye_color ?? ""}
-                    onChange={(event) => {
-                      updateIndividual("eye_color", event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <TextField
-                    disabled={!canManage}
-                    label="Klofärg(er)"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.claw_color ?? ""}
-                    onChange={(event) => {
-                      updateIndividual("claw_color", event.currentTarget.value);
-                    }}
-                  />
-                  <Autocomplete
-                    disabled={!canManage}
-                    options={photoOptions ?? []}
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Foto finns"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                  />
-                </div>
-                <div></div>
-                <TextField
-                  label="Anteckningar"
-                  variant={inputVariant}
-                  className={style.wideControl}
-                  multiline
-                  rows={4}
-                  value={individual.notes ?? ""}
-                  onChange={(event) => {
-                    updateIndividual("notes", event.currentTarget.value);
-                  }}
-                />
-              </div>
-            </div>
-            <div className={style.paneControls}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() =>
-                  popup(<IndividualView id={id} />, `/individual/${id}`)
-                }
-              >
-                {"Tillbaka"}
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                  setShowForm(false);
-                  setShowSummary(true);
-                  previewCertificate(id, certificateData);
-                }}
-              >
-                {"Förhandsgranska"}
-              </Button>
-            </div>
-          </MuiPickersUtilsProvider>
-        </div>
+        <>
+          <h1>Fyll i uppgifterna för certifikatet</h1>
+          <CertificateForm
+            style={style}
+            individual={individual}
+            canManage={canManage}
+            canEdit={canEdit}
+            onUpdateIndividual={handleUpdateIndividual}
+          />
+          <div className={style.paneControls}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() =>
+                popup(<IndividualView id={id} />, `/individual/${id}`)
+              }
+            >
+              {"Tillbaka"}
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                setShowForm(false);
+                setShowSummary(true);
+                previewCertificate(id, certificateData);
+              }}
+            >
+              {"Förhandsgranska"}
+            </Button>
+          </div>
+        </>
       ) : individual && showSummary ? (
         <>
           <h1>Är alla uppgifter korrekta?</h1>
@@ -585,26 +423,46 @@ export function IndividualCertificate({ id }: { id: string }) {
               color="primary"
               disabled={isUserGood ? false : true}
               onClick={() => {
-                issueCertificate(id, certificateData);
+                switch (action) {
+                  case "issue":
+                    issueCertificate(id, certificateData);
+                    break;
+                  case "update":
+                    updateCertificate(id, certificateData);
+                }
               }}
             >
-              {"Beställ certifikat"}
+              {action == "issue"
+                ? "Beställ certifikat"
+                : "update"
+                ? "Uppdatera certifikat"
+                : "Fortsätt"}
             </Button>
           </div>
         </>
       ) : individual && showComplete ? (
         <>
-          <h1>Certifikatet är klart!</h1>
-          <a target="_blank" href={certificateUrl} download={individual.number}>
-            <Button variant="contained" color="primary">
-              {"Ladda ner"}
-            </Button>
-          </a>
-          <a target="_blank" href={certificateUrl}>
-            <Button variant="contained" color="primary">
-              {"Öppna i ny flik"}
-            </Button>
-          </a>
+          {action == "issue" ? (
+            <h1>Certifikatet är klart!</h1>
+          ) : (
+            <h1>Certifikatet uppdaterades!</h1>
+          )}
+          <div className={style.paneControls}>
+            <a
+              href={certificateUrl}
+              download={individual.number}
+              rel="noopener noreferrer"
+            >
+              <Button variant="contained" color="primary">
+                {"Ladda ner"}
+              </Button>
+            </a>
+            <a target="_blank" href={certificateUrl} rel="noopener noreferrer">
+              <Button variant="contained" color="primary">
+                {"Öppna i ny flik"}
+              </Button>
+            </a>
+          </div>
         </>
       ) : (
         <></>

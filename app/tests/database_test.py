@@ -148,6 +148,7 @@ class DatabaseTest(unittest.TestCase):
                 breeding=self.breeding[0],
                 color=self.colors[0],
                 number="H1-1",
+                digital_certificate="G1310-2121",
             )[0],
             db.Individual.get_or_create(
                 origin_herd=self.herds[1], breeding=self.breeding[0], number="H2-2"

@@ -21,6 +21,8 @@ services:
         volumes:
             - ./frontend:/home/node/app/
             - /home/node/app/node_modules
+        environment:
+            - NODE_OPTIONS="--max-old-space-size=2048"
     main:
         image: herdbook_main
         build:
@@ -32,6 +34,7 @@ services:
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
+            - ./.docker/main-api-variables.env
         ports:
             - 8080:8080
             - 8443:8443
@@ -60,4 +63,15 @@ services:
             - type: bind
               source: ./R
               target: /code
- 
+    s3backend:
+        command: server /data
+        container_name: s3backend
+        environment:
+            - MINIO_ACCESS_KEY=accesskeytest
+            - MINIO_SECRET_KEY=secretkeytest
+        healthcheck:
+            test: ["CMD", "curl", "-fkq", "http://localhost:9000/minio/health/live"]
+            interval: 5s
+            timeout: 20s
+            retries: 3
+        image: minio/minio:RELEASE.2021-04-18T19-26-29Z

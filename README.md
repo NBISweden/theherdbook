@@ -81,7 +81,7 @@ You can also use [the interface without encryption](http://localhost:8080) to ac
 To be able to login in the website and play with it you will need to create an user with admin privileges. This can be done by executing register_user.sh, providing your email and password:
 
 ```console
-./register_user.sh 'user@domain.com', 'userpassword'
+./register_user.sh 'username' 'userpassword' 'user@example.com'
 ```
 
 All branches that are pushed to github has prebuilt images. To use the prebuilt images instead of building locally, use:
@@ -89,6 +89,27 @@ All branches that are pushed to github has prebuilt images. To use the prebuilt 
 ```console
 ./run-with-prebuilt-images.sh
 ```
+
+### R-api services
+
+You also need to configure a user for the R server. This is done by providing an `Authorized` header to use as `API_AUTH`
+in `.docker/r-api-variables.env`. This header must provide credentials to see all individuals for which the R service
+will be used.
+
+You typically create a specific user for this:
+
+```console
+./register_user.sh 'rapiuser' 'rapipassword' 'r-api@example.com'
+```
+
+You can then create the corresponding header as `Authorization: Basic $(echo -n rapiuser:rapipassword |base64)`
+so the line in `.docker/r-api-variables.env` might look something like:
+
+```console
+API_AUTH=Authorization: Basic dGVzdDp0ZXN0
+```
+
+The default file contains the credentials for the user `test`, password `test`.
 
 ## Loading data
 
