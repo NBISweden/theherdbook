@@ -301,6 +301,15 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(
                 first_pdf_response.headers["Content-Type"], "application/pdf"
             )
+            self.assertEqual(first_pdf_response.status_code, 200)
+
+            # Download a certificate
+            download_response = context.get(f"/api/certificates/issue/{individual}")
+            self.assertEqual(
+                download_response.headers["Content-Type"], "application/pdf"
+            )
+            self.assertEqual(download_response.status_code, 200)
+            self.assertEqual(download_response.data, first_pdf_response.data)
 
             # Update a certificate
             pdf_response = context.patch(
