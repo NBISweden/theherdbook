@@ -28,6 +28,7 @@ import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
 import { CertificateVerification } from "./certificate_verification";
+import { CertificateDownload } from "./certificate_download";
 
 const useStyles = makeStyles({
   body: {
@@ -86,6 +87,9 @@ export function IndividualView({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [certificateUrl, setCertificateUrl] = React.useState(
+    undefined as string | undefined
+  );
   const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
   const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
   // state to control the certificate menu button
@@ -114,6 +118,42 @@ export function IndividualView({ id }: { id: string }) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const downloadCertificate = () => {
+    fetch(`/api/certificates/issue/${id}`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Certifikatet kunde inte laddas ner.");
+        } else return res.blob();
+      })
+      .then((blob) => {
+        if (blob) {
+          console.log("blob");
+          setCertificateUrl(window.URL.createObjectURL(blob));
+        } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .catch((error) => {
+        userMessage(error.message, "error");
+      });
+  };
+
+  React.useEffect(() => {
+    if (individual && certificateUrl) {
+      console.log("use effect", certificateUrl);
+      popup(
+        <CertificateDownload certUrl={certificateUrl} individual={individual} />
+      );
+    }
+  }, [certificateUrl]);
 
   const children: Individual[] = React.useMemo(() => {
     if (
@@ -288,6 +328,7 @@ export function IndividualView({ id }: { id: string }) {
                     <MenuItem
                       onClick={() => {
                         handleClose();
+                        downloadCertificate();
                       }}
                     >
                       Ladda ner
