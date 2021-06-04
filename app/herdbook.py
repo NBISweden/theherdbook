@@ -538,18 +538,18 @@ def update_certificate(i_number):
             ind_data.update(**form)
             da.update_individual(ind_data, session.get("user_id", None))
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info("Unexpected error while updating certificate " + str(ex))
+        APP.logger.info("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
         return create_pdf_response(
-            pdf_bytes=signed_data, obj_name=f'{ind_data["certificate"]}.pdf'
+            pdf_bytes=signed_data.getvalue(), obj_name=f'{ind_data["certificate"]}.pdf'
         )
 
     return jsonify({"response": "Certificate was not updated"}), 404
 
 
-@APP.route("/api/certificates/issue/<i_number>", methods=["POST"])
+@APP.route("/api/certificates/issue/<i_number>", methods=["GET", "POST"])
 @login_required
 def issue_certificate(i_number):
     """
@@ -562,33 +562,48 @@ def issue_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     certificate_exists = ind_data.get("certificate", None)
-    if certificate_exists:
-        return jsonify({"response": "Certificate already exists"}), 400
+    if request.method == "GET":
+        try:
+            present = check_certificate_s3(ind_number=ind_data["number"])
+            if certificate_exists and present:
+                cert = download_certificate_s3(i_number)
+                return create_pdf_response(
+                    pdf_bytes=cert, obj_name=f"{i_number}_certificate.pdf"
+                )
+        except Exception as ex:  # pylint: disable=broad-except
+            print(ex)
+            return jsonify({"response": "Error processing your request"}), 400
 
-    form = request.json
-    cert_number = ind_data["digital_certificate"]
+    elif request.method == "POST":
+        if certificate_exists:
+            return jsonify({"response": "Certificate already exists"}), 400
 
-    ind_data.update(**form, certificate=cert_number)
-    da.update_individual(ind_data, session.get("user_id", None))
+        form = request.json
+        cert_number = ind_data["digital_certificate"]
 
-    cert_data = get_certificate_data(ind_data, user_id)
-    pdf_bytes = get_certificate(cert_data)
-    ind_number = ind_data["number"]
-    uploaded = False
+        ind_data.update(**form, certificate=cert_number)
+        da.update_individual(ind_data, session.get("user_id", None))
 
-    try:
-        signed_data = sign_data(pdf_bytes)
-        uploaded = upload_certificate(
-            pdf_bytes=signed_data.getvalue(), ind_number=ind_number
-        )
-    except Exception as ex:  # pylint: disable=broad-except
-        print(ex)
-        return jsonify({"response": "Error processing your request"}), 400
+        cert_data = get_certificate_data(ind_data, user_id)
+        pdf_bytes = get_certificate(cert_data)
+        ind_number = ind_data["number"]
+        uploaded = False
 
-    if uploaded:
-        return create_pdf_response(pdf_bytes=signed_data, obj_name=f"{cert_number}.pdf")
+        try:
+            signed_data = sign_data(pdf_bytes)
+            uploaded = upload_certificate(
+                pdf_bytes=signed_data.getvalue(), ind_number=ind_number
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            print(ex)
+            return jsonify({"response": "Error processing your request"}), 400
 
-    return jsonify({"response": "Certificate could not be uploaded"}), 400
+        if uploaded:
+            return create_pdf_response(
+                pdf_bytes=signed_data.getvalue(), obj_name=f"{cert_number}.pdf"
+            )
+
+        return jsonify({"response": "Certificate could not be uploaded"}), 400
 
 
 @APP.route("/api/certificates/preview/<i_number>", methods=["POST", "GET"])
@@ -611,7 +626,7 @@ def preview_certificate(i_number):
     elif request.method == "GET":
         pdf_bytes = get_certificate(data)
 
-    return create_pdf_response(pdf_bytes=pdf_bytes, obj_name="preview.pdf")
+    return create_pdf_response(pdf_bytes=pdf_bytes.getvalue(), obj_name="preview.pdf")
 
 
 @APP.route("/api/certificates/verify/<i_number>", methods=["POST"])
@@ -651,7 +666,7 @@ def create_pdf_response(pdf_bytes, obj_name):
     """
     Returns a http response containing the pdf as body.
     """
-    response = make_response(pdf_bytes.getvalue())
+    response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = "inline; filename=%s" % obj_name
     return response
@@ -686,6 +701,15 @@ def upload_certificate(pdf_bytes, ind_number):
     """
     return s3.get_s3_client().put_object(
         file_name=f"{ind_number}/certificate.pdf", file_data=pdf_bytes
+    )
+
+
+def download_certificate_s3(ind_number):
+    """
+    Returns a signed certificate that already exists in S3.
+    """
+    return s3.get_s3_client().get_object(
+        bucket_object_name=f"{ind_number}/certificate.pdf"
     )
 
 
@@ -730,12 +754,24 @@ def get_certificate_data(ind, user_id):
 
     date = datetime.datetime.utcnow()
     date = date.strftime("%Y-%m-%d")
-    extra_data = {"user_id": user_id, "issue_date": date, "photos": False}
+    herd = ind["herd"]
+    if type(herd) == dict:
+        herd = herd["herd"]
+
+    genebank = ind["number"].split("-")
+    extra_data = {
+        "genebank_aki": genebank[1],
+        "genebank_number": genebank[0],
+        "herd": herd,
+        "user_id": user_id,
+        "issue_date": date,
+        "photos": False,
+    }
     ind["notes"] = "\n".join(
         [
-            "Notes: " + str(ind.get("notes", "")),
-            "Color notes: " + str(ind.get("color_note", "")),
-            "Hair notes: " + str(ind.get("hair_notes", "")),
+            str(ind.get("notes", "")),
+            "Färg upplysningar: " + str(ind.get("color_note", "")),
+            "Hår upplysningar: " + str(ind.get("hair_notes", "")),
         ]
     )
     cert_data_lst = []
@@ -778,6 +814,10 @@ def _get_parent(ind, user_id, ancestry_level, ancestry_type):
     parent_ind = dict()
     for old_key, val in idv.items():
         parent_ind[ndict[old_key]] = val
+
+    genebank = parent_ind[ancestry_type + "_" + "number"].split("-")
+    parent_ind[ancestry_type + "_" + "genebank_aki"] = genebank[1]
+    parent_ind[ancestry_type + "_" + "genebank_number"] = genebank[0]
 
     return parent_ind
 
