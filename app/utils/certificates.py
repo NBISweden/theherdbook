@@ -16,11 +16,11 @@ from endesive import pdf
 from endesive.pdf import cms
 
 FORM_KEYS = {
-    "IdRas": "genebank_id",
-    "IdGenbanksNummer": "genebank_id",
+    "IdRas": "genebank",
+    "IdGenbanksNummer": "genebank_number",
     "IdFärg": "color",
-    "IdÖvriga": "notes",  # color and hair notes
-    "IdÅrKullIndivid": "name",  # Fix
+    "IdÖvriga": "notes",
+    "IdÅrKullIndivid": "genebank_aki",
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
     "IdAntalFödda": "litter",
@@ -31,35 +31,34 @@ FORM_KEYS = {
     "IdFödelseDatum": "birth_date",
     "IdFotoFinns": "photos",  # Fix Left right and up. Checkbox.
     "IdNamn": "name",  # herdname + ind name(?) Pending decision
-    "FarGenbanksNummer": "F_genebank_id",
-    "FarÅrKullIndivid": "F_number",
-    "MorGenbanksNummer": "M_genebank_id",
-    "MorÅrKullIndivid": "M_number",
+    "FarGenbanksNummer": "F_genebank_number",
+    "FarÅrKullIndivid": "F_genebank_aki",
+    "MorGenbanksNummer": "M_genebank_number",
+    "MorÅrKullIndivid": "M_genebank_aki",
     "FarNamn": "F_name",
     "MorNamn": "M_name",
     "FarFärg": "F_color",
     "MorFärg": "M_color",
-    "FarfarGenbanksNummer": "FF_genebank_id",
-    "FarfarÅrKullInvidid": "FF_number",
-    "MorfarGenbanksNummer": "MF_genebank_id",
-    "MorfarÅrKullIndivid": "MF_number",
+    "FarfarGenbanksNummer": "FF_genebank_number",
+    "FarfarÅrKullInvidid": "FF_genebank_aki",
+    "MorfarGenbanksNummer": "MF_genebank_number",
+    "MorfarÅrKullIndivid": "MF_genebank_aki",
     "FarfarNamn": "FF_name",
     "MorfarNamn": "MF_name",
     "FarfarFärg": "FF_color",
     "MorfarFärg": "MF_color",
-    "FarmorGenbanksNummer": "FM_genebank_id",
-    "FarmorÅrKullInvidid": "FM_number",
-    "MormorGenbanksNummer": "MM_genebank_id",
-    "MormorÅrKullIndivid": "MM_number",
+    "FarmorGenbanksNummer": "FM_genebank_number",
+    "FarmorÅrKullInvidid": "FM_genebank_aki",
+    "MormorGenbanksNummer": "MM_genebank_number",
+    "MormorÅrKullIndivid": "MM_genebank_aki",
     "FarmorNamn": "FM_name",
     "MormorNamn": "MM_name",
     "FarmorFärg": "FM_color",
     "MormorFärg": "MM_color",
-    "Nummer": "number",
-    "IntygasAv": "user_id",  # Username
-    # Herd id of rabbit individual (Without herd identifier) G/M
-    "IntygasNummer": "certificate",
-    "IntygasDatum": "issue_date",  # Day of signature
+    "Nummer": "certificate",
+    "IntygasAv": "user_id",
+    "IntygasNummer": "herd",
+    "IntygasDatum": "issue_date",
     "IntygasPlats": "name",  # Physical id (Only in cert?)
 }
 
