@@ -585,6 +585,8 @@ def issue_certificate(i_number):
         da.update_individual(ind_data, session.get("user_id", None))
 
         cert_data = get_certificate_data(ind_data, user_id)
+        # get_certificate expects a dict
+        cert_data.update(**form, certificate=cert_number)
         pdf_bytes = get_certificate(cert_data)
         ind_number = ind_data["number"]
         uploaded = False
