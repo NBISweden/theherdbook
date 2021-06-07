@@ -19,6 +19,7 @@ import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { Individual, inputVariant, OptionType } from "@app/data_context_global";
 import { CertificateDownload } from "./certificate_download";
+import { Usecase } from "@app/certificate_form";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
@@ -77,13 +78,17 @@ export function IndividualCertificate({
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
+  const style = useStyles();
+
+  // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
+
+  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
   const canEdit: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.number);
   }, [user, individual]);
-  const style = useStyles();
 
   // Limited version of the individual to be used for the preview
   const certificateData = {
@@ -270,6 +275,7 @@ export function IndividualCertificate({
             canManage={canManage}
             canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
+            usecase={Usecase.Certificate}
           />
           <div className={style.paneControls}>
             <Button
