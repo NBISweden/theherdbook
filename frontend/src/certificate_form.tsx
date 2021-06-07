@@ -85,16 +85,23 @@ const useStyles = makeStyles({
   },
 });
 
+export enum Usecase {
+  AddIndividual = "addIndividual",
+  Certificate = "certificate",
+}
+
 export function CertificateForm({
   individual,
   canManage,
   canEdit,
   onUpdateIndividual,
+  usecase,
 }: {
   individual: Individual;
-  canManage: boolean;
+  canManage?: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
+  usecase: Usecase;
 }) {
   const { colors } = useDataContext();
   const style = useStyles();
@@ -129,21 +136,51 @@ export function CertificateForm({
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
-              <div className={style.adminPane}>
-                <div className={style.paneTitle}>
-                  Kan endast ändras av genbanksansvarig
+              {usecase == Usecase.Certificate ? (
+                <div className={style.adminPane}>
+                  <div className={style.paneTitle}>
+                    Kan endast ändras av genbanksansvarig
+                  </div>
+                  <TextField
+                    disabled={!canManage}
+                    label="Nummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.number ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual("number", event.currentTarget.value);
+                    }}
+                  />
                 </div>
-                <TextField
-                  disabled={!canManage}
-                  label="Nummer"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.number ?? ""}
-                  onChange={(event) => {
-                    onUpdateIndividual("number", event.currentTarget.value);
-                  }}
-                />
-              </div>
+              ) : usecase == Usecase.AddIndividual ? (
+                <>
+                  <TextField
+                    disabled={!canEdit}
+                    label="Nummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.number ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual("number", event.currentTarget.value);
+                    }}
+                  />
+                  <TextField
+                    disabled={!canEdit}
+                    label="Certifikatnummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.certificate ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "certificate",
+                        event.currentTarget.value
+                      );
+                    }}
+                  />
+                </>
+              ) : (
+                <div></div>
+              )}
               <div className={style.flexRow}>
                 <TextField
                   disabled={!canEdit}
