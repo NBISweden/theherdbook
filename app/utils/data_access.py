@@ -674,7 +674,6 @@ def update_individual(form, user_uuid):
     try:
         try:
             individual = form_to_individual(form, user)
-            print("this is ind: %s" % individual)
         except ValueError as exception:
             return {"status": "error", "message": f"{exception}"}
         if "weights" in form:
