@@ -19,8 +19,8 @@ services:
             - ./.docker/r-api-variables.env
             - ./.docker/main-api-variables.env
         ports:
-            - 8080:8080
-            - 8443:8443
+            - 80:8080
+            - 443:8443
             - 9090:9090
         volumes:
             - type: bind
