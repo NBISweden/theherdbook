@@ -663,7 +663,7 @@ def update_individual(form, user_uuid):
         form["herd"] = form["herd"].get("herd", None)
     if not Herd.select().where(Herd.herd == form["herd"]).exists():
         return {"status": "error", "message": "Individual must have a valid herd"}
-    if form.get("issue_digital", False) == True:
+    if form.get("issue_digital", False):
         nextval = 1000000
         max = Individual.select(  # pylint: disable=E1120
             fn.MAX(Individual.digital_certificate)

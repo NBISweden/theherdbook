@@ -352,7 +352,14 @@ class TestDataAccess(DatabaseTest):
         self.individuals[0].name = "original name"
 
         status = da.update_individual(forms["valid"], self.admin.uuid)
-        self.assertEqual(status, {"status": "success", "message": "Individual Updated", "digital_certificate": None})
+        self.assertEqual(
+            status,
+            {
+                "status": "success",
+                "message": "Individual Updated",
+                "digital_certificate": None,
+            },
+        )
         self.assertEqual(db.Individual.get(self.individuals[0].id).name, "new name")
 
         # TODO: also validate weights and bodyfat
