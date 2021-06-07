@@ -4,7 +4,14 @@
  */
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button, Tooltip } from "@material-ui/core";
+import {
+  Button,
+  ButtonGroup,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from "@material-ui/core";
+import { ArrowForward } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import { useMessageContext } from "@app/message_context";
 import { get } from "@app/communication";
@@ -21,6 +28,7 @@ import { useUserContext } from "@app/user_context";
 import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
 import { CertificateVerification } from "./certificate_verification";
+import { CertificateDownload } from "./certificate_download";
 
 const useStyles = makeStyles({
   body: {
@@ -64,6 +72,9 @@ const useStyles = makeStyles({
   editButton: {
     marginTop: "15px",
   },
+  icon: {
+    marginLeft: "0.5em",
+  },
 });
 
 /**
@@ -76,8 +87,13 @@ export function IndividualView({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [certificateUrl, setCertificateUrl] = React.useState(
+    undefined as string | undefined
+  );
   const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
   const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
+  // state to control the certificate menu button
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
 
   //checks if the individual has a certificate, and if yes whether it's a paper or digital one
@@ -93,6 +109,52 @@ export function IndividualView({ id }: { id: string }) {
       setHasDigitalCert(true);
     }
   };
+
+  // funtions to control the certificate menu button
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // function to download an existing certificate
+  const downloadCertificate = () => {
+    fetch(`/api/certificates/issue/${id}`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/pdf",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Certifikatet kunde inte laddas ner.");
+        } else return res.blob();
+      })
+      .then((blob) => {
+        if (blob) {
+          console.log("blob");
+          setCertificateUrl(window.URL.createObjectURL(blob));
+        } else {
+          throw new Error("Något gick fel.");
+        }
+      })
+      .catch((error) => {
+        userMessage(error.message, "error");
+      });
+  };
+
+  React.useEffect(() => {
+    if (individual && certificateUrl) {
+      console.log("use effect", certificateUrl);
+      popup(
+        <CertificateDownload certUrl={certificateUrl} individual={individual} />
+      );
+    }
+  }, [certificateUrl]);
 
   const children: Individual[] = React.useMemo(() => {
     if (
@@ -245,33 +307,58 @@ export function IndividualView({ id }: { id: string }) {
                 </Button>
               )}
               {user?.canEdit(id) && hasDigitalCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(<IndividualCertificate id={id} action={"update"} />)
-                  }
-                >
-                  Uppdatera certifikat
-                </Button>
-              )}
-              {user?.canEdit(id) && hasDigitalCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(
-                      <CertificateVerification
-                        id={id}
-                        individual={individual}
-                      />
-                    )
-                  }
-                >
-                  Verifiera certifikat
-                </Button>
+                <>
+                  <Button
+                    aria-controls="simple-menu"
+                    aria-haspopup="true"
+                    variant="contained"
+                    color="primary"
+                    className={style.editButton}
+                    onClick={handleClick}
+                  >
+                    Certifikat{" "}
+                    <ArrowForward fontSize="small" className={style.icon} />
+                  </Button>
+                  <Menu
+                    id="simple-menu"
+                    anchorEl={anchorEl}
+                    keepMounted
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                        downloadCertificate();
+                      }}
+                    >
+                      Ladda ner
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                        popup(
+                          <IndividualCertificate id={id} action={"update"} />
+                        );
+                      }}
+                    >
+                      Uppdatera
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        handleClose();
+                        popup(
+                          <CertificateVerification
+                            id={id}
+                            individual={individual}
+                          />
+                        );
+                      }}
+                    >
+                      Verifiera
+                    </MenuItem>
+                  </Menu>
+                </>
               )}
               <div>
                 <h3>Besättningshistoria</h3>

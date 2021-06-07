@@ -18,6 +18,7 @@ import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { Individual, inputVariant, OptionType } from "@app/data_context_global";
+import { CertificateDownload } from "./certificate_download";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
@@ -442,27 +443,10 @@ export function IndividualCertificate({
         </>
       ) : individual && showComplete ? (
         <>
-          {action == "issue" ? (
-            <h1>Certifikatet är klart!</h1>
-          ) : (
-            <h1>Certifikatet uppdaterades!</h1>
-          )}
-          <div className={style.paneControls}>
-            <a
-              href={certificateUrl}
-              download={individual.number}
-              rel="noopener noreferrer"
-            >
-              <Button variant="contained" color="primary">
-                {"Ladda ner"}
-              </Button>
-            </a>
-            <a target="_blank" href={certificateUrl} rel="noopener noreferrer">
-              <Button variant="contained" color="primary">
-                {"Öppna i ny flik"}
-              </Button>
-            </a>
-          </div>
+          <CertificateDownload
+            certUrl={certificateUrl}
+            individual={individual}
+          />
         </>
       ) : (
         <></>
