@@ -663,10 +663,18 @@ def update_individual(form, user_uuid):
         form["herd"] = form["herd"].get("herd", None)
     if not Herd.select().where(Herd.herd == form["herd"]).exists():
         return {"status": "error", "message": "Individual must have a valid herd"}
-
+    if form.get("issue_digital", False) == True:
+        nextval = 1000000
+        max = Individual.select(  # pylint: disable=E1120
+            fn.MAX(Individual.digital_certificate)
+        ).scalar()
+        if max is not None:
+            nextval = max + 1
+        form["digital_certificate"] = nextval
     try:
         try:
             individual = form_to_individual(form, user)
+            print("this is ind: %s" % individual)
         except ValueError as exception:
             return {"status": "error", "message": f"{exception}"}
         if "weights" in form:
@@ -677,7 +685,11 @@ def update_individual(form, user_uuid):
         # TODO: also update herd tracking
 
         individual.save()
-        return {"status": "success", "message": "Individual Updated"}
+        return {
+            "status": "success",
+            "message": "Individual Updated",
+            "digital_certificate": individual.digital_certificate,
+        }
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
 
