@@ -298,7 +298,7 @@ class TestEndpoints(FlaskTest):
             digital_certificate = db.Individual.get(
                 self.individuals[0].id
             ).digital_certificate
-            self.assertEqual(digital_certificate, 1000000)
+            self.assertEqual(digital_certificate, 100000)
             self.assertEqual(
                 first_pdf_response.headers["Content-Type"], "application/pdf"
             )
@@ -311,7 +311,7 @@ class TestEndpoints(FlaskTest):
             digital_certificate = db.Individual.get(
                 self.individuals[1].id
             ).digital_certificate
-            self.assertEqual(digital_certificate, 1000001)
+            self.assertEqual(digital_certificate, 100001)
             self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
             self.assertEqual(pdf_response.status_code, 200)
 
