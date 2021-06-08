@@ -562,6 +562,8 @@ def issue_certificate(i_number):
         return jsonify({"response": "Individual not found"}), 404
 
     certificate_exists = ind_data.get("digital_certificate", None)
+    paper_certificate_exists = ind_data.get("certificate", None)
+
     if request.method == "GET":
         try:
             present = check_certificate_s3(ind_number=ind_data["number"])
@@ -575,7 +577,7 @@ def issue_certificate(i_number):
             return jsonify({"response": "Error processing your request"}), 400
 
     elif request.method == "POST":
-        if certificate_exists:
+        if certificate_exists or paper_certificate_exists:
             return jsonify({"response": "Certificate already exists"}), 400
 
         form = request.json
