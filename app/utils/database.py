@@ -410,14 +410,7 @@ class Individual(BaseModel):
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
-
-    if isinstance(DATABASE, PostgresqlDatabase):
-        digital_certificate = IntegerField(
-            sequence="certificates_seq", unique=True, null=True
-        )
-    elif isinstance(DATABASE, SqliteDatabase):
-        digital_certificate = IntegerField(unique=True, null=True)
-
+    digital_certificate = IntegerField(unique=True, null=True)
     number = CharField(20)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
@@ -1099,13 +1092,6 @@ def init():
     with DATABASE.atomic():
         sh_bootstrap.save()
 
-    # Create sequence to allow unique ids for digital certificates
-    if isinstance(DATABASE, PostgresqlDatabase):
-        # pylint: disable=C0301
-        DATABASE.execute_sql(
-            """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""  # noqa: E501
-        )
-
 
 def verify(try_init=True):
     """
@@ -1239,7 +1225,6 @@ def migrate_4_to_5():
     """
     Migrate between schema version 4 and 5.
     """
-    sequence = {}
     with DATABASE.atomic():
         if "individual" not in DATABASE.get_tables():
             # Can't run migration
@@ -1250,12 +1235,6 @@ def migrate_4_to_5():
             ).execute()
             return
 
-        if isinstance(DATABASE_MIGRATOR, PostgresqlMigrator):
-            sequence = {"sequence": "certificates_seq"}
-            # pylint: disable=C0301
-            DATABASE.execute_sql(
-                """CREATE SEQUENCE IF NOT EXISTS certificates_seq START WITH 100000 INCREMENT BY 1 MAXVALUE 199999 NO CYCLE"""  # noqa: E501
-            )
         cols = [x.name for x in DATABASE.get_columns("individual")]
 
         if "digital_certificate" not in cols:
@@ -1263,7 +1242,7 @@ def migrate_4_to_5():
                 DATABASE_MIGRATOR.add_column(
                     "individual",
                     "digital_certificate",
-                    IntegerField(null=True, unique=True, **sequence),
+                    IntegerField(null=True, unique=True),
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120

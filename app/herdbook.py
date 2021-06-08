@@ -521,7 +521,7 @@ def update_certificate(i_number):
     if ind_data is None:
         return jsonify({"response": "Individual not found"}), 404
 
-    certificate_exists = ind_data.get("certificate", None)
+    certificate_exists = ind_data.get("digital_certificate", None)
     form = request.json
     uploaded = False
 
@@ -561,7 +561,9 @@ def issue_certificate(i_number):
     if ind_data is None:
         return jsonify({"response": "Individual not found"}), 404
 
-    certificate_exists = ind_data.get("certificate", None)
+    certificate_exists = ind_data.get("digital_certificate", None)
+    paper_certificate_exists = ind_data.get("certificate", None)
+
     if request.method == "GET":
         try:
             present = check_certificate_s3(ind_number=ind_data["number"])
@@ -575,14 +577,14 @@ def issue_certificate(i_number):
             return jsonify({"response": "Error processing your request"}), 400
 
     elif request.method == "POST":
-        if certificate_exists:
+        if certificate_exists or paper_certificate_exists:
             return jsonify({"response": "Certificate already exists"}), 400
 
         form = request.json
-        cert_number = ind_data["digital_certificate"]
 
-        ind_data.update(**form, certificate=cert_number)
-        da.update_individual(ind_data, session.get("user_id", None))
+        ind_data.update(**form, issue_digital=True)
+        res = da.update_individual(ind_data, session.get("user_id", None))
+        cert_number = res.get("digital_certificate", None)
 
         cert_data = get_certificate_data(ind_data, user_id)
         # get_certificate expects a dict
