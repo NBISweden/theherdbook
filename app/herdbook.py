@@ -16,8 +16,18 @@ import time
 import uuid
 
 import apscheduler.schedulers.background
+import flask_session
 import requests
-from flask import Flask, jsonify, make_response, request, session
+from flask import (
+    Flask,
+    abort,
+    jsonify,
+    make_response,
+    redirect,
+    request,
+    session,
+    url_for,
+)
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -28,6 +38,7 @@ from flask_login import (
 )
 
 import utils.csvparser as csvparser  # isort:skip
+import utils.external_auth  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
@@ -42,6 +53,7 @@ APP.config.update(
     # workflow
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Strict",
+    SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="filesystem",
     CACHE_DIR="/tmp",
@@ -50,6 +62,10 @@ APP.config.update(
 
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
+
+utils.external_auth.setup(APP)
+
+flask_session.Session().init_app(APP)
 
 CACHE = Cache(APP)
 LOGIN = LoginManager(APP)
@@ -143,7 +159,12 @@ def get_users():
     return jsonify(users=users)
 
 
-@APP.route("/api/manage/user/<u_id>", methods=["GET", "PATCH", "POST"])
+@APP.route(
+    "/api/manage/user/",
+    defaults={"u_id": False},
+    methods=["GET", "UPDATE", "PATCH", "POST"],
+)
+@APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "PATCH", "POST"])
 @login_required
 def manage_user(u_id):
     """
@@ -156,18 +177,46 @@ def manage_user(u_id):
             data?: any
         }
     """
+
+    form = request.json
+    if not u_id:
+        # If not provided, default to current user.
+        u_id = current_user.id
+        if form:
+            form["id"] = u_id
+
     if request.method == "GET":
         retval = da.get_user(u_id, session.get("user_id", None))
-    if request.method == "PATCH":
-        form = request.json
+    if request.method in ("UPDATE", "PATCH"):
         retval = da.update_user(form, session.get("user_id", None))
     if request.method == "POST":
-        form = request.json
         retval = da.add_user(form, session.get("user_id", None))
     return jsonify(retval)
 
 
-@APP.route("/api/manage/role", methods=["POST", "PATCH"])
+@APP.route("/api/manage/setpassword/", defaults={"u_id": False}, methods=["POST"])
+@APP.route("/api/manage/setpassword/<u_id>", methods=["POST"])
+def change_userpassword(u_id):
+    """
+    Set password for user u_id. Administrators can set password for any user.
+    Non-administrators need to present the old password or a token.
+    """
+
+    if request.method != "POST":
+        return abort(400)  # Makes the linter happy
+
+    form = request.json
+
+    if not current_user.is_authenticated:
+        return abort(403)  # Makes the linter happy
+
+    if not u_id:
+        u_id = current_user.id
+    retval = da.change_password(current_user, u_id, form)
+    return jsonify(retval)
+
+
+@APP.route("/api/manage/role", methods=["POST", "PATCH", "UPDATE"])
 @login_required
 def manage_roles():
     """
@@ -291,6 +340,144 @@ def login_handler():
         session.modified = True
         login_user(user)
     return get_user()
+
+
+@APP.route("/api/login/<string:service>", methods=["GET", "POST"])
+def external_login_handler(service):
+    """
+    Do an external authentication. The special service
+    available responds with a list of the enabled services.
+    """
+
+    if service == "available":
+        return jsonify(utils.external_auth.available_methods())
+
+    if service not in utils.external_auth.available_methods():
+        return "null"  # bad method
+
+    if not session.get("link_account") and current_user.is_authenticated:
+        return get_user()
+
+    if not utils.external_auth.authorized(APP, service):
+        APP.logger.debug("Need to do external auth for service %s" % service)
+        return redirect(url_for("%s.login" % service))
+
+    # Hack to reuse the same external handler for both linking and login
+    if session.get("link_account"):
+        return redirect("/api/link/%s" % service)
+
+    persistent_id = utils.external_auth.get_persistent(service)
+
+    user = da.authenticate_with_credentials(service, persistent_id)
+
+    if user:
+        APP.logger.info(
+            "Logging in user %s (%s - #%d) by persistent id %s for service %s"
+            % (user.username, user.email, user.id, persistent_id, service)
+        )
+        session["user_id"] = user.uuid
+        session.modified = True
+        login_user(user)
+        return get_user()
+
+    if not utils.external_auth.get_autocreate(service):
+        # No user - give up
+        return None
+
+    accountdetails = utils.external_auth.get_account_details(service)
+    user = da.register_user(accountdetails["email"], None, validated=True)
+
+    if not user:
+        APP.logger.error(
+            "Automatic registering of user with e-mail %s (persistent id %s) for service %s FAILED"
+            % (accountdetails["email"], persistent_id, service)
+        )
+        return None
+
+    linked = da.link_account(user, service, persistent_id)
+
+    if not linked:
+        APP.logger.error(
+            "Linked of of user with e-mail %s (persistent id %s) for service %s FAILED"
+            % (accountdetails["email"], persistent_id, service)
+        )
+        return None
+
+    APP.logger.info(
+        "Automatically registered user with e-mail %s (persistent id %s) for service %s"
+        % (persistent_id, accountdetails["email"], service)
+    )
+
+    login_user(user)
+
+    return get_user()
+
+
+@APP.route("/api/link/<string:service>", methods=["GET", "POST"])
+def external_link_handler(service):
+    """
+    Link user to selected account. Will be logged in to that service if not.
+    """
+    # Something odd
+
+    if service == "reset":
+        if session.get("link_account"):
+            del session["link_account"]
+        return "reset"
+
+    if service not in utils.external_auth.available_methods():
+        return "null"  # bad method
+
+    if not current_user.is_authenticated:
+        return "null"  # FIXME: error code instead?
+
+    if not utils.external_auth.authorized(APP, service):
+        # Not authorized? Go back to login
+        session["link_account"] = True
+        return redirect("/api/login/%s" % service)
+
+    persistent = utils.external_auth.get_persistent(service)
+    linked = da.link_account(current_user, service, persistent)
+
+    if not linked:
+        # Not linked
+        return "null"  # FIXME: error code instead?
+
+    return "%d" % current_user.id
+
+
+@APP.route("/api/linked", methods=["GET", "POST"])
+def external_linked_accounts_handler():
+    """
+    Return linked services for logged in user.
+    """
+    # Something odd
+
+    if not current_user.is_authenticated:
+        return "null"  # FIXME: Return error code instead?
+
+    linked = da.linked_accounts(current_user)
+
+    if not linked:
+        return "null"  # FIXME: error code instead?
+
+    return jsonify(linked)
+
+
+@APP.route("/api/unlink/<string:service>", methods=["GET", "POST"])
+def external_unlink_handler(service):
+    """
+    Link user to selected account. Should be logged in to that service.
+    """
+    # Something odd
+
+    if not current_user.is_authenticated:
+        return "null"  # FIXME: 403 instead?
+
+    unlinked = da.unlink_account(current_user, service)
+    if not unlinked:
+        return "null"  # FIXME: Error code instead?
+    return "1"
 
 
 @APP.route("/api/logout")

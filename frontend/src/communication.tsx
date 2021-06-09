@@ -43,7 +43,7 @@ export async function post(url: string, content: any) {
 }
 
 /**
- * Creates an UPDATE request to the given `url` containing `content`, and
+ * Creates an PATCH request to the given `url` containing `content`, and
  * returnsthe reply as json.
  *
  * @param url The target URL for the POST request

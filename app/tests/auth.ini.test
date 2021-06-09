@@ -1,0 +1,10 @@
+[twitter]
+key=twitterkey
+secret=twittersecret
+bearer=twitterbearer
+
+[google]
+key=googlekey
+secret=googlesecret
+
+

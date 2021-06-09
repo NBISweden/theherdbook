@@ -47,6 +47,7 @@ def set_test_database(name):
     global DATABASE, DATABASE_MIGRATOR  # pylint: disable=global-statement
     DATABASE = SqliteDatabase(name)
 
+    # Assume Sqlite to be connected always.
     DB_PROXY.initialize(DATABASE)
 
     DATABASE_MIGRATOR = SqliteMigrator(DATABASE)
@@ -61,6 +62,7 @@ def set_database(name, host=None, port=None, user=None, password=None):
     DATABASE = PostgresqlDatabase(
         name, host=host, port=port, user=user, password=password
     )
+
     DB_PROXY.initialize(DATABASE)
 
     DATABASE_MIGRATOR = PostgresqlMigrator(DATABASE)
@@ -646,7 +648,6 @@ class User(BaseModel, UserMixin):
     username = TextField(unique=True, null=True)
     email = TextField()
     uuid = UUIDField()
-    password_hash = CharField(128)
     validated = BooleanField(default=False)
     _privileges = TextField(column_name="privileges", default="[]")
 
@@ -1169,7 +1170,6 @@ def migrate_2_to_3():
     """
 
     with DATABASE.atomic():
-
         tables = DATABASE.get_tables()
 
         if "colour" in tables:
@@ -1250,6 +1250,32 @@ def migrate_4_to_5():
         ).execute()
 
 
+def migrate_5_to_6():
+    """
+    Migrate between schema version 5 and 6.
+    """
+
+    with DATABASE.atomic():
+
+        cols = [x.name for x in DATABASE.get_columns("hbuser")]
+
+        if "password_hash" in cols:
+            # Go through hbuser and fill in authenticators from the old data.
+            pw_cursor = DATABASE.execute_sql("select user_id,password_hash from hbuser")
+
+            for user_data in pw_cursor.fetchmany():
+                auth = Authenticators(
+                    user=user_data[0], auth="password", auth_data=user_data[1]
+                )
+                auth.save()
+            migrate(DATABASE_MIGRATOR.drop_column("hbuser", "password_hash"))
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=5,
+            comment="Remove password_hash from hbuser",
+            applied=datetime.now(),
+        ).execute()
+
+
 def check_migrations():
     """
     Check if the database needs any migrations run and run those if that's the case.
@@ -1273,11 +1299,6 @@ def check_migrations():
         call = ("migrate_%s_to_%s" % (current_version, next_version)).lower()
         logging.info(
             "Calling %s to migrate from %s to %s", call, current_version, next_version
-        )
-
-        print(
-            "Calling %s to migrate from %s to %s"
-            % (call, current_version, next_version)
         )
 
         globals()[call]()

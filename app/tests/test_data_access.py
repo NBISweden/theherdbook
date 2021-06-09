@@ -85,10 +85,19 @@ class TestDataAccess(DatabaseTest):
         user = da.register_user(email, password, username, validated, privileges)
 
         self.assertEqual(user.email, email)
-        self.assertTrue(check_password_hash(user.password_hash, password))
         self.assertEqual(user.username, username)
         self.assertEqual(user.validated, validated)
         self.assertEqual(user.privileges, privileges)
+
+        auth = (
+            db.Authenticators.select()
+            .where(
+                (db.Authenticators.user == user.id)
+                & (db.Authenticators.auth == "password")
+            )
+            .get()
+        )
+        self.assertTrue(check_password_hash(auth.auth_data, password))
 
     def test_authenticate_user(self):
         """
