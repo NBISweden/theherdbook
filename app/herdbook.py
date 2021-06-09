@@ -345,7 +345,7 @@ def login_handler():
 @APP.route("/api/login/<string:service>", methods=["GET", "POST"])
 def external_login_handler(service):
     """
-    Do an external authentication. The special sercvice
+    Do an external authentication. The special service
     available responds with a list of the enabled services.
     """
 
