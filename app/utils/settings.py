@@ -2,6 +2,7 @@
 Instance specific settings for the herdbook.
 """
 
+import json
 import logging
 import os
 from argparse import Namespace
@@ -36,6 +37,6 @@ s3.endpoint = os.environ.get("S3_ENDPOINT", None)
 s3.region = os.environ.get("S3_REGION", "us-east-1")
 s3.secret_key = os.environ.get("S3_SECRETKEY", "secretkeytest")
 s3.access_key = os.environ.get("S3_ACCESSKEY", "accesskeytest")
-s3.verify = False
+s3.verify = json.loads(os.environ.get("S3_VERIFY", "True").lower())
 s3.cert = None
 s3.private_key = None

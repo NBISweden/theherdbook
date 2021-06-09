@@ -354,6 +354,7 @@ class TestEndpoints(FlaskTest):
         """
 
         individual = self.individuals[0].number
+        individual_2 = self.individuals[1].number
 
         valid_issue_form = {
             "color_id": 3,
@@ -383,14 +384,31 @@ class TestEndpoints(FlaskTest):
             first_pdf_response = context.post(
                 f"/api/certificates/issue/{individual}", json=valid_issue_form
             )
-            certificate = db.Individual.get(self.individuals[0].id).certificate
-            self.assertEqual(certificate, "G1310-2121")
-            color = db.Individual.get(self.individuals[0].id).color.id
-            self.assertEqual(color, 3)
+            digital_certificate = db.Individual.get(
+                self.individuals[0].id
+            ).digital_certificate
+            self.assertEqual(digital_certificate, 100000)
             self.assertEqual(
                 first_pdf_response.headers["Content-Type"], "application/pdf"
             )
             self.assertEqual(first_pdf_response.status_code, 200)
+
+            # Issue a second certificate
+            pdf_response = context.post(
+                f"/api/certificates/issue/{individual_2}", json=valid_issue_form
+            )
+            digital_certificate = db.Individual.get(
+                self.individuals[1].id
+            ).digital_certificate
+            self.assertEqual(digital_certificate, 100001)
+            self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
+            self.assertEqual(pdf_response.status_code, 200)
+
+            # Issue a certificate again
+            response = context.post(
+                f"/api/certificates/issue/{individual_2}", json=valid_issue_form
+            )
+            self.assertEqual(response.status_code, 400)
 
             # Download a certificate
             download_response = context.get(f"/api/certificates/issue/{individual}")
