@@ -2,9 +2,9 @@
 Instance specific settings for the herdbook.
 """
 
+import json
 import logging
 import os
-import json
 from argparse import Namespace
 from pathlib import Path
 
