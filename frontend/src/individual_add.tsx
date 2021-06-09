@@ -3,11 +3,12 @@ import React from "react";
 import { Button, makeStyles } from "@material-ui/core";
 
 import { CertificateForm } from "@app/certificate_form";
-import { Individual } from "@app/data_context_global";
+import { HerdNameID, Individual, LimitedHerd } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { Usecase } from "@app/certificate_form";
+import { useDataContext } from "./data_context";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -18,10 +19,11 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualAdd() {
+export function IndividualAdd({ id }: { id: string }) {
   const [individual, setIndividual] = React.useState({} as Individual);
   const { userMessage } = useMessageContext();
   const { user } = useUserContext();
+  const { genebanks } = useDataContext();
   const style = useStyles();
 
   //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
@@ -43,18 +45,44 @@ export function IndividualAdd() {
   };
 
   const createIndividual = (individual: Individual) => {
-    if (individual) {
-      post("/api/individual", individual).then(
-        () => {
-          console.log("individual sent");
-        },
-        (error) => {
-          console.log(error);
-          userMessage("Något gick fel.", "error");
-        }
+    // first generate the individuals origin herd
+    if (individual?.number) {
+      let newIndividual = individual;
+      const numberParts: string[] = individual.number.split("-");
+      const originHerdNumber: string = numberParts[0];
+      // id here is the id of the herd the user is adding the individual to.
+      // assumes that the new individual originates from a herd belonging to the same genebank.
+      const originGenebank = genebanks.find((genebank) =>
+        genebank.herds.filter((herd) => herd.herd == id)
       );
-    } else {
-      userMessage("Fyll i uppgifterna först", "warning");
+      const originHerd = originGenebank?.herds.find(
+        (herd) => herd.herd == originHerdNumber
+      );
+
+      if (originHerd?.herd_name && originHerd.herd && originHerd.id) {
+        const originHerdNameID: HerdNameID = {
+          herd_name: originHerd.herd_name,
+          herd: originHerd.herd,
+          id: originHerd.id,
+        };
+        newIndividual = {
+          ...newIndividual,
+          origin_herd: originHerdNameID,
+          herd: id,
+        };
+
+        post("/api/individual", newIndividual).then(
+          () => {
+            console.log("individual sent");
+          },
+          (error) => {
+            console.log(error);
+            userMessage("Något gick fel.", "error");
+          }
+        );
+      } else {
+        userMessage("Fyll i uppgifterna först", "warning");
+      }
     }
   };
 

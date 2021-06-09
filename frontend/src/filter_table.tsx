@@ -562,7 +562,7 @@ export function FilterTable({
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => popup(<IndividualAdd />)}
+                  onClick={() => popup(<IndividualAdd id={id} />)}
                 >
                   Lägg till
                 </Button>
