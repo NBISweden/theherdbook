@@ -1270,7 +1270,7 @@ def migrate_5_to_6():
                 auth.save()
             migrate(DATABASE_MIGRATOR.drop_column("hbuser", "password_hash"))
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=5,
+            version=6,
             comment="Remove password_hash from hbuser",
             applied=datetime.now(),
         ).execute()
