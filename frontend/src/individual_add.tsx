@@ -81,8 +81,10 @@ export function IndividualAdd({ id }: { id: string }) {
           }
         );
       } else {
-        userMessage("Fyll i uppgifterna först", "warning");
+        userMessage("Individens nummer ha inget giltigt format.", "warning");
       }
+    } else {
+      userMessage("Fyll i ett nummer först.", "warning");
     }
   };
 
