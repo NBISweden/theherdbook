@@ -1,20 +1,23 @@
 import React from "react";
 
-import { Button, makeStyles } from "@material-ui/core";
+import { Button, makeStyles, TextField } from "@material-ui/core";
 
-import { CertificateForm } from "@app/certificate_form";
+import { CertificateForm, Usecase } from "@app/certificate_form";
+import { HerdView } from "@app/herd_view";
 import {
   activeIndividuals,
   HerdNameID,
   Individual,
+  LimitedIndividual,
+  individualLabel,
   LimitedHerd,
   Genebank,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { post } from "@app/communication";
 import { useUserContext } from "./user_context";
-import { Usecase } from "@app/certificate_form";
 import { useDataContext } from "./data_context";
+import { Autocomplete } from "@material-ui/lab";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -23,6 +26,14 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     padding: "20px 0",
   },
+  ancestorBox: {
+    display: "flex",
+    flexDirection: "column",
+    margin: "0 0 4em 0",
+  },
+  ancestorInput: {
+    margin: "1em 0",
+  },
 });
 
 export function IndividualAdd({ id }: { id: string }) {
@@ -30,7 +41,7 @@ export function IndividualAdd({ id }: { id: string }) {
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
   );
-  const { userMessage } = useMessageContext();
+  const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const style = useStyles();
@@ -62,13 +73,33 @@ export function IndividualAdd({ id }: { id: string }) {
     setGenebank(originGenebank);
   }, [id]);
 
+  const activeFemales: Individual[] = activeIndividuals(genebank, "female");
+  const activeMales: Individual[] = activeIndividuals(genebank, "male");
+
+  const limitedFemales: LimitedIndividual[] = activeFemales.map(
+    (individual) => {
+      return {
+        id: individual.id,
+        name: individual.name,
+        number: individual.number,
+      };
+    }
+  );
+
+  const limitedMales: LimitedIndividual[] = activeMales.map((individual) => {
+    return {
+      id: individual.id,
+      name: individual.name,
+      number: individual.number,
+    };
+  });
+
   const createIndividual = (individual: Individual) => {
     // first generate the individuals origin herd
     if (individual?.number) {
       let newIndividual = individual;
       const numberParts: string[] = individual.number.split("-");
       const originHerdNumber: string = numberParts[0];
-
       const originHerd = genebank?.herds.find(
         (herd: LimitedHerd) => herd.herd == originHerdNumber
       );
@@ -95,7 +126,7 @@ export function IndividualAdd({ id }: { id: string }) {
           }
         );
       } else {
-        userMessage("Individens nummer ha inget giltigt format.", "warning");
+        userMessage("Individens nummer har inget giltigt format.", "warning");
       }
     } else {
       userMessage("Fyll i ett nummer först.", "warning");
@@ -112,9 +143,42 @@ export function IndividualAdd({ id }: { id: string }) {
         usecase={Usecase.AddIndividual}
       />
       <h2>Lägg till härstamningen</h2>
-      <div></div>
+      <div className={style.ancestorBox}>
+        <Autocomplete
+          className={style.ancestorInput}
+          options={limitedFemales}
+          getOptionLabel={(option: LimitedIndividual) =>
+            individualLabel(option)
+          }
+          value={individual.mother}
+          onChange={(event, newValue) =>
+            handleUpdateIndividual("mother", newValue)
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Välj mor" variant="outlined" />
+          )}
+        />
+        <Autocomplete
+          className={style.ancestorInput}
+          options={limitedMales}
+          getOptionLabel={(option: LimitedIndividual) =>
+            individualLabel(option)
+          }
+          value={individual.father}
+          onChange={(event, newValue) =>
+            handleUpdateIndividual("father", newValue)
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Välj far" variant="outlined" />
+          )}
+        />
+      </div>
       <div className={style.paneControls}>
-        <Button variant="contained" color="primary">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => popup(<HerdView id={id} />)}
+        >
           Tillbaka
         </Button>
         <Button
