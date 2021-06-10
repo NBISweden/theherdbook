@@ -46,11 +46,6 @@ export function IndividualAdd({ id }: { id: string }) {
   const { genebanks } = useDataContext();
   const style = useStyles();
 
-  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
-  const canEdit: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.number);
-  }, [user, individual]);
-
   /**
    * Updates a single field in `individual`.
    *
@@ -139,7 +134,7 @@ export function IndividualAdd({ id }: { id: string }) {
       <CertificateForm
         onUpdateIndividual={handleUpdateIndividual}
         individual={individual}
-        canEdit={canEdit}
+        canEdit={user?.canEdit(id)}
         usecase={Usecase.AddIndividual}
       />
       <h2>Lägg till härstamningen</h2>
