@@ -48,10 +48,10 @@ const useStyles = makeStyles({
   },
   form: {
     display: "flex",
-    height: "100%",
     overflow: "hidden",
     flexDirection: "column",
     width: "95%",
+    marginBottom: "5em",
   },
   formPane: {
     borderRight: "none",
