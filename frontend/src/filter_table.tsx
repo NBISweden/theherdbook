@@ -557,16 +557,15 @@ export function FilterTable({
                 </TableBody>
               </Table>
             </TableContainer>
-            {id &&
-              (user?.is_manager || user?.is_admin) && ( //doublecheck if you can add rabbits for a genebank you're not the manager for. That shouldn't be the case
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => popup(<IndividualAdd id={id} />)}
-                >
-                  Lägg till
-                </Button>
-              )}
+            {id && user?.canEdit(id) && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => popup(<IndividualAdd id={id} />)}
+              >
+                Lägg till
+              </Button>
+            )}
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
