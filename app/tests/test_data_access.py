@@ -332,7 +332,9 @@ class TestDataAccess(DatabaseTest):
 
         # Make sure you cannot add rabbits with already existing numbers
         status = da.add_individual(forms["valid"], self.admin.uuid)
-        self.assertEqual(status, {"status": "error", "message": "Individual number already exists"})
+        self.assertEqual(
+            status, {"status": "error", "message": "Individual number already exists"}
+        )
 
     def test_update_individual(self):
         """
