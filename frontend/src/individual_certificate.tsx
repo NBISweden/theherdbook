@@ -12,14 +12,14 @@ import {
 } from "@material-ui/core";
 
 import { IndividualView } from "@app/individual_view";
-import { CertificateForm } from "@app/certificate_form";
+import { IndividualForm } from "@app/individual_form";
 import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { Individual, inputVariant, OptionType } from "@app/data_context_global";
 import { CertificateDownload } from "./certificate_download";
-import { Usecase } from "@app/certificate_form";
+import { FormAction } from "@app/individual_form";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
@@ -270,12 +270,12 @@ export function IndividualCertificate({
       ) : individual && showForm ? (
         <>
           <h1>Fyll i uppgifterna för certifikatet</h1>
-          <CertificateForm
+          <IndividualForm
             individual={individual}
             canManage={canManage}
             canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
-            usecase={Usecase.Certificate}
+            formAction={FormAction.handleCertificate}
           />
           <div className={style.paneControls}>
             <Button
