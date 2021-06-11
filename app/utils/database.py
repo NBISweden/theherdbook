@@ -1288,7 +1288,7 @@ def migrate_5_to_6():
 
 def migrate_6_to_7():
     """
-    Migrate between schema version 5 and 6.
+    Migrate between schema version 6 and 7.
     """
 
     with DATABASE.atomic():
