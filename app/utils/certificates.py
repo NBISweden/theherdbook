@@ -56,7 +56,7 @@ FORM_KEYS = {
     "FarmorFärg": "FM_color",
     "MormorFärg": "MM_color",
     "Nummer": "certificate",
-    "IntygasAv": "user_id",
+    "IntygasAv": "fullname",
     "IntygasNummer": "herd",
     "IntygasDatum": "issue_date",
     "IntygasPlats": "name",  # Physical id (Only in cert?)
