@@ -34,7 +34,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 7
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -647,6 +647,7 @@ class User(BaseModel, UserMixin):
     id = AutoField(primary_key=True, column_name="user_id")
     username = TextField(unique=True, null=True)
     email = TextField()
+    fullname = TextField(null=True)
     uuid = UUIDField()
     validated = BooleanField(default=False)
     _privileges = TextField(column_name="privileges", default="[]")
@@ -808,6 +809,7 @@ class User(BaseModel, UserMixin):
 
         return {
             "email": self.email,
+            "fullname": self.fullname,
             "username": self.username,
             "validated": self.validated if self.validated else False,
             "is_admin": self.is_admin,
@@ -1272,6 +1274,27 @@ def migrate_5_to_6():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=6,
             comment="Remove password_hash from hbuser",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_6_to_7():
+    """
+    Migrate between schema version 5 and 6.
+    """
+
+    with DATABASE.atomic():
+
+        cols = [x.name for x in DATABASE.get_columns("hbuser")]
+
+        if "fullname" not in cols:
+            # Go through hbuser and fill in authenticators from the old data.
+            migrate(
+                DATABASE_MIGRATOR.add_column("hbuser", "fullname", TextField(null=True))
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=7,
+            comment="Add fullname to hbuser",
             applied=datetime.now(),
         ).execute()
 
