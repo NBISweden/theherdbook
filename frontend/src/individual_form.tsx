@@ -152,7 +152,7 @@ export function IndividualForm({
                     }}
                   />
                 </div>
-              ) : formAction == FormAction.AddIndividual ? (
+              ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                 <>
                   <TextField
                     disabled={!canEdit}
@@ -177,9 +177,9 @@ export function IndividualForm({
                       );
                     }}
                   />
-                </>
+                </> // jscpd:ignore-end
               ) : (
-                <div></div>
+                <></>
               )}
               <div className={style.flexRow}>
                 <TextField
