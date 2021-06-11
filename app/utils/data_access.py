@@ -83,7 +83,9 @@ def add_user(form, user_uuid=None):
     return {"status": "created", "data": user.id}
 
 
-def register_user(email, password, username=None, validated=False, privileges=None):
+def register_user(
+    email, password, username=None, validated=False, privileges=None, fullname=None
+):
     """
     Creates a new user from an e-mail and password, returning the new user
     object.
@@ -100,6 +102,7 @@ def register_user(email, password, username=None, validated=False, privileges=No
             email=email,
             uuid=uuid.uuid4().hex,
             username=username,
+            fullname=fullname,
             validated=validated,
             privileges=privileges,
         )
