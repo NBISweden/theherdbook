@@ -8,6 +8,7 @@ export interface User {
   email: string | null;
   username: string | undefined;
   validated: boolean;
+  fullname: string | undefined;
   is_admin: boolean;
   is_manager: Array<number> | undefined;
   is_owner: Array<string> | undefined;

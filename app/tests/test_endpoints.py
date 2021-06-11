@@ -72,6 +72,7 @@ class TestEndpoints(FlaskTest):
         for test_user in [self.admin, self.manager, self.specialist, self.owner]:
             user_data = {
                 "email": test_user.email,
+                "fullname": test_user.fullname,
                 "is_admin": test_user.is_admin,
                 "is_manager": test_user.is_manager,
                 "is_owner": test_user.is_owner,
@@ -96,14 +97,24 @@ class TestEndpoints(FlaskTest):
             (
                 self.admin,
                 [
-                    {"id": u.id, "email": u.email, "name": u.username}
+                    {
+                        "id": u.id,
+                        "email": u.email,
+                        "name": u.username,
+                        "fullname": u.fullname,
+                    }
                     for u in [self.admin, self.specialist, self.manager, self.owner]
                 ],
             ),
             (
                 self.manager,
                 [
-                    {"id": u.id, "email": u.email, "name": u.username}
+                    {
+                        "id": u.id,
+                        "email": u.email,
+                        "name": u.username,
+                        "fullname": u.fullname,
+                    }
                     for u in [self.specialist, self.manager, self.owner]
                 ],
             ),

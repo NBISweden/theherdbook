@@ -178,7 +178,7 @@ def manage_user(u_id):
         }
     """
 
-    form = request.json
+    form = request.json if request.method != "GET" else {}
     if not u_id:
         # If not provided, default to current user.
         u_id = current_user.id
