@@ -610,6 +610,7 @@ class TestDatabase(DatabaseTest):
             {
                 "email": "admin",
                 "username": None,
+                "fullname": None,
                 "validated": False,
                 "is_admin": True,
                 "is_manager": None,
@@ -621,6 +622,7 @@ class TestDatabase(DatabaseTest):
             {
                 "email": "man",
                 "username": None,
+                "fullname": None,
                 "validated": False,
                 "is_admin": False,
                 "is_manager": [self.genebanks[0].id],
@@ -632,6 +634,7 @@ class TestDatabase(DatabaseTest):
             {
                 "email": "spec",
                 "username": None,
+                "fullname": None,
                 "validated": False,
                 "is_admin": False,
                 "is_manager": None,
@@ -643,6 +646,7 @@ class TestDatabase(DatabaseTest):
             {
                 "email": "owner",
                 "username": None,
+                "fullname": None,
                 "validated": False,
                 "is_admin": False,
                 "is_manager": None,

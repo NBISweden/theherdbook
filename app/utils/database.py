@@ -1258,6 +1258,14 @@ def migrate_5_to_6():
     """
 
     with DATABASE.atomic():
+        if "hbuser" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=6,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
 
         cols = [x.name for x in DATABASE.get_columns("hbuser")]
 
@@ -1284,6 +1292,14 @@ def migrate_6_to_7():
     """
 
     with DATABASE.atomic():
+        if "hbuser" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=7,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
 
         cols = [x.name for x in DATABASE.get_columns("hbuser")]
 
