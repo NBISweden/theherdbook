@@ -171,6 +171,22 @@ export function asLocale(dateString?: string) {
   return date.toLocaleDateString(locale);
 }
 
+/**
+ * Returns active individuals of given sex in the genebank
+ * @param genebank the genebank data to filter active individuals from
+ * @param sex the sex of the active individuals
+ */
+export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
+  return React.useMemo(() => {
+    if (!genebank) {
+      return [];
+    }
+    return genebank?.individuals.filter(
+      (i) => i.sex == sex && i.active == true
+    );
+  }, [genebank]);
+}
+
 const emptyContext: DataContext = {
   genebanks: [],
   users: [],
