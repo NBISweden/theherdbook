@@ -138,6 +138,13 @@ export function IndividualAdd({ id }: { id: string }) {
                     );
                     break;
                   }
+                  case "Individual number already exists": {
+                    userMessage(
+                      "Det finns redan en kanin med detta nummer i databasen.",
+                      "error"
+                    );
+                    break;
+                  }
                   default: {
                     userMessage(
                       "Något gick fel. Det här borde inte hända.",
