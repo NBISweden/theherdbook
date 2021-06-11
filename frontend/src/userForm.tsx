@@ -60,6 +60,7 @@ export interface ManagedUser {
   id: number | "new";
   email: string;
   username: string;
+  fullname: string;
   validated: boolean;
   privileges: any;
   password?: string;
@@ -69,6 +70,7 @@ const defaultValues: ManagedUser = {
   id: -1,
   email: "",
   username: "",
+  fullname: "",
   validated: false,
   privileges: [],
   password: "",
@@ -155,6 +157,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               email: postData.email,
               id: +postData.id,
               name: postData.username,
+              fullname: postData.fullname,
             });
             setUsers(newUsers);
             userMessage("Changes saved", "success");
@@ -168,6 +171,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                 email: user.email,
                 id: newUserId,
                 name: user.username,
+                fullname: user.fullname,
               };
               setUsers([...users, new_user]);
               userMessage("User saved", "success");
@@ -279,6 +283,14 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               className={classes.simpleField}
               value={user.username ?? ""}
               onChange={(e) => setUser({ ...user, username: e.target.value })}
+            />
+            <TextField
+              label="Namn"
+              type="fullname"
+              variant={inputVariant}
+              className={classes.simpleField}
+              value={user.fullname ?? ""}
+              onChange={(e) => setUser({ ...user, fullname: e.target.value })}
             />
             {isNew ? (
               <TextField
