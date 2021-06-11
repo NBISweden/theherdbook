@@ -852,6 +852,8 @@ def add_individual(form, user_uuid):
             herd = Herd.get(Herd.herd == form["herd"])
     except DoesNotExist:
         return {"status": "error", "message": "Individual must have a valid herd"}
+    except IntegrityError:
+        return {"status": "error", "message": "Individual number already exists"}
 
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}

@@ -4,6 +4,7 @@ Database handler for 'the herdbook'.
 """
 # pylint: disable=too-many-lines
 
+from enum import unique
 import json
 import logging
 import re
@@ -413,7 +414,7 @@ class Individual(BaseModel):
     name = CharField(50, null=True)
     certificate = CharField(20, null=True)
     digital_certificate = IntegerField(unique=True, null=True)
-    number = CharField(20)
+    number = CharField(20, unique=True)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
     color_note = CharField(100, null=True)

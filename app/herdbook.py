@@ -564,8 +564,10 @@ def edit_individual():
     form = request.json
     if request.method == "PATCH":
         retval = da.update_individual(form, session.get("user_id", None))
+        print(retval)
     if request.method == "POST":
         retval = da.add_individual(form, session.get("user_id", None))
+        print(retval)
     return jsonify(retval)
 
 
