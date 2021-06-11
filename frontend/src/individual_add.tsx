@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button, makeStyles, TextField } from "@material-ui/core";
 
-import { CertificateForm, Usecase } from "@app/certificate_form";
+import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
   activeIndividuals,
@@ -112,8 +112,41 @@ export function IndividualAdd({ id }: { id: string }) {
         };
 
         post("/api/individual", newIndividual).then(
-          () => {
-            console.log("individual sent");
+          (json) => {
+            switch (json.status) {
+              case "success": {
+                userMessage(
+                  "Kaninen har lagts till i din besättning.",
+                  "success"
+                );
+                break;
+              }
+              case "error": {
+                switch (json.message) {
+                  case "Not logged in": {
+                    userMessage("Du är inte inloggad.", "error");
+                    break;
+                  }
+                  case "Individual must have a valid herd": {
+                    userMessage("Besättningen kunde inte hittas.", "error");
+                    break;
+                  }
+                  case "Forbidden": {
+                    userMessage(
+                      "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
+                      "error"
+                    );
+                    break;
+                  }
+                  default: {
+                    userMessage(
+                      "Något gick fel. Det här borde inte hända.",
+                      "error"
+                    );
+                  }
+                }
+              }
+            }
           },
           (error) => {
             console.log(error);
@@ -131,11 +164,11 @@ export function IndividualAdd({ id }: { id: string }) {
   return (
     <>
       <h1>Fyll i uppgifterna om kaninen</h1>
-      <CertificateForm
+      <IndividualForm
         onUpdateIndividual={handleUpdateIndividual}
         individual={individual}
         canEdit={user?.canEdit(id)}
-        usecase={Usecase.AddIndividual}
+        formAction={FormAction.AddIndividual}
       />
       <h2>Lägg till härstamningen</h2>
       <div className={style.ancestorBox}>

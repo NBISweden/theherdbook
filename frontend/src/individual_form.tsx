@@ -85,23 +85,23 @@ const useStyles = makeStyles({
   },
 });
 
-export enum Usecase {
+export enum FormAction {
   AddIndividual = "addIndividual",
-  Certificate = "certificate",
+  handleCertificate = "handleCertificate",
 }
 
-export function CertificateForm({
+export function IndividualForm({
   individual,
   canManage,
   canEdit,
   onUpdateIndividual,
-  usecase,
+  formAction,
 }: {
   individual: Individual;
   canManage?: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
-  usecase: Usecase;
+  formAction: FormAction;
 }) {
   const { colors } = useDataContext();
   const style = useStyles();
@@ -136,7 +136,7 @@ export function CertificateForm({
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
-              {usecase == Usecase.Certificate ? (
+              {formAction == FormAction.handleCertificate ? (
                 <div className={style.adminPane}>
                   <div className={style.paneTitle}>
                     Kan endast ändras av genbanksansvarig
@@ -152,7 +152,7 @@ export function CertificateForm({
                     }}
                   />
                 </div>
-              ) : usecase == Usecase.AddIndividual ? (
+              ) : formAction == FormAction.AddIndividual ? (
                 <>
                   <TextField
                     disabled={!canEdit}
