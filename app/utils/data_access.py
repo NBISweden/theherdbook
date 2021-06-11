@@ -856,6 +856,9 @@ def add_individual(form, user_uuid):
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}
 
+    if Individual.select().where(Individual.number == form["number"]).exists():
+        return {"status": "error", "message": "Individual number already exists"}
+
     try:
         individual = form_to_individual(form, user)
     except ValueError as exception:
