@@ -950,7 +950,7 @@ def get_certificate_data(ind, user_id):
         herd = herd["herd"]
 
     genebank = ind["number"].split("-")
-    fullname = da.fetch_user_info(user_id).get("fullname", "")
+    fullname = da.fetch_user_info(user_id).fullname
     extra_data = {
         "genebank_aki": genebank[1],
         "genebank_number": genebank[0],
