@@ -373,7 +373,10 @@ def get_users(user_uuid=None):
         if not user.is_admin:
             users = [user for user in users if not user.is_admin]
 
-        return [{"email": u.email, "name": u.username, "id": u.id} for u in users]
+        return [
+            {"email": u.email, "name": u.username, "id": u.id, "fullname": u.fullname}
+            for u in users
+        ]
     except DoesNotExist:
         return None
 
@@ -407,6 +410,7 @@ def get_user(user_id, user_uuid=None):
             "id": target.id,
             "email": target.email,
             "username": target.username,
+            "fullname": target.fullname,
             "validated": target.validated,
             "privileges": target.privileges,
         },
@@ -431,7 +435,6 @@ def update_user(form, user_uuid=None):
     if user is None:
         return {"status": "error", "message": "not logged in"}
 
-    logging.warning("a")
     # Check data
     if (
         not isinstance(form, dict)
@@ -442,7 +445,7 @@ def update_user(form, user_uuid=None):
         return {"status": "error", "message": f"malformed request: {form}"}
 
     # Check permissions - allow users to update e-mail only
-    if not (user.is_admin or user.is_manager) or (
+    if not (user.is_admin or user.is_manager) and (
         form.get("validated") or form.get("username")
     ):
         return {"status": "error", "message": "forbidden"}
@@ -460,7 +463,7 @@ def update_user(form, user_uuid=None):
 
     # update target user data if needed
     updated = False
-    for field in ["email", "username", "validated"]:
+    for field in ["email", "username", "validated", "fullname"]:
         if field in form and getattr(target_user, field) != form[field]:
             setattr(target_user, field, form[field])
             updated = True
