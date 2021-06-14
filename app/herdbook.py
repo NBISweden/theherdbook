@@ -777,6 +777,7 @@ def issue_certificate(i_number):
         cert_number = res.get("digital_certificate", None)
 
         cert_data = get_certificate_data(ind_data_copy, user_id)
+        cert_data.update(**form, certificate=cert_number)
         pdf_bytes = get_certificate(cert_data)
         ind_number = ind_data["number"]
         uploaded = False
