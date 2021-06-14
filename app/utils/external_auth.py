@@ -218,8 +218,12 @@ def google_details():
             % idtoken["sub"]
         )
 
-        if userinfo.json() and  "name" in userinfo.json() and  "fullName" in userinfo.json()["name"]:
-                    out_token["fullname"] = userinfo.json()["name"]["fullName"]
+        if (
+            userinfo.json()
+            and "name" in userinfo.json()
+            and "fullName" in userinfo.json()["name"]
+        ):
+            out_token["fullname"] = userinfo.json()["name"]["fullName"]
 
     if out_token:
         return out_token
