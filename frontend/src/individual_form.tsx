@@ -1,6 +1,6 @@
 import React from "react";
 
-import { TextField } from "@material-ui/core";
+import { makeStyles, TextField } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -16,20 +16,95 @@ import {
   OptionType,
 } from "@app/data_context_global";
 
-export function CertificateForm({
-  style,
+const useStyles = makeStyles({
+  adminPane: {
+    width: "100%",
+    padding: "15px 0 5px 10px",
+    border: "1px solid lightgrey",
+    position: "relative",
+    display: "flex",
+    flexDirection: "row",
+    background:
+      "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
+  },
+  control: {
+    margin: "5px",
+    minWidth: "195px",
+    paddingRight: "5px",
+  },
+  flexRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "end",
+  },
+  flexRowOrColumn: {
+    display: "flex",
+    flexDirection: "column",
+    overflowX: "hidden",
+    overflowY: "auto",
+    ["@media (min-width:600px)"]: {
+      flexDirection: "row",
+    },
+  },
+  form: {
+    display: "flex",
+    overflow: "hidden",
+    flexDirection: "column",
+    width: "95%",
+    marginBottom: "5em",
+  },
+  formPane: {
+    borderRight: "none",
+    minWidth: "410px",
+    ["@media (min-width:660px)"]: {
+      borderRight: "1px solid lightgrey",
+    },
+    paddingRight: "5px",
+    "&:last-child": {
+      paddingLeft: "5px",
+      paddingRight: "0",
+      borderRight: "none",
+    },
+  },
+  paneControls: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: "20px 0",
+  },
+  paneTitle: {
+    position: "absolute",
+    top: "0px",
+    left: "10px",
+  },
+  wideControl: {
+    margin: "5px",
+    minWidth: "195px",
+    width: "100%",
+    paddingRight: "5px",
+  },
+});
+
+export enum FormAction {
+  AddIndividual = "addIndividual",
+  handleCertificate = "handleCertificate",
+}
+
+export function IndividualForm({
   individual,
   canManage,
   canEdit,
   onUpdateIndividual,
+  formAction,
 }: {
-  style: any;
   individual: Individual;
-  canManage: boolean;
+  canManage?: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
+  formAction: FormAction;
 }) {
   const { colors } = useDataContext();
+  const style = useStyles();
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
@@ -61,21 +136,51 @@ export function CertificateForm({
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
-              <div className={style.adminPane}>
-                <div className={style.paneTitle}>
-                  Kan endast ändras av genbanksansvarig
+              {formAction == FormAction.handleCertificate ? (
+                <div className={style.adminPane}>
+                  <div className={style.paneTitle}>
+                    Kan endast ändras av genbanksansvarig
+                  </div>
+                  <TextField
+                    disabled={!canManage}
+                    label="Nummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.number ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual("number", event.currentTarget.value);
+                    }}
+                  />
                 </div>
-                <TextField
-                  disabled={!canManage}
-                  label="Nummer"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.number ?? ""}
-                  onChange={(event) => {
-                    onUpdateIndividual("number", event.currentTarget.value);
-                  }}
-                />
-              </div>
+              ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
+                <>
+                  <TextField
+                    disabled={!canEdit}
+                    label="Nummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.number ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual("number", event.currentTarget.value);
+                    }}
+                  />
+                  <TextField
+                    disabled={!canEdit}
+                    label="Certifikatnummer"
+                    className={style.control}
+                    variant={inputVariant}
+                    value={individual.certificate ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "certificate",
+                        event.currentTarget.value
+                      );
+                    }}
+                  />
+                </> // jscpd:ignore-end
+              ) : (
+                <></>
+              )}
               <div className={style.flexRow}>
                 <TextField
                   disabled={!canEdit}

@@ -12,45 +12,22 @@ import {
 } from "@material-ui/core";
 
 import { IndividualView } from "@app/individual_view";
-import { CertificateForm } from "@app/certificate_form";
+import { IndividualForm } from "@app/individual_form";
 import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { Individual, inputVariant, OptionType } from "@app/data_context_global";
 import { CertificateDownload } from "./certificate_download";
+import { FormAction } from "@app/individual_form";
 
 //Styles for the form. A lot similar to the ones in individual_edit.
 //Find a different solution to avoid repetetive code.
 const useStyles = makeStyles({
-  adminPane: {
-    width: "100%",
-    padding: "15px 0 5px 10px",
-    border: "1px solid lightgrey",
-    position: "relative",
-    display: "flex",
-    flexDirection: "row",
-    background:
-      "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
-  },
   control: {
     margin: "5px",
     minWidth: "195px",
     paddingRight: "5px",
-  },
-  flexRow: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "end",
-  },
-  flexRowOrColumn: {
-    display: "flex",
-    flexDirection: "column",
-    overflowX: "hidden",
-    overflowY: "auto",
-    ["@media (min-width:600px)"]: {
-      flexDirection: "row",
-    },
   },
   form: {
     display: "flex",
@@ -58,19 +35,6 @@ const useStyles = makeStyles({
     overflow: "hidden",
     flexDirection: "column",
     width: "95%",
-  },
-  formPane: {
-    borderRight: "none",
-    minWidth: "410px",
-    ["@media (min-width:660px)"]: {
-      borderRight: "1px solid lightgrey",
-    },
-    paddingRight: "5px",
-    "&:last-child": {
-      paddingLeft: "5px",
-      paddingRight: "0",
-      borderRight: "none",
-    },
   },
   loading: {
     display: "flex",
@@ -83,23 +47,6 @@ const useStyles = makeStyles({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: "20px 0",
-  },
-  paneTitle: {
-    position: "absolute",
-    top: "0px",
-    left: "10px",
-  },
-  titleText: {
-    width: "100%",
-    borderBottom: "1px solid lightgrey",
-    padding: "0 20px",
-    fontSize: "2.3em",
-  },
-  wideControl: {
-    margin: "5px",
-    minWidth: "195px",
-    width: "100%",
-    paddingRight: "5px",
   },
 });
 
@@ -131,13 +78,17 @@ export function IndividualCertificate({
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
+  const style = useStyles();
+
+  // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
+
+  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
   const canEdit: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.number);
   }, [user, individual]);
-  const style = useStyles();
 
   // Limited version of the individual to be used for the preview
   const certificateData = {
@@ -319,12 +270,12 @@ export function IndividualCertificate({
       ) : individual && showForm ? (
         <>
           <h1>Fyll i uppgifterna för certifikatet</h1>
-          <CertificateForm
-            style={style}
+          <IndividualForm
             individual={individual}
             canManage={canManage}
             canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
+            formAction={FormAction.handleCertificate}
           />
           <div className={style.paneControls}>
             <Button

@@ -6,6 +6,7 @@
 import React from "react";
 import { Edit } from "@material-ui/icons";
 import {
+  Button,
   CircularProgress,
   Checkbox,
   makeStyles,
@@ -32,6 +33,8 @@ import {
 import { IndividualView } from "@app/individual_view";
 import { HerdView } from "@app/herd_view";
 import { useMessageContext } from "@app/message_context";
+import { useUserContext } from "./user_context";
+import { IndividualAdd } from "./individual_add";
 
 // Define styles
 const useStyles = makeStyles({
@@ -216,6 +219,7 @@ function searchFilter(
  * can be set to further customize the table.
  */
 export function FilterTable({
+  id,
   individuals,
   title = "",
   filters = [],
@@ -223,6 +227,7 @@ export function FilterTable({
   actionIcon = Edit,
   actionLabel = "Redigera",
 }: {
+  id?: string | undefined;
   individuals: Individual[];
   title: string;
   filters: Filter[];
@@ -231,6 +236,7 @@ export function FilterTable({
   actionLabel: string;
 }) {
   const { popup } = useMessageContext();
+  const { user } = useUserContext();
   const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
@@ -423,11 +429,10 @@ export function FilterTable({
     setOrderBy(property);
   };
 
-  const createSortHandler = (property: keyof Individual) => (
-    event: React.MouseEvent<unknown>
-  ) => {
-    handleRequestSort(event, property);
-  };
+  const createSortHandler =
+    (property: keyof Individual) => (event: React.MouseEvent<unknown>) => {
+      handleRequestSort(event, property);
+    };
 
   return (
     <>
@@ -552,6 +557,15 @@ export function FilterTable({
                 </TableBody>
               </Table>
             </TableContainer>
+            {id && user?.canEdit(id) && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => popup(<IndividualAdd id={id} />)}
+              >
+                Lägg till
+              </Button>
+            )}
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
