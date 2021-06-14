@@ -385,7 +385,12 @@ def external_login_handler(service):
         return None
 
     accountdetails = utils.external_auth.get_account_details(service)
-    user = da.register_user(accountdetails["email"], None, validated=True)
+    user = da.register_user(
+        accountdetails["email"],
+        None,
+        validated=True,
+        fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
+    )
 
     if not user:
         APP.logger.error(
