@@ -36,10 +36,16 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualAdd({ id }: { id: string }) {
+export function IndividualAdd({
+  herdId,
+  genebank,
+}: {
+  herdId?: string;
+  genebank?: Genebank;
+}) {
   const [individual, setIndividual] = React.useState({} as Individual);
-  const [genebank, setGenebank] = React.useState(
-    undefined as Genebank | undefined
+  const [currentGenebank, setCurrentGenebank] = React.useState(
+    genebank ? genebank : (undefined as Genebank | undefined)
   );
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
@@ -60,16 +66,20 @@ export function IndividualAdd({ id }: { id: string }) {
   };
 
   React.useEffect(() => {
-    // id here is the id of the herd the user is adding the individual to.
-    // assumes that the new individual originates from a herd belonging to the same genebank.
-    const originGenebank = genebanks.find((genebank) =>
-      genebank.herds.filter((herd) => herd.herd == id)
-    );
-    setGenebank(originGenebank);
-  }, [id]);
+    // if there is no genebank, generate it from the herdId
+    if (!currentGenebank) {
+      const originGenebank = genebanks.find((currentGenebank) =>
+        currentGenebank.herds.filter((herd) => herd.herd == herdId)
+      );
+      setCurrentGenebank(originGenebank);
+    }
+  }, [herdId]);
 
-  const activeFemales: Individual[] = activeIndividuals(genebank, "female");
-  const activeMales: Individual[] = activeIndividuals(genebank, "male");
+  const activeFemales: Individual[] = activeIndividuals(
+    currentGenebank,
+    "female"
+  );
+  const activeMales: Individual[] = activeIndividuals(currentGenebank, "male");
 
   const limitedFemales: LimitedIndividual[] = activeFemales.map(
     (individual) => {
@@ -95,7 +105,7 @@ export function IndividualAdd({ id }: { id: string }) {
       let newIndividual = individual;
       const numberParts: string[] = individual.number.split("-");
       const originHerdNumber: string = numberParts[0];
-      const originHerd = genebank?.herds.find(
+      const originHerd = currentGenebank?.herds.find(
         (herd: LimitedHerd) => herd.herd == originHerdNumber
       );
 
@@ -108,7 +118,7 @@ export function IndividualAdd({ id }: { id: string }) {
         newIndividual = {
           ...newIndividual,
           origin_herd: originHerdNameID,
-          herd: id,
+          herd: herdId,
         };
 
         post("/api/individual", newIndividual).then(
