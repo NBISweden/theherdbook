@@ -65,6 +65,10 @@ export function IndividualAdd({
     individual && setIndividual({ ...individual, [field]: value });
   };
 
+  if (herdId) {
+    handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
+  }
+
   React.useEffect(() => {
     // if there is no genebank, generate it from the herdId
     if (!currentGenebank) {
@@ -104,74 +108,80 @@ export function IndividualAdd({
     if (individual?.number) {
       let newIndividual = individual;
       const numberParts: string[] = individual.number.split("-");
-      const originHerdNumber: string = numberParts[0];
-      const originHerd = currentGenebank?.herds.find(
-        (herd: LimitedHerd) => herd.herd == originHerdNumber
-      );
+      if (!herdId || herdId == numberParts[0]) {
+        const originHerdNumber: string = numberParts[0];
+        const originHerd = currentGenebank?.herds.find(
+          (herd: LimitedHerd) => herd.herd == originHerdNumber
+        );
 
-      if (originHerd?.herd_name && originHerd.herd && originHerd.id) {
-        const originHerdNameID: HerdNameID = {
-          herd_name: originHerd.herd_name,
-          herd: originHerd.herd,
-          id: originHerd.id,
-        };
-        newIndividual = {
-          ...newIndividual,
-          origin_herd: originHerdNameID,
-          herd: herdId,
-        };
+        if (originHerd?.herd_name && originHerd.herd && originHerd.id) {
+          const originHerdNameID: HerdNameID = {
+            herd_name: originHerd.herd_name,
+            herd: originHerd.herd,
+            id: originHerd.id,
+          };
+          newIndividual = {
+            ...newIndividual,
+            origin_herd: originHerdNameID,
+          };
 
-        post("/api/individual", newIndividual).then(
-          (json) => {
-            switch (json.status) {
-              case "success": {
-                userMessage(
-                  "Kaninen har lagts till i din besättning.",
-                  "success"
-                );
-                break;
-              }
-              case "error": {
-                switch (json.message) {
-                  case "Not logged in": {
-                    userMessage("Du är inte inloggad.", "error");
-                    break;
-                  }
-                  case "Individual must have a valid herd": {
-                    userMessage("Besättningen kunde inte hittas.", "error");
-                    break;
-                  }
-                  case "Forbidden": {
-                    userMessage(
-                      "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
-                      "error"
-                    );
-                    break;
-                  }
-                  case "Individual number already exists": {
-                    userMessage(
-                      "Det finns redan en kanin med detta nummer i databasen.",
-                      "error"
-                    );
-                    break;
-                  }
-                  default: {
-                    userMessage(
-                      "Något gick fel. Det här borde inte hända.",
-                      "error"
-                    );
+          post("/api/individual", newIndividual).then(
+            (json) => {
+              switch (json.status) {
+                case "success": {
+                  userMessage(
+                    "Kaninen har lagts till i din besättning.",
+                    "success"
+                  );
+                  break;
+                }
+                case "error": {
+                  switch (json.message) {
+                    case "Not logged in": {
+                      userMessage("Du är inte inloggad.", "error");
+                      break;
+                    }
+                    case "Individual must have a valid herd": {
+                      userMessage("Besättningen kunde inte hittas.", "error");
+                      break;
+                    }
+                    case "Forbidden": {
+                      userMessage(
+                        "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
+                        "error"
+                      );
+                      break;
+                    }
+                    case "Individual number already exists": {
+                      userMessage(
+                        "Det finns redan en kanin med detta nummer i databasen.",
+                        "error"
+                      );
+                      break;
+                    }
+                    default: {
+                      userMessage(
+                        "Något gick fel. Det här borde inte hända.",
+                        "error"
+                      );
+                    }
                   }
                 }
               }
+            },
+            (error) => {
+              console.log(error);
+              userMessage("Något gick fel.", "error");
             }
-          },
-          (error) => {
-            console.log(error);
-            userMessage("Något gick fel.", "error");
-          }
-        );
+          );
+        } else {
+          userMessage("Individens nummer har inget giltigt format.", "warning");
+        }
       } else {
-        userMessage("Individens nummer har inget giltigt format.", "warning");
+        userMessage(
+          "Du kan bara lägga till individer som har fötts i din besättning.",
+          "warning"
+        );
       }
     } else {
       userMessage("Fyll i ett nummer först.", "warning");
@@ -184,7 +194,7 @@ export function IndividualAdd({
       <IndividualForm
         onUpdateIndividual={handleUpdateIndividual}
         individual={individual}
-        canEdit={user?.canEdit(id)}
+        canEdit={user?.canEdit(herdId)}
         formAction={FormAction.AddIndividual}
       />
       <h2>Lägg till härstamningen</h2>
@@ -222,7 +232,7 @@ export function IndividualAdd({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => popup(<HerdView id={id} />)}
+          onClick={() => popup(<HerdView id={herdId} />)}
         >
           Tillbaka
         </Button>
