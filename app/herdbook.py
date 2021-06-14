@@ -8,6 +8,7 @@ database.
 
 import base64
 import binascii
+import copy
 import datetime
 import hashlib
 import logging
@@ -770,12 +771,12 @@ def issue_certificate(i_number):
         form = request.json
 
         ind_data.update(**form, issue_digital=True)
+        # keep the ind_data object intact
+        ind_data_copy = copy.copy(ind_data)
         res = da.update_individual(ind_data, session.get("user_id", None))
         cert_number = res.get("digital_certificate", None)
 
-        cert_data = get_certificate_data(ind_data, user_id)
-        # get_certificate expects a dict
-        cert_data.update(**form, certificate=cert_number)
+        cert_data = get_certificate_data(ind_data_copy, user_id)
         pdf_bytes = get_certificate(cert_data)
         ind_number = ind_data["number"]
         uploaded = False
