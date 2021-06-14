@@ -413,6 +413,9 @@ def external_login_handler(service):
         % (persistent_id, accountdetails["email"], service)
     )
 
+    # FIXME: this is how we "really" log in the user
+    session["user_id"] = user.uuid
+
     login_user(user)
 
     return get_user()
