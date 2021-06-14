@@ -386,7 +386,12 @@ def external_login_handler(service):
         return None
 
     accountdetails = utils.external_auth.get_account_details(service)
-    user = da.register_user(accountdetails["email"], None, validated=True)
+    user = da.register_user(
+        accountdetails["email"],
+        None,
+        validated=True,
+        fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
+    )
 
     if not user:
         APP.logger.error(
@@ -408,6 +413,9 @@ def external_login_handler(service):
         "Automatically registered user with e-mail %s (persistent id %s) for service %s"
         % (persistent_id, accountdetails["email"], service)
     )
+
+    # FIXME: this is how we "really" log in the user
+    session["user_id"] = user.uuid
 
     login_user(user)
 

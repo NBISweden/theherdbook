@@ -172,14 +172,6 @@ def google_authorized():
     if not idtoken:
         return False
 
-    if "googleherd" in _config:
-        # Do we have an attribute specified for herd?
-        userinfo = flask_dance.contrib.google.google.get(
-            "https://admin.googleapis.com/admin/directory/v1/users/%s?projection=full&viewType=domain_public"
-            % idtoken["sub"]
-        )
-        print(userinfo.text)
-
     if "googledomain" in _config:
         if idtoken["hd"] != _config["googledomain"]:
             return None
@@ -214,10 +206,27 @@ def google_details():
     if not idtoken.get("email_verified", False):
         return None
 
+    out_token = {}
+
     if "email" in idtoken:
-        return {
-            "email": idtoken["email"],
-        }
+        out_token["email"] = idtoken["email"]
+
+    if "googledomain" in _config:
+        # Do we have an attribute specified for herd?
+        userinfo = flask_dance.contrib.google.google.get(
+            "https://admin.googleapis.com/admin/directory/v1/users/%s?projection=full&viewType=domain_public"
+            % idtoken["sub"]
+        )
+
+        if (
+            userinfo.json()
+            and "name" in userinfo.json()
+            and "fullName" in userinfo.json()["name"]
+        ):
+            out_token["fullname"] = userinfo.json()["name"]["fullName"]
+
+    if out_token:
+        return out_token
 
     return None
 
