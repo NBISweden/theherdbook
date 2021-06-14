@@ -8,6 +8,7 @@ import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
 import VpnKeyIcon from "@material-ui/icons/VpnKey";
 import MeetingRoom from "@material-ui/icons/MeetingRoom";
 import GroupIcon from "@material-ui/icons/Group";
+import PostAddIcon from "@material-ui/icons/PostAdd";
 
 import { Login } from "@app/login";
 import { Genebanks } from "@app/genebanks";
@@ -20,6 +21,7 @@ import { IndividualView } from "@app/individual_view";
 import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
+import { Register } from "@app/register";
 import * as ui from "@app/ui_utils";
 
 // Define styles for tab menu
@@ -94,6 +96,17 @@ export function Navigation() {
       ),
       visible: is_owner,
       icon: <GroupIcon />,
+    },
+    {
+      label: "Registrera",
+      path: "/register",
+      component: (
+        <Restricted>
+          <Register />
+        </Restricted>
+      ),
+      visible: is_admin,
+      icon: <PostAddIcon />,
     },
     {
       label: "Administrera",
