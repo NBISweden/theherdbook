@@ -13,6 +13,8 @@ import {
   LimitedHerd,
   LimitedIndividual,
   Genebank,
+  herdLabel,
+  OptionType,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { post } from "@app/communication";
@@ -47,6 +49,9 @@ export function IndividualAdd({
   const [individual, setIndividual] = React.useState({} as Individual);
   const [currentGenebank, setCurrentGenebank] = React.useState(
     genebank ? genebank : (undefined as Genebank | undefined)
+  );
+  const [herdOptions, setHerdOptions] = React.useState(
+    genebank ? genebank.herds : ([] as LimitedHerd[])
   );
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
@@ -226,6 +231,27 @@ export function IndividualAdd({
             <TextField {...params} label="Välj far" variant="outlined" />
           )}
         />
+        {!herdId && (
+          <>
+            <h2>I vilken besättning ska kaninen läggas till?</h2>
+            <Autocomplete
+              options={herdOptions}
+              value={individual.herd}
+              getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Besättning"
+                  variant="outlined"
+                  margin="normal"
+                />
+              )}
+              onChange={(event, newValue) => {
+                handleUpdateIndividual("herd", newValue?.herd);
+              }}
+            />
+          </>
+        )}
       </div>
       <div className={style.paneControls}>
         <Button
