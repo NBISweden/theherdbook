@@ -133,6 +133,7 @@ export function IndividualForm({
   return (
     <>
       <div className={style.form}>
+        <h1>Fyll i uppgifterna om kaninen</h1>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
