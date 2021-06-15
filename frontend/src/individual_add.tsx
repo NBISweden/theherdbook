@@ -154,7 +154,6 @@ export function IndividualAdd({
 
   return (
     <>
-      <h1>Fyll i uppgifterna om kaninen</h1>
       <IndividualForm
         onUpdateIndividual={handleUpdateIndividual}
         individual={individual}
