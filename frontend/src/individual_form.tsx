@@ -28,9 +28,9 @@ const useStyles = makeStyles({
       "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
   },
   control: {
-    margin: "5px",
-    minWidth: "195px",
-    paddingRight: "5px",
+    margin: "0.3em",
+    minWidth: "18em",
+    paddingRight: "0.5em",
   },
   flexRow: {
     display: "flex",
@@ -50,8 +50,8 @@ const useStyles = makeStyles({
     display: "flex",
     overflow: "hidden",
     flexDirection: "column",
-    width: "95%",
     marginBottom: "5em",
+    padding: "3em 3em 0 3em",
   },
   formPane: {
     borderRight: "none",
@@ -65,12 +65,6 @@ const useStyles = makeStyles({
       paddingRight: "0",
       borderRight: "none",
     },
-  },
-  paneControls: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: "20px 0",
   },
   paneTitle: {
     position: "absolute",
@@ -201,7 +195,7 @@ export function IndividualForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  value={individual.birth_date ?? ""}
+                  value={individual.birth_date ?? "1900-01-01"}
                   InputLabelProps={{
                     shrink: true,
                   }}
