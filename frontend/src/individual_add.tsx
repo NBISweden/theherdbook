@@ -1,15 +1,12 @@
 import React from "react";
 
-import { Button, makeStyles, TextField } from "@material-ui/core";
+import { Button, makeStyles } from "@material-ui/core";
 
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
-  activeIndividuals,
   HerdNameID,
   Individual,
-  LimitedIndividual,
-  individualLabel,
   LimitedHerd,
   Genebank,
 } from "@app/data_context_global";
@@ -17,7 +14,7 @@ import { useMessageContext } from "@app/message_context";
 import { post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
-import { Autocomplete } from "@material-ui/lab";
+import { IndividualAncestry } from "./individual_ancestry";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -25,14 +22,6 @@ const useStyles = makeStyles({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: "20px 0",
-  },
-  ancestorBox: {
-    display: "flex",
-    flexDirection: "column",
-    margin: "0 0 4em 0",
-  },
-  ancestorInput: {
-    margin: "1em 0",
   },
 });
 
@@ -65,10 +54,6 @@ export function IndividualAdd({
     individual && setIndividual({ ...individual, [field]: value });
   };
 
-  if (herdId) {
-    handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
-  }
-
   React.useEffect(() => {
     // if there is no genebank, generate it from the herdId
     if (!currentGenebank) {
@@ -77,31 +62,10 @@ export function IndividualAdd({
       );
       setCurrentGenebank(originGenebank);
     }
-  }, [herdId]);
-
-  const activeFemales: Individual[] = activeIndividuals(
-    currentGenebank,
-    "female"
-  );
-  const activeMales: Individual[] = activeIndividuals(currentGenebank, "male");
-
-  const limitedFemales: LimitedIndividual[] = activeFemales.map(
-    (individual) => {
-      return {
-        id: individual.id,
-        name: individual.name,
-        number: individual.number,
-      };
+    if (herdId) {
+      handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
     }
-  );
-
-  const limitedMales: LimitedIndividual[] = activeMales.map((individual) => {
-    return {
-      id: individual.id,
-      name: individual.name,
-      number: individual.number,
-    };
-  });
+  }, [herdId]);
 
   const createIndividual = (individual: Individual) => {
     // first generate the individuals origin herd
@@ -197,37 +161,11 @@ export function IndividualAdd({
         canEdit={user?.canEdit(herdId)}
         formAction={FormAction.AddIndividual}
       />
-      <h2>Lägg till härstamningen</h2>
-      <div className={style.ancestorBox}>
-        <Autocomplete
-          className={style.ancestorInput}
-          options={limitedFemales}
-          getOptionLabel={(option: LimitedIndividual) =>
-            individualLabel(option)
-          }
-          value={individual.mother}
-          onChange={(event, newValue) =>
-            handleUpdateIndividual("mother", newValue)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Välj mor" variant="outlined" />
-          )}
-        />
-        <Autocomplete
-          className={style.ancestorInput}
-          options={limitedMales}
-          getOptionLabel={(option: LimitedIndividual) =>
-            individualLabel(option)
-          }
-          value={individual.father}
-          onChange={(event, newValue) =>
-            handleUpdateIndividual("father", newValue)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Välj far" variant="outlined" />
-          )}
-        />
-      </div>
+      <IndividualAncestry
+        individual={individual}
+        currentGenebank={currentGenebank}
+        onUpdateIndividual={handleUpdateIndividual}
+      />
       <div className={style.paneControls}>
         <Button
           variant="contained"
