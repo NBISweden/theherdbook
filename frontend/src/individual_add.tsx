@@ -1,7 +1,8 @@
 import React from "react";
 
-import { Button, makeStyles, TextField } from "@material-ui/core";
+import { Box, Button, makeStyles, TextField } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
+import { CheckCircle } from "@material-ui/icons";
 
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
@@ -20,7 +21,6 @@ import { useMessageContext } from "@app/message_context";
 import { post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
-import { IndividualAncestry } from "./individual_ancestry";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -42,8 +42,28 @@ const useStyles = makeStyles({
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
-    /*     padding: "3em", */
     alignItems: "center",
+  },
+  responseBox: {
+    maxWidth: "65em",
+    padding: "1em",
+    margin: "2em 0",
+    flexBasis: "40em",
+  },
+  successIcon: {
+    fill: "#388e3c", // same as success.dark in the default theme
+    marginLeft: "0.5em",
+  },
+  boxTitle: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: "1em 3em",
+  },
+  bottomBox: {
+    display: "flex",
+    justifyContent: "center",
+    padding: "3em",
   },
 });
 
@@ -61,6 +81,7 @@ export function IndividualAdd({
   const [herdOptions, setHerdOptions] = React.useState(
     genebank ? genebank.herds : ([] as LimitedHerd[])
   );
+  const [success, setSuccess] = React.useState(true as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
@@ -142,10 +163,7 @@ export function IndividualAdd({
             (json) => {
               switch (json.status) {
                 case "success": {
-                  userMessage(
-                    "Kaninen har lagts till i din besättning.",
-                    "success"
-                  );
+                  setSuccess(true);
                   break;
                 }
                 case "error": {
@@ -199,6 +217,36 @@ export function IndividualAdd({
     } else {
       userMessage("Fyll i ett nummer först.", "warning");
     }
+  };
+
+  const resetBlank = () => {
+    setIndividual({} as Individual);
+    setSuccess(false);
+  };
+
+  const resetSibling = () => {
+    const numberParts: string[] = individual.number.split("-");
+    const sibling: Individual = {
+      number: numberParts[0],
+      name: null,
+      herd: {},
+      origin_herd: individual.origin_herd,
+      birth_date: individual.birth_date,
+      mother: individual.mother,
+      father: individual.father,
+      color: null,
+      certificate: null,
+      color_note: null,
+      litter: individual.litter,
+      notes: null,
+      herd_tracking: null,
+      sex: undefined,
+      eye_color: null,
+      claw_color: null,
+      hair_notes: "",
+    };
+    setIndividual(sibling);
+    setSuccess(false);
   };
 
   return (
@@ -279,6 +327,39 @@ export function IndividualAdd({
           Skapa
         </Button>
       </div>
+      {success && (
+        <>
+          <div>
+            <Box
+              border={3}
+              borderRadius={8}
+              borderColor="success.light"
+              className={style.responseBox}
+            >
+              <div className={style.boxTitle}>
+                <h2>Kaninen har lagts till!</h2>
+                <CheckCircle className={style.successIcon} />
+              </div>
+              <div className={style.paneControls}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={resetBlank}
+                >
+                  Ny kanin
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={resetSibling}
+                >
+                  Ny kull-syskon
+                </Button>
+              </div>
+            </Box>
+          </div>
+        </>
+      )}
     </>
   );
 }
