@@ -27,15 +27,23 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: "20px 0",
+    padding: "0 3em 3em 3em ",
   },
   ancestorBox: {
     display: "flex",
     flexDirection: "column",
     margin: "0 0 4em 0",
+    flexBasis: "30em",
+    padding: "0 3em",
   },
   ancestorInput: {
     margin: "1em 0",
+  },
+  inputBox: {
+    display: "flex",
+    flexWrap: "wrap",
+    /*     padding: "3em", */
+    alignItems: "center",
   },
 });
 
@@ -195,63 +203,65 @@ export function IndividualAdd({
 
   return (
     <>
-      <IndividualForm
-        onUpdateIndividual={handleUpdateIndividual}
-        individual={individual}
-        canEdit={user?.canEdit(herdId)}
-        formAction={FormAction.AddIndividual}
-      />
-      <div className={style.ancestorBox}>
-        <h2>Lägg till härstamningen</h2>
-        <Autocomplete
-          className={style.ancestorInput}
-          options={limitedFemales}
-          getOptionLabel={(option: LimitedIndividual) =>
-            individualLabel(option)
-          }
-          value={individual.mother}
-          onChange={(event, newValue) =>
-            handleUpdateIndividual("mother", newValue)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Välj mor" variant="outlined" />
-          )}
+      <div className={style.inputBox}>
+        <IndividualForm
+          onUpdateIndividual={handleUpdateIndividual}
+          individual={individual}
+          canEdit={user?.canEdit(herdId)}
+          formAction={FormAction.AddIndividual}
         />
-        <Autocomplete
-          className={style.ancestorInput}
-          options={limitedMales}
-          getOptionLabel={(option: LimitedIndividual) =>
-            individualLabel(option)
-          }
-          value={individual.father}
-          onChange={(event, newValue) =>
-            handleUpdateIndividual("father", newValue)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Välj far" variant="outlined" />
+        <div className={style.ancestorBox}>
+          <h2>Lägg till härstamningen</h2>
+          <Autocomplete
+            className={style.ancestorInput}
+            options={limitedFemales}
+            getOptionLabel={(option: LimitedIndividual) =>
+              individualLabel(option)
+            }
+            value={individual.mother}
+            onChange={(event, newValue) =>
+              handleUpdateIndividual("mother", newValue)
+            }
+            renderInput={(params) => (
+              <TextField {...params} label="Välj mor" variant="outlined" />
+            )}
+          />
+          <Autocomplete
+            className={style.ancestorInput}
+            options={limitedMales}
+            getOptionLabel={(option: LimitedIndividual) =>
+              individualLabel(option)
+            }
+            value={individual.father}
+            onChange={(event, newValue) =>
+              handleUpdateIndividual("father", newValue)
+            }
+            renderInput={(params) => (
+              <TextField {...params} label="Välj far" variant="outlined" />
+            )}
+          />
+          {!herdId && (
+            <>
+              <h2>I vilken besättning ska kaninen läggas till?</h2>
+              <Autocomplete
+                options={herdOptions}
+                value={individual.herd}
+                getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Besättning"
+                    variant="outlined"
+                    margin="normal"
+                  />
+                )}
+                onChange={(event, newValue) => {
+                  handleUpdateIndividual("herd", newValue?.herd);
+                }}
+              />
+            </>
           )}
-        />
-        {!herdId && (
-          <>
-            <h2>I vilken besättning ska kaninen läggas till?</h2>
-            <Autocomplete
-              options={herdOptions}
-              value={individual.herd}
-              getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Besättning"
-                  variant="outlined"
-                  margin="normal"
-                />
-              )}
-              onChange={(event, newValue) => {
-                handleUpdateIndividual("herd", newValue?.herd);
-              }}
-            />
-          </>
-        )}
+        </div>
       </div>
       <div className={style.paneControls}>
         <Button
