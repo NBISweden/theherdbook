@@ -895,6 +895,7 @@ def update_herdtracking_values(individual, herd, user_signature):
             herd_tracking_date=datetime.now(),
         ).save()
 
+
 def update_individual(form, user_uuid):
     """
     Updates an individual, identified by `form.number`, by the values in `form`,
