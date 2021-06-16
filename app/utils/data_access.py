@@ -756,6 +756,10 @@ def form_to_individual(form, user=None):
     if "id" in form and form["id"] != individual.id:
         raise ValueError("Number can not be updated")
 
+    birth_date = form.get("birth_date", None)
+    if birth_date is None:
+        raise ValueError("Birth date must be present")
+
     can_manage = user and (
         user.is_admin
         or user.is_manager
@@ -880,18 +884,29 @@ def add_individual(form, user_uuid):
         individual=individual,
         herd=individual.origin_herd,
         user_signature=user,
-        birth_date=form.get("birth_date", datetime.now()),
+        tracking_date=form["birth_date"],
     )
+
+    selling_date = form.get("selling_date", None)
+
+    if selling_date is not None:
+        update_herdtracking_values(
+            individual=individual,
+            herd=individual.origin_herd,
+            user_signature=user,
+            tracking_date=form["selling_date"],
+        )
+
     return {"status": "success", "message": "Individual Created"}
 
 
-def update_herdtracking_values(individual, herd, user_signature, birth_date):
+def update_herdtracking_values(individual, herd, user_signature, tracking_date):
     HerdTracking(
         from_herd=herd,
         herd=individual.origin_herd,
         signature=user_signature,
         individual=individual,
-        herd_tracking_date=birth_date,
+        herd_tracking_date=tracking_date,
     ).save()
 
 

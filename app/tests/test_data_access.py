@@ -267,6 +267,7 @@ class TestDataAccess(DatabaseTest):
             "admin_update": {
                 "number": self.individuals[0].number,
                 "certificate": "new-cert",
+                "birth_date": datetime.now(),
             },
             "unknown_color": {
                 "number": self.individuals[0].number,
@@ -276,7 +277,10 @@ class TestDataAccess(DatabaseTest):
                 "number": self.individuals[0].number,
                 "origin_herd": {"herd": "does-not-exist"},
             },
-            "valid": {"number": self.individuals[0].number},
+            "valid": {
+                "number": self.individuals[0].number,
+                "birth_date": datetime.now(),
+            },
         }
         self.assertRaises(
             PermissionError, da.form_to_individual, forms["valid"], self.specialist
@@ -307,6 +311,7 @@ class TestDataAccess(DatabaseTest):
                 "herd": self.herds[0].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": "H1-4",
+                "birth_date": datetime.now(),
             },
         }
         self.assertEqual(
@@ -347,6 +352,7 @@ class TestDataAccess(DatabaseTest):
                 "id": self.individuals[0].id,
                 "number": self.individuals[0].number,
                 "name": "new name",
+                "birth_date": datetime.now(),
             },
         }
         self.assertEqual(

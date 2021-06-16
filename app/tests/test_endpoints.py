@@ -367,12 +367,8 @@ class TestEndpoints(FlaskTest):
         individual = self.individuals[0].number
         individual_2 = self.individuals[1].number
 
-        valid_issue_form = {
-            "color_id": 3,
-        }
-        valid_update_form = {
-            "color_id": 2,
-        }
+        valid_issue_form = {"color_id": 3, "birth_date": datetime.now()}
+        valid_update_form = {"color_id": 2, "birth_date": datetime.now()}
 
         mock = mock_s3()
         mock.start()
