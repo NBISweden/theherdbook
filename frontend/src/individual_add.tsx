@@ -3,6 +3,11 @@ import React from "react";
 import { Box, Button, makeStyles, TextField } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
 import { CheckCircle } from "@material-ui/icons";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from "@material-ui/pickers";
+import DateFnsUtils from "@date-io/date-fns";
 
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
@@ -11,6 +16,7 @@ import {
   HerdNameID,
   Individual,
   individualLabel,
+  inputVariant,
   LimitedHerd,
   LimitedIndividual,
   Genebank,
@@ -29,6 +35,11 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     padding: "0 3em 3em 3em ",
   },
+  control: {
+    margin: "0.3em",
+    minWidth: "18em",
+    paddingRight: "0.5em",
+  },
   ancestorBox: {
     display: "flex",
     flexDirection: "column",
@@ -42,7 +53,7 @@ const useStyles = makeStyles({
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
-    alignItems: "center",
+    alignItems: "end",
   },
   responseBox: {
     maxWidth: "65em",
@@ -80,7 +91,7 @@ export function IndividualAdd({
   const [herdOptions, setHerdOptions] = React.useState(
     genebank ? genebank.herds : ([] as LimitedHerd[])
   );
-  const [success, setSuccess] = React.useState(true as boolean);
+  const [success, setSuccess] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
@@ -164,12 +175,24 @@ export function IndividualAdd({
             ...newIndividual,
             origin_herd: originHerdNameID,
           };
+          // if the user doesn't input a current herd, use origin_herd as the current herd
+          if (!newIndividual.herd) {
+            newIndividual = {
+              ...newIndividual,
+              herd: originHerd.herd,
+            };
+          }
 
           post("/api/individual", newIndividual).then(
             (json) => {
               switch (json.status) {
                 case "success": {
-                  setSuccess(true);
+                  if (herdId) {
+                    userMessage(
+                      "Kaninen har lagts till i din besättning.",
+                      "success"
+                    );
+                  } else setSuccess(true);
                   break;
                 }
                 case "error": {
@@ -227,7 +250,7 @@ export function IndividualAdd({
 
   const resetBlank = () => {
     setIndividual({} as Individual);
-    /*  setSuccess(false); */
+    setSuccess(false);
   };
 
   const resetSibling = () => {
@@ -252,7 +275,7 @@ export function IndividualAdd({
       hair_notes: "",
     };
     setIndividual(sibling);
-    /*     setSuccess(false); */
+    setSuccess(false);
   };
 
   return (
@@ -296,7 +319,7 @@ export function IndividualAdd({
           />
           {!herdId && (
             <>
-              <h2>I vilken besättning ska kaninen läggas till?</h2>
+              <h2>Lägg till nuvarande besättning</h2>
               <Autocomplete
                 options={herdOptions}
                 value={individual.herd}
@@ -307,12 +330,34 @@ export function IndividualAdd({
                     label="Välj besättning"
                     variant="outlined"
                     margin="normal"
+                    helperText="Fyll i om kaninen har bytt besättning"
                   />
                 )}
+                className={style.ancestorInput}
                 onChange={(event, newValue) => {
-                  handleUpdateIndividual("herd", newValue?.herd);
+                  newValue && handleUpdateIndividual("herd", newValue.herd);
                 }}
               />
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <KeyboardDatePicker
+                  autoOk
+                  fullWidth={true}
+                  className={style.ancestorInput}
+                  variant="inline"
+                  inputVariant="outlined"
+                  label="Köpdatum"
+                  format="yyyy-MM-dd"
+                  value={individual.selling_date ?? null}
+                  helperText="Fyll i om kaninen har bytt besättning"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(event, newValue) => {
+                    newValue &&
+                      handleUpdateIndividual("selling_date", newValue);
+                  }}
+                />
+              </MuiPickersUtilsProvider>
             </>
           )}
         </div>
