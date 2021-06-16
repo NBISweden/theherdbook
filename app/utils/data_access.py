@@ -756,10 +756,6 @@ def form_to_individual(form, user=None):
     if "id" in form and form["id"] != individual.id:
         raise ValueError("Number can not be updated")
 
-    birth_date = form.get("birth_date", None)
-    if birth_date is None:
-        raise ValueError("Birth date must be present")
-
     can_manage = user and (
         user.is_admin
         or user.is_manager
@@ -868,6 +864,10 @@ def add_individual(form, user_uuid):
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
+
+    birth_date = form.get("birth_date", None)
+    if birth_date is None:
+        return {"status": "error", "message": "Birth date must be defined"}
 
     try:
         individual = form_to_individual(form, user)
