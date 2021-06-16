@@ -876,7 +876,6 @@ def add_individual(form, user_uuid):
 
     individual.save()
 
-    setattr(individual, "herdtracking_set", True)
     update_herdtracking_values(
         individual=individual,
         herd=individual.origin_herd,
@@ -886,14 +885,13 @@ def add_individual(form, user_uuid):
 
 
 def update_herdtracking_values(individual, herd, user_signature):
-    if individual.herdtracking_set:
-        HerdTracking(
-            from_herd=herd,
-            herd=individual.origin_herd,
-            signature=user_signature,
-            individual=individual,
-            herd_tracking_date=datetime.now(),
-        ).save()
+    HerdTracking(
+        from_herd=herd,
+        herd=individual.origin_herd,
+        signature=user_signature,
+        individual=individual,
+        herd_tracking_date=datetime.now(),
+    ).save()
 
 
 def update_individual(form, user_uuid):
