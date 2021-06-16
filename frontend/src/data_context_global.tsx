@@ -64,6 +64,7 @@ export interface Individual extends LimitedIndividual {
   MK?: number;
   children?: number;
   hair_notes: string;
+  selling_date: string | null;
 }
 
 export type PrivacyLevel = "private" | "authenticated" | "public" | null;
