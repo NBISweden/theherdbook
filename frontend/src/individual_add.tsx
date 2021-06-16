@@ -250,7 +250,7 @@ export function IndividualAdd({
 
   const resetBlank = () => {
     setIndividual({} as Individual);
-    /*  setSuccess(false); */
+    setSuccess(false);
   };
 
   const resetSibling = () => {
@@ -275,7 +275,7 @@ export function IndividualAdd({
       hair_notes: "",
     };
     setIndividual(sibling);
-    /*     setSuccess(false); */
+    setSuccess(false);
   };
 
   return (
