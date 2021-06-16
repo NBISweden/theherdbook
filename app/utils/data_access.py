@@ -880,17 +880,18 @@ def add_individual(form, user_uuid):
         individual=individual,
         herd=individual.origin_herd,
         user_signature=user,
+        birth_date=form.get("birth_date", datetime.now()),
     )
     return {"status": "success", "message": "Individual Created"}
 
 
-def update_herdtracking_values(individual, herd, user_signature):
+def update_herdtracking_values(individual, herd, user_signature, birth_date):
     HerdTracking(
         from_herd=herd,
         herd=individual.origin_herd,
         signature=user_signature,
         individual=individual,
-        herd_tracking_date=datetime.now(),
+        herd_tracking_date=birth_date,
     ).save()
 
 
