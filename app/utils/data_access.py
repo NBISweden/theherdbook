@@ -874,11 +874,26 @@ def add_individual(form, user_uuid):
     if "bodyfat" in form:
         update_bodyfat(individual, form["bodyfat"])
 
-    # TODO: also create herd tracking values
-
     individual.save()
+
+    setattr(individual, "herdtracking_set", True)
+    update_herdtracking_values(
+        individual=individual,
+        herd=individual.origin_herd,
+        user_signature=user,
+    )
     return {"status": "success", "message": "Individual Created"}
 
+
+def update_herdtracking_values(individual, herd, user_signature):
+    if individual.herdtracking_set:
+        HerdTracking(
+            from_herd=herd,
+            herd=individual.origin_herd,
+            signature=user_signature,
+            individual=individual,
+            herd_tracking_date=datetime.now(),
+        ).save()
 
 def update_individual(form, user_uuid):
     """
