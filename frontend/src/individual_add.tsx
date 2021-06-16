@@ -59,11 +59,10 @@ const useStyles = makeStyles({
     flexDirection: "row",
     alignItems: "center",
     padding: "1em 3em",
+    minWidth: "30em",
   },
   bottomBox: {
-    display: "flex",
-    justifyContent: "center",
-    padding: "3em",
+    margin: "3em",
   },
 });
 
@@ -112,6 +111,13 @@ export function IndividualAdd({
       handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
     }
   }, [herdId]);
+
+  // add the field genebank to the individual to get the color options in the form
+  React.useEffect(() => {
+    if (currentGenebank) {
+      handleUpdateIndividual("genebank", currentGenebank.name);
+    }
+  }, [currentGenebank]);
 
   const activeFemales: Individual[] = activeIndividuals(
     currentGenebank,
@@ -221,13 +227,13 @@ export function IndividualAdd({
 
   const resetBlank = () => {
     setIndividual({} as Individual);
-    setSuccess(false);
+    /*  setSuccess(false); */
   };
 
   const resetSibling = () => {
-    const numberParts: string[] = individual.number.split("-");
+    const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
-      number: numberParts[0],
+      number: numberParts ? numberParts[0] + "-" : null,
       name: null,
       herd: {},
       origin_herd: individual.origin_herd,
@@ -246,7 +252,7 @@ export function IndividualAdd({
       hair_notes: "",
     };
     setIndividual(sibling);
-    setSuccess(false);
+    /*     setSuccess(false); */
   };
 
   return (
@@ -298,7 +304,7 @@ export function IndividualAdd({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Besättning"
+                    label="Välj besättning"
                     variant="outlined"
                     margin="normal"
                   />
@@ -310,6 +316,39 @@ export function IndividualAdd({
             </>
           )}
         </div>
+        {success && (
+          <>
+            <div className={style.bottomBox}>
+              <Box
+                border={3}
+                borderRadius={8}
+                borderColor="success.light"
+                className={style.responseBox}
+              >
+                <div className={style.boxTitle}>
+                  <h2>Kaninen har lagts till!</h2>
+                  <CheckCircle className={style.successIcon} />
+                </div>
+                <div className={style.paneControls}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={resetBlank}
+                  >
+                    Ny kanin
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={resetSibling}
+                  >
+                    Ny kull-syskon
+                  </Button>
+                </div>
+              </Box>
+            </div>
+          </>
+        )}
       </div>
       <div className={style.paneControls}>
         <Button
@@ -327,39 +366,6 @@ export function IndividualAdd({
           Skapa
         </Button>
       </div>
-      {success && (
-        <>
-          <div>
-            <Box
-              border={3}
-              borderRadius={8}
-              borderColor="success.light"
-              className={style.responseBox}
-            >
-              <div className={style.boxTitle}>
-                <h2>Kaninen har lagts till!</h2>
-                <CheckCircle className={style.successIcon} />
-              </div>
-              <div className={style.paneControls}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={resetBlank}
-                >
-                  Ny kanin
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={resetSibling}
-                >
-                  Ny kull-syskon
-                </Button>
-              </div>
-            </Box>
-          </div>
-        </>
-      )}
     </>
   );
 }

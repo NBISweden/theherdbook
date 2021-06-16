@@ -195,7 +195,7 @@ export function IndividualForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  value={individual.birth_date ?? "1900-01-01"}
+                  value={individual.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -232,7 +232,7 @@ export function IndividualForm({
                   label="Antal födda i kullen"
                   className={style.control}
                   variant={inputVariant}
-                  value={individual.litter ?? null}
+                  value={individual.litter ?? 0}
                   type="number"
                   onChange={(event) => {
                     onUpdateIndividual("litter", +event.currentTarget.value);
