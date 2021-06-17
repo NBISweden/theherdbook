@@ -218,7 +218,10 @@ class TestEndpoints(FlaskTest):
             # register a valid breeding event
             response = context.post("/api/breeding", json=valid_form)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.get_json(), {"status": "success"})
+            self.assertEqual(
+                response.get_json(),
+                {"breeding_id": 5, "status": "success"},
+            )
         # jscpd:ignore-end
 
     def test_register_birth(self):
