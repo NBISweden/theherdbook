@@ -892,22 +892,23 @@ def add_individual(form, user_uuid):
     if selling_date is not None:
         update_herdtracking_values(
             individual=individual,
-            herd=individual.origin_herd,
+            herd=herd,
             user_signature=user,
-            tracking_date=form["selling_date"],
+            tracking_date=datetime.utcnow(),
         )
 
     return {"status": "success", "message": "Individual Created"}
 
 
 def update_herdtracking_values(individual, herd, user_signature, tracking_date):
-    HerdTracking(
-        from_herd=herd,
-        herd=individual.origin_herd,
-        signature=user_signature,
-        individual=individual,
-        herd_tracking_date=tracking_date,
-    ).save()
+    with DATABASE.atomic():
+        HerdTracking(
+            from_herd=individual.origin_herd,
+            herd=herd,
+            signature=user_signature,
+            individual=individual,
+            herd_tracking_date=tracking_date,
+        ).save()
 
 
 def update_individual(form, user_uuid):

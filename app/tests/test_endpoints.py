@@ -13,7 +13,7 @@ isort:skip_file
 import base64
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import flask
 import requests
@@ -367,8 +367,14 @@ class TestEndpoints(FlaskTest):
         individual = self.individuals[0].number
         individual_2 = self.individuals[1].number
 
-        valid_issue_form = {"color_id": 3, "birth_date": datetime.now()}
-        valid_update_form = {"color_id": 2, "birth_date": datetime.now()}
+        valid_issue_form = {
+            "color_id": 3,
+            "birth_date": datetime.now() - timedelta(days=30),
+        }
+        valid_update_form = {
+            "color_id": 2,
+            "birth_date": datetime.now() - timedelta(days=30),
+        }
 
         mock = mock_s3()
         mock.start()
