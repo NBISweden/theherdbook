@@ -11,7 +11,7 @@ isort:skip_file
 
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import utils.data_access as da
 
@@ -226,6 +226,6 @@ class DatabaseTest(unittest.TestCase):
                 herd=self.herds[2],
                 signature=self.manager,
                 individual=self.individuals[2],
-                herd_tracking_date=datetime.now(),
+                herd_tracking_date=datetime.now() - timedelta(days=30),
             )[0],
         ]

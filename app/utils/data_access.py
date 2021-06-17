@@ -865,6 +865,10 @@ def add_individual(form, user_uuid):
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
 
+    birth_date = form.get("birth_date", None)
+    if birth_date is None:
+        return {"status": "error", "message": "Birth date must be defined"}
+
     try:
         individual = form_to_individual(form, user)
     except ValueError as exception:
@@ -874,10 +878,37 @@ def add_individual(form, user_uuid):
     if "bodyfat" in form:
         update_bodyfat(individual, form["bodyfat"])
 
-    # TODO: also create herd tracking values
-
     individual.save()
+
+    update_herdtracking_values(
+        individual=individual,
+        herd=individual.origin_herd,
+        user_signature=user,
+        tracking_date=form["birth_date"],
+    )
+
+    selling_date = form.get("selling_date", None)
+
+    if selling_date is not None:
+        update_herdtracking_values(
+            individual=individual,
+            herd=herd,
+            user_signature=user,
+            tracking_date=datetime.utcnow(),
+        )
+
     return {"status": "success", "message": "Individual Created"}
+
+
+def update_herdtracking_values(individual, herd, user_signature, tracking_date):
+    with DATABASE.atomic():
+        HerdTracking(
+            from_herd=individual.origin_herd,
+            herd=herd,
+            signature=user_signature,
+            individual=individual,
+            herd_tracking_date=tracking_date,
+        ).save()
 
 
 def update_individual(form, user_uuid):

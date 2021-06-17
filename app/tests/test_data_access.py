@@ -267,6 +267,7 @@ class TestDataAccess(DatabaseTest):
             "admin_update": {
                 "number": self.individuals[0].number,
                 "certificate": "new-cert",
+                "birth_date": datetime.now() - timedelta(days=30),
             },
             "unknown_color": {
                 "number": self.individuals[0].number,
@@ -276,7 +277,10 @@ class TestDataAccess(DatabaseTest):
                 "number": self.individuals[0].number,
                 "origin_herd": {"herd": "does-not-exist"},
             },
-            "valid": {"number": self.individuals[0].number},
+            "valid": {
+                "number": self.individuals[0].number,
+                "birth_date": datetime.now() - timedelta(days=30),
+            },
         }
         self.assertRaises(
             PermissionError, da.form_to_individual, forms["valid"], self.specialist
@@ -307,6 +311,8 @@ class TestDataAccess(DatabaseTest):
                 "herd": self.herds[0].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": "H1-4",
+                "birth_date": datetime.now() - timedelta(days=30),
+                "selling_date": datetime.now() - timedelta(days=10),
             },
         }
         self.assertEqual(
@@ -326,9 +332,9 @@ class TestDataAccess(DatabaseTest):
 
         status = da.add_individual(forms["valid"], self.admin.uuid)
         self.assertEqual(status, {"status": "success", "message": "Individual Created"})
-        self.assertIsNotNone(
-            da.get_individual(forms["valid"]["number"], self.admin.uuid)
-        )
+        ind = da.get_individual(forms["valid"]["number"], self.admin.uuid)
+        self.assertIsNotNone(ind)
+        self.assertEqual(ind["herd"], {"id": 1, "herd": "H1", "herd_name": "herd1"})
 
         # Make sure you cannot add rabbits with already existing numbers
         status = da.add_individual(forms["valid"], self.admin.uuid)
@@ -347,6 +353,7 @@ class TestDataAccess(DatabaseTest):
                 "id": self.individuals[0].id,
                 "number": self.individuals[0].number,
                 "name": "new name",
+                "birth_date": datetime.now() - timedelta(days=30),
             },
         }
         self.assertEqual(
