@@ -334,7 +334,7 @@ class TestDataAccess(DatabaseTest):
         self.assertEqual(status, {"status": "success", "message": "Individual Created"})
         ind = da.get_individual(forms["valid"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
-        self.assertEqual(ind["herd"], {'id': 1, 'herd': 'H1', 'herd_name': 'herd1'})
+        self.assertEqual(ind["herd"], {"id": 1, "herd": "H1", "herd_name": "herd1"})
 
         # Make sure you cannot add rabbits with already existing numbers
         status = da.add_individual(forms["valid"], self.admin.uuid)
