@@ -90,12 +90,14 @@ export function IndividualForm({
   canEdit,
   onUpdateIndividual,
   formAction,
+  colorKey,
 }: {
   individual: Individual;
   canManage?: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
   formAction: FormAction;
+  colorKey: number;
 }) {
   const { colors } = useDataContext();
   const style = useStyles();
@@ -241,12 +243,13 @@ export function IndividualForm({
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
+                  key={colorKey}
                   disabled={!canEdit}
                   options={colorOptions ?? []}
                   value={
                     colorOptions.find(
                       (option) => option.value == individual.color
-                    ) ?? colorOptions[0]
+                    ) ?? null
                   }
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => (

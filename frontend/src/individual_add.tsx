@@ -92,6 +92,9 @@ export function IndividualAdd({
     genebank ? genebank.herds : ([] as LimitedHerd[])
   );
   const [success, setSuccess] = React.useState(false as boolean);
+  // states to handle the Autocompletes rerendering
+  const [herdKey, setHerdKey] = React.useState(0 as number);
+  const [colorKey, setColorKey] = React.useState(0 as number);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
@@ -124,11 +127,12 @@ export function IndividualAdd({
   }, [herdId]);
 
   // add the field genebank to the individual to get the color options in the form
+  // make sure it also is triggered after resetBlank has been called
   React.useEffect(() => {
-    if (currentGenebank) {
+    if (!individual.genebank && currentGenebank) {
       handleUpdateIndividual("genebank", currentGenebank.name);
     }
-  }, [currentGenebank]);
+  }, [currentGenebank, individual]);
 
   const activeFemales: Individual[] = activeIndividuals(
     currentGenebank,
@@ -249,6 +253,9 @@ export function IndividualAdd({
   };
 
   const resetBlank = () => {
+    // change the keys to something new to cause rerender of the Autocompletes
+    setHerdKey(Date.now());
+    setColorKey(Date.now());
     setIndividual({} as Individual);
     setSuccess(false);
   };
@@ -286,6 +293,7 @@ export function IndividualAdd({
           individual={individual}
           canEdit={user?.canEdit(herdId)}
           formAction={FormAction.AddIndividual}
+          colorKey={colorKey}
         />
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
@@ -295,7 +303,7 @@ export function IndividualAdd({
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }
-            value={individual.mother}
+            value={individual.mother ?? null}
             onChange={(event, newValue) =>
               handleUpdateIndividual("mother", newValue)
             }
@@ -309,7 +317,7 @@ export function IndividualAdd({
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }
-            value={individual.father}
+            value={individual.father ?? null}
             onChange={(event, newValue) =>
               handleUpdateIndividual("father", newValue)
             }
@@ -321,6 +329,7 @@ export function IndividualAdd({
             <>
               <h2>Lägg till nuvarande besättning</h2>
               <Autocomplete
+                key={herdKey}
                 options={herdOptions}
                 value={individual.herd}
                 getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
