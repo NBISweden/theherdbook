@@ -12,6 +12,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
+  locale,
   activeIndividuals,
   HerdNameID,
   Individual,
@@ -157,6 +158,51 @@ export function IndividualAdd({
       number: individual.number,
     };
   });
+
+  // creates a breeding event, updates it with birth information and calls the createIndividual function
+  const prepareIndividual = async () => {
+    let breedingString = "";
+    if (individual.birth_date) {
+      let breedingDate: Date | number = new Date(individual.birth_date);
+      breedingDate.setDate(breedingDate.getDate() - 30);
+      breedingString = breedingDate.toLocaleDateString(locale);
+
+      let breeding = {
+        mother: individual.mother?.number,
+        father: individual.father?.number,
+        date: breedingString,
+      };
+
+      let birth = {
+        date: individual.birth_date,
+        litter: individual.litter,
+        id: null,
+      };
+
+      const breedingEvent = await post("/api/breeding", breeding);
+
+      birth = { ...birth, id: breedingEvent.breeding_id };
+
+      const birthEvent = await post("/api/birth", birth);
+
+      if (birthEvent.status == "success") {
+        const individualWithBreeding: Individual = {
+          ...individual,
+          breeding: breedingEvent.breeding_id,
+        };
+        createIndividual(individualWithBreeding);
+      } else {
+        userMessage(
+          // register_birth in data_access.py requires a litter size.
+          // Thus, the field must be mandatory in the form. Okay for föreningen?
+          "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
+          "error"
+        );
+      }
+    } else {
+      userMessage("Fyll i ett födelsedatum först.", "warning");
+    }
+  };
 
   const createIndividual = (individual: Individual) => {
     // first generate the individuals origin herd
@@ -415,7 +461,7 @@ export function IndividualAdd({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => createIndividual(individual)}
+          onClick={() => prepareIndividual()}
         >
           Skapa
         </Button>
