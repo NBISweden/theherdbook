@@ -555,7 +555,8 @@ class TestDataAccess(DatabaseTest):
             {"status": "error", "message": "Date must be formatted as yyyy-mm-dd."},
         )
         self.assertEqual(
-            da.register_breeding(valid_form, self.admin.uuid), {"status": "success"}
+            da.register_breeding(valid_form, self.admin.uuid),
+            {"breeding_id": 5, "status": "success"},
         )
         self.assertEqual(
             da.register_breeding(valid_form, self.admin.uuid),

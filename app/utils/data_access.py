@@ -1292,13 +1292,14 @@ def register_breeding(form, user_uuid):
         return {"status": "error", "message": "Breeding already registered"}
 
     with DATABASE.atomic():
-        Breeding(
+        breeding = Breeding(
             father=father,
             mother=mother,
             breed_date=breed_date,
             breed_notes=form.get("notes", None),
-        ).save()
-        return {"status": "success"}
+        )
+        breeding.save()
+        return {"status": "success", "breeding_id": breeding.id}
 
 
 def register_birth(form, user_uuid):
