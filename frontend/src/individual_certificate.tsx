@@ -269,7 +269,6 @@ export function IndividualCertificate({
         </div>
       ) : individual && showForm ? (
         <>
-          <h1>Fyll i uppgifterna för certifikatet</h1>
           <IndividualForm
             individual={individual}
             canManage={canManage}
