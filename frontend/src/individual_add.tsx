@@ -172,7 +172,13 @@ export function IndividualAdd({
 
   //adds the fields origin_herd and breeding to the individual and calls createIndividual
   const prepareIndividual = async () => {
-    if (individual && individual.number && individual.birth_date) {
+    setSuccess(false);
+    if (
+      individual &&
+      individual.number &&
+      individual.birth_date &&
+      individual.litter
+    ) {
       let newIndividual = individual;
       // first create the individual's origin herd
       const numberParts: string[] = individual.number.split("-");
@@ -225,11 +231,12 @@ export function IndividualAdd({
           const breedings: { breedings: Breeding[] } = await get(
             `/api/breeding/${originHerd.herd}`
           );
-          const breedingMatch = breedings.breedings.find((item) => {
-            item.mother == currentBreeding.mother &&
+          const breedingMatch = breedings.breedings.find(
+            (item) =>
+              item.mother == currentBreeding.mother &&
               item.father == currentBreeding.father &&
-              item.breed_date == currentBreeding.date;
-          });
+              item.breed_date == currentBreeding.date
+          );
 
           // if there is no match, create a new breeding
           if (!breedingMatch) {
@@ -261,7 +268,8 @@ export function IndividualAdd({
               );
             } else if (
               birthEvent.status == "error" &&
-              birthEvent.message.includes("litter size" || "Litter size")
+              (birthEvent.message.includes("litter size") ||
+                birthEvent.message.includes("Litter size"))
             ) {
               userMessage("Ange en kullstorlek större än null.", "warning");
             } else if (
@@ -280,11 +288,6 @@ export function IndividualAdd({
                 "error"
               );
             }
-          } else {
-            userMessage(
-              "Något gick fel på grund av tekniska problem. Kontakta en administrator.",
-              "error"
-            );
           }
         } else {
           userMessage(
@@ -299,7 +302,7 @@ export function IndividualAdd({
         );
       }
     } else {
-      userMessage("Fyll i nummer och födelsedatum först.", "warning");
+      userMessage("Fyll i nummer, födelsedatum och kullstorlek.", "warning");
     }
   };
 
@@ -315,7 +318,8 @@ export function IndividualAdd({
       userMessage("Du är inte inloggad. Logga in och försök igen.", "warning");
     } else if (
       breedingEvent.status == "error" &&
-      breedingEvent.message.includes("Unknown father" || "Unknown mother")
+      (breedingEvent.message.includes("Unknown father") ||
+        breedingEvent.message.includes("Unknown mother"))
     ) {
       userMessage(
         "En eller båda föräldrar kunde inte hittas. Både mor och far måste vara aktiva individer i databasen.",
@@ -323,10 +327,15 @@ export function IndividualAdd({
       );
     } else if (
       breedingEvent.status == "error" &&
-      breedingEvent.massage == "Forbidden"
+      breedingEvent.message == "Forbidden"
     ) {
       userMessage(
         "Du har inte behörighet att lägga till den här individen.",
+        "error"
+      );
+    } else {
+      userMessage(
+        "Något gick fel på grund av tekniska problem. Kontakta en administrator.",
         "error"
       );
     }
@@ -397,22 +406,11 @@ export function IndividualAdd({
     const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
       number: numberParts ? numberParts[0] + "-" : null,
-      name: null,
-      herd: {},
       origin_herd: individual.origin_herd,
       birth_date: individual.birth_date,
       mother: individual.mother,
       father: individual.father,
-      color: null,
-      certificate: null,
-      color_note: null,
       litter: individual.litter,
-      notes: null,
-      herd_tracking: null,
-      sex: undefined,
-      eye_color: null,
-      claw_color: null,
-      hair_notes: "",
     };
     setIndividual(sibling);
     setSuccess(false);
