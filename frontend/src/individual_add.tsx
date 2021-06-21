@@ -174,21 +174,43 @@ export function IndividualAdd({
   const prepareIndividual = async () => {
     setSuccess(false);
     if (
-      individual &&
-      individual.number &&
-      individual.birth_date &&
-      individual.litter
+      !(
+        individual &&
+        individual.number &&
+        individual.birth_date &&
+        individual.litter
+      )
     ) {
+      userMessage("Fyll i nummer, födelsedatum och kullstorlek.", "warning");
+    } else {
       let newIndividual = individual;
       // first create the individual's origin herd
       const numberParts: string[] = individual.number.split("-");
-      if (!herdId || herdId == numberParts[0]) {
+
+      if (herdId || herdId !== numberParts[0]) {
+        userMessage(
+          "Du kan bara lägga till individer som har fötts i din besättning.",
+          "warning"
+        );
+      } else {
         const originHerdNumber: string = numberParts[0];
         const originHerd = currentGenebank?.herds.find(
           (herd: LimitedHerd) => herd.herd == originHerdNumber
         );
 
-        if (originHerd?.herd_name && originHerd.herd && originHerd.id) {
+        if (
+          !(
+            originHerd &&
+            originHerd.herd_name &&
+            originHerd.herd &&
+            originHerd.id
+          )
+        ) {
+          userMessage(
+            "Första delen i individens nummer motsvarar ingen besättning.",
+            "warning"
+          );
+        } else {
           const originHerdNameID: HerdNameID = {
             herd_name: originHerd.herd_name,
             herd: originHerd.herd,
@@ -289,20 +311,8 @@ export function IndividualAdd({
               );
             }
           }
-        } else {
-          userMessage(
-            "Första delen i individens nummer motsvarar ingen besättning.",
-            "warning"
-          );
         }
-      } else {
-        userMessage(
-          "Du kan bara lägga till individer som har fötts i din besättning.",
-          "warning"
-        );
       }
-    } else {
-      userMessage("Fyll i nummer, födelsedatum och kullstorlek.", "warning");
     }
   };
 
