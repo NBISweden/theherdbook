@@ -170,11 +170,11 @@ export function IndividualAdd({
     };
   });
 
-  // creates a breeding event, updates it with birth information and calls the createIndividual function
+  //adds the fields origin_herd and breeding to the individual and calls createIndividual
   const prepareIndividual = async () => {
-    if (individual?.number) {
-      // first create the individual's origin herd
+    if (individual && individual.number && individual.birth_date) {
       let newIndividual = individual;
+      // first create the individual's origin herd
       const numberParts: string[] = individual.number.split("-");
       if (!herdId || herdId == numberParts[0]) {
         const originHerdNumber: string = numberParts[0];
@@ -200,97 +200,97 @@ export function IndividualAdd({
             };
           }
 
-          if (individual.birth_date) {
-            //first generate the breeding date
-            let breedingString = "";
-            let breedingDate: Date | number = new Date(individual.birth_date);
-            breedingDate.setDate(breedingDate.getDate() - 30);
-            breedingString = breedingDate.toLocaleDateString(locale);
+          // generate the breeding date
+          let breedingString = "";
+          let breedingDate: Date | number = new Date(individual.birth_date);
+          breedingDate.setDate(breedingDate.getDate() - 30);
+          breedingString = breedingDate.toLocaleDateString(locale);
 
-            let currentBreeding = {
-              mother: individual.mother?.number,
-              father: individual.father?.number,
-              date: breedingString,
-            };
-            let birth: {
-              date: string;
-              litter: number | null;
-              id: number | null;
-            } = {
-              date: individual.birth_date,
-              litter: individual.litter,
-              id: null,
-            };
+          let currentBreeding = {
+            mother: individual.mother?.number,
+            father: individual.father?.number,
+            date: breedingString,
+          };
+          let birth: {
+            date: string;
+            litter: number | null;
+            id: number | null;
+          } = {
+            date: individual.birth_date,
+            litter: individual.litter,
+            id: null,
+          };
 
-            // Get all the breedings for the individual's origin herd and see if there is a match
-            const breedings: { breedings: Breeding[] } = await get(
-              `/api/breeding/${originHerd.herd}`
-            );
-            console.log("breedings sent");
-            console.log(breedings.breedings);
-            console.log(currentBreeding);
-            const breedingMatch = breedings.breedings.find((item) => {
-              item.mother == currentBreeding.mother &&
-                item.father == currentBreeding.father &&
-                item.breed_date == currentBreeding.date;
-            });
-            console.log("looked for matches");
-            console.log(breedingMatch);
-            // if there is no match, create a new breeding
-            if (!breedingMatch) {
-              birth = { ...birth, id: await createBreeding(currentBreeding) };
+          // Get all the breedings for the individual's origin herd and see if there is a match
+          const breedings: { breedings: Breeding[] } = await get(
+            `/api/breeding/${originHerd.herd}`
+          );
+          const breedingMatch = breedings.breedings.find((item) => {
+            item.mother == currentBreeding.mother &&
+              item.father == currentBreeding.father &&
+              item.breed_date == currentBreeding.date;
+          });
+
+          // if there is no match, create a new breeding
+          if (!breedingMatch) {
+            birth = { ...birth, id: await createBreeding(currentBreeding) };
+          } else {
+            birth = { ...birth, id: breedingMatch.id };
+          }
+
+          // only continue with registering a birth if there is a breeding
+          if (!!birth.id) {
+            const birthEvent = await post("/api/birth", birth);
+
+            if (
+              birthEvent.status == "success" ||
+              birthEvent.message.includes("Birth already registered.")
+            ) {
+              const individualWithBreeding: Individual = {
+                ...newIndividual,
+                breeding: birth.id,
+              };
+              createIndividual(individualWithBreeding);
+            } else if (
+              birthEvent.status == "error" &&
+              birthEvent.message == "Not logged in"
+            ) {
+              userMessage(
+                "Du är inte inloggad. Logga in och försök igen.",
+                "warning"
+              );
+            } else if (
+              birthEvent.status == "error" &&
+              birthEvent.message.includes("litter size" || "Litter size")
+            ) {
+              userMessage("Ange en kullstorlek större än null.", "warning");
+            } else if (
+              birthEvent.status == "error" &&
+              birthEvent.message == "Forbidden"
+            ) {
+              userMessage(
+                "Du har inte behörighet att lägga till den här individen.",
+                "error"
+              );
             } else {
-              birth = { ...birth, id: breedingMatch.id };
-            }
-
-            // only continue with registering a birth if there is a breeding
-            if (!!birth.id) {
-              const birthEvent = await post("/api/birth", birth);
-
-              if (
-                birthEvent.status == "success" ||
-                birthEvent.message.includes("Birth already registered.")
-              ) {
-                const individualWithBreeding: Individual = {
-                  ...newIndividual,
-                  breeding: birth.id,
-                };
-                createIndividual(individualWithBreeding);
-              } else if (
-                birthEvent.status == "error" &&
-                birthEvent.message == "Not logged in"
-              ) {
-                userMessage(
-                  "Du är inte inloggad. Logga in och försök igen.",
-                  "warning"
-                );
-              } else if (
-                birthEvent.status == "error" &&
-                birthEvent.message.includes("litter size" || "Litter size")
-              ) {
-                userMessage("Ange en kullstorlek större än null.", "warning");
-              } else if (
-                birthEvent.status == "error" &&
-                birthEvent.message == "Forbidden"
-              ) {
-                userMessage(
-                  "Du har inte behörighet att lägga till den här individen.",
-                  "error"
-                );
-              } else {
-                userMessage(
-                  // register_birth in data_access.py requires a litter size.
-                  // Thus, the field must be mandatory in the form. Okay for föreningen?
-                  "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
-                  "error"
-                );
-              }
+              userMessage(
+                // register_birth in data_access.py requires a litter size.
+                // Thus, the field must be mandatory in the form. Okay for föreningen?
+                "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
+                "error"
+              );
             }
           } else {
-            userMessage("Fyll i ett födelsedatum först.", "warning");
+            userMessage(
+              "Något gick fel på grund av tekniska problem. Kontakta en administrator.",
+              "error"
+            );
           }
         } else {
-          userMessage("Individens nummer har inget giltigt format.", "warning");
+          userMessage(
+            "Första delen i individens nummer motsvarar ingen besättning.",
+            "warning"
+          );
         }
       } else {
         userMessage(
@@ -299,7 +299,7 @@ export function IndividualAdd({
         );
       }
     } else {
-      userMessage("Fyll i ett nummer först.", "warning");
+      userMessage("Fyll i nummer och födelsedatum först.", "warning");
     }
   };
 
@@ -380,7 +380,6 @@ export function IndividualAdd({
         }
       },
       (error) => {
-        console.log(error);
         userMessage("Något gick fel.", "error");
       }
     );
