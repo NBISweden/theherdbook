@@ -181,16 +181,71 @@ export function IndividualAdd({
 
       const breedingEvent = await post("/api/breeding", breeding);
 
-      birth = { ...birth, id: breedingEvent.breeding_id };
+      if (breedingEvent.status == "success") {
+        birth = { ...birth, id: breedingEvent.breeding_id };
+      } else if (
+        breedingEvent.status == "error" &&
+        !!breedingEvent.breeding_id // not implemented in backend yet!!
+      ) {
+        birth = { ...birth, id: breedingEvent.breeding_id };
+      } else if (
+        breedingEvent.status == "error" &&
+        breedingEvent.message == "Not logged in"
+      ) {
+        userMessage(
+          "Du är inte inloggad. Logga in och försök igen.",
+          "warning"
+        );
+      } else if (
+        breedingEvent.status == "error" &&
+        breedingEvent.message.includes("Unknown father" || "Unknown mother")
+      ) {
+        userMessage(
+          "En eller båda föräldrar kunde inte hittas. Både mor och far måste vara aktiva individer i databasen.",
+          "warning"
+        );
+      } else if (
+        breedingEvent.status == "error" &&
+        breedingEvent.massage == "Forbidden"
+      ) {
+        userMessage(
+          "Du har inte behörighet att lägga till den här individen.",
+          "error"
+        );
+      }
 
       const birthEvent = await post("/api/birth", birth);
 
-      if (birthEvent.status == "success") {
+      if (
+        birthEvent.status == "success" ||
+        birthEvent.message.includes("Birth already registered.")
+      ) {
         const individualWithBreeding: Individual = {
           ...individual,
           breeding: breedingEvent.breeding_id,
         };
         createIndividual(individualWithBreeding);
+      } else if (
+        birthEvent.status == "error" &&
+        birthEvent.message == "Not logged in"
+      ) {
+        userMessage(
+          "Du är inte inloggad. Logga in och försök igen.",
+          "warning"
+        );
+      } else if (
+        birthEvent.status == "error" &&
+        birthEvent.message.includes("litter size" || "Litter size")
+      ) {
+        userMessage("Ange en kullstorlek större än null.", "warning");
+      } else if (
+        birthEvent.status == "error" &&
+        birthEvent.message == "Forbidden"
+      ) {
+        userMessage(
+          "Du har inte behörighet att lägga till den här individen.",
+          "error"
+        );
       } else {
         userMessage(
           // register_birth in data_access.py requires a litter size.
