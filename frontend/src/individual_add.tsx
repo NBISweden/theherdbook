@@ -25,7 +25,7 @@ import {
   OptionType,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
-import { post } from "@app/communication";
+import { get, post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
 
@@ -77,6 +77,17 @@ const useStyles = makeStyles({
     margin: "3em",
   },
 });
+
+interface Breeding {
+  birth_date: string;
+  birth_notes: string | null;
+  breed_date: string | null;
+  breed_notes: string | null;
+  father: string;
+  id: number;
+  litter_size: number;
+  mother: string;
+}
 
 export function IndividualAdd({
   herdId,
@@ -161,107 +172,8 @@ export function IndividualAdd({
 
   // creates a breeding event, updates it with birth information and calls the createIndividual function
   const prepareIndividual = async () => {
-    let breedingString = "";
-    if (individual.birth_date) {
-      let breedingDate: Date | number = new Date(individual.birth_date);
-      breedingDate.setDate(breedingDate.getDate() - 30);
-      breedingString = breedingDate.toLocaleDateString(locale);
-
-      let breeding = {
-        mother: individual.mother?.number,
-        father: individual.father?.number,
-        date: breedingString,
-      };
-
-      let birth = {
-        date: individual.birth_date,
-        litter: individual.litter,
-        id: null,
-      };
-
-      const breedingEvent = await post("/api/breeding", breeding);
-
-      if (breedingEvent.status == "success") {
-        birth = { ...birth, id: breedingEvent.breeding_id };
-      } else if (
-        breedingEvent.status == "error" &&
-        !!breedingEvent.breeding_id // not implemented in backend yet!!
-      ) {
-        birth = { ...birth, id: breedingEvent.breeding_id };
-      } else if (
-        breedingEvent.status == "error" &&
-        breedingEvent.message == "Not logged in"
-      ) {
-        userMessage(
-          "Du är inte inloggad. Logga in och försök igen.",
-          "warning"
-        );
-      } else if (
-        breedingEvent.status == "error" &&
-        breedingEvent.message.includes("Unknown father" || "Unknown mother")
-      ) {
-        userMessage(
-          "En eller båda föräldrar kunde inte hittas. Både mor och far måste vara aktiva individer i databasen.",
-          "warning"
-        );
-      } else if (
-        breedingEvent.status == "error" &&
-        breedingEvent.massage == "Forbidden"
-      ) {
-        userMessage(
-          "Du har inte behörighet att lägga till den här individen.",
-          "error"
-        );
-      }
-
-      const birthEvent = await post("/api/birth", birth);
-
-      if (
-        birthEvent.status == "success" ||
-        birthEvent.message.includes("Birth already registered.")
-      ) {
-        const individualWithBreeding: Individual = {
-          ...individual,
-          breeding: breedingEvent.breeding_id,
-        };
-        createIndividual(individualWithBreeding);
-      } else if (
-        birthEvent.status == "error" &&
-        birthEvent.message == "Not logged in"
-      ) {
-        userMessage(
-          "Du är inte inloggad. Logga in och försök igen.",
-          "warning"
-        );
-      } else if (
-        birthEvent.status == "error" &&
-        birthEvent.message.includes("litter size" || "Litter size")
-      ) {
-        userMessage("Ange en kullstorlek större än null.", "warning");
-      } else if (
-        birthEvent.status == "error" &&
-        birthEvent.message == "Forbidden"
-      ) {
-        userMessage(
-          "Du har inte behörighet att lägga till den här individen.",
-          "error"
-        );
-      } else {
-        userMessage(
-          // register_birth in data_access.py requires a litter size.
-          // Thus, the field must be mandatory in the form. Okay for föreningen?
-          "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
-          "error"
-        );
-      }
-    } else {
-      userMessage("Fyll i ett födelsedatum först.", "warning");
-    }
-  };
-
-  const createIndividual = (individual: Individual) => {
-    // first generate the individuals origin herd
     if (individual?.number) {
+      // first create the individual's origin herd
       let newIndividual = individual;
       const numberParts: string[] = individual.number.split("-");
       if (!herdId || herdId == numberParts[0]) {
@@ -288,57 +200,95 @@ export function IndividualAdd({
             };
           }
 
-          post("/api/individual", newIndividual).then(
-            (json) => {
-              switch (json.status) {
-                case "success": {
-                  if (herdId) {
-                    userMessage(
-                      "Kaninen har lagts till i din besättning.",
-                      "success"
-                    );
-                  } else setSuccess(true);
-                  break;
-                }
-                case "error": {
-                  switch (json.message) {
-                    case "Not logged in": {
-                      userMessage("Du är inte inloggad.", "error");
-                      break;
-                    }
-                    case "Individual must have a valid herd": {
-                      userMessage("Besättningen kunde inte hittas.", "error");
-                      break;
-                    }
-                    case "Forbidden": {
-                      userMessage(
-                        "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
-                        "error"
-                      );
-                      break;
-                    }
-                    case "Individual number already exists": {
-                      userMessage(
-                        "Det finns redan en kanin med detta nummer i databasen.",
-                        "error"
-                      );
-                      break;
-                    }
-                    default: {
-                      userMessage(
-                        "Något gick fel. Det här borde inte hända.",
-                        "error"
-                      );
-                    }
-                  }
-                }
-              }
-            },
-            (error) => {
-              console.log(error);
-              userMessage("Något gick fel.", "error");
+          if (individual.birth_date) {
+            //first generate the breeding date
+            let breedingString = "";
+            let breedingDate: Date | number = new Date(individual.birth_date);
+            breedingDate.setDate(breedingDate.getDate() - 30);
+            breedingString = breedingDate.toLocaleDateString(locale);
+
+            let currentBreeding = {
+              mother: individual.mother?.number,
+              father: individual.father?.number,
+              date: breedingString,
+            };
+            let birth: {
+              date: string;
+              litter: number | null;
+              id: number | null;
+            } = {
+              date: individual.birth_date,
+              litter: individual.litter,
+              id: null,
+            };
+
+            // Get all the breedings for the individual's origin herd and see if there is a match
+            const breedings: { breedings: Breeding[] } = await get(
+              `/api/breeding/${originHerd.herd}`
+            );
+            console.log("breedings sent");
+            console.log(breedings.breedings);
+            console.log(currentBreeding);
+            const breedingMatch = breedings.breedings.find((item) => {
+              item.mother == currentBreeding.mother &&
+                item.father == currentBreeding.father &&
+                item.breed_date == currentBreeding.date;
+            });
+            console.log("looked for matches");
+            console.log(breedingMatch);
+            // if there is no match, create a new breeding
+            if (!breedingMatch) {
+              birth = { ...birth, id: await createBreeding(currentBreeding) };
+            } else {
+              birth = { ...birth, id: breedingMatch.id };
             }
-          );
+
+            // only continue with registering a birth if there is a breeding
+            if (!!birth.id) {
+              const birthEvent = await post("/api/birth", birth);
+
+              if (
+                birthEvent.status == "success" ||
+                birthEvent.message.includes("Birth already registered.")
+              ) {
+                const individualWithBreeding: Individual = {
+                  ...newIndividual,
+                  breeding: birth.id,
+                };
+                createIndividual(individualWithBreeding);
+              } else if (
+                birthEvent.status == "error" &&
+                birthEvent.message == "Not logged in"
+              ) {
+                userMessage(
+                  "Du är inte inloggad. Logga in och försök igen.",
+                  "warning"
+                );
+              } else if (
+                birthEvent.status == "error" &&
+                birthEvent.message.includes("litter size" || "Litter size")
+              ) {
+                userMessage("Ange en kullstorlek större än null.", "warning");
+              } else if (
+                birthEvent.status == "error" &&
+                birthEvent.message == "Forbidden"
+              ) {
+                userMessage(
+                  "Du har inte behörighet att lägga till den här individen.",
+                  "error"
+                );
+              } else {
+                userMessage(
+                  // register_birth in data_access.py requires a litter size.
+                  // Thus, the field must be mandatory in the form. Okay for föreningen?
+                  "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
+                  "error"
+                );
+              }
+            }
+          } else {
+            userMessage("Fyll i ett födelsedatum först.", "warning");
+          }
         } else {
           userMessage("Individens nummer har inget giltigt format.", "warning");
         }
@@ -351,6 +301,89 @@ export function IndividualAdd({
     } else {
       userMessage("Fyll i ett nummer först.", "warning");
     }
+  };
+
+  const createBreeding = async (breedingData: Object) => {
+    const breedingEvent = await post("/api/breeding", breedingData);
+
+    if (breedingEvent.status == "success") {
+      return breedingEvent.breeding_id;
+    } else if (
+      breedingEvent.status == "error" &&
+      breedingEvent.message == "Not logged in"
+    ) {
+      userMessage("Du är inte inloggad. Logga in och försök igen.", "warning");
+    } else if (
+      breedingEvent.status == "error" &&
+      breedingEvent.message.includes("Unknown father" || "Unknown mother")
+    ) {
+      userMessage(
+        "En eller båda föräldrar kunde inte hittas. Både mor och far måste vara aktiva individer i databasen.",
+        "warning"
+      );
+    } else if (
+      breedingEvent.status == "error" &&
+      breedingEvent.massage == "Forbidden"
+    ) {
+      userMessage(
+        "Du har inte behörighet att lägga till den här individen.",
+        "error"
+      );
+    }
+  };
+
+  const createIndividual = (individual: Individual) => {
+    post("/api/individual", individual).then(
+      (json) => {
+        switch (json.status) {
+          case "success": {
+            if (herdId) {
+              userMessage(
+                "Kaninen har lagts till i din besättning.",
+                "success"
+              );
+            } else setSuccess(true);
+            break;
+          }
+          case "error": {
+            switch (json.message) {
+              case "Not logged in": {
+                userMessage("Du är inte inloggad.", "error");
+                break;
+              }
+              case "Individual must have a valid herd": {
+                userMessage("Besättningen kunde inte hittas.", "error");
+                break;
+              }
+              case "Forbidden": {
+                userMessage(
+                  "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
+                  "error"
+                );
+                break;
+              }
+              case "Individual number already exists": {
+                userMessage(
+                  "Det finns redan en kanin med detta nummer i databasen.",
+                  "error"
+                );
+                break;
+              }
+              default: {
+                userMessage(
+                  "Något gick fel. Det här borde inte hända.",
+                  "error"
+                );
+              }
+            }
+          }
+        }
+      },
+      (error) => {
+        console.log(error);
+        userMessage("Något gick fel.", "error");
+      }
+    );
   };
 
   const resetBlank = () => {
