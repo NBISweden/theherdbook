@@ -187,7 +187,7 @@ export function IndividualAdd({
       // first create the individual's origin herd
       const numberParts: string[] = individual.number.split("-");
 
-      if (herdId || herdId !== numberParts[0]) {
+      if (herdId && herdId !== numberParts[0]) {
         userMessage(
           "Du kan bara lägga till individer som har fötts i din besättning.",
           "warning"
