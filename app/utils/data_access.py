@@ -1042,9 +1042,9 @@ def get_individuals(genebank_id, user_uuid=None):
             fn.RANK()
             .over(
                 order_by=[HerdTracking.herd_tracking_date.desc()],
-                partition_by=[HerdTracking.individual]
+                partition_by=[HerdTracking.individual],
             )
-            .alias("rank")
+            .alias("rank"),
         ).distinct()
         # count children for individuals. This can be done in two ways - total
         # number of children, or number of children that is available in the
