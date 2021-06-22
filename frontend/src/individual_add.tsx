@@ -262,7 +262,8 @@ export function IndividualAdd({
       (item) =>
         item.mother == currentBreeding.mother &&
         item.father == currentBreeding.father &&
-        item.breed_date == currentBreeding.date
+        (item.breed_date == currentBreeding.date ||
+          item.birth_date == individual.birth_date)
     );
 
     // if there is no match, create a new breeding
