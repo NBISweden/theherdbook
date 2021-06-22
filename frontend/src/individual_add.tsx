@@ -76,6 +76,10 @@ const useStyles = makeStyles({
   bottomBox: {
     margin: "3em",
   },
+  sellingTitle: {
+    marginTop: "2em",
+    marginBottom: "0",
+  },
 });
 
 interface Breeding {
@@ -485,7 +489,9 @@ export function IndividualAdd({
           />
           {!herdId && (
             <>
-              <h2>Lägg till nuvarande besättning</h2>
+              <h2 className={style.sellingTitle}>
+                Fyll i bara om kaninen har sålts
+              </h2>
               <Autocomplete
                 key={herdKey}
                 options={herdOptions}
@@ -497,7 +503,7 @@ export function IndividualAdd({
                     label="Välj besättning"
                     variant="outlined"
                     margin="normal"
-                    helperText="Fyll i om kaninen har bytt besättning"
+                    helperText="Lämna tom om kaninen inte har sålts"
                   />
                 )}
                 className={style.ancestorInput}
@@ -515,7 +521,7 @@ export function IndividualAdd({
                   label="Köpdatum"
                   format="yyyy-MM-dd"
                   value={individual.selling_date ?? null}
-                  helperText="Fyll i om kaninen har bytt besättning"
+                  helperText="Lämna tom om kaninen inte har sålts"
                   InputLabelProps={{
                     shrink: true,
                   }}
