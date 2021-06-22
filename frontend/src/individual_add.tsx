@@ -263,14 +263,15 @@ export function IndividualAdd({
 
     // if there is no match, create a new breeding
     if (!breedingMatch) {
-      newBreeding = await createBreeding(currentBreeding);
+      const newBreeding: { breeding_id: number; status: string } =
+        await createBreeding(currentBreeding);
 
       if (!newBreeding) {
         // createBreeding will show a message, so we should not try to
         return;
       }
 
-      birth = { ...birth, id: newBreeding };
+      birth = { ...birth, id: newBreeding.breeding_id };
     } else {
       birth = { ...birth, id: breedingMatch.id };
     }
@@ -311,27 +312,37 @@ export function IndividualAdd({
     }
   };
 
-  const createBreeding = async (breedingData: Object): string | null => {
+  const createBreeding = async (
+    breedingData: Object
+  ): { status: string; message?: string; breeding_id?: number } => {
     const breedingEvent = await post("/api/breeding", breedingData);
 
     if (breedingEvent.status == "success") {
       return breedingEvent.breeding_id;
     }
 
-    const translate: Map<string, string> = {
-      "Not logged in": "Du är inte inloggad. Logga in och försök igen",
-      "Unknown mother":
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+      [
+        "Unknown mother",
         "Okänd mor, modern måste vara en aktiv individ i databasen",
-      "Unknown father":
+      ],
+      [
+        "Unknown father",
         "Okänd far, fadern måste vara en aktiv individ i databasen",
-      Forbidden: "Du har inte behörighet att lägga till individen",
-    };
+      ],
+      [
+        "Unknown mother, Unknown father",
+        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+      ],
+      ["Forbidden", "Du har inte behörighet att lägga till individen"],
+    ]);
 
     if (
       breedingEvent.status == "error" &&
       translate.has(breedingEvent.message)
     ) {
-      userMessage(translate[breedingEvent.message], "error");
+      userMessage(translate.get(breedingEvent.message), "error");
       return;
     }
 
