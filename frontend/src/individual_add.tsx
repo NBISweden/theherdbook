@@ -186,7 +186,7 @@ export function IndividualAdd({
     }
 
     let newIndividual = individual;
-    // first create the individual's origin herd
+    // create the individual's origin herd
     const numberParts: string[] = individual.number.split("-");
 
     if (herdId && herdId !== numberParts[0]) {
@@ -263,11 +263,12 @@ export function IndividualAdd({
 
     // if there is no match, create a new breeding
     if (!breedingMatch) {
-      const newBreeding: { breeding_id: number; status: string } =
-        await createBreeding(currentBreeding);
+      const newBreeding:
+        | { breeding_id?: number; status: string; message?: string }
+        | undefined = await createBreeding(currentBreeding);
 
       if (!newBreeding) {
-        // createBreeding will show a message, so we should not try to
+        // createBreeding will show a message, so no error handling or messages here
         return;
       }
 
@@ -292,30 +293,43 @@ export function IndividualAdd({
         return;
       }
 
-      const translate: Map<string, string> = {
-        "Not logged in": "Du är inte inloggad. Logga in och försök igen",
-        "Litter size": "Du måste ange en kullstorlek",
-        Forbidden: "Du har inte behörighet att lägga till individen",
-      };
-
-      if (birthEvent.status == "error" && translate.has(birthEvent.message)) {
-        userMessage(translate[birthEvent.message], "error");
-        return;
+      if (
+        birthEvent.status == "error" &&
+        birthEvent.message == "Not logged in"
+      ) {
+        userMessage(
+          "Du är inte inloggad. Logga in och försök igen.",
+          "warning"
+        );
+      } else if (
+        birthEvent.status == "error" &&
+        (birthEvent.message.includes("litter size") ||
+          birthEvent.message.includes("Litter size"))
+      ) {
+        userMessage("Ange en kullstorlek större än null.", "warning");
+      } else if (
+        birthEvent.status == "error" &&
+        birthEvent.message == "Forbidden"
+      ) {
+        userMessage(
+          "Du har inte behörighet att lägga till den här individen.",
+          "error"
+        );
+      } else {
+        userMessage(
+          "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
+          "error"
+        );
       }
-
-      userMessage(
-        // register_birth in data_access.py requires a litter size.
-        // Thus, the field must be mandatory in the form. Okay for föreningen?
-        "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
-        "error"
-      );
     }
   };
 
-  const createBreeding = async (
-    breedingData: Object
-  ): { status: string; message?: string; breeding_id?: number } => {
-    const breedingEvent = await post("/api/breeding", breedingData);
+  const createBreeding = async (breedingData: Object): Promise<any> => {
+    const breedingEvent: {
+      status: string;
+      message?: string;
+      breeding_id?: number;
+    } = await post("/api/breeding", breedingData);
 
     if (breedingEvent.status == "success") {
       return breedingEvent.breeding_id;
@@ -340,6 +354,7 @@ export function IndividualAdd({
 
     if (
       breedingEvent.status == "error" &&
+      !!breedingEvent.message &&
       translate.has(breedingEvent.message)
     ) {
       userMessage(translate.get(breedingEvent.message), "error");
@@ -350,6 +365,7 @@ export function IndividualAdd({
       "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
       "error"
     );
+    return;
   };
 
   const createIndividual = (individual: Individual) => {
