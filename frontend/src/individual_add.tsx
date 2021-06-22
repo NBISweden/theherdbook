@@ -182,173 +182,163 @@ export function IndividualAdd({
       )
     ) {
       userMessage("Fyll i nummer, födelsedatum och kullstorlek.", "warning");
-    } else {
-      let newIndividual = individual;
-      // first create the individual's origin herd
-      const numberParts: string[] = individual.number.split("-");
+      return;
+    }
 
-      if (herdId && herdId !== numberParts[0]) {
-        userMessage(
-          "Du kan bara lägga till individer som har fötts i din besättning.",
-          "warning"
-        );
-      } else {
-        const originHerdNumber: string = numberParts[0];
-        const originHerd = currentGenebank?.herds.find(
-          (herd: LimitedHerd) => herd.herd == originHerdNumber
-        );
+    let newIndividual = individual;
+    // first create the individual's origin herd
+    const numberParts: string[] = individual.number.split("-");
 
-        if (
-          !(
-            originHerd &&
-            originHerd.herd_name &&
-            originHerd.herd &&
-            originHerd.id
-          )
-        ) {
-          userMessage(
-            "Första delen i individens nummer motsvarar ingen besättning.",
-            "warning"
-          );
-        } else {
-          const originHerdNameID: HerdNameID = {
-            herd_name: originHerd.herd_name,
-            herd: originHerd.herd,
-            id: originHerd.id,
-          };
-          newIndividual = {
-            ...newIndividual,
-            origin_herd: originHerdNameID,
-          };
-          // if the user doesn't input a current herd, use origin_herd as the current herd
-          if (!newIndividual.herd) {
-            newIndividual = {
-              ...newIndividual,
-              herd: originHerd.herd,
-            };
-          }
+    if (herdId && herdId !== numberParts[0]) {
+      userMessage(
+        "Du kan bara lägga till individer som har fötts i din besättning.",
+        "warning"
+      );
+      return;
+    }
 
-          // generate the breeding date
-          let breedingString = "";
-          let breedingDate: Date | number = new Date(individual.birth_date);
-          breedingDate.setDate(breedingDate.getDate() - 30);
-          breedingString = breedingDate.toLocaleDateString(locale);
+    const originHerdNumber: string = numberParts[0];
+    const originHerd = currentGenebank?.herds.find(
+      (herd: LimitedHerd) => herd.herd == originHerdNumber
+    );
 
-          let currentBreeding = {
-            mother: individual.mother?.number,
-            father: individual.father?.number,
-            date: breedingString,
-          };
-          let birth: {
-            date: string;
-            litter: number | null;
-            id: number | null;
-          } = {
-            date: individual.birth_date,
-            litter: individual.litter,
-            id: null,
-          };
+    if (
+      !(originHerd && originHerd.herd_name && originHerd.herd && originHerd.id)
+    ) {
+      userMessage(
+        "Första delen i individens nummer motsvarar ingen besättning.",
+        "warning"
+      );
+      return;
+    }
 
-          // Get all the breedings for the individual's origin herd and see if there is a match
-          const breedings: { breedings: Breeding[] } = await get(
-            `/api/breeding/${originHerd.herd}`
-          );
-          const breedingMatch = breedings.breedings.find(
-            (item) =>
-              item.mother == currentBreeding.mother &&
-              item.father == currentBreeding.father &&
-              item.breed_date == currentBreeding.date
-          );
+    const originHerdNameID: HerdNameID = {
+      herd_name: originHerd.herd_name,
+      herd: originHerd.herd,
+      id: originHerd.id,
+    };
+    newIndividual = {
+      ...newIndividual,
+      origin_herd: originHerdNameID,
+    };
+    // if the user doesn't input a current herd, use origin_herd as the current herd
+    if (!newIndividual.herd) {
+      newIndividual = {
+        ...newIndividual,
+        herd: originHerd.herd,
+      };
+    }
 
-          // if there is no match, create a new breeding
-          if (!breedingMatch) {
-            birth = { ...birth, id: await createBreeding(currentBreeding) };
-          } else {
-            birth = { ...birth, id: breedingMatch.id };
-          }
+    // generate the breeding date
+    let breedingString = "";
+    let breedingDate: Date | number = new Date(individual.birth_date);
+    breedingDate.setDate(breedingDate.getDate() - 30);
+    breedingString = breedingDate.toLocaleDateString(locale);
 
-          // only continue with registering a birth if there is a breeding
-          if (!!birth.id) {
-            const birthEvent = await post("/api/birth", birth);
+    let currentBreeding = {
+      mother: individual.mother?.number,
+      father: individual.father?.number,
+      date: breedingString,
+    };
+    let birth: {
+      date: string;
+      litter: number | null;
+      id: number | null;
+    } = {
+      date: individual.birth_date,
+      litter: individual.litter,
+      id: null,
+    };
 
-            if (
-              birthEvent.status == "success" ||
-              birthEvent.message.includes("Birth already registered.")
-            ) {
-              const individualWithBreeding: Individual = {
-                ...newIndividual,
-                breeding: birth.id,
-              };
-              createIndividual(individualWithBreeding);
-            } else if (
-              birthEvent.status == "error" &&
-              birthEvent.message == "Not logged in"
-            ) {
-              userMessage(
-                "Du är inte inloggad. Logga in och försök igen.",
-                "warning"
-              );
-            } else if (
-              birthEvent.status == "error" &&
-              (birthEvent.message.includes("litter size") ||
-                birthEvent.message.includes("Litter size"))
-            ) {
-              userMessage("Ange en kullstorlek större än null.", "warning");
-            } else if (
-              birthEvent.status == "error" &&
-              birthEvent.message == "Forbidden"
-            ) {
-              userMessage(
-                "Du har inte behörighet att lägga till den här individen.",
-                "error"
-              );
-            } else {
-              userMessage(
-                // register_birth in data_access.py requires a litter size.
-                // Thus, the field must be mandatory in the form. Okay for föreningen?
-                "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
-                "error"
-              );
-            }
-          }
-        }
+    // Get all the breedings for the individual's origin herd and see if there is a match
+    const breedings: { breedings: Breeding[] } = await get(
+      `/api/breeding/${originHerd.herd}`
+    );
+    const breedingMatch = breedings.breedings.find(
+      (item) =>
+        item.mother == currentBreeding.mother &&
+        item.father == currentBreeding.father &&
+        item.breed_date == currentBreeding.date
+    );
+
+    // if there is no match, create a new breeding
+    if (!breedingMatch) {
+      newBreeding = await createBreeding(currentBreeding);
+
+      if (!newBreeding) {
+        // createBreeding will show a message, so we should not try to
+        return;
       }
+
+      birth = { ...birth, id: newBreeding };
+    } else {
+      birth = { ...birth, id: breedingMatch.id };
+    }
+
+    // only continue with registering a birth if there is a breeding
+    if (!!birth.id) {
+      const birthEvent = await post("/api/birth", birth);
+
+      if (
+        birthEvent.status == "success" ||
+        birthEvent.message.includes("Birth already registered.")
+      ) {
+        const individualWithBreeding: Individual = {
+          ...newIndividual,
+          breeding: birth.id,
+        };
+        createIndividual(individualWithBreeding);
+        return;
+      }
+
+      const translate: Map<string, string> = {
+        "Not logged in": "Du är inte inloggad. Logga in och försök igen",
+        "Litter size": "Du måste ange en kullstorlek",
+        Forbidden: "Du har inte behörighet att lägga till individen",
+      };
+
+      if (birthEvent.status == "error" && translate.has(birthEvent.message)) {
+        userMessage(translate[birthEvent.message], "error");
+        return;
+      }
+
+      userMessage(
+        // register_birth in data_access.py requires a litter size.
+        // Thus, the field must be mandatory in the form. Okay for föreningen?
+        "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
+        "error"
+      );
     }
   };
 
-  const createBreeding = async (breedingData: Object) => {
+  const createBreeding = async (breedingData: Object): string | null => {
     const breedingEvent = await post("/api/breeding", breedingData);
 
     if (breedingEvent.status == "success") {
       return breedingEvent.breeding_id;
-    } else if (
-      breedingEvent.status == "error" &&
-      breedingEvent.message == "Not logged in"
-    ) {
-      userMessage("Du är inte inloggad. Logga in och försök igen.", "warning");
-    } else if (
-      breedingEvent.status == "error" &&
-      (breedingEvent.message.includes("Unknown father") ||
-        breedingEvent.message.includes("Unknown mother"))
-    ) {
-      userMessage(
-        "En eller båda föräldrar kunde inte hittas. Både mor och far måste vara aktiva individer i databasen.",
-        "warning"
-      );
-    } else if (
-      breedingEvent.status == "error" &&
-      breedingEvent.message == "Forbidden"
-    ) {
-      userMessage(
-        "Du har inte behörighet att lägga till den här individen.",
-        "error"
-      );
-    } else {
-      userMessage(
-        "Något gick fel på grund av tekniska problem. Kontakta en administrator.",
-        "error"
-      );
     }
+
+    const translate: Map<string, string> = {
+      "Not logged in": "Du är inte inloggad. Logga in och försök igen",
+      "Unknown mother":
+        "Okänd mor, modern måste vara en aktiv individ i databasen",
+      "Unknown father":
+        "Okänd far, fadern måste vara en aktiv individ i databasen",
+      Forbidden: "Du har inte behörighet att lägga till individen",
+    };
+
+    if (
+      breedingEvent.status == "error" &&
+      translate.has(breedingEvent.message)
+    ) {
+      userMessage(translate[breedingEvent.message], "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
   };
 
   const createIndividual = (individual: Individual) => {
