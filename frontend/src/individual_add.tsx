@@ -337,7 +337,7 @@ export function IndividualAdd({
     } = await post("/api/breeding", breedingData);
 
     if (breedingEvent.status == "success") {
-      return breedingEvent.breeding_id;
+      return breedingEvent;
     }
 
     const translate: Map<string, string> = new Map([
