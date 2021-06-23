@@ -11,6 +11,7 @@ import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import MeetingRoom from '@material-ui/icons/MeetingRoom';
 import GroupIcon from '@material-ui/icons/Group';
 import PersonAddIcon from '@material-ui/icons/PersonAdd'
+import PostAddIcon from '@material-ui/icons/PostAdd'
 import NaturePeopleIcon from '@material-ui/icons/NaturePeople'
 import EmojiNatureIcon from '@material-ui/icons/EmojiNature'
 import EcoIcon from '@material-ui/icons/Eco'
