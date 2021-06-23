@@ -8,7 +8,7 @@ import {
   DialogContent,
   Snackbar,
 } from "@material-ui/core";
-import MuiAlert from "@material-ui/lab/Alert";
+import Alert from "@material-ui/lab/Alert";
 import { unstable_batchedUpdates } from "react-dom";
 
 /**
@@ -108,14 +108,14 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
         autoHideDuration={5000}
         onClose={handleCloseMessage}
       >
-        <MuiAlert
+        <Alert
           elevation={6}
           variant="filled"
           onClose={handleCloseMessage}
           severity={severity}
         >
           {message}
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     </MessageContext.Provider>
   );
