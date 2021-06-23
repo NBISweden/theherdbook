@@ -8,7 +8,12 @@ import {
 import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
 
-import { herdLabel, Individual, LimitedHerd } from "./data_context_global";
+import {
+  Genebank,
+  herdLabel,
+  Individual,
+  LimitedHerd,
+} from "./data_context_global";
 
 const useStyles = makeStyles({
   inputField: {

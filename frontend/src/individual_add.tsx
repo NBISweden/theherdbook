@@ -105,9 +105,6 @@ export function IndividualAdd({
   const [currentGenebank, setCurrentGenebank] = React.useState(
     genebank ? genebank : (undefined as Genebank | undefined)
   );
-  const [herdOptions, setHerdOptions] = React.useState(
-    genebank ? genebank.herds : ([] as LimitedHerd[])
-  );
   const [success, setSuccess] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
   const [herdKey, setHerdKey] = React.useState(0 as number);
@@ -496,7 +493,7 @@ export function IndividualAdd({
               </h2>
               <IndividualSellingform
                 individual={individual}
-                herdOptions={herdOptions}
+                herdOptions={genebank ? genebank.herds : []}
                 herdKey={herdKey}
                 onUpdateIndividual={handleUpdateIndividual}
               />

@@ -29,6 +29,7 @@ import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
 import { CertificateVerification } from "./certificate_verification";
 import { CertificateDownload } from "./certificate_download";
+import { IndividualSell } from "./individual_sell";
 
 const useStyles = makeStyles({
   body: {
@@ -381,6 +382,18 @@ export function IndividualView({ id }: { id: string }) {
                       }
                     })}
                 </ul>
+                {user?.canEdit(id) && (
+                  <Button
+                    className={style.editButton}
+                    variant="outlined"
+                    color="primary"
+                    onClick={() =>
+                      popup(<IndividualSell individual={individual} />)
+                    }
+                  >
+                    Sälj individ
+                  </Button>
+                )}
               </div>
               <div>
                 <h3>Föräldrar</h3>
