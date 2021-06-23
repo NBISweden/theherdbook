@@ -28,6 +28,7 @@ import { useMessageContext } from "@app/message_context";
 import { get, post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
+import { IndividualSellingform } from "./individual_sellingform";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -337,7 +338,7 @@ export function IndividualAdd({
     } = await post("/api/breeding", breedingData);
 
     if (breedingEvent.status == "success") {
-      return breedingEvent.breeding_id;
+      return breedingEvent;
     }
 
     const translate: Map<string, string> = new Map([
@@ -493,45 +494,12 @@ export function IndividualAdd({
               <h2 className={style.sellingTitle}>
                 Fyll i bara om kaninen har sålts
               </h2>
-              <Autocomplete
-                key={herdKey}
-                options={herdOptions}
-                value={individual.herd}
-                getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Välj besättning"
-                    variant="outlined"
-                    margin="normal"
-                    helperText="Lämna tom om kaninen inte har sålts"
-                  />
-                )}
-                className={style.ancestorInput}
-                onChange={(event, newValue) => {
-                  newValue && handleUpdateIndividual("herd", newValue.herd);
-                }}
+              <IndividualSellingform
+                individual={individual}
+                herdOptions={herdOptions}
+                herdKey={herdKey}
+                onUpdateIndividual={handleUpdateIndividual}
               />
-              <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <KeyboardDatePicker
-                  autoOk
-                  fullWidth={true}
-                  className={style.ancestorInput}
-                  variant="inline"
-                  inputVariant="outlined"
-                  label="Köpdatum"
-                  format="yyyy-MM-dd"
-                  value={individual.selling_date ?? null}
-                  helperText="Lämna tom om kaninen inte har sålts"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(event, newValue) => {
-                    newValue &&
-                      handleUpdateIndividual("selling_date", newValue);
-                  }}
-                />
-              </MuiPickersUtilsProvider>
             </>
           )}
         </div>
