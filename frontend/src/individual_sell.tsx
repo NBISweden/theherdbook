@@ -8,22 +8,64 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
   );
+  const [individualForSale, setIndividualForSale] = React.useState(
+    individual as Individual
+  );
+  const [herdKey, setHerdKey] = React.useState(0 as number);
   const { genebanks } = useDataContext();
 
   React.useEffect(() => {
     const currentGenebank = genebanks.find((genebank) =>
       genebank.individuals.some((i) => i.number == individual.number)
     );
+
     setGenebank(currentGenebank);
   }, [individual]);
 
+  /**
+   * Updates a single field in `individual`.
+   *
+   * @param field field name to update
+   * @param value the new value of the field
+   */
+  const handleUpdateIndividual = <T extends keyof Individual>(
+    field: T,
+    value: Individual[T]
+  ) => {
+    individualForSale &&
+      setIndividualForSale({ ...individualForSale, [field]: value });
+  };
+
+  /*
+  delete the herd field from individualForSale to get the dropdown input for 
+  herd empty when component is rendered
+  */
+  React.useEffect(() => {
+    let currentIndividual = individualForSale;
+    delete currentIndividual.herd;
+    setIndividualForSale(currentIndividual);
+  }, []);
+
   return (
     <>
+      <h2>
+        Sälja {individual.name} {individual.number}
+      </h2>
+      <p>
+        Ange besättningen som individen ska flyttas till, samt ett datum för
+        flytten. Individen kommer tas bort från din besättning och läggas till i
+        besättningen du anger.
+      </p>
+      <p>
+        Observera att du då inte längre kan ändra informationen om individen.
+        Det går inte heller att utfärda eller uppdatera digitala certifikat för
+        individen när den har flyttats.
+      </p>
       <IndividualSellingform
-        individual={individual}
+        individual={individualForSale}
         herdOptions={genebank ? genebank.herds : []}
-        herdKey={3}
-        onUpdateIndividual={() => console.log(individual)}
+        herdKey={herdKey}
+        onUpdateIndividual={handleUpdateIndividual}
       />
     </>
   );
