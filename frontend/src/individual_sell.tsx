@@ -1,8 +1,11 @@
 import React from "react";
 
+import { Button } from "@material-ui/core";
+
 import { Genebank, Individual } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
 import { IndividualSellingform } from "./individual_sellingform";
+import { patch } from "./communication";
 
 export function IndividualSell({ individual }: { individual: Individual }) {
   const [genebank, setGenebank] = React.useState(
@@ -23,7 +26,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   }, [individual]);
 
   /**
-   * Updates a single field in `individual`.
+   * Updates a single field in `individualForSale`.
    *
    * @param field field name to update
    * @param value the new value of the field
@@ -46,6 +49,12 @@ export function IndividualSell({ individual }: { individual: Individual }) {
     setIndividualForSale(currentIndividual);
   }, []);
 
+  const sellIndividual = () => {
+    patch("/api/individual", individualForSale).then((json) =>
+      console.log(json)
+    );
+  };
+
   return (
     <>
       <h2>
@@ -67,6 +76,9 @@ export function IndividualSell({ individual }: { individual: Individual }) {
         herdKey={herdKey}
         onUpdateIndividual={handleUpdateIndividual}
       />
+      <Button variant="contained" color="primary" onClick={sellIndividual}>
+        Sälj
+      </Button>
     </>
   );
 }
