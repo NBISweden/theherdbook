@@ -29,7 +29,7 @@ export function IndividualSellingform({
 }: {
   individual: Individual;
   herdOptions: LimitedHerd[];
-  herdKey: number;
+  herdKey?: number;
   onUpdateIndividual: any;
 }) {
   const style = useStyles();
@@ -46,7 +46,6 @@ export function IndividualSellingform({
             label="Välj besättning"
             variant="outlined"
             margin="normal"
-            helperText="Lämna tom om kaninen inte har sålts"
           />
         )}
         className={style.inputField}
@@ -64,7 +63,6 @@ export function IndividualSellingform({
           label="Köpdatum"
           format="yyyy-MM-dd"
           value={individual.selling_date ?? null}
-          helperText="Lämna tom om kaninen inte har sålts"
           InputLabelProps={{
             shrink: true,
           }}
