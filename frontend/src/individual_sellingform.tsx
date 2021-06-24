@@ -38,7 +38,7 @@ export function IndividualSellingform({
       <Autocomplete
         key={herdKey}
         options={herdOptions}
-        value={individual.herd}
+        value={herdOptions.find((option) => option.herd == individual.herd)}
         getOptionLabel={(option: LimitedHerd) => herdLabel(option)}
         renderInput={(params) => (
           <TextField

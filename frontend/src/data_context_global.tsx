@@ -38,7 +38,7 @@ export interface LimitedIndividual {
 }
 
 export interface Individual extends LimitedIndividual {
-  herd: HerdNameID;
+  herd: HerdNameID | string;
   origin_herd?: HerdNameID;
   genebank: string;
   certificate: string | null;
