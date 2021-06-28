@@ -44,6 +44,12 @@ const useStyles = makeStyles({
   },
 });
 
+interface LimitedIndividualForSale {
+  number: string;
+  herd: string;
+  selling_date: string;
+}
+
 export function IndividualSell({ individual }: { individual: Individual }) {
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
@@ -110,7 +116,12 @@ export function IndividualSell({ individual }: { individual: Individual }) {
       userMessage("Fyll i ett köpdatum först.", "warning");
       return;
     }
-    patch("/api/individual", individualForSale).then((json) => {
+    const limitedIndividual: LimitedIndividualForSale = {
+      number: individualForSale.number,
+      herd: individualForSale.herd,
+      selling_date: individualForSale.selling_date,
+    };
+    patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
         userMessage("Kaninen har flyttats till en annan besättning", "success");
         return;
