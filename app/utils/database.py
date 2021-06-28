@@ -436,6 +436,19 @@ class Individual(BaseModel):
         table.
         """
 
+        latest_ht_entry = self.latest_herdtracking_entry
+        if latest_ht_entry:
+            return latest_ht_entry.herd
+
+        # Individual not found in HerdTracking!
+        return self.origin_herd
+
+    @property
+    def latest_herdtracking_entry(self):
+        """
+        Returns the latest entry for the individual in HerdTracking, if any.
+        """
+
         try:
             ht_history = (
                 HerdTracking.select()
@@ -444,13 +457,11 @@ class Individual(BaseModel):
             ).execute()
 
             if len(ht_history):
-                return ht_history[0].herd
+                return ht_history[0]
 
         except DoesNotExist:
             pass
-
-        # Individual not found in HerdTracking!
-        return self.origin_herd
+        return None
 
     @property
     def children(self):
@@ -575,14 +586,10 @@ class Individual(BaseModel):
             self.is_active
             and not self.death_date
             and not self.death_note
+            and self.latest_herdtracking_entry
             and (
-                HerdTracking.select()
-                .where(HerdTracking.individual == self)
-                .order_by(HerdTracking.herd_tracking_date.desc())[0]
-                .herd_tracking_date
-                > datetime.date(datetime.now() - timedelta(days=366))
-                if HerdTracking.select().where(HerdTracking.individual == self).count()
-                else False
+                self.latest_herdtracking_entry.herd_tracking_date
+                > (datetime.now() - timedelta(days=366)).date()
             )
         )
 
