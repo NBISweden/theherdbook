@@ -74,6 +74,11 @@ export function IndividualCertificate({
   //States to make pdf-preview-library work
   const [numPages, setNumPages] = React.useState(null);
   const [pageNumber, setPageNumber] = React.useState(1);
+  // Error states for mandatory form fields
+  const [numberError, setNumberError] = React.useState(false as boolean);
+  const [colorError, setColorError] = React.useState(false as boolean);
+  const [sexError, setSexError] = React.useState(false as boolean);
+  const [birthDateError, setBirthDateError] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
@@ -139,19 +144,53 @@ export function IndividualCertificate({
     individual && setIndividual({ ...individual, [field]: value });
   };
 
-  // Used to activate the button for ordering the certificate
-  async function authenticate(username: string, password: string) {
-    return await post("/api/login", { username, password }).then(
-      (data) => {
-        data ? setIsUserGood(true) : setIsUserGood(false);
-        return data;
-      },
-      (error) => {
-        userMessage("Något gick fel.", "error");
-        return "error";
-      }
-    );
-  }
+  // check if all mandatory fields are filled before moving on to preview
+  const handlePreview = () => {
+    let error: boolean = false;
+    if (!individual?.number) {
+      setNumberError(true);
+      error = true;
+    }
+    if (!individual?.color) {
+      setColorError(true);
+      error = true;
+    }
+    if (!individual?.sex) {
+      setSexError(true);
+      error = true;
+    }
+    if (!individual?.birth_date) {
+      setBirthDateError(true);
+      error = true;
+    }
+    if (error) {
+      return;
+    }
+    setShowForm(false);
+    setShowSummary(true);
+    previewCertificate(id, certificateData);
+  };
+
+  // remove error layout from input fields when user has added an input
+  React.useEffect(() => {
+    if (individual?.color) {
+      setColorError(false);
+    }
+    if (individual?.number) {
+      setNumberError(false);
+    }
+    if (individual?.sex) {
+      setSexError(false);
+    }
+    if (individual?.birth_date) {
+      setBirthDateError(false);
+    }
+  }, [
+    individual?.color,
+    individual?.number,
+    individual?.sex,
+    individual?.birth_date,
+  ]);
 
   // Returns a preview of the certificate that will be shown as an image
   // using the React-pdf library.
@@ -173,6 +212,20 @@ export function IndividualCertificate({
         userMessage(error.message, "error");
       });
   };
+
+  // Used to activate the button for ordering the certificate
+  async function authenticate(username: string, password: string) {
+    return await post("/api/login", { username, password }).then(
+      (data) => {
+        data ? setIsUserGood(true) : setIsUserGood(false);
+        return data;
+      },
+      (error) => {
+        userMessage("Något gick fel.", "error");
+        return "error";
+      }
+    );
+  }
 
   // Returns the signed, new certificate.
   const issueCertificate = (id: string, content: any) => {
@@ -254,7 +307,7 @@ export function IndividualCertificate({
   };
   // jscpd:ignore-end
 
-  // This function is necessary to make the previw work.
+  // This function is necessary to make the preview work.
   // Built into the library.
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -275,6 +328,10 @@ export function IndividualCertificate({
             canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
             formAction={FormAction.handleCertificate}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
           />
           <div className={style.paneControls}>
             <Button
@@ -286,15 +343,7 @@ export function IndividualCertificate({
             >
               {"Tillbaka"}
             </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                setShowForm(false);
-                setShowSummary(true);
-                previewCertificate(id, certificateData);
-              }}
-            >
+            <Button variant="contained" color="primary" onClick={handlePreview}>
               {"Förhandsgranska"}
             </Button>
           </div>

@@ -91,13 +91,21 @@ export function IndividualForm({
   onUpdateIndividual,
   formAction,
   colorKey,
+  numberError,
+  colorError,
+  sexError,
+  birthDateError,
 }: {
   individual: Individual;
   canManage?: boolean;
   canEdit: boolean;
   onUpdateIndividual: any;
   formAction: FormAction;
-  colorKey: number;
+  colorKey?: number;
+  numberError: boolean;
+  colorError: boolean;
+  sexError: boolean;
+  birthDateError: boolean;
 }) {
   const { colors } = useDataContext();
   const style = useStyles();
@@ -140,6 +148,8 @@ export function IndividualForm({
                   </div>
                   <TextField
                     disabled={!canManage}
+                    required
+                    error={numberError}
                     label="Nummer"
                     className={style.control}
                     variant={inputVariant}
@@ -153,6 +163,8 @@ export function IndividualForm({
                 <>
                   <TextField
                     disabled={!canEdit}
+                    required
+                    error={numberError}
                     label="Nummer"
                     className={style.control}
                     variant={inputVariant}
@@ -191,6 +203,8 @@ export function IndividualForm({
                 />
                 <KeyboardDatePicker
                   disabled={!canEdit}
+                  required
+                  error={birthDateError}
                   autoOk
                   variant="inline"
                   className={style.control}
@@ -223,6 +237,8 @@ export function IndividualForm({
                       className={style.control}
                       variant={inputVariant}
                       margin="normal"
+                      required
+                      error={sexError}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
@@ -259,6 +275,8 @@ export function IndividualForm({
                       className={style.control}
                       variant={inputVariant}
                       margin="normal"
+                      required
+                      error={colorError}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
