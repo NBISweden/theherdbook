@@ -79,6 +79,7 @@ export function IndividualCertificate({
   const [colorError, setColorError] = React.useState(false as boolean);
   const [sexError, setSexError] = React.useState(false as boolean);
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
+  const [litterError, setLitterError] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
@@ -163,6 +164,10 @@ export function IndividualCertificate({
       setBirthDateError(true);
       error = true;
     }
+    if (!individual?.litter) {
+      setLitterError(true);
+      error = true;
+    }
     if (error) {
       return;
     }
@@ -185,11 +190,15 @@ export function IndividualCertificate({
     if (individual?.birth_date) {
       setBirthDateError(false);
     }
+    if (individual?.litter) {
+      setLitterError(false);
+    }
   }, [
     individual?.color,
     individual?.number,
     individual?.sex,
     individual?.birth_date,
+    individual?.litter,
   ]);
 
   // Returns a preview of the certificate that will be shown as an image
@@ -332,6 +341,7 @@ export function IndividualCertificate({
             numberError={numberError}
             sexError={sexError}
             birthDateError={birthDateError}
+            litterError={litterError}
           />
           <div className={style.paneControls}>
             <Button

@@ -95,6 +95,7 @@ export function IndividualForm({
   colorError,
   sexError,
   birthDateError,
+  litterError,
 }: {
   individual: Individual;
   canManage?: boolean;
@@ -106,6 +107,7 @@ export function IndividualForm({
   colorError: boolean;
   sexError: boolean;
   birthDateError: boolean;
+  litterError: boolean;
 }) {
   const { colors } = useDataContext();
   const style = useStyles();
@@ -247,6 +249,8 @@ export function IndividualForm({
                 />
                 <TextField
                   disabled={!canEdit}
+                  required
+                  error={litterError}
                   label="Antal födda i kullen"
                   className={style.control}
                   variant={inputVariant}
