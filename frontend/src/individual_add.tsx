@@ -28,7 +28,7 @@ import { useMessageContext } from "@app/message_context";
 import { get, post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
-import { IndividualSellingform } from "./individual_sellingform";
+import { IndividualSellingForm } from "./individual_sellingform";
 
 const useStyles = makeStyles({
   paneControls: {
@@ -491,7 +491,7 @@ export function IndividualAdd({
               <h2 className={style.sellingTitle}>
                 Fyll i bara om kaninen har sålts
               </h2>
-              <IndividualSellingform
+              <IndividualSellingForm
                 individual={individual}
                 herdOptions={genebank ? genebank.herds : []}
                 herdKey={herdKey}

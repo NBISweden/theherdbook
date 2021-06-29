@@ -14,7 +14,7 @@ import {
 import { Genebank, Individual } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
-import { IndividualSellingform } from "./individual_sellingform";
+import { IndividualSellingForm } from "./individual_sellingform";
 import { patch } from "./communication";
 
 const useStyles = makeStyles({
@@ -149,7 +149,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
         </Typography>
       </div>
       <div className={style.formContainer}>
-        <IndividualSellingform
+        <IndividualSellingForm
           individual={individualForSale}
           herdOptions={genebank ? genebank.herds : []}
           onUpdateIndividual={handleUpdateIndividual}

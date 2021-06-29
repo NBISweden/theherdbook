@@ -21,7 +21,7 @@ const useStyles = makeStyles({
   },
 });
 
-export function IndividualSellingform({
+export function IndividualSellingForm({
   individual,
   herdOptions,
   herdKey,
