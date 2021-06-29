@@ -169,6 +169,7 @@ export function IndividualCertificate({
       error = true;
     }
     if (error) {
+      userMessage("Fyll i alla obligatoriska fält.", "warning");
       return;
     }
     setShowForm(false);
