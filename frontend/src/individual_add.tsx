@@ -185,7 +185,7 @@ export function IndividualAdd({
         individual.litter
       )
     ) {
-      userMessage("Fyll i nummer, födelsedatum och kullstorlek.", "warning");
+      userMessage("Fyll i alla obligatoriska fält.", "warning");
       return;
     }
 
