@@ -111,6 +111,12 @@ export function IndividualAdd({
   // states to handle the Autocompletes rerendering
   const [herdKey, setHerdKey] = React.useState(0 as number);
   const [colorKey, setColorKey] = React.useState(0 as number);
+  // Error states for mandatory form fields
+  const [numberError, setNumberError] = React.useState(false as boolean);
+  const [colorError, setColorError] = React.useState(false as boolean);
+  const [sexError, setSexError] = React.useState(false as boolean);
+  const [birthDateError, setBirthDateError] = React.useState(false as boolean);
+  const [litterError, setLitterError] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
@@ -174,17 +180,57 @@ export function IndividualAdd({
     };
   });
 
-  //adds the fields origin_herd and breeding to the individual and calls createIndividual
+  // remove error layout from input fields when user has added an input
+  React.useEffect(() => {
+    if (individual?.color) {
+      setColorError(false);
+    }
+    if (individual?.number) {
+      setNumberError(false);
+    }
+    if (individual?.sex) {
+      setSexError(false);
+    }
+    if (individual?.birth_date) {
+      setBirthDateError(false);
+    }
+    if (individual?.litter) {
+      setLitterError(false);
+    }
+  }, [
+    individual?.color,
+    individual?.number,
+    individual?.sex,
+    individual?.birth_date,
+    individual?.litter,
+  ]);
+
+  // Checks first if all mandatory fields are filled in.
+  // Adds then the fields origin_herd and breeding to the individual and calls createIndividual
   const prepareIndividual = async () => {
     setSuccess(false);
-    if (
-      !(
-        individual &&
-        individual.number &&
-        individual.birth_date &&
-        individual.litter
-      )
-    ) {
+    let error: boolean = false;
+    if (!individual?.number) {
+      setNumberError(true);
+      error = true;
+    }
+    if (!individual?.color) {
+      setColorError(true);
+      error = true;
+    }
+    if (!individual?.sex) {
+      setSexError(true);
+      error = true;
+    }
+    if (!individual?.birth_date) {
+      setBirthDateError(true);
+      error = true;
+    }
+    if (!individual?.litter) {
+      setLitterError(true);
+      error = true;
+    }
+    if (error) {
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return;
     }
@@ -457,6 +503,11 @@ export function IndividualAdd({
           canEdit={user?.canEdit(herdId)}
           formAction={FormAction.AddIndividual}
           colorKey={colorKey}
+          colorError={colorError}
+          numberError={numberError}
+          sexError={sexError}
+          birthDateError={birthDateError}
+          litterError={litterError}
         />
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
