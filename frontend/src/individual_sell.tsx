@@ -1,6 +1,7 @@
 import React from "react";
 
 import {
+  Box,
   Button,
   Checkbox,
   FormLabel,
@@ -10,6 +11,7 @@ import {
   makeStyles,
   Typography,
 } from "@material-ui/core";
+import { CheckCircle } from "@material-ui/icons";
 
 import { Genebank, Individual } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
@@ -42,6 +44,21 @@ const useStyles = makeStyles({
   buttonContainer: {
     display: "flex",
   },
+  responseBox: {
+    width: "100%",
+    maxWidth: "65em",
+    padding: "1em",
+    margin: "2em 0",
+  },
+  successIcon: {
+    fill: "#388e3c", // same as success.dark in the default theme
+    marginLeft: "0.5em",
+  },
+  boxTitle: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
 
 interface LimitedIndividualForSale {
@@ -59,6 +76,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   );
   const [checked, setChecked] = React.useState(false as boolean);
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
+  const [success, setSuccess] = React.useState(false as boolean);
   const { genebanks } = useDataContext();
   const { userMessage } = useMessageContext();
   const style = useStyles();
@@ -123,7 +141,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
     };
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
-        userMessage("Kaninen har flyttats till en annan besättning", "success");
+        setSuccess(true);
         return;
       }
       if (json.status == "error") {
@@ -136,55 +154,78 @@ export function IndividualSell({ individual }: { individual: Individual }) {
       <h2>
         Sälja {individual.name} {individual.number}
       </h2>
-      <div className={style.textContainer}>
-        <Typography variant="body1" className={style.infoText}>
-          Ange besättningen som individen ska flyttas till, samt ett datum för
-          flytten. Individen kommer tas bort från din besättning och läggas till
-          i besättningen du anger.
-        </Typography>
-        <Typography variant="body1" className={style.infoText}>
-          Observera att du då inte längre kan ändra informationen om individen.
-          Det går inte heller att utfärda eller uppdatera digitala certifikat
-          för individen när den har flyttats.
-        </Typography>
-      </div>
-      <div className={style.formContainer}>
-        <IndividualSellingForm
-          individual={individualForSale}
-          herdOptions={genebank ? genebank.herds : []}
-          onUpdateIndividual={handleUpdateIndividual}
-        />
-      </div>
-      <div>
-        <FormControl
-          required
-          error={error}
-          component="fieldset"
-          disabled={disabled}
-          className={style.checkContainer}
-        >
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={checked}
-                onChange={handleCheckbox}
-                color="primary"
-                inputProps={{ "aria-label": "primary checkbox" }}
-              />
-            }
-            label="Jag har tagit del av informationen och vill ta bort individen
+      {!success ? (
+        <>
+          <div className={style.textContainer}>
+            <Typography variant="body1" className={style.infoText}>
+              Ange besättningen som individen ska flyttas till, samt ett datum
+              för flytten. Individen kommer tas bort från din besättning och
+              läggas till i besättningen du anger.
+            </Typography>
+            <Typography variant="body1" className={style.infoText}>
+              Observera att du då inte längre kan ändra informationen om
+              individen. Det går inte heller att utfärda eller uppdatera
+              digitala certifikat för individen när den har flyttats.
+            </Typography>
+          </div>
+          <div className={style.formContainer}>
+            <IndividualSellingForm
+              individual={individualForSale}
+              herdOptions={genebank ? genebank.herds : []}
+              onUpdateIndividual={handleUpdateIndividual}
+            />
+          </div>
+          <div>
+            <FormControl
+              required
+              error={error}
+              component="fieldset"
+              disabled={disabled}
+              className={style.checkContainer}
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checked}
+                    onChange={handleCheckbox}
+                    color="primary"
+                    inputProps={{ "aria-label": "primary checkbox" }}
+                  />
+                }
+                label="Jag har tagit del av informationen och vill ta bort individen
             från min besättning."
-          ></FormControlLabel>
-          <FormHelperText hidden={!error}>
-            Bekräfta att du tagit del av informationen.
-          </FormHelperText>
-        </FormControl>
-      </div>
-      <div className={style.buttonContainer}>
-        <Button variant="contained" color="primary" onClick={sellIndividual}>
-          Sälj
-        </Button>
-      </div>
+              ></FormControlLabel>
+              <FormHelperText hidden={!error}>
+                Bekräfta att du tagit del av informationen.
+              </FormHelperText>
+            </FormControl>
+          </div>
+          <div className={style.buttonContainer}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={sellIndividual}
+            >
+              Sälj
+            </Button>
+          </div>{" "}
+        </>
+      ) : (
+        <Box
+          border={3}
+          borderRadius={8}
+          borderColor="success.light"
+          className={style.responseBox}
+        >
+          <div className={style.boxTitle}>
+            <h2>Klart!</h2>
+            <CheckCircle className={style.successIcon} />
+          </div>
+          <p>
+            Individen har flyttats till besättning {individualForSale.herd}.
+          </p>
+        </Box>
+      )}
     </div>
   );
 }
