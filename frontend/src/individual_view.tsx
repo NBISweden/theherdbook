@@ -262,7 +262,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>
                     {individual &&
                       individual.weights &&
-                      individual.weights.length > 1 && (
+                      individual.weights.length >= 1 && (
                         <ul className={style.herdList}>
                           {individual.weights
                             .sort(
