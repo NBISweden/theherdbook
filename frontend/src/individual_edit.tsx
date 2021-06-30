@@ -192,6 +192,12 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       });
   }, [genebankIndividuals]);
 
+  const translateBodyfat: Map<string, string> = new Map([
+    ["low", "låg"],
+    ["normal", "normal"],
+    ["high", "hög"],
+  ]);
+
   const asIndividual = (
     number: string | undefined
   ): LimitedIndividual | null => {
@@ -558,7 +564,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                               className={style.scriptLink}
                               onClick={() => removeMeasure("weights", i)}
                             >
-                              Delete
+                              Radera
                             </a>
                             ]
                           </span>
@@ -622,14 +628,16 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     individual.bodyfat &&
                       individual.bodyfat.map((b: DateBodyfat, i: number) => (
                         <li key={i} className={style.measureList}>
-                          {`${asLocale(b.date)} - ${b.bodyfat}`}
+                          {`${asLocale(b.date)} - ${translateBodyfat.get(
+                            b.bodyfat
+                          )}`}
                           <span className={style.listButton}>
                             [
                             <a
                               className={style.scriptLink}
                               onClick={() => removeMeasure("bodyfat", i)}
                             >
-                              Delete
+                              Radera
                             </a>
                             ]
                           </span>
@@ -662,7 +670,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     value={
                       bodyfatOptions.find(
                         (option) => option.value == bodyfat
-                      ) ?? sexOptions[1]
+                      ) ?? bodyfatOptions[1]
                     }
                     getOptionLabel={(option: OptionType) => option.label}
                     renderInput={(params) => (
