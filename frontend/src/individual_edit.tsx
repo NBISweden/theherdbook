@@ -135,9 +135,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   );
   const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
-  const [weight, setWeight] = React.useState(3.0);
+  const [weight, setWeight] = React.useState(0);
   const [hullDate, setHullDate] = React.useState(asLocale());
-  const [weightDate, setWeightDate] = React.useState(asLocale());
+  const [weightDate, setWeightDate] = React.useState(null);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { userMessage } = useMessageContext();
@@ -242,6 +242,35 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     value: Individual[T]
   ) => {
     individual && setIndividual({ ...individual, [field]: value });
+  };
+
+  const handleNewWeight = () => {
+    // update the local individual state
+    updateField("weights", [
+      ...individual?.weights,
+      { date: weightDate, weight: weight },
+    ]);
+
+    const newWeightRecord = {
+      number: individual?.number,
+      herd: individual?.herd,
+      weights: [{ date: weightDate, weight: weight }],
+    };
+
+    // send weight record to the backend
+    patch("/api/individual", newWeightRecord)
+      .then((json) => {
+        if (json.status == "success") {
+          userMessage("Viktmätningen har lagts till.", "success");
+          return;
+        } else {
+          userMessage("Något gick fel.", "error");
+        }
+      })
+      .then(() => {
+        setWeight(0);
+        setWeightDate(null);
+      });
   };
 
   /**
@@ -504,6 +533,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                       endAdornment: (
                         <InputAdornment position="end">Kg</InputAdornment>
                       ),
+                      inputProps: { min: 0 },
                     }}
                     InputLabelProps={{
                       shrink: true,
@@ -517,12 +547,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => {
-                    updateField("weights", [
-                      ...individual?.weights,
-                      { date: weightDate, weight: weight },
-                    ]);
-                  }}
+                  onClick={() => handleNewWeight()}
                 >
                   {"Lägg till viktmätning"}
                 </Button>
