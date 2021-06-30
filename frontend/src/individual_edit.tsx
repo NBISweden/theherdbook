@@ -137,7 +137,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(0);
   const [hullDate, setHullDate] = React.useState(asLocale());
-  const [weightDate, setWeightDate] = React.useState(null);
+  const [weightDate, setWeightDate] = React.useState(null as string | null);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { userMessage } = useMessageContext();
@@ -245,6 +245,22 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   };
 
   const handleNewWeight = () => {
+    if (!weightDate) {
+      userMessage("Ange ett datum för viktmätningen", "warning");
+      return;
+    }
+    if (weight <= 0) {
+      userMessage("Ange en vikt större än 0.", "warning");
+      return;
+    }
+
+    const recordDate = new Date(weightDate).getTime();
+    const today = new Date().getTime();
+    if (today - recordDate < 0) {
+      userMessage("Ange ett datum som inte ligger i framtiden.", "warning");
+      return;
+    }
+
     // update the local individual state
     updateField("weights", [
       ...individual?.weights,
