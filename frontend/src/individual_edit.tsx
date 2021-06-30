@@ -136,7 +136,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(0);
-  const [hullDate, setHullDate] = React.useState(asLocale());
+  const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
   const [weightDate, setWeightDate] = React.useState(null as string | null);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
@@ -244,6 +244,17 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     individual && setIndividual({ ...individual, [field]: value });
   };
 
+  const isDateOkay = (date: string) => {
+    const recordDate = new Date(date).getTime();
+    const today = new Date().getTime();
+    if (today - recordDate < 0) {
+      userMessage("Ange ett datum som inte ligger i framtiden.", "warning");
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const handleNewWeight = () => {
     if (!weightDate) {
       userMessage("Ange ett datum för viktmätningen", "warning");
@@ -253,11 +264,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       userMessage("Ange en vikt större än 0.", "warning");
       return;
     }
-
-    const recordDate = new Date(weightDate).getTime();
-    const today = new Date().getTime();
-    if (today - recordDate < 0) {
-      userMessage("Ange ett datum som inte ligger i framtiden.", "warning");
+    if (!isDateOkay(weightDate)) {
       return;
     }
 
@@ -270,7 +277,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     const newWeightRecord = {
       number: individual?.number,
       herd: individual?.herd,
-      weights: [{ date: weightDate, weight: weight }],
+      weights: [...individual?.weights, { date: weightDate, weight: weight }],
     };
 
     // send weight record to the backend
@@ -286,6 +293,46 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       .then(() => {
         setWeight(0);
         setWeightDate(null);
+      });
+  };
+
+  const handleNewBodyfat = () => {
+    if (!bodyfatDate) {
+      userMessage("Ange ett datum för hullmätningen", "warning");
+      return;
+    }
+    if (!isDateOkay(bodyfatDate)) {
+      return;
+    }
+
+    // update the local individual state
+    updateField("bodyfat", [
+      ...individual?.bodyfat,
+      { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
+    ]);
+
+    const newBodyfatRecord = {
+      number: individual?.number,
+      herd: individual?.herd,
+      bodyfat: [
+        ...individual?.bodyfat,
+        { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
+      ],
+    };
+
+    // send bodyfat record to the backend
+    patch("/api/individual", newBodyfatRecord)
+      .then((json) => {
+        if (json.status == "success") {
+          userMessage("Hullmätningen har lagts till.", "success");
+          return;
+        } else {
+          userMessage("Något gick fel.", "error");
+        }
+      })
+      .then(() => {
+        setBodyfat("normal");
+        setBodyfatDate(null);
       });
   };
 
@@ -598,13 +645,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     inputVariant={inputVariant}
                     label="Mätningsdatum"
                     format={dateFormat}
-                    value={hullDate}
+                    value={bodyfatDate}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     onChange={
                       (date, value) => {
-                        value && setHullDate(value);
+                        value && setBodyfatDate(value);
                       }
 
                       // jscpd:ignore-end
@@ -636,10 +683,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   variant="contained"
                   color="primary"
                   onClick={() => {
-                    updateField("bodyfat", [
-                      ...individual?.bodyfat,
-                      { date: hullDate, bodyfat: bodyfat as BodyFat },
-                    ]);
+                    handleNewBodyfat();
                   }}
                 >
                   {"Lägg till hullmätning"}
