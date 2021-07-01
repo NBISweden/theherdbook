@@ -608,7 +608,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                       shrink: true,
                     }}
                     onChange={(e: any) => {
-                      setWeight(e.target.value);
+                      setWeight(+e.target.value);
                     }}
                   />
                 </div>
