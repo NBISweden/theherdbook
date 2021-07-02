@@ -328,6 +328,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       .then(() => {
         setWeight(null);
         setWeightDate(null);
+      })
+      .catch((error) => {
+        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
       });
   };
 
@@ -368,6 +371,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       .then(() => {
         setBodyfat("normal");
         setBodyfatDate(null);
+      })
+      .catch((error) => {
+        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
       });
   };
 
