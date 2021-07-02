@@ -34,6 +34,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { Autocomplete } from "@material-ui/lab";
+import NumberFormat from "react-number-format";
 
 const useStyles = makeStyles({
   loading: {
@@ -125,6 +126,34 @@ const useStyles = makeStyles({
   },
 });
 
+// interface and function that make the react-number-format library work
+// used to allow input of decimal commas for weight record
+interface NumberFormatCustomProps {
+  inputRef: (instance: NumberFormat | null) => void;
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+}
+
+const NumberFormatCustom = (props: NumberFormatCustomProps) => {
+  const { inputRef, onChange, ...other } = props;
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.value,
+          },
+        });
+      }}
+      isNumericString
+      decimalSeparator=","
+    />
+  );
+};
+
 /**
  * This function allows a user (with the required permissions) to edit an
  * individual given by `id`, or add a new individual if no `id` is given.
@@ -135,7 +164,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   );
   const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
-  const [weight, setWeight] = React.useState(0);
+  const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
   const [weightDate, setWeightDate] = React.useState(null as string | null);
   const { user } = useUserContext();
@@ -266,7 +295,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       userMessage("Ange ett datum för viktmätningen", "warning");
       return;
     }
-    if (weight <= 0) {
+    if (weight && weight <= 0) {
       userMessage("Ange en vikt större än 0.", "warning");
       return;
     }
@@ -297,7 +326,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         }
       })
       .then(() => {
-        setWeight(0);
+        setWeight(null);
         setWeightDate(null);
       });
   };
@@ -596,13 +625,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     label="Vikt"
                     className={style.control}
                     value={weight}
-                    type="number"
                     variant={inputVariant}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">Kg</InputAdornment>
                       ),
                       inputProps: { min: 0 },
+                      inputComponent: NumberFormatCustom as any,
                     }}
                     InputLabelProps={{
                       shrink: true,
