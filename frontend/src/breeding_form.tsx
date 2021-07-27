@@ -15,6 +15,7 @@ import {
   individualLabel,
   inputVariant,
   LimitedHerd,
+  locale,
   OptionType,
 } from "@app/data_context_global";
 
@@ -127,6 +128,11 @@ export function BreedingForm({
       return;
     }
 
+    if (formState.date === "") {
+      userMessage("Ange ett parningsdatum.", "warning");
+      return;
+    }
+
     if (formState.mother === "") {
       userMessage("Fyll i modern.", "warning");
       return;
@@ -137,21 +143,25 @@ export function BreedingForm({
       return;
     }
 
-    if (formState.date === "" && formState.birth_date === "") {
-      userMessage("Ange ett parningsdatum eller födelsedatum.", "warning");
-      return;
-    }
-
     if (formState.birth_date !== "" && formState.litter_size === 0) {
       userMessage("Ange en kullstorlek större än noll.", "warning");
       return;
     }
+
+    // TODO
+    // create sensibility checks for birth/breeding dates (should be about 30 days in between)
 
     const breedingEvent: {
       status: string;
       message?: string;
       breeding_id?: number;
     } = await post("/api/breeding", breedingData);
+
+    // TODO
+    // make alternative with /api/birth in case the breeding already exists
+    // and only the birth information should be added.
+    // Should the user be able to change an already registered breeding?
+    // I.E. use the PATCH version of /api/breeding?
 
     if (breedingEvent.status == "success") {
       userMessage("Parningstillfället har skapats.", "success");
@@ -190,6 +200,19 @@ export function BreedingForm({
     );
     return;
   };
+
+  const autoFillBreedDate = (dateString: string) => {
+    let breedDate: Date | number = new Date(dateString);
+    breedDate.setDate(breedDate.getDate() - 30);
+    const breedDateLocal = breedDate.toLocaleDateString(locale);
+    setFormField("date", breedDateLocal);
+  };
+
+  React.useEffect(() => {
+    if (formState.date == "" && typeof formState.birth_date == "string") {
+      autoFillBreedDate(formState.birth_date);
+    }
+  }, [formState.birth_date]);
 
   return (
     <>
