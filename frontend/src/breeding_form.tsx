@@ -54,6 +54,20 @@ const emptyBreeding: Breeding = {
   litter_size: 0,
 };
 
+interface LimitedBreeding {
+  date: string;
+  mother: string;
+  father: string;
+  notes?: string;
+}
+
+interface Birth {
+  id: number;
+  date: string;
+  litter: number;
+  notes?: string;
+}
+
 /**
  * The BreedingForm function. This function allows users to create and update
  * breeding events in the database.
@@ -122,7 +136,7 @@ export function BreedingForm({
       });
   }, [genebank]);
 
-  const createBreeding = async (breedingData: Breeding): Promise<any> => {
+  const saveBreeding = async (data: Breeding): Promise<any> => {
     if (formState === emptyBreeding) {
       userMessage("Fyll i informationen om parningstillfället.", "warning");
       return;
@@ -151,20 +165,39 @@ export function BreedingForm({
     // TODO
     // create sensibility checks for birth/breeding dates (should be about 30 days in between)
 
+    const breedingData: LimitedBreeding = {
+      date: data.date,
+      mother: data.mother,
+      father: data.father,
+      notes: data.breed_notes !== "" ? data.breed_notes : undefined,
+    };
+
+    const newBreeding = await createBreeding(breedingData);
+
+    if (!newBreeding) {
+      // createBreeding will show a message, so no error handling or messages here
+      return;
+    }
+
+    // TODO
+    // decide if register_birth or update_breeding should be used to add birth information
+
+    /*     const birthData: Birth = {
+      date: data.birth_date,
+      litter: data.litter_size,
+      notes: data.birth_notes !== "" ? data.birth_notes : undefined,
+      id: newBreeding.breeding_id,
+    }; */
+  };
+
+  const createBreeding = async (breedingData: LimitedBreeding) => {
     const breedingEvent: {
       status: string;
       message?: string;
       breeding_id?: number;
     } = await post("/api/breeding", breedingData);
 
-    // TODO
-    // make alternative with /api/birth in case the breeding already exists
-    // and only the birth information should be added.
-    // Should the user be able to change an already registered breeding?
-    // I.E. use the PATCH version of /api/breeding?
-
     if (breedingEvent.status == "success") {
-      userMessage("Parningstillfället har skapats.", "success");
       return breedingEvent;
     }
 
@@ -354,7 +387,7 @@ export function BreedingForm({
             <Button
               variant="contained"
               color="primary"
-              onClick={() => createBreeding(formState)}
+              onClick={() => saveBreeding(formState)}
             >
               Spara
             </Button>
