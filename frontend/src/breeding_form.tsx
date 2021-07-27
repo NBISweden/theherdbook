@@ -19,9 +19,11 @@ import {
 } from "@app/data_context_global";
 
 import { Breeding } from "./breeding_list";
-import { TextField, Typography } from "@material-ui/core";
+import { Button, TextField, Typography } from "@material-ui/core";
 import { useDataContext } from "./data_context";
+import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
+import { post } from "./communication";
 
 const useStyles = makeStyles({
   form: {
@@ -63,6 +65,7 @@ export function BreedingForm({
 }) {
   const style = useStyles();
   const { genebanks } = useDataContext();
+  const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   React.useEffect(
     () => setFormState(!data || data == "new" ? emptyBreeding : data),
@@ -115,6 +118,76 @@ export function BreedingForm({
         return { value: i.number, label: individualLabel(i) };
       });
   }, [genebank]);
+
+  const createBreeding = async (breedingData: Breeding): Promise<any> => {
+    if (formState === emptyBreeding) {
+      userMessage("Fyll i informationen om parningstillfället.", "warning");
+      return;
+    }
+
+    if (formState.mother === "") {
+      userMessage("Fyll i modern.", "warning");
+      return;
+    }
+
+    if (formState.father === "") {
+      userMessage("Fyll i fadern.", "warning");
+      return;
+    }
+
+    if (formState.breed_date === "" && formState.birth_date === "") {
+      userMessage("Ange ett parningsdatum eller födelsedatum.", "warning");
+      return;
+    }
+
+    if (formState.birth_date !== "" && formState.litter_size === 0) {
+      userMessage("Ange en kullstorlek större än noll.", "warning");
+      return;
+    }
+
+    const breedingEvent: {
+      status: string;
+      message?: string;
+      breeding_id?: number;
+    } = await post("/api/breeding", breedingData);
+
+    if (breedingEvent.status == "success") {
+      userMessage("Parningstillfället har skapats.", "success");
+      return breedingEvent;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+      [
+        "Unknown mother",
+        "Okänd mor, modern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown father",
+        "Okänd far, fadern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown mother, Unknown father",
+        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+      ],
+      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
+    ]);
+
+    if (
+      breedingEvent.status == "error" &&
+      !!breedingEvent.message &&
+      translate.has(breedingEvent.message)
+    ) {
+      userMessage(translate.get(breedingEvent.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
+  };
 
   return (
     <>
@@ -245,6 +318,13 @@ export function BreedingForm({
           ) : (
             <p>Ingen födselinformation</p>
           )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => createBreeding(formState)}
+          >
+            Spara
+          </Button>
         </MuiPickersUtilsProvider>
       </form>
     </>
