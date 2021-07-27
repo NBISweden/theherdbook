@@ -44,7 +44,7 @@ const useStyles = makeStyles({
 });
 
 const emptyBreeding: Breeding = {
-  breed_date: "",
+  date: "",
   breed_notes: "",
   father: "",
   mother: "",
@@ -137,7 +137,7 @@ export function BreedingForm({
       return;
     }
 
-    if (formState.breed_date === "" && formState.birth_date === "") {
+    if (formState.date === "" && formState.birth_date === "") {
       userMessage("Ange ett parningsdatum eller födelsedatum.", "warning");
       return;
     }
@@ -206,12 +206,12 @@ export function BreedingForm({
               label="Parningsdatum"
               format={dateFormat}
               className={style.wideControl}
-              value={formState ? formState.breed_date ?? "" : ""}
+              value={formState ? formState.date ?? "" : ""}
               InputLabelProps={{
                 shrink: true,
               }}
               onChange={(date, value) => {
-                value && setFormField("breed_date", value);
+                value && setFormField("date", value);
               }}
             />
             <Autocomplete
@@ -327,13 +327,15 @@ export function BreedingForm({
           ) : (
             <></>
           )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => createBreeding(formState)}
-          >
-            Spara
-          </Button>
+          <div>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => createBreeding(formState)}
+            >
+              Spara
+            </Button>
+          </div>
         </MuiPickersUtilsProvider>
       </form>
     </>
