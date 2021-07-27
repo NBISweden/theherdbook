@@ -23,6 +23,7 @@ import { Button, TextField, Typography } from "@material-ui/core";
 import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
+import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import { post } from "./communication";
 
 const useStyles = makeStyles({
@@ -67,6 +68,7 @@ export function BreedingForm({
   const { genebanks } = useDataContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
+  const [showBirthForm, setShowBirthForm] = React.useState(false);
   React.useEffect(
     () => setFormState(!data || data == "new" ? emptyBreeding : data),
     [data]
@@ -270,7 +272,14 @@ export function BreedingForm({
               }}
             />
           </div>
-          {data != "new" ? (
+          <Button
+            color="primary"
+            onClick={() => setShowBirthForm(!showBirthForm)}
+          >
+            {showBirthForm == false ? "födselinformation" : "bara parning"}
+            {showBirthForm == false ? <ExpandMore /> : <ExpandLess />}
+          </Button>
+          {showBirthForm ? (
             <>
               <Typography variant="h6">Födsel</Typography>
               <div className={style.formBox}>
@@ -316,7 +325,7 @@ export function BreedingForm({
               </div>
             </>
           ) : (
-            <p>Ingen födselinformation</p>
+            <></>
           )}
           <Button
             variant="contained"
