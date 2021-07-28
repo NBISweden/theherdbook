@@ -402,6 +402,9 @@ export function BreedingForm({
           <div className={style.formBox}>
             <KeyboardDatePicker
               autoOk
+              error={false}
+              invalidDateMessage="Datumet har fel format."
+              maxDateMessage="Datumet får inte ligga i framtiden."
               disableFuture
               variant="inline"
               inputVariant={inputVariant}
@@ -488,6 +491,9 @@ export function BreedingForm({
                 <KeyboardDatePicker
                   autoOk
                   disableFuture
+                  error={false}
+                  invalidDateMessage="Datumet har fel format."
+                  maxDateMessage="Datumet får inte ligga i framtiden."
                   variant="inline"
                   inputVariant={inputVariant}
                   label="Födelsedatum"
