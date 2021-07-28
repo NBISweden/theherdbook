@@ -178,8 +178,11 @@ export function BreedingForm({
       return;
     }
 
-    if (formState.birth_date !== "" && formState.litter_size === 0) {
-      userMessage("Ange en kullstorlek större än noll.", "warning");
+    if (
+      formState.birth_date !== "" &&
+      !(formState.litter_size > 0 && formState.litter_size < 10)
+    ) {
+      userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
       return;
     }
 
