@@ -162,6 +162,17 @@ export function BreedingForm({
       return;
     }
 
+    if (
+      (formState.litter_size !== 0 || formState.birth_notes !== "") &&
+      formState.birth_date == ""
+    ) {
+      userMessage(
+        "Om du vill spara information om födseln måste du ange ett födelsedatum.",
+        "warning"
+      );
+      return;
+    }
+
     // TODO
     // create sensibility checks for birth/breeding dates (should be about 30 days in between)
 
@@ -179,26 +190,66 @@ export function BreedingForm({
       return;
     }
 
+    if (formState.birth_date === "") {
+      return;
+    }
+
     // TODO
     // decide if register_birth or update_breeding should be used to add birth information
 
-    /*     const birthData: Birth = {
+    const birthData: Birth = {
       date: data.birth_date,
       litter: data.litter_size,
       notes: data.birth_notes !== "" ? data.birth_notes : undefined,
       id: newBreeding.breeding_id,
-    }; */
+    };
+
+    const newBirth = await createBirth(birthData);
+
+    if (!!newBirth) {
+      userMessage("Sparat!", "success");
+    }
+    return;
+  };
+
+  const createBirth = async (birthData: Birth) => {
+    const wasBirthCreated: { status: "success" | "error"; message?: string } =
+      await post("/api/birth", birthData);
+
+    if (wasBirthCreated.status === "success") {
+      return wasBirthCreated;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen."],
+      ["Forbidden", "Du har inte behörighet att lägga till födselinformation."],
+    ]);
+
+    if (
+      wasBirthCreated.status === "error" &&
+      !!wasBirthCreated.message &&
+      translate.has(wasBirthCreated.message)
+    ) {
+      userMessage(translate.get(wasBirthCreated.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
   };
 
   const createBreeding = async (breedingData: LimitedBreeding) => {
-    const breedingEvent: {
+    const wasBreedingCreated: {
       status: string;
       message?: string;
       breeding_id?: number;
     } = await post("/api/breeding", breedingData);
 
-    if (breedingEvent.status == "success") {
-      return breedingEvent;
+    if (wasBreedingCreated.status == "success") {
+      return wasBreedingCreated;
     }
 
     const translate: Map<string, string> = new Map([
@@ -219,11 +270,11 @@ export function BreedingForm({
     ]);
 
     if (
-      breedingEvent.status == "error" &&
-      !!breedingEvent.message &&
-      translate.has(breedingEvent.message)
+      wasBreedingCreated.status == "error" &&
+      !!wasBreedingCreated.message &&
+      translate.has(wasBreedingCreated.message)
     ) {
-      userMessage(translate.get(breedingEvent.message), "error");
+      userMessage(translate.get(wasBreedingCreated.message), "error");
       return;
     }
 
