@@ -88,10 +88,6 @@ export function BreedingForm({
     () => setFormState(!data || data == "new" ? emptyBreeding : data),
     [data]
   );
-  const hasBirth = React.useMemo(() => {
-    return !!formState.birth_date;
-  }, [formState]);
-
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
    * undefined).
@@ -102,13 +98,6 @@ export function BreedingForm({
   ) => {
     formState && setFormState({ ...formState, [label]: value });
   };
-  const herd: LimitedHerd | undefined = React.useMemo(() => {
-    const herd = genebanks.map((g) => g.herds.find((h) => h.herd == herdId));
-    if (herd.length) {
-      return herd[0];
-    }
-    return undefined;
-  }, [genebanks]);
 
   const genebank: Genebank | undefined = React.useMemo(() => {
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
