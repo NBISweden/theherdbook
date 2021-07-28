@@ -25,7 +25,7 @@ import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
-import { post } from "./communication";
+import { get, patch, post } from "./communication";
 
 const useStyles = makeStyles({
   form: {
@@ -136,7 +136,21 @@ export function BreedingForm({
       });
   }, [genebank]);
 
-  const saveBreeding = async (data: Breeding): Promise<any> => {
+  const autoFillBreedDate = (dateString: string) => {
+    let breedDate: Date | number = new Date(dateString);
+    breedDate.setDate(breedDate.getDate() - 30);
+    const breedDateLocal = breedDate.toLocaleDateString(locale);
+    setFormField("date", breedDateLocal);
+  };
+
+  React.useEffect(() => {
+    if (formState.date == "" && typeof formState.birth_date == "string") {
+      autoFillBreedDate(formState.birth_date);
+    }
+  }, [formState.birth_date]);
+
+  const saveBreeding = async (breeding: Breeding): Promise<any> => {
+    // Validation checks for user input
     if (formState === emptyBreeding) {
       userMessage("Fyll i informationen om parningstillfället.", "warning");
       return;
@@ -176,36 +190,41 @@ export function BreedingForm({
     // TODO
     // create sensibility checks for birth/breeding dates (should be about 30 days in between)
 
+    const updatedBreeding = await updateBreeding(breeding);
+    if (!!updatedBreeding) {
+      userMessage("Parningstillfället har uppdaterats.", "success");
+      return;
+    }
+
+    // If there was no existing breeding to update, create a new one
     const breedingData: LimitedBreeding = {
-      date: data.date,
-      mother: data.mother,
-      father: data.father,
-      notes: data.breed_notes !== "" ? data.breed_notes : undefined,
+      date: breeding.date,
+      mother: breeding.mother,
+      father: breeding.father,
+      notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
     };
 
     const newBreeding = await createBreeding(breedingData);
-
     if (!newBreeding) {
       // createBreeding will show a message, so no error handling or messages here
       return;
     }
 
+    // If the user hasn't provided birth information, leave with the following message:
     if (formState.birth_date === "") {
+      userMessage("Parningen har sparats.", "success");
       return;
     }
 
-    // TODO
-    // decide if register_birth or update_breeding should be used to add birth information
-
+    // Otherwise, continue with creating a birth
     const birthData: Birth = {
-      date: data.birth_date,
-      litter: data.litter_size,
-      notes: data.birth_notes !== "" ? data.birth_notes : undefined,
+      date: breeding.birth_date,
+      litter: breeding.litter_size,
+      notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
       id: newBreeding.breeding_id,
     };
 
     const newBirth = await createBirth(birthData);
-
     if (!!newBirth) {
       userMessage("Sparat!", "success");
     }
@@ -231,6 +250,77 @@ export function BreedingForm({
       translate.has(wasBirthCreated.message)
     ) {
       userMessage(translate.get(wasBirthCreated.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
+  };
+
+  const updateBreeding = async (breedingUpdates: Breeding) => {
+    // Only run this if there is a breeding to update.
+    if (data == "new") {
+      return;
+    }
+
+    // Get all the breedings for the current herd
+    const breedings = await get(`/api/breeding/${herdId}`);
+
+    const breedingMatch = breedings.breedings.find(
+      (item) =>
+        item.mother == data.mother &&
+        item.father == data.father &&
+        (item.breed_date == data.date || item.birth_date == data.birth_date)
+    );
+
+    if (!breedingMatch) {
+      userMessage("Parningstillfället kunde inte hittas.", "error");
+      return;
+    }
+
+    const breedingData = {
+      date: breedingUpdates.date,
+      breed_notes: breedingUpdates.breed_notes,
+      father: breedingUpdates.father,
+      mother: breedingUpdates.mother,
+      birth_date: breedingUpdates.birth_date,
+      birth_notes: breedingUpdates.birth_notes,
+      litter_size: breedingUpdates.litter_size,
+      id: breedingMatch.breeding_id,
+    };
+
+    const wasBreedingUpdated = await patch("/api/breeding", breedingData);
+
+    if (wasBreedingUpdated.status === "success") {
+      return wasBreedingUpdated;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+      [
+        "Unknown mother",
+        "Okänd mor, modern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown father",
+        "Okänd far, fadern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown mother, Unknown father",
+        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+      ],
+      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
+    ]);
+
+    if (
+      wasBreedingUpdated.status == "error" &&
+      !!wasBreedingUpdated.message &&
+      translate.has(wasBreedingUpdated.message)
+    ) {
+      userMessage(translate.get(wasBreedingUpdated.message), "error");
       return;
     }
 
@@ -284,19 +374,6 @@ export function BreedingForm({
     );
     return;
   };
-
-  const autoFillBreedDate = (dateString: string) => {
-    let breedDate: Date | number = new Date(dateString);
-    breedDate.setDate(breedDate.getDate() - 30);
-    const breedDateLocal = breedDate.toLocaleDateString(locale);
-    setFormField("date", breedDateLocal);
-  };
-
-  React.useEffect(() => {
-    if (formState.date == "" && typeof formState.birth_date == "string") {
-      autoFillBreedDate(formState.birth_date);
-    }
-  }, [formState.birth_date]);
 
   return (
     <>
