@@ -138,6 +138,24 @@ export function BreedingForm({
     }
   }, [formState.birth_date]);
 
+  const validateDates = (
+    breedingDateString: string,
+    birthDateString: string
+  ) => {
+    const breedingDate: Date | number = new Date(breedingDateString);
+    const birthDate: Date | number = new Date(birthDateString);
+    const daysBetween =
+      (birthDate.getTime() - breedingDate.getTime()) / 86400000;
+    if (daysBetween < 28 || daysBetween > 32) {
+      userMessage(
+        "Parningsdatum och födelsedatum passar inte ihop.",
+        "warning"
+      );
+      return false;
+    }
+    return true;
+  };
+
   const saveBreeding = async (breeding: Breeding): Promise<any> => {
     // Validation checks for user input
     if (formState === emptyBreeding) {
@@ -174,6 +192,13 @@ export function BreedingForm({
         "warning"
       );
       return;
+    }
+
+    if (formState.birth_date !== "" && formState.birth_date !== "") {
+      const datesValid = validateDates(formState.date, formState.birth_date);
+      if (datesValid === false) {
+        return;
+      }
     }
 
     // TODO
