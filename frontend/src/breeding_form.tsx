@@ -374,6 +374,7 @@ export function BreedingForm({
           <div className={style.formBox}>
             <KeyboardDatePicker
               autoOk
+              disableFuture
               variant="inline"
               inputVariant={inputVariant}
               label="Parningsdatum"
@@ -458,6 +459,7 @@ export function BreedingForm({
               <div className={style.formBox}>
                 <KeyboardDatePicker
                   autoOk
+                  disableFuture
                   variant="inline"
                   inputVariant={inputVariant}
                   label="Födelsedatum"
