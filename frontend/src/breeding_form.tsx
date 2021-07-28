@@ -318,7 +318,7 @@ export function BreedingForm({
                 shrink: true,
               }}
               onChange={(date, value) => {
-                value && setFormField("date", value);
+                setFormField("date", value ?? "");
               }}
             />
             <Autocomplete
@@ -402,7 +402,7 @@ export function BreedingForm({
                     shrink: true,
                   }}
                   onChange={(date, value) => {
-                    value && setFormField("birth_date", value);
+                    setFormField("birth_date", value ?? "");
                   }}
                 />
                 <TextField
