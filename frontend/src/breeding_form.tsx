@@ -45,13 +45,13 @@ const useStyles = makeStyles({
 });
 
 const emptyBreeding: Breeding = {
-  date: "",
+  breed_date: "",
   breed_notes: "",
   father: "",
   mother: "",
   birth_date: "",
   birth_notes: "",
-  litter_size: 0,
+  litter_size: null,
 };
 
 interface LimitedBreeding {
@@ -133,7 +133,7 @@ export function BreedingForm({
   };
 
   React.useEffect(() => {
-    if (formState.date == "" && typeof formState.birth_date == "string") {
+    if (formState.breed_date == "" && typeof formState.birth_date == "string") {
       autoFillBreedDate(formState.birth_date);
     }
   }, [formState.birth_date]);
@@ -163,7 +163,7 @@ export function BreedingForm({
       return;
     }
 
-    if (formState.date === "") {
+    if (formState.breed_date === "") {
       userMessage("Ange ett parningsdatum.", "warning");
       return;
     }
@@ -179,7 +179,7 @@ export function BreedingForm({
     }
 
     if (
-      formState.birth_date !== "" &&
+      formState.birth_date !== ("" || null) &&
       !(formState.litter_size > 0 && formState.litter_size < 10)
     ) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
@@ -197,8 +197,14 @@ export function BreedingForm({
       return;
     }
 
-    if (formState.birth_date !== "" && formState.birth_date !== "") {
-      const datesValid = validateDates(formState.date, formState.birth_date);
+    if (
+      formState.breed_date !== ("" || null) &&
+      formState.birth_date !== ("" || null)
+    ) {
+      const datesValid = validateDates(
+        formState.breed_date,
+        formState.birth_date
+      );
       if (datesValid === false) {
         return;
       }
@@ -215,7 +221,7 @@ export function BreedingForm({
 
     // If there was no existing breeding to update, create a new one
     const breedingData: LimitedBreeding = {
-      date: breeding.date,
+      date: breeding.breed_date,
       mother: breeding.mother,
       father: breeding.father,
       notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
@@ -290,7 +296,8 @@ export function BreedingForm({
       (item) =>
         item.mother == data.mother &&
         item.father == data.father &&
-        (item.breed_date == data.date || item.birth_date == data.birth_date)
+        (item.breed_date == data.breed_date ||
+          item.birth_date == data.birth_date)
     );
 
     if (!breedingMatch) {
@@ -298,16 +305,18 @@ export function BreedingForm({
       return;
     }
 
-    const breedingData = {
-      date: breedingUpdates.date,
-      breed_notes: breedingUpdates.breed_notes,
-      father: breedingUpdates.father,
-      mother: breedingUpdates.mother,
-      birth_date: breedingUpdates.birth_date,
-      birth_notes: breedingUpdates.birth_notes,
-      litter_size: breedingUpdates.litter_size,
-      id: breedingMatch.breeding_id,
+    // function to add the breeding id and remove empty key/value pairs
+    const modifyBreedingUpdates = (updates: Breeding) => {
+      let newUpdates = { ...updates, ...{ id: breedingMatch.id } };
+      for (let key in newUpdates) {
+        if (newUpdates[key] === null || newUpdates[key] === undefined) {
+          delete newUpdates[key];
+        }
+      }
+      return newUpdates;
     };
+
+    const breedingData = modifyBreedingUpdates(breedingUpdates);
 
     const wasBreedingUpdated = await patch("/api/breeding", breedingData);
 
@@ -411,12 +420,12 @@ export function BreedingForm({
               label="Parningsdatum"
               format={dateFormat}
               className={style.wideControl}
-              value={formState ? formState.date ?? "" : ""}
+              value={formState ? formState.breed_date ?? "" : ""}
               InputLabelProps={{
                 shrink: true,
               }}
               onChange={(date, value) => {
-                setFormField("date", value ?? "");
+                setFormField("breed_date", value ?? "");
               }}
             />
             <Autocomplete
@@ -509,7 +518,7 @@ export function BreedingForm({
                 />
                 <TextField
                   label="Kullstorlek"
-                  value={formState.litter_size ?? 0}
+                  value={formState.litter_size}
                   type="number"
                   className={style.wideControl}
                   variant={inputVariant}
