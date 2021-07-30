@@ -62,6 +62,7 @@ export interface Breeding {
 export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
   const [active, setActive] = React.useState(null as any);
+  const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
   const style = useStyles();
@@ -103,18 +104,24 @@ export function BreedingList({ id }: { id: string | undefined }) {
   ];
 
   React.useEffect(() => {
-    if (id) {
-      get(`/api/breeding/${id}`).then(
-        (data: { breedings: Breeding[] }) => {
-          data && setBreedingEvents(data.breedings);
-        },
-        (error) => {
-          console.error(error);
-          userMessage(error, "error");
-        }
-      );
+    if (id && breedingsChanged) {
+      get(`/api/breeding/${id}`)
+        .then(
+          (data: { breedings: Breeding[] }) => {
+            data && setBreedingEvents(data.breedings);
+          },
+          (error) => {
+            console.error(error);
+            userMessage(error, "error");
+          }
+        )
+        .then(() => setBreedingsChanged(false));
     }
-  }, [id]);
+  }, [id, breedingsChanged]);
+
+  const handleBreedingsChanged = () => {
+    setBreedingsChanged(true);
+  };
 
   return (
     <>
@@ -134,7 +141,11 @@ export function BreedingList({ id }: { id: string | undefined }) {
           style={{ width: active ? "60%" : "calc(100% - 2px)" }}
         />
         <div className={style.form} style={{ width: active ? "40%" : 0 }}>
-          <BreedingForm data={active} herdId={id} />
+          <BreedingForm
+            data={active}
+            herdId={id}
+            handleBreedingsChanged={handleBreedingsChanged}
+          />
         </div>
       </div>
     </>

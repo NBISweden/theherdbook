@@ -75,9 +75,11 @@ interface Birth {
 export function BreedingForm({
   data,
   herdId,
+  handleBreedingsChanged,
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
+  handleBreedingsChanged: any;
 }) {
   const style = useStyles();
   const { genebanks } = useDataContext();
@@ -370,6 +372,7 @@ export function BreedingForm({
     const updatedBreeding = await updateBreeding(breeding);
     if (!!updatedBreeding) {
       userMessage("Parningstillfället har uppdaterats.", "success");
+      handleBreedingsChanged();
       return;
     }
 
@@ -388,6 +391,7 @@ export function BreedingForm({
 
     if (breeding.birth_date === null) {
       userMessage("Parningen har sparats.", "success");
+      handleBreedingsChanged();
       return;
     }
 
@@ -401,6 +405,7 @@ export function BreedingForm({
     const newBirth = await createBirth(newBirthData);
     if (!!newBirth) {
       userMessage("Sparat!", "success");
+      handleBreedingsChanged();
     }
     return;
   };
