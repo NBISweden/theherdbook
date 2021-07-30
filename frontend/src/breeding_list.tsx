@@ -51,7 +51,7 @@ export interface Breeding {
   mother: string;
   birth_date: string;
   birth_notes: string;
-  litter_size: number;
+  litter_size: number | null;
 }
 
 /**
