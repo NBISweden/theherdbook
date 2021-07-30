@@ -76,10 +76,12 @@ export function BreedingForm({
   data,
   herdId,
   handleBreedingsChanged,
+  handleActive,
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
   handleBreedingsChanged: any;
+  handleActive: any;
 }) {
   const style = useStyles();
   const { genebanks } = useDataContext();
@@ -368,6 +370,8 @@ export function BreedingForm({
     if (!isInputValid) {
       return;
     }
+
+    handleActive(breeding);
 
     const updatedBreeding = await updateBreeding(breeding);
     if (!!updatedBreeding) {

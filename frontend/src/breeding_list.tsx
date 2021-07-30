@@ -123,6 +123,10 @@ export function BreedingList({ id }: { id: string | undefined }) {
     setBreedingsChanged(true);
   };
 
+  const handleActive = (breeding: Breeding) => {
+    setActive(breeding);
+  };
+
   return (
     <>
       <Typography variant="h5">Parningstillfällen</Typography>
@@ -145,6 +149,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
             data={active}
             herdId={id}
             handleBreedingsChanged={handleBreedingsChanged}
+            handleActive={handleActive}
           />
         </div>
       </div>
