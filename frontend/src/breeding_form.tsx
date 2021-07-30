@@ -181,7 +181,7 @@ export function BreedingForm({
     }
 
     if (
-      userInput.birth_date !== null &&
+      (userInput.birth_date, userInput.litter_size) !== null &&
       !(userInput.litter_size > 0 && userInput.litter_size < 10)
     ) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
@@ -522,7 +522,7 @@ export function BreedingForm({
                 />
                 <TextField
                   label="Kullstorlek"
-                  value={formState.litter_size}
+                  value={formState.litter_size ?? ""}
                   type="number"
                   className={style.wideControl}
                   variant={inputVariant}
