@@ -156,39 +156,38 @@ export function BreedingForm({
     return true;
   };
 
-  const saveBreeding = async (breeding: Breeding): Promise<any> => {
-    // Validation checks for user input
-    if (formState === emptyBreeding) {
-      userMessage("Fyll i informationen om parningstillfället.", "warning");
+  const validateUserInput = (userInput: Breeding) => {
+    if (userInput === emptyBreeding) {
+      userMessage("Fyll i information om parningstillfället.", "warning");
       return;
     }
 
-    if (formState.breed_date === "") {
+    if (userInput.breed_date === "") {
       userMessage("Ange ett parningsdatum.", "warning");
       return;
     }
 
-    if (formState.mother === "") {
+    if (userInput.mother === "") {
       userMessage("Fyll i modern.", "warning");
       return;
     }
 
-    if (formState.father === "") {
+    if (userInput.father === "") {
       userMessage("Fyll i fadern.", "warning");
       return;
     }
 
     if (
-      formState.birth_date !== ("" || null) &&
-      !(formState.litter_size > 0 && formState.litter_size < 10)
+      userInput.birth_date !== ("" || null) &&
+      !(userInput.litter_size > 0 && userInput.litter_size < 10)
     ) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
       return;
     }
 
     if (
-      (formState.litter_size !== 0 || formState.birth_notes !== "") &&
-      formState.birth_date == ""
+      (userInput.litter_size !== 0 || userInput.birth_notes !== "") &&
+      userInput.birth_date == ""
     ) {
       userMessage(
         "Om du vill spara information om födseln måste du ange ett födelsedatum.",
@@ -198,20 +197,21 @@ export function BreedingForm({
     }
 
     if (
-      formState.breed_date !== ("" || null) &&
-      formState.birth_date !== ("" || null)
+      userInput.breed_date !== ("" || null) &&
+      userInput.birth_date !== ("" || null)
     ) {
       const datesValid = validateDates(
-        formState.breed_date,
-        formState.birth_date
+        userInput.breed_date,
+        userInput.birth_date
       );
       if (datesValid === false) {
         return;
       }
     }
+  };
 
-    // TODO
-    // create sensibility checks for birth/breeding dates (should be about 30 days in between)
+  const saveBreeding = async (breeding: Breeding): Promise<any> => {
+    validateUserInput(breeding);
 
     const updatedBreeding = await updateBreeding(breeding);
     if (!!updatedBreeding) {
@@ -219,35 +219,32 @@ export function BreedingForm({
       return;
     }
 
-    // If there was no existing breeding to update, create a new one
-    const breedingData: LimitedBreeding = {
+    const newBreedingData: LimitedBreeding = {
       date: breeding.breed_date,
       mother: breeding.mother,
       father: breeding.father,
       notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
     };
 
-    const newBreeding = await createBreeding(breedingData);
+    const newBreeding = await createBreeding(newBreedingData);
     if (!newBreeding) {
       // createBreeding will show a message, so no error handling or messages here
       return;
     }
 
-    // If the user hasn't provided birth information, leave with the following message:
-    if (formState.birth_date === "") {
+    if (breeding.birth_date === "") {
       userMessage("Parningen har sparats.", "success");
       return;
     }
 
-    // Otherwise, continue with creating a birth
-    const birthData: Birth = {
+    const newBirthData: Birth = {
       date: breeding.birth_date,
       litter: breeding.litter_size,
       notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
       id: newBreeding.breeding_id,
     };
 
-    const newBirth = await createBirth(birthData);
+    const newBirth = await createBirth(newBirthData);
     if (!!newBirth) {
       userMessage("Sparat!", "success");
     }
