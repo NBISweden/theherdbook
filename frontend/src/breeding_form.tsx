@@ -55,7 +55,7 @@ const emptyBreeding: Breeding = {
 };
 
 interface LimitedBreeding {
-  date: string;
+  date: string | null;
   mother: string;
   father: string;
   notes?: string;
@@ -64,7 +64,7 @@ interface LimitedBreeding {
 interface Birth {
   id: number;
   date: string;
-  litter: number;
+  litter: number | null;
   notes?: string;
 }
 
@@ -233,7 +233,7 @@ export function BreedingForm({
     }
 
     const modifyBreedingUpdates = (updates: Breeding) => {
-      let newUpdates = { ...updates, ...{ id: breedingMatch.id } };
+      let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
       for (let key in newUpdates) {
         if (newUpdates[key] === null || newUpdates[key] === undefined) {
           delete newUpdates[key];
@@ -407,7 +407,7 @@ export function BreedingForm({
 
   return (
     <>
-      <form className={style.formState}>
+      <form>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle

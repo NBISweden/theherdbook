@@ -44,6 +44,7 @@ const useStyles = makeStyles({
 });
 
 export interface Breeding {
+  [key: string]: any;
   id?: number;
   breed_date: string | null;
   breed_notes: string;
