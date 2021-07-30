@@ -45,11 +45,11 @@ const useStyles = makeStyles({
 });
 
 const emptyBreeding: Breeding = {
-  breed_date: "",
+  breed_date: null,
   breed_notes: "",
   father: "",
   mother: "",
-  birth_date: "",
+  birth_date: null,
   birth_notes: "",
   litter_size: null,
 };
@@ -133,7 +133,10 @@ export function BreedingForm({
   };
 
   React.useEffect(() => {
-    if (formState.breed_date == "" && typeof formState.birth_date == "string") {
+    if (
+      formState.breed_date == null &&
+      typeof formState.birth_date == "string"
+    ) {
       autoFillBreedDate(formState.birth_date);
     }
   }, [formState.birth_date]);
@@ -159,55 +162,53 @@ export function BreedingForm({
   const validateUserInput = (userInput: Breeding) => {
     if (userInput === emptyBreeding) {
       userMessage("Fyll i information om parningstillfället.", "warning");
-      return;
+      return false;
     }
 
-    if (userInput.breed_date === "") {
+    if (userInput.breed_date === null) {
       userMessage("Ange ett parningsdatum.", "warning");
-      return;
+      return false;
     }
 
     if (userInput.mother === "") {
       userMessage("Fyll i modern.", "warning");
-      return;
+      return false;
     }
 
     if (userInput.father === "") {
       userMessage("Fyll i fadern.", "warning");
-      return;
+      return false;
     }
 
     if (
-      userInput.birth_date !== ("" || null) &&
+      userInput.birth_date !== null &&
       !(userInput.litter_size > 0 && userInput.litter_size < 10)
     ) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
-      return;
+      return false;
     }
 
     if (
-      (userInput.litter_size !== 0 || userInput.birth_notes !== "") &&
-      userInput.birth_date == ""
+      (userInput.litter_size !== null || userInput.birth_notes !== "") &&
+      userInput.birth_date == null
     ) {
       userMessage(
         "Om du vill spara information om födseln måste du ange ett födelsedatum.",
         "warning"
       );
-      return;
+      return false;
     }
 
-    if (
-      userInput.breed_date !== ("" || null) &&
-      userInput.birth_date !== ("" || null)
-    ) {
+    if (userInput.breed_date !== null && userInput.birth_date !== null) {
       const datesValid = validateDates(
         userInput.breed_date,
         userInput.birth_date
       );
       if (datesValid === false) {
-        return;
+        return false;
       }
     }
+    return true;
   };
 
   const updateBreeding = async (breedingUpdates: Breeding) => {
@@ -361,7 +362,10 @@ export function BreedingForm({
   };
 
   const saveBreeding = async (breeding: Breeding): Promise<any> => {
-    validateUserInput(breeding);
+    const isInputValid = validateUserInput(breeding);
+    if (!isInputValid) {
+      return;
+    }
 
     const updatedBreeding = await updateBreeding(breeding);
     if (!!updatedBreeding) {
@@ -382,7 +386,7 @@ export function BreedingForm({
       return;
     }
 
-    if (breeding.birth_date === "") {
+    if (breeding.birth_date === null) {
       userMessage("Parningen har sparats.", "success");
       return;
     }
@@ -411,21 +415,21 @@ export function BreedingForm({
           <div className={style.formBox}>
             <KeyboardDatePicker
               autoOk
+              disableFuture
               error={false}
               invalidDateMessage="Datumet har fel format."
               maxDateMessage="Datumet får inte ligga i framtiden."
-              disableFuture
               variant="inline"
               inputVariant={inputVariant}
               label="Parningsdatum"
               format={dateFormat}
               className={style.wideControl}
-              value={formState ? formState.breed_date ?? "" : ""}
+              value={formState.breed_date ?? null}
               InputLabelProps={{
                 shrink: true,
               }}
               onChange={(date, value) => {
-                setFormField("breed_date", value ?? "");
+                value && setFormField("breed_date", value);
               }}
             />
             <Autocomplete
@@ -508,12 +512,12 @@ export function BreedingForm({
                   label="Födelsedatum"
                   format={dateFormat}
                   className={style.wideControl}
-                  value={formState ? formState.birth_date ?? "" : ""}
+                  value={formState.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
                   }}
                   onChange={(date, value) => {
-                    setFormField("birth_date", value ?? "");
+                    value && setFormField("birth_date", value);
                   }}
                 />
                 <TextField

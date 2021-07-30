@@ -45,11 +45,11 @@ const useStyles = makeStyles({
 
 export interface Breeding {
   id?: number;
-  breed_date: string;
+  breed_date: string | null;
   breed_notes: string;
   father: string;
   mother: string;
-  birth_date: string;
+  birth_date: string | null;
   birth_notes: string;
   litter_size: number | null;
 }
