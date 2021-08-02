@@ -10,11 +10,13 @@ import {
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
 import {
+  Birth,
   dateFormat,
   Genebank,
   individualLabel,
   inputVariant,
   LimitedHerd,
+  LimitedBreeding,
   locale,
   OptionType,
 } from "@app/data_context_global";
@@ -54,20 +56,6 @@ const emptyBreeding: Breeding = {
   litter_size: null,
 };
 
-interface LimitedBreeding {
-  date: string | null;
-  mother: string;
-  father: string;
-  notes?: string;
-}
-
-interface Birth {
-  id: number;
-  date: string;
-  litter: number | null;
-  notes?: string;
-}
-
 /**
  * The BreedingForm function. This function allows users to create and update
  * breeding events in the database.
@@ -84,7 +72,8 @@ export function BreedingForm({
   handleActive: any;
 }) {
   const style = useStyles();
-  const { genebanks } = useDataContext();
+  const { genebanks, createBreeding, updateBreeding, findBreedingMatch } =
+    useDataContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
@@ -215,7 +204,7 @@ export function BreedingForm({
     return true;
   };
 
-  const updateBreeding = async (breedingUpdates: Breeding) => {
+  /*   const updateBreeding = async (breedingUpdates: Breeding) => {
     // Only run this if there is a breeding to update.
     if (data == "new") {
       return;
@@ -288,51 +277,7 @@ export function BreedingForm({
       "error"
     );
     return;
-  };
-
-  const createBreeding = async (breedingData: LimitedBreeding) => {
-    const breedingCreationResponse: {
-      status: string;
-      message?: string;
-      breeding_id?: number;
-    } = await post("/api/breeding", breedingData);
-
-    if (breedingCreationResponse.status == "success") {
-      return breedingCreationResponse;
-    }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
-      [
-        "Unknown mother",
-        "Okänd mor, modern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown father",
-        "Okänd far, fadern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown mother, Unknown father",
-        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
-      ],
-      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
-    ]);
-
-    if (
-      breedingCreationResponse.status == "error" &&
-      !!breedingCreationResponse.message &&
-      translate.has(breedingCreationResponse.message)
-    ) {
-      userMessage(translate.get(breedingCreationResponse.message), "error");
-      return;
-    }
-
-    userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
-      "error"
-    );
-    return;
-  };
+  }; */
 
   const createBirth = async (birthData: Birth) => {
     const birthCreationResponse: {
@@ -373,11 +318,26 @@ export function BreedingForm({
 
     handleActive(breeding);
 
-    const updatedBreeding = await updateBreeding(breeding);
-    if (!!updatedBreeding) {
-      userMessage("Parningstillfället har uppdaterats.", "success");
-      handleBreedingsChanged();
-      return;
+    if (data !== "new") {
+      const breedingMatch = findBreedingMatch(herdId, breeding);
+
+      const modifyBreedingUpdates = (updates: Breeding) => {
+        let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
+        for (let key in newUpdates) {
+          if (newUpdates[key] === null || newUpdates[key] === undefined) {
+            delete newUpdates[key];
+          }
+        }
+        return newUpdates;
+      };
+
+      const modifiedBreedingUpdates = modifyBreedingUpdates(breeding);
+      const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
+      if (!!updatedBreeding) {
+        userMessage("Parningstillfället har uppdaterats.", "success");
+        handleBreedingsChanged();
+        return;
+      }
     }
 
     const newBreedingData: LimitedBreeding = {

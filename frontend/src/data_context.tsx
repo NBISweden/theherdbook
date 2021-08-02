@@ -2,7 +2,17 @@ import * as React from "react";
 
 import { get } from "@app/communication";
 
-import { Color, DataContext, Genebank, NameID } from "@app/data_context_global";
+import {
+  Birth,
+  Breeding,
+  Color,
+  DataContext,
+  Genebank,
+  NameID,
+  LimitedBreeding,
+} from "@app/data_context_global";
+import { patch, post } from "./communication";
+import { useMessageContext } from "./message_context";
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -24,6 +34,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
   const [colors, setColors] = React.useState(
     {} as { [genebank: string]: Color[] }
   );
+  const { userMessage } = useMessageContext();
 
   async function fetchAndSet(
     url: string,
@@ -178,9 +189,165 @@ export function WithDataContext(props: { children: React.ReactNode }) {
     loadData("all");
   }, []);
 
+  /**
+   * Function that can be used to create a new breeding event
+
+  **/
+  const createBreeding = async (
+    breedingData: LimitedBreeding
+  ): Promise<any> => {
+    const breedingEvent: {
+      status: string;
+      message?: string;
+      breeding_id?: number;
+    } = await post("/api/breeding", breedingData);
+
+    if (breedingEvent.status == "success") {
+      return breedingEvent;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+      [
+        "Unknown mother",
+        "Okänd mor, modern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown father",
+        "Okänd far, fadern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown mother, Unknown father",
+        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+      ],
+      ["Forbidden", "Du har inte rätt behörighet."],
+    ]);
+
+    if (
+      breedingEvent.status == "error" &&
+      !!breedingEvent.message &&
+      translate.has(breedingEvent.message)
+    ) {
+      userMessage(translate.get(breedingEvent.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
+  };
+
+  /**
+   * Function to create a birth inside an existing breeding event
+   * **/
+  const createBirth = async (birthData: Birth) => {
+    const birthCreationResponse: {
+      status: "success" | "error";
+      message?: string;
+    } = await post("/api/birth", birthData);
+
+    if (birthCreationResponse.status === "success") {
+      return birthCreationResponse;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen."],
+      ["Forbidden", "Du har inte behörighet att lägga till födselinformation."],
+    ]);
+
+    if (
+      birthCreationResponse.status === "error" &&
+      !!birthCreationResponse.message &&
+      translate.has(birthCreationResponse.message)
+    ) {
+      userMessage(translate.get(birthCreationResponse.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
+  };
+
+  /**
+   * Function to update a breeding event. You can update all the fields in a breeding object.
+   * This way, it can also be used to add birth information to an existing breeding.
+   *  **/
+  const updateBreeding = async (breeding: Breeding) => {
+    const breedingUpdateResponse = await patch("/api/breeding", breeding);
+
+    if (breedingUpdateResponse.status === "success") {
+      return breedingUpdateResponse;
+    }
+
+    const translate: Map<string, string> = new Map([
+      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+      [
+        "Unknown mother",
+        "Okänd mor, modern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown father",
+        "Okänd far, fadern måste vara en aktiv individ i databasen",
+      ],
+      [
+        "Unknown mother, Unknown father",
+        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+      ],
+      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
+    ]);
+
+    if (
+      breedingUpdateResponse.status == "error" &&
+      !!breedingUpdateResponse.message &&
+      translate.has(breedingUpdateResponse.message)
+    ) {
+      userMessage(translate.get(breedingUpdateResponse.message), "error");
+      return;
+    }
+
+    userMessage(
+      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      "error"
+    );
+    return;
+  };
+
+  const findBreedingMatch = async (herdId: string, breedingData: Breeding) => {
+    const herdBreedings = await get(`/api/breeding/${herdId}`);
+
+    const breedingMatch = herdBreedings.breedings.find(
+      (item) =>
+        item.mother == breedingData.mother &&
+        item.father == breedingData.father &&
+        (item.breed_date == breedingData.breed_date ||
+          item.birth_date == breedingData.birth_date)
+    );
+    if (!breedingMatch) {
+      userMessage("Parningstillfället kunde inte hittas.", "error");
+      return;
+    }
+    return breedingMatch;
+  };
+
   return (
     <DataContext.Provider
-      value={{ genebanks, users, colors, setGenebanks, setUsers, loadData }}
+      value={{
+        genebanks,
+        users,
+        colors,
+        setGenebanks,
+        setUsers,
+        loadData,
+        createBreeding,
+        createBirth,
+        updateBreeding,
+        findBreedingMatch,
+      }}
     >
       {props.children}
     </DataContext.Provider>

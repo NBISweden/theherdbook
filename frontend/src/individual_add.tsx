@@ -18,6 +18,7 @@ import {
   Individual,
   individualLabel,
   inputVariant,
+  LimitedBreeding,
   LimitedHerd,
   LimitedIndividual,
   Genebank,
@@ -117,7 +118,7 @@ export function IndividualAdd({
   const [litterError, setLitterError] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const { genebanks } = useDataContext();
+  const { genebanks, createBreeding, createBirth } = useDataContext();
   const style = useStyles();
 
   /**
@@ -283,7 +284,7 @@ export function IndividualAdd({
     breedingDate.setDate(breedingDate.getDate() - 30);
     breedingString = breedingDate.toLocaleDateString(locale);
 
-    let currentBreeding = {
+    let currentBreeding: LimitedBreeding = {
       mother: individual.mother?.number,
       father: individual.father?.number,
       date: breedingString,
@@ -371,50 +372,6 @@ export function IndividualAdd({
         );
       }
     }
-  };
-
-  const createBreeding = async (breedingData: Object): Promise<any> => {
-    const breedingEvent: {
-      status: string;
-      message?: string;
-      breeding_id?: number;
-    } = await post("/api/breeding", breedingData);
-
-    if (breedingEvent.status == "success") {
-      return breedingEvent;
-    }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
-      [
-        "Unknown mother",
-        "Okänd mor, modern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown father",
-        "Okänd far, fadern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown mother, Unknown father",
-        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
-      ],
-      ["Forbidden", "Du har inte behörighet att lägga till individen"],
-    ]);
-
-    if (
-      breedingEvent.status == "error" &&
-      !!breedingEvent.message &&
-      translate.has(breedingEvent.message)
-    ) {
-      userMessage(translate.get(breedingEvent.message), "error");
-      return;
-    }
-
-    userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
-      "error"
-    );
-    return;
   };
 
   const createIndividual = (individual: Individual) => {
