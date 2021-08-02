@@ -447,9 +447,6 @@ class TestDataAccess(DatabaseTest):
                 and ind.death_date is None
                 and not ind.death_note
             )
-            print("active is")
-            print(active)
-            print(ind.is_active)
             ind_info = {
                 "id": ind.id,
                 "name": ind.name,
