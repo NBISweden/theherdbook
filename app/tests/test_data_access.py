@@ -481,7 +481,6 @@ class TestDataAccess(DatabaseTest):
 
         gb0_value = da.get_individuals(self.genebanks[0].id, self.admin.uuid)
 
-
         self.assertListEqual(gb0_expected, gb0_value)
 
     def test_get_all_individuals(self):
