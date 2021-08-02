@@ -353,13 +353,17 @@ class TestDatabase(DatabaseTest):
                 individual.is_active
                 and not individual.death_date
                 and not individual.death_note
-                and individual.herdtracking_set.select()
-                .where(
-                    db.HerdTracking.herd_tracking_date
-                    > datetime.now() - timedelta(days=366)
+                and (
+                    db.HerdTracking.select()
+                    .where(db.HerdTracking.individual == individual)
+                    .order_by(db.HerdTracking.herd_tracking_date.desc())[0]
+                    .herd_tracking_date
+                    > datetime.date(datetime.now() - timedelta(days=366))
+                    if db.HerdTracking.select()
+                    .where(db.HerdTracking.individual == individual)
+                    .count()
+                    else False
                 )
-                .count()
-                > 0
             )
 
             self.assertDictEqual(

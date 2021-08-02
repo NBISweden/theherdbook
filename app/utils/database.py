@@ -435,13 +435,33 @@ class Individual(BaseModel):
         Returns the current herd of the individual by querying the HerdTracking
         table.
         """
-        if not self.herdtracking_set:
-            return self.origin_herd
-        return (
-            self.herdtracking_set.order_by(HerdTracking.herd_tracking_date.desc())
-            .first()
-            .herd
-        )
+
+        latest_ht_entry = self.latest_herdtracking_entry
+        if latest_ht_entry:
+            return latest_ht_entry.herd
+
+        # Individual not found in HerdTracking!
+        return self.origin_herd
+
+    @property
+    def latest_herdtracking_entry(self):
+        """
+        Returns the latest entry for the individual in HerdTracking, if any.
+        """
+
+        try:
+            ht_history = (
+                HerdTracking.select()
+                .where(HerdTracking.individual == self.id)
+                .order_by(HerdTracking.herd_tracking_date.desc())
+            ).execute()
+
+            if len(ht_history):
+                return ht_history[0]
+
+        except DoesNotExist:
+            pass
+        return None
 
     @property
     def children(self):
@@ -506,18 +526,28 @@ class Individual(BaseModel):
         data["bodyfat"] = [
             {"bodyfat": b.bodyfat, "date": b.bodyfat_date.strftime("%Y-%m-%d")}
             for b in self.bodyfat_set
-        ]  # pylint: disable=no-member
-        data["herd_tracking"] = [
-            {
-                "herd_id": h.herd.id,
-                "herd": h.herd.herd,
-                "herd_name": h.herd.herd_name,
-                "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                if h.herd_tracking_date
-                else None,
-            }
-            for h in self.herdtracking_set  # pylint: disable=no-member
         ]
+
+        ht_history = (
+            HerdTracking.select()
+            .where(HerdTracking.individual == self.id)
+            .order_by(HerdTracking.herd_tracking_date.desc())
+        )
+
+        try:
+            data["herd_tracking"] = [
+                {
+                    "herd_id": h.herd.id,
+                    "herd": h.herd.herd,
+                    "herd_name": h.herd.herd_name,
+                    "date": h.herd_tracking_date.strftime("%Y-%m-%d")
+                    if h.herd_tracking_date
+                    else None,
+                }
+                for h in ht_history
+            ]
+        except DoesNotExist:
+            data["herd_tracking"] = []
 
         return data
 
@@ -551,17 +581,18 @@ class Individual(BaseModel):
             if self.breeding and self.breeding.mother
             else None
         )
+
         is_active = (
             self.is_active
             and not self.death_date
             and not self.death_note
-            and self.herdtracking_set.select()
-            .where(
-                HerdTracking.herd_tracking_date > datetime.now() - timedelta(days=366)
+            and self.latest_herdtracking_entry
+            and (
+                self.latest_herdtracking_entry.herd_tracking_date
+                > (datetime.now() - timedelta(days=366)).date()
             )
-            .count()
-            > 0
         )
+
         return {
             "id": self.id,
             "name": self.name,

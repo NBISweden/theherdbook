@@ -715,6 +715,7 @@ def get_individual(individual_id, user_uuid=None):
             individual = (
                 Individual.select().where(Individual.number == individual_id).get()
             )
+
         if (
             individual
             and individual.current_herd.genebank.id in user.accessible_genebanks
@@ -882,29 +883,50 @@ def add_individual(form, user_uuid):
 
     update_herdtracking_values(
         individual=individual,
-        herd=individual.origin_herd,
+        new_herd=individual.origin_herd,
         user_signature=user,
         tracking_date=form["birth_date"],
     )
 
     selling_date = form.get("selling_date", None)
 
-    if selling_date is not None:
+    new_herd = None
+    if isinstance(form.get("herd", None), dict):
+        new_herd = form["herd"]
+    if isinstance(form.get("herd", None), str):
+        new_herd = Herd.get(Herd.herd == form["herd"])
+
+    if new_herd and new_herd != individual.origin_herd:
         update_herdtracking_values(
             individual=individual,
-            herd=herd,
+            new_herd=new_herd,
             user_signature=user,
-            tracking_date=datetime.utcnow(),
+            tracking_date=datetime.utcnow() if not selling_date else selling_date,
         )
 
     return {"status": "success", "message": "Individual Created"}
 
 
-def update_herdtracking_values(individual, herd, user_signature, tracking_date):
+def update_herdtracking_values(individual, new_herd, user_signature, tracking_date):
     with DATABASE.atomic():
+
+        ht_history = (
+            HerdTracking.select()
+            .where(HerdTracking.individual == individual)
+            .order_by(HerdTracking.herd_tracking_date.desc())
+        )
+
+        current_herd = individual.origin_herd
+
+        if len(ht_history):
+            current_herd = ht_history[0].herd
+
+        if isinstance(new_herd, str):
+            new_herd = Herd.get(Herd.herd == new_herd)
+
         HerdTracking(
-            from_herd=individual.origin_herd,
-            herd=herd,
+            from_herd=current_herd,
+            herd=new_herd,
             signature=user_signature,
             individual=individual,
             herd_tracking_date=tracking_date,
@@ -925,8 +947,8 @@ def update_individual(form, user_uuid):
 
     if form["herd"] and isinstance(form["herd"], dict):
         form["herd"] = form["herd"].get("herd", None)
-    if not Herd.select().where(Herd.herd == form["herd"]).exists():
-        return {"status": "error", "message": "Individual must have a valid herd"}
+        if not Herd.select().where(Herd.herd == form["herd"]).exists():
+            return {"status": "error", "message": "Individual must have a valid herd"}
     if form.get("issue_digital", False):
         nextval = 100000
         max = Individual.select(  # pylint: disable=E1120
@@ -936,18 +958,29 @@ def update_individual(form, user_uuid):
             nextval = max + 1
         form["digital_certificate"] = nextval
     try:
-        try:
-            individual = form_to_individual(form, user)
-        except ValueError as exception:
-            return {"status": "error", "message": f"{exception}"}
-        if "weights" in form:
-            update_weights(individual, form["weights"])
-        if "bodyfat" in form:
-            update_bodyfat(individual, form["bodyfat"])
+        with DATABASE.atomic():
+            try:
+                individual = form_to_individual(form, user)
+            except ValueError as exception:
+                return {"status": "error", "message": f"{exception}"}
 
-        # TODO: also update herd tracking
+            if "weights" in form:
+                update_weights(individual, form["weights"])
+            if "bodyfat" in form:
+                update_bodyfat(individual, form["bodyfat"])
+            if "herd" in form:
+                selling_date = form.get("selling_date", None)
 
-        individual.save()
+                update_herdtracking_values(
+                    individual=individual,
+                    new_herd=form["herd"],
+                    user_signature=user,
+                    tracking_date=datetime.utcnow()
+                    if not selling_date
+                    else selling_date,
+                )
+
+            individual.save()
         return {
             "status": "success",
             "message": "Individual Updated",

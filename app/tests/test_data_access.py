@@ -384,6 +384,16 @@ class TestDataAccess(DatabaseTest):
         )
         self.assertEqual(db.Individual.get(self.individuals[0].id).name, "new name")
 
+        # Check herd update, we need update to be on a separate date
+        forms["valid"]["herd"] = self.herds[1].herd
+        forms["valid"]["selling_date"] = datetime.now() + timedelta(days=2)
+
+        status = da.update_individual(forms["valid"], self.admin.uuid)
+
+        self.assertEqual(
+            db.Individual.get(self.individuals[0].id).current_herd, self.herds[1]
+        )
+
         # TODO: also validate weights and bodyfat
 
     def test_get_individuals(self):
@@ -407,14 +417,32 @@ class TestDataAccess(DatabaseTest):
                 return None
             return {"id": data.id, "name": data.name, "number": data.number}
 
+        # Add some herd tracking entries
+        form = {
+            "herd": self.individuals[0].current_herd,
+            "number": self.individuals[0].number,
+        }
+
+        for n in range(0, 7):
+            da.update_individual(form, self.admin.uuid)
+            form["selling_date"] = datetime.now() - timedelta(days=n * 365)
+
         # herds 0 and 1 are in genebank 0
         gb0_expected = []
         for ind in [self.individuals[0], self.individuals[1]]:
 
-            herd_tracking = ind.herdtracking_set[-1]
             active = (
-                herd_tracking.herd_tracking_date
-                > datetime.date(datetime.now() - timedelta(days=366))
+                (
+                    db.HerdTracking.select()
+                    .where(db.HerdTracking.individual == ind)
+                    .order_by(db.HerdTracking.herd_tracking_date.desc())[0]
+                    .herd_tracking_date
+                    > datetime.date(datetime.now() - timedelta(days=366))
+                    if db.HerdTracking.select()
+                    .where(db.HerdTracking.individual == ind)
+                    .count()
+                    else False
+                )
                 and (ind.current_herd.is_active or ind.current_herd.is_active is None)
                 and ind.death_date is None
                 and not ind.death_note
@@ -426,8 +454,8 @@ class TestDataAccess(DatabaseTest):
                 "number": ind.number,
                 "sex": ind.sex,
                 "birth_date": dateformat(ind.breeding.birth_date),
-                "death_note": ind.death_note,
                 "death_date": dateformat(ind.death_date),
+                "death_note": ind.death_note,
                 "litter": ind.breeding.litter_size,
                 "notes": ind.notes,
                 "color_note": ind.color_note,
@@ -452,6 +480,7 @@ class TestDataAccess(DatabaseTest):
             gb0_expected += [ind_info]
 
         gb0_value = da.get_individuals(self.genebanks[0].id, self.admin.uuid)
+
         self.assertListEqual(gb0_expected, gb0_value)
 
     def test_get_all_individuals(self):
