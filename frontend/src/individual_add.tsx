@@ -12,6 +12,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
+  Birth,
   Breeding,
   locale,
   activeIndividuals,
@@ -260,6 +261,14 @@ export function IndividualAdd({
     return originHerdNameID;
   };
 
+  const getBreedingDate = (birthDate: string) => {
+    let breedingString = "";
+    let breedingDate: Date | number = new Date(birthDate);
+    breedingDate.setDate(breedingDate.getDate() - 30);
+    breedingString = breedingDate.toLocaleDateString(locale);
+    return breedingString;
+  };
+
   const getBreedingId = async (individual: Individual) => {
     const breedingDate = getBreedingDate(individual.birth_date);
 
@@ -278,16 +287,16 @@ export function IndividualAdd({
       mother: individual.mother.number,
       father: individual.father.number,
     };
-    const breedingMatch = findBreedingMatch(
-      individual.origin_herd.id.toString(),
+    const breedingMatch = await findBreedingMatch(
+      individual.origin_herd.herd,
       breedingInput
     );
     if (breedingMatch) {
-      const modifiedBreedingUpdates = modifyBreedingUpdates(
+      const modifiedBreedingUpdates = await modifyBreedingUpdates(
         breedingInput,
         breedingMatch
       );
-      const updatedBreeding = await updateBreeding(modifyBreedingUpdates);
+      const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
         return updatedBreeding.id;
       }
@@ -301,58 +310,13 @@ export function IndividualAdd({
       const birthData: Birth = {
         date: individual.birth_date,
         litter: individual.litter,
-        id: newBreeding.id,
+        id: newBreeding.breeding_id,
       };
       const newBirth = await createBirth(birthData);
       if (!!newBirth) {
-        return newBreeding.id;
+        return newBreeding.breeding_id;
       }
     }
-  };
-
-  const getBreedingDate = (birthDate: string) => {
-    let breedingString = "";
-    let breedingDate: Date | number = new Date(birthDate);
-    breedingDate.setDate(breedingDate.getDate() - 30);
-    breedingString = breedingDate.toLocaleDateString(locale);
-    return breedingString;
-  };
-
-  // Checks first if all mandatory fields are filled in.
-  // Adds then the fields origin_herd and breeding to the individual and calls createIndividual
-  const onSaveIndividual = async (individual: Individual) => {
-    let newIndividual = individual;
-    const inputValid = validateUserInput(individual);
-    if (!inputValid) {
-      return;
-    }
-
-    const originHerd = getOriginHerd(individual);
-    if (!originHerd) {
-      return;
-    }
-    newIndividual = {
-      ...newIndividual,
-      origin_herd: originHerd,
-    };
-
-    // if the user hasn't put in a current herd, use origin_herd as the current herd
-    if (!newIndividual.herd) {
-      newIndividual = {
-        ...newIndividual,
-        herd: originHerd.herd,
-      };
-    }
-
-    const breedingId = await getBreedingId(individual);
-    if (!breedingId) {
-      return;
-    }
-    newIndividual = {
-      ...newIndividual,
-      breeding: breedingId,
-    };
-    createIndividual(newIndividual);
   };
 
   const createIndividual = (individual: Individual) => {
@@ -406,6 +370,42 @@ export function IndividualAdd({
         userMessage("Något gick fel.", "error");
       }
     );
+  };
+
+  const onSaveIndividual = async (individual: Individual) => {
+    let newIndividual = individual;
+    const inputValid = validateUserInput(individual);
+    if (!inputValid) {
+      return;
+    }
+
+    const originHerd = getOriginHerd(individual);
+    if (!originHerd) {
+      return;
+    }
+    newIndividual = {
+      ...newIndividual,
+      origin_herd: originHerd,
+    };
+
+    // if the user hasn't put in a current herd, use origin_herd as the current herd
+    if (!newIndividual.herd) {
+      newIndividual = {
+        ...newIndividual,
+        herd: originHerd.herd,
+      };
+    }
+
+    const breedingId = await getBreedingId(newIndividual);
+    if (!breedingId) {
+      return;
+    }
+
+    newIndividual = {
+      ...newIndividual,
+      breeding: breedingId,
+    };
+    createIndividual(newIndividual);
   };
 
   const resetBlank = () => {

@@ -336,7 +336,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
 
     if (!breedingMatch) {
       /* userMessage("Parningstillfället kunde inte hittas.", "error"); */
-      return undefined;
+      return false;
     }
     return breedingMatch;
   };
