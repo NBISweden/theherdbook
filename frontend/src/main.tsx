@@ -29,13 +29,13 @@ const Main = (
   <>
     <CssBaseline />
     <BrowserRouter>
-      <WithDataContext>
-        <WithUserContext>
-          <WithMessageContext>
+      <WithMessageContext>
+        <WithDataContext>
+          <WithUserContext>
             <Navigation />
-          </WithMessageContext>
-        </WithUserContext>
-      </WithDataContext>
+          </WithUserContext>
+        </WithDataContext>
+      </WithMessageContext>
     </BrowserRouter>
     <CSS />
   </>

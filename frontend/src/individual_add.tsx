@@ -12,6 +12,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
+  Breeding,
   locale,
   activeIndividuals,
   HerdNameID,
@@ -84,17 +85,6 @@ const useStyles = makeStyles({
   },
 });
 
-interface Breeding {
-  birth_date: string;
-  birth_notes: string | null;
-  breed_date: string | null;
-  breed_notes: string | null;
-  father: string;
-  id: number;
-  litter_size: number;
-  mother: string;
-}
-
 export function IndividualAdd({
   herdId,
   genebank,
@@ -118,7 +108,14 @@ export function IndividualAdd({
   const [litterError, setLitterError] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const { genebanks, createBreeding, createBirth } = useDataContext();
+  const {
+    genebanks,
+    createBreeding,
+    createBirth,
+    findBreedingMatch,
+    modifyBreedingUpdates,
+    updateBreeding,
+  } = useDataContext();
   const style = useStyles();
 
   /**
@@ -204,9 +201,7 @@ export function IndividualAdd({
     individual?.litter,
   ]);
 
-  // Checks first if all mandatory fields are filled in.
-  // Adds then the fields origin_herd and breeding to the individual and calls createIndividual
-  const prepareIndividual = async () => {
+  const validateUserInput = (individual: Individual) => {
     setSuccess(false);
     let error: boolean = false;
     if (!individual?.number) {
@@ -231,26 +226,23 @@ export function IndividualAdd({
     }
     if (error) {
       userMessage("Fyll i alla obligatoriska fält.", "warning");
-      return;
+      return false;
     }
+    return true;
+  };
 
-    let newIndividual = individual;
-    // create the individual's origin herd
-    const numberParts: string[] = individual.number.split("-");
-
-    if (herdId && herdId !== numberParts[0]) {
+  const getOriginHerd = (individual: Individual) => {
+    const originHerdNumber: string = individual.number.split("-")[0];
+    if (herdId && herdId !== originHerdNumber) {
       userMessage(
         "Du kan bara lägga till individer som har fötts i din besättning.",
         "warning"
       );
       return;
     }
-
-    const originHerdNumber: string = numberParts[0];
     const originHerd = currentGenebank?.herds.find(
       (herd: LimitedHerd) => herd.herd == originHerdNumber
     );
-
     if (
       !(originHerd && originHerd.herd_name && originHerd.herd && originHerd.id)
     ) {
@@ -260,17 +252,91 @@ export function IndividualAdd({
       );
       return;
     }
-
     const originHerdNameID: HerdNameID = {
       herd_name: originHerd.herd_name,
       herd: originHerd.herd,
       id: originHerd.id,
     };
+    return originHerdNameID;
+  };
+
+  const getBreedingId = async (individual: Individual) => {
+    const breedingDate = getBreedingDate(individual.birth_date);
+
+    let breedingInput: Breeding = {
+      breed_date: breedingDate,
+      breed_notes: "",
+      father: individual.father.number,
+      mother: individual.mother.number,
+      birth_date: individual.birth_date,
+      birth_notes: "",
+      litter_size: individual.litter,
+    };
+
+    let limitedBreedingInput: LimitedBreeding = {
+      date: breedingDate,
+      mother: individual.mother.number,
+      father: individual.father.number,
+    };
+    const breedingMatch = findBreedingMatch(
+      individual.origin_herd.id.toString(),
+      breedingInput
+    );
+    if (breedingMatch) {
+      const modifiedBreedingUpdates = modifyBreedingUpdates(
+        breedingInput,
+        breedingMatch
+      );
+      const updatedBreeding = await updateBreeding(modifyBreedingUpdates);
+      if (!!updatedBreeding) {
+        return updatedBreeding.id;
+      }
+    }
+
+    if (!breedingMatch) {
+      const newBreeding = await createBreeding(limitedBreedingInput);
+      if (!newBreeding) {
+        return;
+      }
+      const birthData: Birth = {
+        date: individual.birth_date,
+        litter: individual.litter,
+        id: newBreeding.id,
+      };
+      const newBirth = await createBirth(birthData);
+      if (!!newBirth) {
+        return newBreeding.id;
+      }
+    }
+  };
+
+  const getBreedingDate = (birthDate: string) => {
+    let breedingString = "";
+    let breedingDate: Date | number = new Date(birthDate);
+    breedingDate.setDate(breedingDate.getDate() - 30);
+    breedingString = breedingDate.toLocaleDateString(locale);
+    return breedingString;
+  };
+
+  // Checks first if all mandatory fields are filled in.
+  // Adds then the fields origin_herd and breeding to the individual and calls createIndividual
+  const onSaveIndividual = async (individual: Individual) => {
+    let newIndividual = individual;
+    const inputValid = validateUserInput(individual);
+    if (!inputValid) {
+      return;
+    }
+
+    const originHerd = getOriginHerd(individual);
+    if (!originHerd) {
+      return;
+    }
     newIndividual = {
       ...newIndividual,
-      origin_herd: originHerdNameID,
+      origin_herd: originHerd,
     };
-    // if the user doesn't input a current herd, use origin_herd as the current herd
+
+    // if the user hasn't put in a current herd, use origin_herd as the current herd
     if (!newIndividual.herd) {
       newIndividual = {
         ...newIndividual,
@@ -278,100 +344,15 @@ export function IndividualAdd({
       };
     }
 
-    // generate the breeding date
-    let breedingString = "";
-    let breedingDate: Date | number = new Date(individual.birth_date);
-    breedingDate.setDate(breedingDate.getDate() - 30);
-    breedingString = breedingDate.toLocaleDateString(locale);
-
-    let currentBreeding: LimitedBreeding = {
-      mother: individual.mother?.number,
-      father: individual.father?.number,
-      date: breedingString,
-    };
-    let birth: {
-      date: string;
-      litter: number | null;
-      id: number | null;
-    } = {
-      date: individual.birth_date,
-      litter: individual.litter,
-      id: null,
-    };
-
-    // Get all the breedings for the individual's origin herd and see if there is a match
-    const breedings: { breedings: Breeding[] } = await get(
-      `/api/breeding/${originHerd.herd}`
-    );
-    const breedingMatch = breedings.breedings.find(
-      (item) =>
-        item.mother == currentBreeding.mother &&
-        item.father == currentBreeding.father &&
-        (item.breed_date == currentBreeding.date ||
-          item.birth_date == individual.birth_date)
-    );
-
-    // if there is no match, create a new breeding
-    if (!breedingMatch) {
-      const newBreeding:
-        | { breeding_id?: number; status: string; message?: string }
-        | undefined = await createBreeding(currentBreeding);
-
-      if (!newBreeding) {
-        // createBreeding will show a message, so no error handling or messages here
-        return;
-      }
-
-      birth = { ...birth, id: newBreeding.breeding_id };
-    } else {
-      birth = { ...birth, id: breedingMatch.id };
+    const breedingId = await getBreedingId(individual);
+    if (!breedingId) {
+      return;
     }
-
-    // only continue with registering a birth if there is a breeding
-    if (!!birth.id) {
-      const birthEvent = await post("/api/birth", birth);
-
-      if (
-        birthEvent.status == "success" ||
-        birthEvent.message.includes("Birth already registered.")
-      ) {
-        const individualWithBreeding: Individual = {
-          ...newIndividual,
-          breeding: birth.id,
-        };
-        createIndividual(individualWithBreeding);
-        return;
-      }
-
-      if (
-        birthEvent.status == "error" &&
-        birthEvent.message == "Not logged in"
-      ) {
-        userMessage(
-          "Du är inte inloggad. Logga in och försök igen.",
-          "warning"
-        );
-      } else if (
-        birthEvent.status == "error" &&
-        (birthEvent.message.includes("litter size") ||
-          birthEvent.message.includes("Litter size"))
-      ) {
-        userMessage("Ange en kullstorlek större än null.", "warning");
-      } else if (
-        birthEvent.status == "error" &&
-        birthEvent.message == "Forbidden"
-      ) {
-        userMessage(
-          "Du har inte behörighet att lägga till den här individen.",
-          "error"
-        );
-      } else {
-        userMessage(
-          "Något gick fel. Kolla så att du har lagt till mor, far, kullstorlek och födelsedatum.",
-          "error"
-        );
-      }
-    }
+    newIndividual = {
+      ...newIndividual,
+      breeding: breedingId,
+    };
+    createIndividual(newIndividual);
   };
 
   const createIndividual = (individual: Individual) => {
@@ -553,7 +534,7 @@ export function IndividualAdd({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => prepareIndividual()}
+          onClick={() => onSaveIndividual(individual)}
         >
           Skapa
         </Button>

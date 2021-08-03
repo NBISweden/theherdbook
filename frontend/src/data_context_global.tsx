@@ -175,6 +175,7 @@ export interface DataContext {
   createBirth(birthData: Birth): Promise<any>;
   updateBreeding(breedingData: Breeding): Promise<any>;
   findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
+  modifyBreedingUpdates(updates: Breeding, breedingMatch): Promise<any>;
 }
 
 export type ServerMessage = {

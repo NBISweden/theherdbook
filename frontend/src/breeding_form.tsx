@@ -78,6 +78,7 @@ export function BreedingForm({
     createBirth,
     updateBreeding,
     findBreedingMatch,
+    modifyBreedingUpdates,
   } = useDataContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
@@ -210,23 +211,6 @@ export function BreedingForm({
   };
 
   /**
-   * Used before updating an existing breeding with user input.
-   * It removes empty fields and adds the breeding id.
-   * This way, the right breeding is updated and no empty fields are sent to the API.
-   * Empty fields would cause error messages from the API.
-   * */
-
-  const modifyBreedingUpdates = (updates: Breeding, breedingMatch) => {
-    let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
-    for (let key in newUpdates) {
-      if (newUpdates[key] === null || newUpdates[key] === undefined) {
-        delete newUpdates[key];
-      }
-    }
-    return newUpdates;
-  };
-
-  /**
    * Function to save the user input to the database.
    * Error handling happens from within the functions imported from data_context.
    * (updateBreeding, createBreeding and createBirth)
@@ -241,8 +225,11 @@ export function BreedingForm({
 
     if (data !== "new") {
       const breedingMatch = await findBreedingMatch(herdId, breeding);
-
-      const modifiedBreedingUpdates = modifyBreedingUpdates(
+      if (!breedingMatch) {
+        userMessage("Parningstillfället kunde inte hittas.", "error");
+        return;
+      }
+      const modifiedBreedingUpdates = await modifyBreedingUpdates(
         breeding,
         breedingMatch
       );

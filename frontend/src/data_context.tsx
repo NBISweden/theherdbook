@@ -253,7 +253,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
 
     const translate: Map<string, string> = new Map([
       ["Not logged in", "Du är inte inloggad. Logga in och försök igen."],
-      ["Forbidden", "Du har inte behörighet att lägga till födselinformation."],
+      ["Forbidden", "Du har inte rätt behörighet."],
     ]);
 
     if (
@@ -297,7 +297,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
         "Unknown mother, Unknown father",
         "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
       ],
-      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
+      ["Forbidden", "Du har inte rätt behörighet."],
     ]);
 
     if (
@@ -333,12 +333,28 @@ export function WithDataContext(props: { children: React.ReactNode }) {
         (item.breed_date == breedingData.breed_date ||
           item.birth_date == breedingData.birth_date)
     );
-    console.log(breedingMatch);
+
     if (!breedingMatch) {
-      userMessage("Parningstillfället kunde inte hittas.", "error");
-      return;
+      /* userMessage("Parningstillfället kunde inte hittas.", "error"); */
+      return undefined;
     }
     return breedingMatch;
+  };
+
+  /**
+   * Used before updating an existing breeding with user input.
+   * It removes empty fields and adds the breeding id.
+   * This way, the right breeding is updated and no empty fields are sent to the API.
+   * Empty fields would cause error messages from the API.
+   * */
+  const modifyBreedingUpdates = (updates: Breeding, breedingMatch) => {
+    let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
+    for (let key in newUpdates) {
+      if (newUpdates[key] === null || newUpdates[key] === undefined) {
+        delete newUpdates[key];
+      }
+    }
+    return newUpdates;
   };
 
   return (
@@ -354,6 +370,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
         createBirth,
         updateBreeding,
         findBreedingMatch,
+        modifyBreedingUpdates,
       }}
     >
       {props.children}
