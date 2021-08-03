@@ -191,8 +191,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
 
   /**
    * Function that can be used to create a new breeding event
-
-  **/
+   **/
   const createBreeding = async (
     breedingData: LimitedBreeding
   ): Promise<any> => {
@@ -317,16 +316,24 @@ export function WithDataContext(props: { children: React.ReactNode }) {
     return;
   };
 
+  /**
+   * Looks for a breeding in the database that matches the user's input about a breeding.
+   * @param herdId id of the herd the user wants to add a breeding to
+   * @param breedingData data about a breeding put in by the user
+   * @returns the matching breeding if there is any. Otherwise an error message.
+   */
+
   const findBreedingMatch = async (herdId: string, breedingData: Breeding) => {
     const herdBreedings = await get(`/api/breeding/${herdId}`);
 
-    const breedingMatch = herdBreedings.breedings.find(
+    const breedingMatch: Breeding = herdBreedings.breedings.find(
       (item) =>
         item.mother == breedingData.mother &&
         item.father == breedingData.father &&
         (item.breed_date == breedingData.breed_date ||
           item.birth_date == breedingData.birth_date)
     );
+    console.log(breedingMatch);
     if (!breedingMatch) {
       userMessage("Parningstillfället kunde inte hittas.", "error");
       return;

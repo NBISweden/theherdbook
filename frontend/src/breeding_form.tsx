@@ -11,6 +11,7 @@ import {
 import DateFnsUtils from "@date-io/date-fns";
 import {
   Birth,
+  Breeding,
   dateFormat,
   Genebank,
   individualLabel,
@@ -21,7 +22,6 @@ import {
   OptionType,
 } from "@app/data_context_global";
 
-import { Breeding } from "./breeding_list";
 import { Button, TextField, Typography } from "@material-ui/core";
 import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
@@ -72,8 +72,13 @@ export function BreedingForm({
   handleActive: any;
 }) {
   const style = useStyles();
-  const { genebanks, createBreeding, updateBreeding, findBreedingMatch } =
-    useDataContext();
+  const {
+    genebanks,
+    createBreeding,
+    createBirth,
+    updateBreeding,
+    findBreedingMatch,
+  } = useDataContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
@@ -204,112 +209,28 @@ export function BreedingForm({
     return true;
   };
 
-  /*   const updateBreeding = async (breedingUpdates: Breeding) => {
-    // Only run this if there is a breeding to update.
-    if (data == "new") {
-      return;
-    }
+  /**
+   * Used before updating an existing breeding with user input.
+   * It removes empty fields and adds the breeding id.
+   * This way, the right breeding is updated and no empty fields are sent to the API.
+   * Empty fields would cause error messages from the API.
+   * */
 
-    const currentHerdBreedings = await get(`/api/breeding/${herdId}`);
-
-    const breedingMatch = currentHerdBreedings.breedings.find(
-      (item) =>
-        item.mother == data.mother &&
-        item.father == data.father &&
-        (item.breed_date == data.breed_date ||
-          item.birth_date == data.birth_date)
-    );
-
-    if (!breedingMatch) {
-      userMessage("Parningstillfället kunde inte hittas.", "error");
-      return;
-    }
-
-    const modifyBreedingUpdates = (updates: Breeding) => {
-      let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
-      for (let key in newUpdates) {
-        if (newUpdates[key] === null || newUpdates[key] === undefined) {
-          delete newUpdates[key];
-        }
+  const modifyBreedingUpdates = (updates: Breeding, breedingMatch) => {
+    let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
+    for (let key in newUpdates) {
+      if (newUpdates[key] === null || newUpdates[key] === undefined) {
+        delete newUpdates[key];
       }
-      return newUpdates;
-    };
-
-    const modifiedBreedingUpdates = modifyBreedingUpdates(breedingUpdates);
-
-    const breedingUpdateResponse = await patch(
-      "/api/breeding",
-      modifiedBreedingUpdates
-    );
-
-    if (breedingUpdateResponse.status === "success") {
-      return breedingUpdateResponse;
     }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
-      [
-        "Unknown mother",
-        "Okänd mor, modern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown father",
-        "Okänd far, fadern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown mother, Unknown father",
-        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
-      ],
-      ["Forbidden", "Du har inte behörighet att skapa parningstillfället."],
-    ]);
-
-    if (
-      breedingUpdateResponse.status == "error" &&
-      !!breedingUpdateResponse.message &&
-      translate.has(breedingUpdateResponse.message)
-    ) {
-      userMessage(translate.get(breedingUpdateResponse.message), "error");
-      return;
-    }
-
-    userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
-      "error"
-    );
-    return;
-  }; */
-
-  const createBirth = async (birthData: Birth) => {
-    const birthCreationResponse: {
-      status: "success" | "error";
-      message?: string;
-    } = await post("/api/birth", birthData);
-
-    if (birthCreationResponse.status === "success") {
-      return birthCreationResponse;
-    }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen."],
-      ["Forbidden", "Du har inte behörighet att lägga till födselinformation."],
-    ]);
-
-    if (
-      birthCreationResponse.status === "error" &&
-      !!birthCreationResponse.message &&
-      translate.has(birthCreationResponse.message)
-    ) {
-      userMessage(translate.get(birthCreationResponse.message), "error");
-      return;
-    }
-
-    userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
-      "error"
-    );
-    return;
+    return newUpdates;
   };
 
+  /**
+   * Function to save the user input to the database.
+   * Error handling happens from within the functions imported from data_context.
+   * (updateBreeding, createBreeding and createBirth)
+   */
   const saveBreeding = async (breeding: Breeding): Promise<any> => {
     const isInputValid = validateUserInput(breeding);
     if (!isInputValid) {
@@ -319,19 +240,12 @@ export function BreedingForm({
     handleActive(breeding);
 
     if (data !== "new") {
-      const breedingMatch = findBreedingMatch(herdId, breeding);
+      const breedingMatch = await findBreedingMatch(herdId, breeding);
 
-      const modifyBreedingUpdates = (updates: Breeding) => {
-        let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
-        for (let key in newUpdates) {
-          if (newUpdates[key] === null || newUpdates[key] === undefined) {
-            delete newUpdates[key];
-          }
-        }
-        return newUpdates;
-      };
-
-      const modifiedBreedingUpdates = modifyBreedingUpdates(breeding);
+      const modifiedBreedingUpdates = modifyBreedingUpdates(
+        breeding,
+        breedingMatch
+      );
       const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
         userMessage("Parningstillfället har uppdaterats.", "success");
@@ -349,7 +263,6 @@ export function BreedingForm({
 
     const newBreeding = await createBreeding(newBreedingData);
     if (!newBreeding) {
-      // createBreeding will show a message, so no error handling or messages here
       return;
     }
 
