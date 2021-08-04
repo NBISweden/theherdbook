@@ -28,6 +28,7 @@ import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import { get, patch, post } from "./communication";
+import { useBreedingContext } from "./breeding_context";
 
 const useStyles = makeStyles({
   form: {
@@ -72,14 +73,14 @@ export function BreedingForm({
   handleActive: any;
 }) {
   const style = useStyles();
+  const { genebanks } = useDataContext();
   const {
-    genebanks,
     createBreeding,
     createBirth,
     updateBreeding,
     findBreedingMatch,
     modifyBreedingUpdates,
-  } = useDataContext();
+  } = useBreedingContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
@@ -229,7 +230,7 @@ export function BreedingForm({
         userMessage("Parningstillfället kunde inte hittas.", "error");
         return;
       }
-      const modifiedBreedingUpdates = await modifyBreedingUpdates(
+      const modifiedBreedingUpdates = modifyBreedingUpdates(
         breeding,
         breedingMatch
       );

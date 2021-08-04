@@ -171,11 +171,6 @@ export interface DataContext {
   setGenebanks(data: Genebank[]): void;
   setUsers(data: NameID[]): void;
   loadData(data: string | Array<string>): Promise<boolean>;
-  createBreeding(breedingData: LimitedBreeding): Promise<any>;
-  createBirth(birthData: Birth): Promise<any>;
-  updateBreeding(breedingData: Breeding): Promise<any>;
-  findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
-  modifyBreedingUpdates(updates: Breeding, breedingMatch): Promise<any>;
 }
 
 export type ServerMessage = {

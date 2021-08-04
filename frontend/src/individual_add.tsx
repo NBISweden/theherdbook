@@ -31,6 +31,7 @@ import { useMessageContext } from "@app/message_context";
 import { get, post } from "@app/communication";
 import { useUserContext } from "./user_context";
 import { useDataContext } from "./data_context";
+import { useBreedingContext } from "./breeding_context";
 import { IndividualSellingForm } from "./individual_sellingform";
 
 const useStyles = makeStyles({
@@ -109,14 +110,14 @@ export function IndividualAdd({
   const [litterError, setLitterError] = React.useState(false as boolean);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
+  const { genebanks } = useDataContext();
   const {
-    genebanks,
     createBreeding,
     createBirth,
+    updateBreeding,
     findBreedingMatch,
     modifyBreedingUpdates,
-    updateBreeding,
-  } = useDataContext();
+  } = useBreedingContext();
   const style = useStyles();
 
   /**
@@ -320,7 +321,7 @@ export function IndividualAdd({
 
     // If there is a breeding, update it
     if (breedingMatch) {
-      const modifiedBreedingUpdates = await modifyBreedingUpdates(
+      const modifiedBreedingUpdates = modifyBreedingUpdates(
         breedingInput,
         breedingMatch
       );
