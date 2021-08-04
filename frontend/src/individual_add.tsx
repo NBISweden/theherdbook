@@ -311,10 +311,14 @@ export function IndividualAdd({
       mother: individual.mother.number,
       father: individual.father.number,
     };
+
+    // Check if there already is a breeding
     const breedingMatch = await findBreedingMatch(
       individual.origin_herd.herd,
       breedingInput
     );
+
+    // If there is a breeding, update it
     if (breedingMatch) {
       const modifiedBreedingUpdates = await modifyBreedingUpdates(
         breedingInput,
@@ -326,6 +330,7 @@ export function IndividualAdd({
       }
     }
 
+    // If there is no breeding, create breeding and birth
     if (!breedingMatch) {
       const newBreeding = await createBreeding(limitedBreedingInput);
       if (!newBreeding) {
