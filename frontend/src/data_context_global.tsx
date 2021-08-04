@@ -102,6 +102,32 @@ export interface Herd extends LimitedHerd {
   individuals?: Individual[];
 }
 
+export interface LimitedBreeding {
+  date: string | null;
+  mother: string;
+  father: string;
+  notes?: string;
+}
+
+export interface Breeding {
+  [key: string]: any;
+  id?: number;
+  breed_date: string | null;
+  breed_notes: string;
+  father: string;
+  mother: string;
+  birth_date: string | null;
+  birth_notes: string;
+  litter_size: number | null;
+}
+
+export interface Birth {
+  id: number;
+  date: string;
+  litter: number | null;
+  notes?: string;
+}
+
 export interface Color {
   id: number;
   name: string;

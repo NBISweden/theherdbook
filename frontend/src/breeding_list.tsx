@@ -9,6 +9,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
+import { Breeding } from "./data_context_global";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
@@ -42,18 +43,6 @@ const useStyles = makeStyles({
     fontSize: "1.2em",
   },
 });
-
-export interface Breeding {
-  [key: string]: any;
-  id?: number;
-  breed_date: string | null;
-  breed_notes: string;
-  father: string;
-  mother: string;
-  birth_date: string | null;
-  birth_notes: string;
-  litter_size: number | null;
-}
 
 /**
  * The BreedingList function. This function fetches breeding information for a
