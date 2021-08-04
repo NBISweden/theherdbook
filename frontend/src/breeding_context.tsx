@@ -38,6 +38,23 @@ export const useBreedingContext = () => {
 
 export const WithBreedingContext = (props: { children: React.ReactNode }) => {
   const { userMessage } = useMessageContext();
+  const translate: Map<string, string> = new Map([
+    ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
+    [
+      "Unknown mother",
+      "Okänd mor, modern måste vara en aktiv individ i databasen",
+    ],
+    [
+      "Unknown father",
+      "Okänd far, fadern måste vara en aktiv individ i databasen",
+    ],
+    [
+      "Unknown mother, Unknown father",
+      "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
+    ],
+    ["Forbidden", "Du har inte rätt behörighet."],
+  ]);
+
   /**
    * Function that can be used to create a new breeding event
    **/
@@ -53,23 +70,6 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     if (breedingEvent.status == "success") {
       return breedingEvent;
     }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
-      [
-        "Unknown mother",
-        "Okänd mor, modern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown father",
-        "Okänd far, fadern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown mother, Unknown father",
-        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
-      ],
-      ["Forbidden", "Du har inte rätt behörighet."],
-    ]);
 
     if (
       breedingEvent.status == "error" &&
@@ -131,23 +131,6 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     if (breedingUpdateResponse.status === "success") {
       return breedingUpdateResponse;
     }
-
-    const translate: Map<string, string> = new Map([
-      ["Not logged in", "Du är inte inloggad. Logga in och försök igen"],
-      [
-        "Unknown mother",
-        "Okänd mor, modern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown father",
-        "Okänd far, fadern måste vara en aktiv individ i databasen",
-      ],
-      [
-        "Unknown mother, Unknown father",
-        "Okända föräldrar. Både modern och fadern måste vara aktiva individer i databasen.",
-      ],
-      ["Forbidden", "Du har inte rätt behörighet."],
-    ]);
 
     if (
       breedingUpdateResponse.status == "error" &&
