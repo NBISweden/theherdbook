@@ -232,11 +232,31 @@ export function IndividualAdd({
     return true;
   };
 
-  const getOriginHerd = (individual: Individual) => {
+  const getParentHerd = async (individualNumber: string) => {
+    const parent: Individual = await get(`/api/individual/${individualNumber}`);
+    const herd: string = parent.herd.herd;
+    if (!herd) {
+      userMessage("Något gick fel.", "error");
+      return;
+    }
+    return herd;
+  };
+
+  const getOriginHerd = async (individual: Individual) => {
     const originHerdNumber: string = individual.number.split("-")[0];
     if (herdId && herdId !== originHerdNumber) {
       userMessage(
         "Du kan bara lägga till individer som har fötts i din besättning.",
+        "warning"
+      );
+      return;
+    }
+    const motherHerd = await getParentHerd(individual.mother.number);
+    const fatherHerd = await getParentHerd(individual.father.number);
+    if (originHerdNumber !== motherHerd && originHerdNumber !== fatherHerd) {
+      userMessage(
+        `Individens nummer ska börja med antingen moderns eller faderns nuvarande besättning. 
+         I det här fallet ${motherHerd} eller ${fatherHerd}.`,
         "warning"
       );
       return;
@@ -379,7 +399,7 @@ export function IndividualAdd({
       return;
     }
 
-    const originHerd = getOriginHerd(individual);
+    const originHerd = await getOriginHerd(individual);
     if (!originHerd) {
       return;
     }
