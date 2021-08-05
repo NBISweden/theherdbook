@@ -1473,5 +1473,7 @@ def update_breeding(form, user_uuid):
         return {"status": "error", "message": ", ".join(errors)}
 
     with DATABASE.atomic():
+        breeding.birth_notes = form.get("birth_notes", None)
+        breeding.breed_notes = form.get("breed_notes", None)
         breeding.save()
         return {"status": "success"}

@@ -8,6 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 import { WithUserContext } from "@app/user_context";
 import { WithDataContext } from "@app/data_context";
 import { WithMessageContext } from "@app/message_context";
+import { WithBreedingContext } from "@app/breeding_context";
 import { Navigation } from "@app/navigation";
 
 const CSS = sc.createGlobalStyle`
@@ -32,7 +33,9 @@ const Main = (
       <WithDataContext>
         <WithUserContext>
           <WithMessageContext>
-            <Navigation />
+            <WithBreedingContext>
+              <Navigation />
+            </WithBreedingContext>
           </WithMessageContext>
         </WithUserContext>
       </WithDataContext>

@@ -9,6 +9,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
+import { Breeding } from "./data_context_global";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
@@ -43,17 +44,6 @@ const useStyles = makeStyles({
   },
 });
 
-export interface Breeding {
-  id?: number;
-  breed_date: string;
-  breed_notes: string;
-  father: string;
-  mother: string;
-  birth_date: string;
-  birth_notes: string;
-  litter_size: number;
-}
-
 /**
  * The BreedingList function. This function fetches breeding information for a
  * given herd, and displays a list and edit form to handle breedings.
@@ -61,6 +51,7 @@ export interface Breeding {
 export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
   const [active, setActive] = React.useState(null as any);
+  const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
   const style = useStyles();
@@ -102,18 +93,28 @@ export function BreedingList({ id }: { id: string | undefined }) {
   ];
 
   React.useEffect(() => {
-    if (id) {
-      get(`/api/breeding/${id}`).then(
-        (data: { breedings: Breeding[] }) => {
-          data && setBreedingEvents(data.breedings);
-        },
-        (error) => {
-          console.error(error);
-          userMessage(error, "error");
-        }
-      );
+    if (id && breedingsChanged) {
+      get(`/api/breeding/${id}`)
+        .then(
+          (data: { breedings: Breeding[] }) => {
+            data && setBreedingEvents(data.breedings);
+          },
+          (error) => {
+            console.error(error);
+            userMessage(error, "error");
+          }
+        )
+        .then(() => setBreedingsChanged(false));
     }
-  }, [id]);
+  }, [id, breedingsChanged]);
+
+  const handleBreedingsChanged = () => {
+    setBreedingsChanged(true);
+  };
+
+  const handleActive = (breeding: Breeding) => {
+    setActive(breeding);
+  };
 
   return (
     <>
@@ -133,7 +134,12 @@ export function BreedingList({ id }: { id: string | undefined }) {
           style={{ width: active ? "60%" : "calc(100% - 2px)" }}
         />
         <div className={style.form} style={{ width: active ? "40%" : 0 }}>
-          <BreedingForm data={active} herdId={id} />
+          <BreedingForm
+            data={active}
+            herdId={id}
+            handleBreedingsChanged={handleBreedingsChanged}
+            handleActive={handleActive}
+          />
         </div>
       </div>
     </>
