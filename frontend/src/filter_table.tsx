@@ -256,7 +256,8 @@ export function FilterTable({
       action: (rowData: any) =>
         popup(
           <HerdView id={rowData.herd["herd"]} />,
-          `/herd/${rowData.herd["herd"]}`
+          `/herd/${rowData.herd["herd"]}`,
+          true
         ),
       render: (rowData: any) => (
         <a
@@ -264,7 +265,8 @@ export function FilterTable({
           onClick={() =>
             popup(
               <HerdView id={rowData.herd["herd"]} />,
-              `/herd/${rowData.herd["herd"]}`
+              `/herd/${rowData.herd["herd"]}`,
+              true
             )
           }
         >
