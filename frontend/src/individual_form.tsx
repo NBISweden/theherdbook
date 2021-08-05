@@ -1,6 +1,6 @@
 import React from "react";
 
-import { makeStyles, TextField } from "@material-ui/core";
+import { InputAdornment, makeStyles, TextField } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -11,8 +11,11 @@ import DateFnsUtils from "@date-io/date-fns";
 import { useDataContext } from "@app/data_context";
 import {
   dateFormat,
+  Genebank,
+  herdLabel,
   inputVariant,
   Individual,
+  LimitedHerd,
   OptionType,
 } from "@app/data_context_global";
 
@@ -109,7 +112,7 @@ export function IndividualForm({
   birthDateError: boolean;
   litterError: boolean;
 }) {
-  const { colors } = useDataContext();
+  const { colors, genebanks } = useDataContext();
   const style = useStyles();
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
@@ -123,6 +126,20 @@ export function IndividualForm({
     }
     return [];
   }, [colors, individual]);
+
+  const herdOptions = React.useMemo(() => {
+    const dataset = genebanks.find(
+      (g: Genebank) => g.name == individual.genebank
+    );
+    if (dataset) {
+      const herdOptions: OptionType[] = dataset.herds.map((h: LimitedHerd) => {
+        return { value: h, label: herdLabel(h) };
+      });
+      return herdOptions;
+    } else {
+      return [];
+    }
+  }, [genebanks, individual.genebank]);
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -163,16 +180,52 @@ export function IndividualForm({
                 </div>
               ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                 <>
+                  <Autocomplete
+                    options={herdOptions}
+                    getOptionLabel={(option: OptionType) => option.label}
+                    value={
+                      herdOptions.find(
+                        (option) =>
+                          option.value.herd == individual.origin_herd?.herd
+                      ) ?? null
+                    }
+                    onChange={(event, value) =>
+                      onUpdateIndividual("origin_herd", value?.value)
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Välj besättning"
+                        variant="outlined"
+                      />
+                    )}
+                  />
                   <TextField
                     disabled={!canEdit}
                     required
                     error={numberError}
-                    label="Nummer"
+                    label="Individnummer"
                     className={style.control}
                     variant={inputVariant}
-                    value={individual.number ?? ""}
+                    value={individual.number?.split("-")[1] ?? ""}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          {individual.origin_herd?.herd
+                            ? `${individual.origin_herd?.herd}-`
+                            : `${
+                                individual.genebank
+                                  ? individual.genebank[0]
+                                  : "X"
+                              }XXX`}
+                        </InputAdornment>
+                      ),
+                    }}
                     onChange={(event) => {
-                      onUpdateIndividual("number", event.currentTarget.value);
+                      onUpdateIndividual(
+                        "number",
+                        `${individual.origin_herd?.herd}-${event.currentTarget.value}`
+                      );
                     }}
                   />
                   <TextField
