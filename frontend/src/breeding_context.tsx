@@ -9,7 +9,7 @@ export interface BreedingContext {
   createBirth(birthData: Birth): Promise<any>;
   updateBreeding(breedingData: Breeding): Promise<any>;
   findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
-  modifyBreedingUpdates(updates: Breeding, breedingMatch): Breeding;
+  modifyBreedingUpdates(updates: Breeding, breedingMatch: Breeding): Breeding;
 }
 
 const emptyBreedingContext: BreedingContext = {

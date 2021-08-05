@@ -69,8 +69,8 @@ export function BreedingForm({
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
-  handleBreedingsChanged: any;
-  handleActive: any;
+  handleBreedingsChanged: () => void;
+  handleActive: (breeding: Breeding) => void;
 }) {
   const style = useStyles();
   const { genebanks } = useDataContext();
