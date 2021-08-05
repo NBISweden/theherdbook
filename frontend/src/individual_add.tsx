@@ -269,9 +269,7 @@ export function IndividualAdd({
     const originHerd = currentGenebank?.herds.find(
       (herd: LimitedHerd) => herd.herd == originHerdNumber
     );
-    if (
-      !(originHerd && originHerd.herd_name && originHerd.herd && originHerd.id)
-    ) {
+    if (!(originHerd && originHerd.herd && originHerd.id)) {
       userMessage(
         "Första delen i individens nummer motsvarar ingen besättning.",
         "warning"
@@ -279,7 +277,7 @@ export function IndividualAdd({
       return;
     }
     const originHerdNameID: HerdNameID = {
-      herd_name: originHerd.herd_name,
+      herd_name: originHerd.herd_name ?? null,
       herd: originHerd.herd,
       id: originHerd.id,
     };
