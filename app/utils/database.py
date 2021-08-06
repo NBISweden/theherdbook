@@ -400,6 +400,53 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
+    def next_individual_number(herd, birth_date, breeding_event):
+        """
+        Returns the next litter number for a given year and herd.
+        """
+
+        try:
+            events = (
+                Breeding.select(Breeding)
+                .join(Individual, on=(Breeding.id == Individual.breeding))
+                .join(Herd, on=(Herd.id == Individual.origin_herd))
+                .where((Herd.herd == herd))
+                .order_by(Breeding.breed_date.desc())
+            ).execute()
+
+            print("Last litter number is: %s " % len(events))
+
+            for ev in events:
+                print("ev: ", ev.id, ev.breed_date)
+
+            # last_event_id = events[0]
+            # print("Last event id is: %s " % last_event_id)
+
+            next_litter = len(events)
+
+            individuals = (
+                Individual.select(Individual).where(
+                    Individual.breeding == str(breeding_event)
+                )
+            ).execute()
+
+            for ind in individuals:
+                print("ind: ", ind.id, ind.breeding.id)
+
+            litter_size = len(individuals)
+            print("Litter size is: %s " % litter_size)
+
+            ind_number = (
+                f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+            )
+            print("Indiv nummer : %s " % ind_number)
+
+            return ind_number
+
+        except DoesNotExist:
+            pass
+        return None
+
 
 class Individual(BaseModel):
     """
