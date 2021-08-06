@@ -25,6 +25,10 @@
 		 # Stop processing here to serve content from .well-known
         }
 
+	location ^~ /images/ {
+		 # Stop processing here to serve content
+        }
+
         location ~ ..*/[^/]*$ {
             # Redirect any subdirectory request to /
             rewrite ^.*/([^/]*)$ /$1 last; 

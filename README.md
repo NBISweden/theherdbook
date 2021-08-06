@@ -62,6 +62,10 @@ docker-compose build
 docker-compose up
 ```
 
+
+You can also use the script `run-with-prebuilt-images.sh`, that uses the precompiled images generated
+in the production server. This option is much faster and therefore more recommended.
+
 After a few minutes you should have your services up and running. If you run `docker ps` you will see an output similiar to this one:
 
 ```console

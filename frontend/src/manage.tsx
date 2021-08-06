@@ -252,7 +252,7 @@ export function Manage() {
                   history.push(`/manage/${genebank}/${target ? target : ""}`)
                 }
               >
-                Herds
+                Besättningar
               </Button>
               <Button
                 variant="contained"
@@ -261,7 +261,7 @@ export function Manage() {
                   history.push(`/manage/user/${target ? target : ""}`)
                 }
               >
-                Users
+                Användare
               </Button>
             </div>
           </div>
@@ -276,7 +276,7 @@ export function Manage() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={topic == "user" ? "Användare" : "Besättning"}
+                label={topic == "user" ? "Sök användare" : "Sök besättning"}
                 variant={inputVariant}
                 margin="normal"
               />
