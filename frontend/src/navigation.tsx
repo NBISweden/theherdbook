@@ -95,7 +95,7 @@ const useStyles = makeStyles({
     zIndex: -4,
     width: '95%',
     textAlign: 'center',
-    top: '10vh',
+    top: '80vh',
   },
   logoImage: {
     width: '15vh',
