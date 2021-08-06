@@ -96,7 +96,7 @@ export function IndividualAdd({
 }) {
   const [individual, setIndividual] = React.useState({} as Individual);
   const [currentGenebank, setCurrentGenebank] = React.useState(
-    genebank ? genebank : (undefined as Genebank | undefined)
+    undefined as Genebank | undefined
   );
   const [success, setSuccess] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
@@ -134,17 +134,18 @@ export function IndividualAdd({
   };
 
   React.useEffect(() => {
-    // if there is no genebank, generate it from the herdId
-    if (!currentGenebank) {
-      const originGenebank = genebanks.find((currentGenebank) =>
-        currentGenebank.herds.filter((herd) => herd.herd == herdId)
+    if (!!genebank) {
+      setCurrentGenebank(genebank);
+    } else {
+      const originGenebank = genebanks.find((g) =>
+        g.herds.filter((herd) => herd.herd == herdId)
       );
       setCurrentGenebank(originGenebank);
     }
     if (herdId) {
       handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
     }
-  }, [herdId]);
+  }, [herdId, genebank]);
 
   // add the field genebank to the individual to get the color options in the form
   // make sure it also is triggered after resetBlank has been called
@@ -462,6 +463,7 @@ export function IndividualAdd({
     <>
       <div className={style.inputBox}>
         <IndividualForm
+          genebank={currentGenebank}
           onUpdateIndividual={handleUpdateIndividual}
           individual={individual}
           canEdit={user?.canEdit(herdId)}

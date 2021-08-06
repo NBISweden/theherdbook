@@ -88,6 +88,7 @@ export enum FormAction {
 }
 
 export function IndividualForm({
+  genebank,
   individual,
   canManage,
   canEdit,
@@ -100,6 +101,7 @@ export function IndividualForm({
   birthDateError,
   litterError,
 }: {
+  genebank: Genebank;
   individual: Individual;
   canManage?: boolean;
   canEdit: boolean;
@@ -153,6 +155,10 @@ export function IndividualForm({
   ]; //should be boolean but doesn't work together with the OptionType
   // also decide how this should be stored in the backend
 
+  React.useEffect(() => {
+    onUpdateIndividual("genebank", genebank.name);
+  }, [genebank]);
+
   return (
     <>
       <div className={style.form}>
@@ -195,7 +201,7 @@ export function IndividualForm({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Välj besättning"
+                        label="Välj ursprungsbesättning"
                         variant="outlined"
                       />
                     )}
