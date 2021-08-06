@@ -457,7 +457,6 @@ export function FilterTable({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Kolumner"
               variant={inputVariant}
               margin="normal"
             />

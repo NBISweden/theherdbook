@@ -12,7 +12,7 @@ import { WithBreedingContext } from "@app/breeding_context";
 import { Navigation } from "@app/navigation";
 
 const CSS = sc.createGlobalStyle`
-  html, #root {
+  html {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -20,9 +20,15 @@ const CSS = sc.createGlobalStyle`
   }
   body {
     font-family: 'Roboto';
-    padding: 0;
-    margin: 1cm;
-    margin-bottom: 0.1cm;
+    background: #ddd left / cover no-repeat url('/images/background.jpg') fixed;
+    margin: 0;
+    padding: 0 5px;
+    min-height: calc(100vh - 56px);
+    width: 100%;
+    @media (min-width:660px): {
+      background: #ddd center / cover no-repeat url('/images/background.jpg') fixed;
+      padding: 0 20px;
+    },
   }
 `;
 
