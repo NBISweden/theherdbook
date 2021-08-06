@@ -792,6 +792,14 @@ def form_to_individual(form, user=None):
             if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
+    # Make sure a valid breeding id is passed
+    if "breeding" in form:
+        try:
+            with DATABASE.atomic():
+                form["breeding"] = Breeding.get(Breeding.id == form["breeding"])
+        except DoesNotExist:
+            raise ValueError(f"Unknown breeding event: '{form['breeding']}''")
+
     # Color is stored as name in the form, but needs to be converted to id
     if "color" in form:
         try:
@@ -862,6 +870,13 @@ def add_individual(form, user_uuid):
 
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}
+
+    if form.get("number", None) is None and "breeding" in form:
+        form["number"] = Breeding.next_individual_number(
+            herd=form["herd"],
+            birth_date=form["birth_date"],
+            breeding_event=form["breeding"],
+        )
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
