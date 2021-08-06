@@ -54,8 +54,9 @@ const useStyles = makeStyles({
     borderBottom: '1px solid white',
   },
   main: {
+    opacity: 0.9,
     position: 'relative',
-    marginTop: 'calc(100vh - 200px)',
+    marginTop: 'calc(8vh)',
     marginBottom: '210px',
     marginLeft: 0,
     marginRight: 0,
@@ -76,7 +77,7 @@ const useStyles = makeStyles({
     zIndex: -3,
     width: '100%',
     textAlign: 'center',
-    top: '20vh',
+    top: '10vh',
     justifyContent: 'center',
     fontVariant: 'small-caps',
     fontSize: '2.5em',
@@ -92,13 +93,14 @@ const useStyles = makeStyles({
   logoImageWrapper: {
     position: 'fixed',
     zIndex: -4,
-    width: '100%',
+    width: '95%',
     textAlign: 'center',
     top: '10vh',
   },
   logoImage: {
-    width: '400px',
+    width: '15vh',
     maxWidth: '90vw',
+    float: 'right'
   },
   menuButton: {
     height: '52px',
@@ -279,14 +281,7 @@ export function Navigation() {
       visible: !is_logged_in,
       icon: <PersonAddIcon />
     },
-    {
-      label: "Kontakt",
-      path: "/kontakt",
-      exact: true,
-      component: <Kontakt/>,
-      visible: true,
-      icon: <ContactMail />
-    },
+
     {
       label: "Logga in",
       path: "/login",

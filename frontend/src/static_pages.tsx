@@ -29,9 +29,7 @@ const useStyles = makeStyles({
     },
   },
   footer: {
-    position: 'fixed',
     zIndex: -4,
-    height: '200px',
     width: '100%',
     bottom: 0,
     left: 0,
