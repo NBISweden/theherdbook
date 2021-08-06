@@ -46,6 +46,7 @@ export function IndividualSellingForm({
             label="Välj besättning"
             variant="outlined"
             margin="normal"
+            helperText="Tomt om kaninen är kvar i ursprungsbesättningen"
           />
         )}
         className={style.inputField}
@@ -62,6 +63,7 @@ export function IndividualSellingForm({
           inputVariant="outlined"
           label="Köpdatum"
           format="yyyy-MM-dd"
+          helperText="Tomt om kaninen är kvar i ursprungsbesättningen"
           value={individual.selling_date ?? null}
           InputLabelProps={{
             shrink: true,

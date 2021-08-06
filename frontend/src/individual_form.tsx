@@ -39,6 +39,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
     alignItems: "end",
+    justifyContent: "start",
   },
   flexRowOrColumn: {
     display: "flex",
@@ -156,8 +157,17 @@ export function IndividualForm({
   // also decide how this should be stored in the backend
 
   React.useEffect(() => {
-    onUpdateIndividual("genebank", genebank.name);
+    if (!!genebank) {
+      onUpdateIndividual("genebank", genebank.name);
+    }
   }, [genebank]);
+
+  React.useEffect(() => {
+    if (!!individual.birth_date) {
+      const year = individual.birth_date[2] + individual.birth_date[3];
+      onUpdateIndividual("number", year);
+    }
+  }, [individual.birth_date]);
 
   return (
     <>
@@ -186,26 +196,48 @@ export function IndividualForm({
                 </div>
               ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                 <>
-                  <Autocomplete
-                    options={herdOptions}
-                    getOptionLabel={(option: OptionType) => option.label}
-                    value={
-                      herdOptions.find(
-                        (option) =>
-                          option.value.herd == individual.origin_herd?.herd
-                      ) ?? null
-                    }
-                    onChange={(event, value) =>
-                      onUpdateIndividual("origin_herd", value?.value)
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Välj ursprungsbesättning"
-                        variant="outlined"
-                      />
-                    )}
-                  />
+                  <div className={style.flexRow}>
+                    <Autocomplete
+                      options={herdOptions}
+                      getOptionLabel={(option: OptionType) => option.label}
+                      value={
+                        herdOptions.find(
+                          (option) =>
+                            option.value.herd == individual.origin_herd?.herd
+                        ) ?? null
+                      }
+                      onChange={(event, value) =>
+                        onUpdateIndividual("origin_herd", value?.value)
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Välj ursprungsbesättning"
+                          variant={inputVariant}
+                          className={style.control}
+                          margin="normal"
+                        />
+                      )}
+                    />
+                    <KeyboardDatePicker
+                      disabled={!canEdit}
+                      required
+                      error={birthDateError}
+                      autoOk
+                      variant="inline"
+                      className={style.control}
+                      inputVariant={inputVariant}
+                      label="Födelsedatum"
+                      format={dateFormat}
+                      value={individual.birth_date ?? null}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      onChange={(date, value) => {
+                        value && onUpdateIndividual("birth_date", value);
+                      }}
+                    />
+                  </div>
                   <TextField
                     disabled={!canEdit}
                     required
@@ -213,17 +245,19 @@ export function IndividualForm({
                     label="Individnummer"
                     className={style.control}
                     variant={inputVariant}
-                    value={individual.number?.split("-")[1] ?? ""}
+                    value={
+                      individual.number?.split("-")[1] ?? individual.number
+                    }
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
                           {individual.origin_herd?.herd
-                            ? `${individual.origin_herd?.herd}-`
+                            ? `${individual.origin_herd?.herd} -`
                             : `${
                                 individual.genebank
                                   ? individual.genebank[0]
                                   : "X"
-                              }XXX`}
+                              }XXX-`}
                         </InputAdornment>
                       ),
                     }}
@@ -262,26 +296,6 @@ export function IndividualForm({
                     onUpdateIndividual("name", event.currentTarget.value);
                   }}
                 />
-                <KeyboardDatePicker
-                  disabled={!canEdit}
-                  required
-                  error={birthDateError}
-                  autoOk
-                  variant="inline"
-                  className={style.control}
-                  inputVariant={inputVariant}
-                  label="Födelsedatum"
-                  format={dateFormat}
-                  value={individual.birth_date ?? null}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(date, value) => {
-                    value && onUpdateIndividual("birth_date", value);
-                  }}
-                />
-              </div>
-              <div className={style.flexRow}>
                 <Autocomplete
                   disabled={!canEdit}
                   options={sexOptions ?? []}
@@ -304,19 +318,6 @@ export function IndividualForm({
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
                     onUpdateIndividual("sex", newValue?.value ?? "");
-                  }}
-                />
-                <TextField
-                  disabled={!canEdit}
-                  required
-                  error={litterError}
-                  label="Antal födda i kullen"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.litter ?? 0}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual("litter", +event.currentTarget.value);
                   }}
                 />
               </div>
@@ -348,14 +349,15 @@ export function IndividualForm({
                 />
                 <TextField
                   disabled={!canEdit}
-                  label="Avvikande hårlag"
-                  variant={inputVariant}
+                  required
+                  error={litterError}
+                  label="Antal födda i kullen"
                   className={style.control}
-                  multiline
-                  rows={1}
-                  value={individual.hair_notes ?? ""}
+                  variant={inputVariant}
+                  value={individual.litter ?? 0}
+                  type="number"
                   onChange={(event) => {
-                    onUpdateIndividual("hair_notes", event.currentTarget.value);
+                    onUpdateIndividual("litter", +event.currentTarget.value);
                   }}
                 />
               </div>
@@ -410,19 +412,34 @@ export function IndividualForm({
                   )}
                 />
               </div>
-              <div></div>
-              <TextField
-                disabled={!canEdit}
-                label="Anteckningar"
-                variant={inputVariant}
-                className={style.wideControl}
-                multiline
-                rows={4}
-                value={individual.notes ?? ""}
-                onChange={(event) => {
-                  onUpdateIndividual("notes", event.currentTarget.value);
-                }}
-              />
+              <div className={style.flexRow}>
+                <TextField
+                  disabled={!canEdit}
+                  label="Avvikande hårlag"
+                  variant={inputVariant}
+                  className={style.wideControl}
+                  multiline
+                  rows={1}
+                  value={individual.hair_notes ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("hair_notes", event.currentTarget.value);
+                  }}
+                />
+              </div>
+              <div className={style.flexRow}>
+                <TextField
+                  disabled={!canEdit}
+                  label="Anteckningar"
+                  variant={inputVariant}
+                  className={style.wideControl}
+                  multiline
+                  rows={4}
+                  value={individual.notes ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("notes", event.currentTarget.value);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </MuiPickersUtilsProvider>
