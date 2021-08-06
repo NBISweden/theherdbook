@@ -326,7 +326,7 @@ export function IndividualAdd({
       );
       const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
-        return updatedBreeding.id;
+        return modifiedBreedingUpdates.id;
       }
     }
 
@@ -448,7 +448,9 @@ export function IndividualAdd({
   const resetSibling = () => {
     const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
-      number: numberParts ? numberParts[0] + "-" : null,
+      number: numberParts
+        ? numberParts[0] + "-" + numberParts[1][0] + numberParts[1][1]
+        : null,
       origin_herd: individual.origin_herd,
       birth_date: individual.birth_date,
       mother: individual.mother,

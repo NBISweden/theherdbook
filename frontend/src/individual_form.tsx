@@ -162,6 +162,13 @@ export function IndividualForm({
     }
   }, [genebank]);
 
+  React.useEffect(() => {
+    if (!!individual.birth_date) {
+      const year = individual.birth_date[2] + individual.birth_date[3];
+      onUpdateIndividual("number", year);
+    }
+  }, [individual.birth_date]);
+
   return (
     <>
       <div className={style.form}>
@@ -238,12 +245,14 @@ export function IndividualForm({
                     label="Individnummer"
                     className={style.control}
                     variant={inputVariant}
-                    value={individual.number?.split("-")[1] ?? ""}
+                    value={
+                      individual.number?.split("-")[1] ?? individual.number
+                    }
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
                           {individual.origin_herd?.herd
-                            ? `${individual.origin_herd?.herd}-`
+                            ? `${individual.origin_herd?.herd} -`
                             : `${
                                 individual.genebank
                                   ? individual.genebank[0]
