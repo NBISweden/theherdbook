@@ -314,6 +314,22 @@ class TestDataAccess(DatabaseTest):
                 "birth_date": datetime.now() - timedelta(days=30),
                 "selling_date": datetime.now() - timedelta(days=10),
             },
+            "empty": {
+                "herd": self.herds[1].herd,
+                "origin_herd": {"herd": self.herds[0].herd},
+                "number": None,
+                "breeding": 2,
+                "birth_date": datetime.today(),
+                "selling_date": None,
+            },
+            "secondempty": {
+                "herd": self.herds[1].herd,
+                "origin_herd": {"herd": self.herds[1].herd},
+                "number": None,
+                "breeding": 2,
+                "birth_date": datetime.today(),
+                "selling_date": None,
+            },
         }
         self.assertEqual(
             da.add_individual(forms["valid"], "invalid-uuid"),
@@ -335,6 +351,15 @@ class TestDataAccess(DatabaseTest):
         ind = da.get_individual(forms["valid"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
         self.assertEqual(ind["herd"], {"id": 1, "herd": "H1", "herd_name": "herd1"})
+
+        status = da.add_individual(forms["empty"], self.admin.uuid)
+        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        ind = da.get_individual(forms["empty"]["number"], self.admin.uuid)
+
+        status = da.add_individual(forms["secondempty"], self.admin.uuid)
+        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        ind = da.get_individual(forms["secondempty"]["number"], self.admin.uuid)
+        self.assertIsNotNone(ind)
 
         # Make sure you cannot add rabbits with already existing numbers
         status = da.add_individual(forms["valid"], self.admin.uuid)
