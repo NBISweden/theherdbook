@@ -402,7 +402,7 @@ class Breeding(BaseModel):
 
     def next_individual_number(herd, birth_date, breeding_event):
         """
-        Returns the next litter number for a given year and herd.
+        Returns the number for the next individual in a litter for a given year and herd.
         """
 
         try:
