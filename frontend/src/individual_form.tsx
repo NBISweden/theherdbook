@@ -163,7 +163,7 @@ export function IndividualForm({
   }, [genebank]);
 
   React.useEffect(() => {
-    if (!!individual.birth_date) {
+    if (formAction == FormAction.AddIndividual && !!individual.birth_date) {
       const year = individual.birth_date[2] + individual.birth_date[3];
       onUpdateIndividual("number", year);
     }
@@ -185,7 +185,7 @@ export function IndividualForm({
                     disabled={!canManage}
                     required
                     error={numberError}
-                    label="Nummer"
+                    label="Individnummer"
                     className={style.control}
                     variant={inputVariant}
                     value={individual.number ?? ""}
