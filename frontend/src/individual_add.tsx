@@ -245,6 +245,10 @@ export function IndividualAdd({
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
     }
+    if (!/^([a-zA-Z][0-9]+-[0-9][0-9][0-9][0-9]+)$/.test(individual.number)) {
+      userMessage("Individens nummer har fel format.", "warning");
+      return false;
+    }
     if (individual.litter <= 0 || individual.litter > 9) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
       return false;
