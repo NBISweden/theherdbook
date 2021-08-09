@@ -32,8 +32,10 @@ const useStyles = makeStyles({
   },
   control: {
     margin: "0.3em",
-    minWidth: "18em",
     paddingRight: "0.5em",
+  },
+  controlWidth: {
+    width: "50%",
   },
   flexRow: {
     display: "flex",
@@ -54,12 +56,10 @@ const useStyles = makeStyles({
     display: "flex",
     overflow: "hidden",
     flexDirection: "column",
-    marginBottom: "5em",
-    padding: "3em 3em 0 3em",
   },
   formPane: {
     borderRight: "none",
-    minWidth: "410px",
+    width: "100%",
     ["@media (min-width:660px)"]: {
       borderRight: "1px solid lightgrey",
     },
@@ -172,7 +172,6 @@ export function IndividualForm({
   return (
     <>
       <div className={style.form}>
-        <h1>Fyll i uppgifterna om kaninen</h1>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <div className={style.flexRowOrColumn}>
             <div className={style.formPane}>
@@ -194,12 +193,16 @@ export function IndividualForm({
                     }}
                   />
                 </div>
-              ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
-                <>
-                  <div className={style.flexRow}>
+              ) : (
+                <></>
+              )}
+              <>
+                <div className={style.flexRow}>
+                  {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                     <Autocomplete
                       options={herdOptions}
                       getOptionLabel={(option: OptionType) => option.label}
+                      className={style.controlWidth}
                       value={
                         herdOptions.find(
                           (option) =>
@@ -213,37 +216,41 @@ export function IndividualForm({
                         <TextField
                           {...params}
                           label="Välj ursprungsbesättning"
-                          variant={inputVariant}
                           className={style.control}
+                          variant={inputVariant}
                           margin="normal"
                         />
                       )}
                     />
-                    <KeyboardDatePicker
-                      disabled={!canEdit}
-                      required
-                      error={birthDateError}
-                      autoOk
-                      variant="inline"
-                      className={style.control}
-                      inputVariant={inputVariant}
-                      label="Födelsedatum"
-                      format={dateFormat}
-                      value={individual.birth_date ?? null}
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                      onChange={(date, value) => {
-                        value && onUpdateIndividual("birth_date", value);
-                      }}
-                    />
-                  </div>
+                  ) : (
+                    <></>
+                  )}
+                  <KeyboardDatePicker
+                    disabled={!canEdit}
+                    required
+                    error={birthDateError}
+                    autoOk
+                    variant="inline"
+                    className={`${style.control} ${style.controlWidth}`}
+                    inputVariant={inputVariant}
+                    label="Födelsedatum"
+                    format={dateFormat}
+                    value={individual.birth_date ?? null}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(date, value) => {
+                      value && onUpdateIndividual("birth_date", value);
+                    }}
+                  />
+                </div>
+                <div className={style.flexRow}>
                   <TextField
                     disabled={!canEdit}
                     required
                     error={numberError}
                     label="Individnummer"
-                    className={style.control}
+                    className={`${style.control} ${style.controlWidth}`}
                     variant={inputVariant}
                     value={
                       individual.number?.split("-")[1] ?? individual.number
@@ -271,7 +278,7 @@ export function IndividualForm({
                   <TextField
                     disabled={!canEdit}
                     label="Certifikatnummer"
-                    className={style.control}
+                    className={`${style.control} ${style.controlWidth}`}
                     variant={inputVariant}
                     value={individual.certificate ?? ""}
                     onChange={(event) => {
@@ -281,16 +288,13 @@ export function IndividualForm({
                       );
                     }}
                   />
-                </> // jscpd:ignore-end
-              ) : (
-                <></>
-              )}
+                </div>
+              </>
               <div className={style.flexRow}>
                 <TextField
                   disabled={!canEdit}
                   label="Namn"
-                  className={style.control}
-                  variant={inputVariant}
+                  className={`${style.control} ${style.controlWidth}`}
                   value={individual.name ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("name", event.currentTarget.value);
@@ -299,6 +303,7 @@ export function IndividualForm({
                 <Autocomplete
                   disabled={!canEdit}
                   options={sexOptions ?? []}
+                  className={style.controlWidth}
                   value={
                     sexOptions.find(
                       (option) => option.value == individual.sex
@@ -325,6 +330,7 @@ export function IndividualForm({
                 <Autocomplete
                   key={colorKey}
                   disabled={!canEdit}
+                  className={style.controlWidth}
                   options={colorOptions ?? []}
                   value={
                     colorOptions.find(
@@ -352,7 +358,7 @@ export function IndividualForm({
                   required
                   error={litterError}
                   label="Antal födda i kullen"
-                  className={style.control}
+                  className={`${style.control} ${style.controlWidth}`}
                   variant={inputVariant}
                   value={individual.litter ?? 0}
                   type="number"
@@ -365,7 +371,7 @@ export function IndividualForm({
                 <TextField
                   disabled={!canEdit}
                   label="Färg på buken"
-                  className={style.control}
+                  className={`${style.control} ${style.controlWidth}`}
                   variant={inputVariant}
                   value={individual.belly_color ?? ""}
                   onChange={(event) => {
@@ -378,7 +384,7 @@ export function IndividualForm({
                 <TextField
                   disabled={!canEdit}
                   label="Ögonfärg"
-                  className={style.control}
+                  className={`${style.control} ${style.controlWidth}`}
                   variant={inputVariant}
                   value={individual.eye_color ?? ""}
                   onChange={(event) => {
@@ -390,7 +396,7 @@ export function IndividualForm({
                 <TextField
                   disabled={!canEdit}
                   label="Klofärg(er)"
-                  className={style.control}
+                  className={`${style.control} ${style.controlWidth}`}
                   variant={inputVariant}
                   value={individual.claw_color ?? ""}
                   onChange={(event) => {
@@ -400,6 +406,7 @@ export function IndividualForm({
                 <Autocomplete
                   disabled={!canEdit}
                   options={photoOptions ?? []}
+                  className={style.controlWidth}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => (
                     <TextField

@@ -40,6 +40,13 @@ const useStyles = makeStyles({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: "0 3em 3em 3em ",
+    width: "40%",
+    ["@media (max-width: 2000px)"]: {
+      width: "60%",
+    },
+    ["@media (max-width: 1250px)"]: {
+      width: "100%",
+    },
   },
   control: {
     margin: "0.3em",
@@ -49,8 +56,7 @@ const useStyles = makeStyles({
   ancestorBox: {
     display: "flex",
     flexDirection: "column",
-    margin: "0 0 4em 0",
-    flexBasis: "30em",
+    margin: "2em 0 0 0",
     padding: "0 3em",
   },
   ancestorInput: {
@@ -59,7 +65,15 @@ const useStyles = makeStyles({
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
-    alignItems: "end",
+    flexDirection: "column",
+    width: "40%",
+    ["@media (max-width: 2000px)"]: {
+      width: "60%",
+    },
+    ["@media (max-width: 1250px)"]: {
+      width: "100%",
+    },
+    padding: "3em",
   },
   responseBox: {
     maxWidth: "65em",
@@ -464,19 +478,7 @@ export function IndividualAdd({
   return (
     <>
       <div className={style.inputBox}>
-        <IndividualForm
-          genebank={currentGenebank}
-          onUpdateIndividual={handleUpdateIndividual}
-          individual={individual}
-          canEdit={user?.canEdit(herdId)}
-          formAction={FormAction.AddIndividual}
-          colorKey={colorKey}
-          colorError={colorError}
-          numberError={numberError}
-          sexError={sexError}
-          birthDateError={birthDateError}
-          litterError={litterError}
-        />
+        <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
@@ -507,8 +509,26 @@ export function IndividualAdd({
               <TextField {...params} label="Välj far" variant="outlined" />
             )}
           />
-          {!herdId && (
-            <>
+        </div>
+        <div className={style.ancestorBox}>
+          <h2>Fyll i uppgifterna om kaninen</h2>
+          <IndividualForm
+            genebank={currentGenebank}
+            onUpdateIndividual={handleUpdateIndividual}
+            individual={individual}
+            canEdit={user?.canEdit(herdId)}
+            formAction={FormAction.AddIndividual}
+            colorKey={colorKey}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
+          />
+        </div>
+        {!herdId && (
+          <>
+            <div className={style.ancestorBox}>
               <h2 className={style.sellingTitle}>
                 Fyll i bara om kaninen har sålts
               </h2>
@@ -518,9 +538,9 @@ export function IndividualAdd({
                 herdKey={herdKey}
                 onUpdateIndividual={handleUpdateIndividual}
               />
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
         {success && (
           <>
             <div className={style.bottomBox}>
