@@ -74,12 +74,12 @@ const useStyles = makeStyles({
   main: {
     opacity: 0.9,
     position: "relative",
-    marginTop: "calc(8vh)",
+    marginTop: "calc(10vh)",
     marginBottom: "210px",
     marginLeft: 0,
     marginRight: 0,
     padding: "10px",
-    minHeight: "calc(100vh - 271px)",
+    minHeight: "calc(45vh)",
     ["@media (min-width:660px)"]: {
       marginLeft: "20px",
       marginRight: "20px",
@@ -108,18 +108,7 @@ const useStyles = makeStyles({
   hidden: {
     visibility: "hidden",
   },
-  logoImageWrapper: {
-    position: "fixed",
-    zIndex: -4,
-    width: "95%",
-    textAlign: "center",
-    top: "80vh",
-  },
-  logoImage: {
-    width: "15vh",
-    maxWidth: "90vw",
-    float: "right",
-  },
+
   menuButton: {
     height: "52px",
     fontSize: "1.0em",
@@ -387,17 +376,6 @@ export function Navigation() {
           Föreningen <br />
           Gotlandskaninen
         </h1>
-        <div
-          className={`${classes.logoImageWrapper} ${
-            !showLogo && classes.hidden
-          }`}
-        >
-          <img
-            src="/images/logo.png"
-            alt="logo"
-            className={classes.logoImage}
-          />
-        </div>
 
         {/* Declare routes, and what component should be rendered for each
          * route.

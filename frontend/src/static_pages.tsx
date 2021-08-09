@@ -28,16 +28,28 @@ const useStyles = makeStyles({
       fontSize: '1em',
     },
   },
+
+  logoImageWrapper: {
+    width: '95%',
+    textAlign: 'center',
+  },
+  logoImage: {
+    width: '20vh',
+    maxWidth: '90vw',
+    float: 'right'
+  },
+
   footer: {
     zIndex: -4,
     width: '100%',
     bottom: 0,
     left: 0,
-    padding: '10px 20px',
+    padding: '20px 40px',
     background: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    opacity: 0.9
   },
   heading: {
     marginTop: '30px',
@@ -243,12 +255,16 @@ export function Footer() {
     <div className={styles.euLogo}>
       <img src='/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
     </div>
+   
     <Typography className={styles.euText}>
       Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands-
       och Mellerudskanin. Stödet går till genbanksbesättningarna,
       medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
       utbildningar, transport av värdefulla djur samt obduktioner.
     </Typography>
+    <div className={`${styles.logoImageWrapper}`}>
+      <img src='/images/logo.png' alt="logo" className={styles.logoImage} />
+    </div>
   </div>
 }
 // jscpd:ignore-end
