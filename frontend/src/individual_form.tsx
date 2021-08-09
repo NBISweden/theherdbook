@@ -18,6 +18,7 @@ import {
   LimitedHerd,
   OptionType,
 } from "@app/data_context_global";
+import { get } from "./communication";
 
 const useStyles = makeStyles({
   adminPane: {
@@ -115,6 +116,7 @@ export function IndividualForm({
   birthDateError: boolean;
   litterError: boolean;
 }) {
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const { colors, genebanks } = useDataContext();
   const style = useStyles();
   const colorOptions: OptionType[] = React.useMemo(() => {
@@ -130,19 +132,42 @@ export function IndividualForm({
     return [];
   }, [colors, individual]);
 
-  const herdOptions = React.useMemo(() => {
-    const dataset = genebanks.find(
-      (g: Genebank) => g.name == individual.genebank
-    );
-    if (dataset) {
-      const herdOptions: OptionType[] = dataset.herds.map((h: LimitedHerd) => {
-        return { value: h, label: herdLabel(h) };
-      });
-      return herdOptions;
-    } else {
-      return [];
-    }
-  }, [genebanks, individual.genebank]);
+  React.useEffect(() => {
+    const getParents = async () => {
+      let herds = [];
+      let father;
+      let mother;
+
+      if (individual.father?.number) {
+        father = await get(`/api/individual/${individual.father?.number}`);
+        console.log(father);
+        if (!father) {
+          return;
+        }
+        herds.push(father.herd);
+      }
+      if (individual.mother?.number) {
+        mother = await get(`/api/individual/${individual.mother?.number}`);
+        if (!mother) {
+          return;
+        }
+        herds.push(mother.herd);
+      }
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        setHerdOptions(herdOptions);
+        return;
+      } else {
+        return [];
+      }
+    };
+    getParents();
+  }, [individual.father?.number, individual.mother?.number]);
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -201,6 +226,7 @@ export function IndividualForm({
                   {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                     <Autocomplete
                       options={herdOptions}
+                      noOptionsText={"Välj härstamningen först"}
                       getOptionLabel={(option: OptionType) => option.label}
                       className={style.controlWidth}
                       value={
