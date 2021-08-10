@@ -5,71 +5,16 @@
 import * as React from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { Typography } from '@material-ui/core';
+import './style.css';
 
-const useStyles = makeStyles({
-  main: {
-    padding: '.25em 1em .5em 1em',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  euLogo: {
-    textAlign: 'center',
-    '& img': {
-      display: 'inline',
-      height: '180px',
-    }
-  },
-  euText: {
-    margin: '10px 20px',
-    display: 'inline',
-    maxWidth: '250px',
-    fontSize: '0.65em',
-    ['@media (min-width:660px)']: {
-      fontSize: '1em',
-    },
-  },
-
-  logoImageWrapper: {
-    width: '95%',
-    textAlign: 'center',
-  },
-  logoImage: {
-    width: '20vh',
-    maxWidth: '90vw',
-    float: 'right'
-  },
-
-  footer: {
-    zIndex: -4,
-    width: '100%',
-    bottom: 0,
-    left: 0,
-    padding: '20px 40px',
-    background: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.9
-  },
-  heading: {
-    marginTop: '30px',
-  },
-  pSpace: {
-    paddingBottom: '20px',
-    '& p a': {
-      paddingRight: '4px',
-    }
-  }
-});
 
 // jscpd:ignore-start
 
 export function About() {
-  const styles = useStyles();
 
-  return <div className={styles.main}>
-    <Typography variant='h3' className={styles.heading}>Föreningen</Typography>
-    <Typography variant='body1' className={styles.pSpace}>
+  return <div className="staticMain">
+    <Typography variant='h3' className="heading">Föreningen</Typography>
+    <Typography variant='body1' className="pSpace">
       <p>
         Gotlandskaninen är en rest av den gamla svenska lantraskaninen.
         På 1970-talet uppmärksammades att det fanns några gårdar på
@@ -97,11 +42,10 @@ export function About() {
 }
 
 export function Gotlandskaninen() {
-  const styles = useStyles();
 
-  return <div className={styles.main}>
-    <Typography variant='h3' className={styles.heading}>Gotlandskaninen</Typography>
-    <Typography variant='body1' className={styles.pSpace}>
+  return <div className="staticMain">
+    <Typography variant='h3' className="heading">Gotlandskaninen</Typography>
+    <Typography variant='body1' className="pSpace">
       <p>
         Gotlandskaninen är en rest av den gamla svenska lantraskaninen. På
         1970-talet uppmärksammades att det fanns några gårdar på Gotland som hade
@@ -143,11 +87,10 @@ export function Gotlandskaninen() {
 }
 
 export function Mellerudskaninen() {
-  const styles = useStyles();
 
-  return <div className={styles.main}>
-    <Typography variant='h3' className={styles.heading}>Mellerudskaninen</Typography>
-    <Typography variant='body1' className={styles.pSpace}>
+  return <div className="staticMain">
+    <Typography variant='h3' className="heading">Mellerudskaninen</Typography>
+    <Typography variant='body1' className="pSpace">
       <p>
         Mellerudskaninen är en rest av den gamla svenska lantraskaninen. Den
         fanns i en besättning hos Edith Johansson, som bodde nära Mellerud i
@@ -194,11 +137,10 @@ export function Mellerudskaninen() {
 }
 
 export function Medlem() {
-  const styles = useStyles();
 
-  return <div className={styles.main}>
-    <Typography variant='h3' className={styles.heading}>Bli Medlem</Typography>
-    <Typography variant='body1' className={styles.pSpace}>
+  return <div className="staticMain">
+    <Typography variant='h3' className="heading">Bli Medlem</Typography>
+    <Typography variant='body1' className="pSpace">
       <p>
           Vill du bli medlem i föreningen? Då kan du antingen kontakta föreningen
           eller sätta in 200 kr på Föreningen Gotlandskaninens plusgirokonto
@@ -214,11 +156,10 @@ export function Medlem() {
 }
 
 export function Kontakt() {
-  const styles = useStyles();
 
-  return <div className={styles.main}>
-    <Typography variant='h3' className={styles.heading}>Kontakta oss</Typography>
-    <Typography variant='body1' className={styles.pSpace}>
+  return <div className="staticMain">
+    <Typography variant='h3' className="heading">Kontakta oss</Typography>
+    <Typography variant='body1' className="pSpace">
       <p>
         <a href="mailto:info@gotlandskaninen.se">
         info@gotlandskaninen.se
@@ -249,21 +190,20 @@ export function Kontakt() {
 }
 
 export function Footer() {
-  const styles = useStyles();
 
-  return <div className={styles.footer}>
-    <div className={styles.euLogo}>
+  return <div className="footer">
+    <div className="euLogo">
       <img src='/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg'/>
     </div>
    
-    <Typography className={styles.euText}>
+    <Typography className="euText">
       Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands-
       och Mellerudskanin. Stödet går till genbanksbesättningarna,
       medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
       utbildningar, transport av värdefulla djur samt obduktioner.
     </Typography>
-    <div className={`${styles.logoImageWrapper}`}>
-      <img src='/images/logo.png' alt="logo" className={styles.logoImage} />
+    <div className="logoImageWrapper">
+      <img src='/images/logo.png' alt="logo" className="logoImage" />
     </div>
   </div>
 }

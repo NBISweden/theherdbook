@@ -33,102 +33,16 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
-import {
-  About,
-  Gotlandskaninen,
-  Mellerudskaninen,
-  Medlem,
-  Kontakt,
-  Footer,
-} from "@app/static_pages";
-import { Forum } from "@app/forum";
-import * as ui from "@app/ui_utils";
-import {
-  Button,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Typography,
-  withStyles,
-} from "@material-ui/core";
-import { MenuProps } from "@material-ui/core/Menu";
-
+import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt, Footer
+        } from '@app/static_pages'
+import { Forum } from '@app/forum'
+import * as ui from '@app/ui_utils'
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography,
+        withStyles } from '@material-ui/core';
+import { MenuProps } from '@material-ui/core/Menu';
+import './style.css';
 // Define styles for tab menu
-const useStyles = makeStyles({
-  menu: {
-    position: "fixed",
-    zIndex: 100,
-    left: 0,
-    top: 0,
-    width: "100%",
-    height: "51px",
-    background: "rgba(255,255,255,0.95)",
-    borderBottom: "1px solid #aaa",
-  },
-  wrapper: {
-    position: "relative",
-    borderTop: "1px solid white",
-    borderBottom: "1px solid white",
-  },
-  main: {
-    opacity: 0.9,
-    position: "relative",
-    marginTop: "calc(10vh)",
-    marginBottom: "210px",
-    marginLeft: 0,
-    marginRight: 0,
-    padding: "10px",
-    minHeight: "calc(45vh)",
-    ["@media (min-width:660px)"]: {
-      marginLeft: "20px",
-      marginRight: "20px",
-    },
-  },
-  link: {
-    textDecoration: "none",
-    fontFamily: "Open Sans",
-    color: "#222",
-  },
-  logo: {
-    position: "fixed",
-    zIndex: -3,
-    width: "100%",
-    textAlign: "center",
-    top: "10vh",
-    justifyContent: "center",
-    fontVariant: "small-caps",
-    fontSize: "2.5em",
-    color: "#eee",
-    ["@media (min-width:660px)"]: {
-      fontSize: "4em",
-      color: "#222",
-    },
-  },
-  hidden: {
-    visibility: "hidden",
-  },
 
-  menuButton: {
-    height: "52px",
-    fontSize: "1.0em",
-    ["@media (min-width:660px)"]: {
-      fontSize: "1.2em",
-    },
-  },
-  trigram: {
-    fontSize: "1.8em",
-    paddingRight: "7px",
-    marginTop: "-5px",
-    ["@media (min-width:660px)"]: {
-      fontSize: "2.0em",
-      marginTop: "-7px",
-    },
-  },
-  listItem: {
-    display: "block",
-  },
-});
 
 const StyledMenu = withStyles({
   paper: {
@@ -172,15 +86,13 @@ function Restricted(props: { children: React.ReactElement }) {
 }
 
 export function Navigation() {
-  const classes = useStyles();
-  const { logout } = useUserContext();
-  const { user } = useUserContext();
-  const [showLogo, setShowLogo] = React.useState(true);
-  const [showLogoText, setShowLogoText] = React.useState(false);
-  const is_admin = !!(user?.is_manager || user?.is_admin);
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
-  const is_logged_in = !!user;
-  const theme = createMuiTheme({}, svSE);
+  const {logout} = useUserContext();
+  const {user} = useUserContext();
+  const [showLogo, setShowLogo] = React.useState(true)
+  const [showLogoText, setShowLogoText] = React.useState(false)
+  const is_admin = !!(user?.is_manager || user?.is_admin)
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0)
+  const is_logged_in = !!user
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -330,96 +242,74 @@ export function Navigation() {
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
-  return (
-    <>
-      <ThemeProvider theme={theme}>
-        {/* Insert the tab menu */}
-        <div className={classes.menu}>
-          <Button
-            aria-controls="customized-menu"
-            aria-haspopup="true"
-            className={classes.menuButton}
-            onClick={handleClick}
-          >
-            <span className={classes.trigram}>☰</span>
-            <Typography variant="subtitle1">Menu</Typography>
-          </Button>
+  return <>
+    {/* Insert the tab menu */}
+    <div className="menu">
 
-          <StyledMenu
-            id="customized-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            {tabs.map((tab) => (
-              <Link
-                to={tab.path ?? "/"}
-                className={classes.link}
-                style={{ display: tab.visible === false ? "none" : undefined }}
-                onClick={() => {
-                  tab.on_click && tab.on_click();
-                  handleClose();
-                }}
-              >
-                <StyledMenuItem>
-                  <ListItemIcon>{tab.icon}</ListItemIcon>
-                  <ListItemText primary={tab.label} />
-                </StyledMenuItem>
-              </Link>
-            ))}
-          </StyledMenu>
+      <Button
+          aria-controls="customized-menu"
+          aria-haspopup="true"
+          className="menuButton"
+          onClick={handleClick}
+        >
+        <span className="trigram">☰</span>
+        <Typography variant='subtitle1'>Menu</Typography>
+      </Button>
 
-          {/* <Tabs centered/> */}
-        </div>
-        <h1 className={`${classes.logo} ${!showLogoText && classes.hidden}`}>
-          Föreningen <br />
-          Gotlandskaninen
-        </h1>
+      <StyledMenu
+        id="customized-menu"
+        anchorEl={anchorEl}
+        keepMounted
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+      >
+        {tabs.map(tab =>
+          <Link to={tab.path ?? '/'}
+                className="link"
+                style={{display: tab.visible === false ? 'none' : undefined}}
+                onClick={() => {tab.on_click && tab.on_click(); handleClose();}}>
+            <StyledMenuItem>
+              <ListItemIcon>
+                {tab.icon}
+              </ListItemIcon>
+              <ListItemText primary={tab.label} />
+            </StyledMenuItem>
+          </Link>
+        )}
+      </StyledMenu>
+
+      {/* <Tabs centered/> */}
+    </div>
 
         {/* Declare routes, and what component should be rendered for each
          * route.
          */}
 
-        <div className={classes.wrapper}>
-          <Paper className={classes.main}>
-            <Switch>
-              {TabbedRoutes}
-              <ui.Routed path="/herd/:id">
-                {(params) => (
-                  <Restricted>
-                    <HerdView id={params.id} />
-                  </Restricted>
-                )}
-              </ui.Routed>
-              <ui.Routed path="/individual/:id">
-                {(params) => (
-                  <Restricted>
-                    <IndividualView id={params.id} />
-                  </Restricted>
-                )}
-              </ui.Routed>
-              <ui.Routed path="/individual-pedigree/:id/:generations?">
-                {(params) => (
-                  <Restricted>
-                    <IndividualPedigree
-                      id={params.id}
-                      generations={params.generations ? +params.generations : 5}
-                    />
-                  </Restricted>
-                )}
-              </ui.Routed>
-              <ui.Routed path="/herd-pedigree/:id">
-                {(params) => (
-                  <Restricted>
-                    <HerdPedigree id={params.id} />
-                  </Restricted>
-                )}
-              </ui.Routed>
-              <Route path="/">Welcome!</Route>
-            </Switch>
-          </Paper>
-        </div>
+    <div className="wrapper">
+      <Paper className="main">
+        <Switch>
+          {TabbedRoutes}
+          <ui.Routed path="/herd/:id">
+            {params => <Restricted><HerdView id={params.id}/></Restricted>}
+          </ui.Routed>
+          <ui.Routed path="/individual/:id">
+            {params => <Restricted><IndividualView id={params.id} /></Restricted>}
+          </ui.Routed>
+          <ui.Routed path="/individual-pedigree/:id/:generations?">
+            {params =>
+              <Restricted>
+                <IndividualPedigree id={params.id} generations={params.generations ? +params.generations : 5}/>
+              </Restricted>}
+          </ui.Routed>
+          <ui.Routed path="/herd-pedigree/:id">
+            {params => <Restricted><HerdPedigree id={params.id}/></Restricted>}
+          </ui.Routed>
+          <Route path="/">
+            Welcome!
+          </Route>
+        </Switch>
+      </Paper>
+    </div>
 
         <Footer />
       </ThemeProvider>
