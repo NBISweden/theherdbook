@@ -9,7 +9,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
-import { Breeding } from "./data_context_global";
+import { Breeding, ExtendedBreeding } from "./data_context_global";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
@@ -50,6 +50,9 @@ const useStyles = makeStyles({
  */
 export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
+  const [extendedBreedings, setExtendedBreedings] = React.useState(
+    [] as ExtendedBreeding[]
+  );
   const [active, setActive] = React.useState(null as any);
   const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
@@ -66,6 +69,25 @@ export function BreedingList({ id }: { id: string | undefined }) {
     });
   }, [genebanks, breedingEvents]);
 
+  // add parents names to the breeding events
+  React.useEffect(() => {
+    const breedings: ExtendedBreeding[] = breedingEvents.map((breeding) => {
+      const mother = parents.find((parent) => {
+        return parent.number == breeding.mother;
+      });
+      const father = parents.find((parent) => {
+        return parent.number == breeding.father;
+      });
+      const newBreeding: ExtendedBreeding = {
+        ...breeding,
+        mother_name: mother?.name,
+        father_name: father?.name,
+      };
+      return newBreeding;
+    });
+    setExtendedBreedings(breedings);
+  }, [breedingEvents, parents]);
+
   const columns: Column[] = [
     {
       field: "breed_date",
@@ -75,7 +97,9 @@ export function BreedingList({ id }: { id: string | undefined }) {
     },
     { field: "breed_notes", label: "Parningsanteckningar", hidden: true },
     { field: "mother", label: "Moder", sortAs: "numbers", hidden: false },
+    { field: "mother_name", label: "Moderns namn", hidden: false },
     { field: "father", label: "Fader", sortAs: "numbers", hidden: false },
+    { field: "father_name", label: "Faderns namn", hidden: false },
     {
       field: "birth_date",
       sortAs: "date",
@@ -122,7 +146,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
       <div className={style.breeding}>
         <SortedTable
           columns={columns}
-          data={breedingEvents}
+          data={extendedBreedings}
           addButton={() => {
             setActive("new");
           }}
