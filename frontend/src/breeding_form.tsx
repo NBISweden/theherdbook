@@ -14,12 +14,15 @@ import {
   Breeding,
   dateFormat,
   Genebank,
+  HerdNameID,
   individualLabel,
   inputVariant,
   LimitedHerd,
   LimitedBreeding,
   locale,
   OptionType,
+  Individual,
+  LimitedIndividual,
 } from "@app/data_context_global";
 
 import { Button, TextField, Typography } from "@material-ui/core";
@@ -211,6 +214,52 @@ export function BreedingForm({
     return true;
   };
 
+  const createEmptyIndividual = (individual: Individual): boolean => {
+    post("/api/individual", individual).then(
+      (json) => {
+        switch (json.status) {
+          case "success": {
+            userMessage("Kaninen har lagts till i din besättning.", "success");
+            return true;
+          }
+          case "error": {
+            switch (json.message) {
+              case "Not logged in":
+                {
+                  userMessage("Du är inte inloggad.", "error");
+                }
+                return false;
+              case "Individual must have a valid herd":
+                {
+                  userMessage("Besättningen kunde inte hittas.", "error");
+                }
+                return false;
+              case "Forbidden": {
+                userMessage(
+                  "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
+                  "error"
+                );
+                return false;
+              }
+              default: {
+                userMessage(
+                  "Något gick fel. Det här borde inte hända.",
+                  "error"
+                );
+                return false;
+              }
+            }
+          }
+        }
+      },
+      (error) => {
+        userMessage("Något gick fel.", "error");
+        return false;
+      }
+    );
+    return false;
+  };
+
   /**
    * Function to save the user input to the database.
    * Error handling happens from within the functions imported from data_context.
@@ -271,6 +320,55 @@ export function BreedingForm({
     if (!!newBirth) {
       userMessage("Sparat!", "success");
       handleBreedingsChanged();
+      if (!breeding.litter_size || !herdId) {
+        userMessage("Något gick fel", "error");
+        return;
+      }
+      console.log(breeding.litter_size);
+
+      const originHerdNameID: HerdNameID = {
+        herd: herdId,
+      };
+      const fatherInd: LimitedIndividual = {
+        number: breeding.father,
+      };
+      const motherInd: LimitedIndividual = {
+        number: breeding.mother,
+      };
+      const emptyIndividual: Individual = {
+        herd: herdId,
+        origin_herd: originHerdNameID,
+        genebank: genebank?.name,
+        certificate: null,
+        number: null,
+        birth_date: breeding.birth_date,
+        father: fatherInd,
+        mother: motherInd,
+        color: null,
+        color_note: null,
+        death_date: null,
+        death_note: null,
+        litter: breeding.id ? breeding.id : 0,
+        notes: null,
+        weights: null,
+        bodyfat: null,
+        herd_tracking: null,
+        herd_active: true,
+        active: false,
+        alive: true,
+        belly_color: null,
+        eye_color: null,
+        claw_color: null,
+        hair_notes: "",
+        selling_date: null,
+        breeding: null,
+      };
+      for (let i = 0; i < breeding.litter_size; i++) {
+        let success: boolean = createEmptyIndividual(emptyIndividual);
+        if (!success) {
+          break;
+        }
+      }
     }
     return;
   };
