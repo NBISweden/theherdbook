@@ -6,36 +6,14 @@
 import React from "react";
 
 import { Genebank, Individual } from "@app/data_context_global";
-import { CircularProgress, makeStyles } from "@material-ui/core";
+import { CircularProgress, make } from "@material-ui/core";
 import { FilterTable } from "@app/filter_table";
-
-// Define styles
-const useStyles = makeStyles({
-  table: {
-    height: "100%",
-    padding: "5px",
-    overflowY: "scroll",
-  },
-  columnLabel: {
-    paddingRight: "30px",
-  },
-  columnSelect: {
-    zIndex: 15,
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 /**
  * Shows genebank information, with a list of all herds belonging to that
  * genebank.
  */
 export function GenebankView({ genebank }: { genebank: Genebank }) {
-  const styles = useStyles();
   const [individuals, setIndividuals] = React.useState(
     null as Array<Individual> | null
   );
@@ -48,7 +26,7 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
 
   return (
     <>
-      <div className={styles.table}>
+      <div className="table">
         {individuals ? (
           <FilterTable
             individuals={individuals}
@@ -61,7 +39,7 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
           />
         ) : (
           <>
-            <div className={styles.loading}>
+            <div className="loading">
               <h2>Loading Individuals</h2>
               <CircularProgress />
             </div>

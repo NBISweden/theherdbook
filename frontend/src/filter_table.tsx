@@ -36,46 +36,6 @@ import { useMessageContext } from "@app/message_context";
 import { useUserContext } from "./user_context";
 import { IndividualAdd } from "./individual_add";
 
-// Define styles
-const useStyles = makeStyles({
-  table: {
-    height: "100%",
-    padding: "5px",
-    overflowY: "scroll",
-  },
-  columnLabel: {
-    paddingRight: "30px",
-  },
-  columnSelect: {
-    zIndex: 15,
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  functionLink: {
-    color: "blue",
-    textDecoration: "underline",
-    cursor: "pointer",
-  },
-  sorted: {
-    border: 0,
-    clip: "rect(0 0 0 0)",
-    height: 1,
-    margin: -1,
-    overflow: "hidden",
-    padding: 0,
-    position: "absolute",
-    top: 20,
-    width: 1,
-  },
-  search: {
-    float: "right",
-  },
-});
-
 /**
  * Column definition with sorting information. `sortBy` is used to tell the
  * sorting function which sub-field to sort by if the column value is an object,
@@ -237,7 +197,6 @@ export function FilterTable({
 }) {
   const { popup } = useMessageContext();
   const { user } = useUserContext();
-  const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [order, setOrder] = React.useState("desc" as Order);
@@ -261,7 +220,7 @@ export function FilterTable({
         ),
       render: (rowData: any) => (
         <a
-          className={styles.functionLink}
+          className="functionLink"
           onClick={() =>
             popup(
               <HerdView id={rowData.herd["herd"]} />,
@@ -282,7 +241,7 @@ export function FilterTable({
       sortAs: "numbers",
       render: (rowData: any) => (
         <a
-          className={styles.functionLink}
+          className="functionLink"
           onClick={() =>
             popup(
               <IndividualView id={rowData.number} />,
@@ -317,7 +276,7 @@ export function FilterTable({
       sortAs: "numbers",
       render: (rowData: any) => (
         <a
-          className={styles.functionLink}
+          className="functionLink"
           onClick={() =>
             popup(
               <IndividualView id={rowData.mother["number"]} />,
@@ -336,7 +295,7 @@ export function FilterTable({
       sortAs: "numbers",
       render: (rowData: any) => (
         <a
-          className={styles.functionLink}
+          className="functionLink"
           onClick={() =>
             popup(
               <IndividualView id={rowData.father["number"]} />,
@@ -431,17 +390,18 @@ export function FilterTable({
     setOrderBy(property);
   };
 
-  const createSortHandler =
-    (property: keyof Individual) => (event: React.MouseEvent<unknown>) => {
-      handleRequestSort(event, property);
-    };
+  const createSortHandler = (property: keyof Individual) => (
+    event: React.MouseEvent<unknown>
+  ) => {
+    handleRequestSort(event, property);
+  };
 
   return (
     <>
       <div>
         <Autocomplete
           multiple
-          className={styles.columnLabel}
+          className="columnLabel"
           options={columns.map((v: any) => {
             return { value: v.field, label: v.label };
           })}
@@ -455,18 +415,14 @@ export function FilterTable({
             option.value == value.value
           }
           renderInput={(params) => (
-            <TextField
-              {...params}
-              variant={inputVariant}
-              margin="normal"
-            />
+            <TextField {...params} variant={inputVariant} margin="normal" />
           )}
           onChange={(event: any, newValues: OptionType[] | null) => {
             newValues && updateColumns(newValues);
           }}
         />
       </div>
-      <div className={styles.table}>
+      <div className="table">
         {individuals ? (
           <>
             {currentFilters.map((filter) => (
@@ -487,7 +443,7 @@ export function FilterTable({
             ))}
 
             <TextField
-              className={styles.search}
+              className="search"
               label="Sök"
               variant={inputVariant}
               onChange={(e) => setSearch(e.currentTarget.value)}
@@ -515,7 +471,7 @@ export function FilterTable({
                         >
                           {column.label}
                           {orderBy === column.field ? (
-                            <span className={styles.sorted}>
+                            <span className="sorted">
                               {order === "desc"
                                 ? "sorted descending"
                                 : "sorted ascending"}
@@ -534,7 +490,7 @@ export function FilterTable({
                         <TableRow key={row.number} hover tabIndex={-1}>
                           {action && (
                             <TableCell
-                              className={styles.functionLink}
+                              className="functionLink"
                               onClick={(event) => action && action(event, row)}
                             >
                               <SvgIcon component={actionIcon} />
@@ -579,7 +535,7 @@ export function FilterTable({
           </>
         ) : (
           <>
-            <div className={styles.loading}>
+            <div className="loading">
               <h2>Loading Individuals</h2>
               <CircularProgress />
             </div>
