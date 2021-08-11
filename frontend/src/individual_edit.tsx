@@ -411,7 +411,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     Kan endast ändras av genbanksansvarig
                   </div>
                   <TextField
-                    disabled
+                    disabled={!canManage}
                     label="Nummer"
                     className={style.control}
                     variant={inputVariant}
@@ -432,7 +432,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
                 </div>
                 <TextField
-                  disabled={!canManage}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -443,7 +442,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 />
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!canManage}
                     options={sexOptions ?? []}
                     value={
                       sexOptions.find(
@@ -466,7 +464,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
 
                   <KeyboardDatePicker
-                    disabled={!canManage}
                     autoOk
                     variant="inline"
                     className={style.control}
@@ -484,7 +481,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!canManage}
                     options={motherOptions ?? []}
                     value={
                       motherOptions.find(
@@ -506,7 +502,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <Autocomplete
-                    disabled={!canManage}
                     options={fatherOptions ?? []}
                     value={
                       fatherOptions.find(
@@ -530,7 +525,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!canManage}
                     options={colorOptions ?? []}
                     value={
                       colorOptions.find(
@@ -552,7 +546,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!canManage}
                     label="Färgantecking"
                     variant={inputVariant}
                     className={style.control}
