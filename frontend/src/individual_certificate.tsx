@@ -89,11 +89,6 @@ export function IndividualCertificate({
   const { userMessage } = useMessageContext();
   const style = useStyles();
 
-  // returns true if you are an admin or the manager of the genebank the individual belongs to
-  const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank);
-  }, [user, individual]);
-
   //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
   const canEdit: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.number);
@@ -355,20 +350,16 @@ export function IndividualCertificate({
         </div>
       ) : individual && showForm ? (
         <>
-          <div className={style.formWrapper}>
-            <IndividualForm
-              individual={individual}
-              canManage={canManage}
-              canEdit={canEdit}
-              onUpdateIndividual={handleUpdateIndividual}
-              formAction={FormAction.handleCertificate}
-              colorError={colorError}
-              numberError={numberError}
-              sexError={sexError}
-              birthDateError={birthDateError}
-              litterError={litterError}
-            />
-          </div>
+          <IndividualForm
+            individual={individual}
+            onUpdateIndividual={handleUpdateIndividual}
+            formAction={FormAction.handleCertificate}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
+          />
           <div className={style.paneControls}>
             <Button
               variant="contained"

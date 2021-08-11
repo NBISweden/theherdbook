@@ -486,7 +486,17 @@ export function IndividualAdd({
   return (
     <>
       <div className={style.inputBox}>
-        <h1>Registrera en ny kanin</h1>
+        <IndividualForm
+          onUpdateIndividual={handleUpdateIndividual}
+          individual={individual}
+          formAction={FormAction.AddIndividual}
+          colorKey={colorKey}
+          colorError={colorError}
+          numberError={numberError}
+          sexError={sexError}
+          birthDateError={birthDateError}
+          litterError={litterError}
+        />
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
