@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css?family=Open+Sans");
+
 .menu {
   position: fixed;
   z-index: 100;
@@ -28,7 +30,7 @@
 
 .link {
   text-decoration: none;
-  font-family: "Open Sans";
+  font-family: "Open Sans", sans-serif;
   color: #222;
 }
 
