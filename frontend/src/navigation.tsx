@@ -2,7 +2,6 @@ import * as React from "react";
 import { Switch, Route, useLocation, Redirect, Link } from "react-router-dom";
 
 import {
-  makeStyles,
   createMuiTheme,
   ThemeProvider,
 } from "@material-ui/core/styles";
@@ -33,16 +32,28 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
-import { About, Gotlandskaninen, Mellerudskaninen, Medlem, Kontakt, Footer
-        } from '@app/static_pages'
-import { Forum } from '@app/forum'
-import * as ui from '@app/ui_utils'
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography,
-        withStyles } from '@material-ui/core';
-import { MenuProps } from '@material-ui/core/Menu';
-import './style.css';
-// Define styles for tab menu
+import {
+  About,
+  Gotlandskaninen,
+  Mellerudskaninen,
+  Medlem,
+  Kontakt,
+  Footer,
+} from "@app/static_pages";
+import { Forum } from "@app/forum";
+import * as ui from "@app/ui_utils";
+import {
+  Button,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Typography,
+  withStyles,
+} from "@material-ui/core";
+import { MenuProps } from "@material-ui/core/Menu";
 
+import './style.css';
 
 const StyledMenu = withStyles({
   paper: {
@@ -86,13 +97,14 @@ function Restricted(props: { children: React.ReactElement }) {
 }
 
 export function Navigation() {
-  const {logout} = useUserContext();
-  const {user} = useUserContext();
-  const [showLogo, setShowLogo] = React.useState(true)
-  const [showLogoText, setShowLogoText] = React.useState(false)
-  const is_admin = !!(user?.is_manager || user?.is_admin)
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0)
-  const is_logged_in = !!user
+  const { logout } = useUserContext();
+  const { user } = useUserContext();
+  const [showLogo, setShowLogo] = React.useState(true);
+  const [showLogoText, setShowLogoText] = React.useState(false);
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
+  const is_logged_in = !!user;
+  const theme = createMuiTheme({}, svSE);
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -242,6 +254,7 @@ export function Navigation() {
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
+
   return <>
     {/* Insert the tab menu */}
     <div className="menu">
@@ -280,6 +293,8 @@ export function Navigation() {
 
       {/* <Tabs centered/> */}
     </div>
+    
+    
 
         {/* Declare routes, and what component should be rendered for each
          * route.

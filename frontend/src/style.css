@@ -1,143 +1,143 @@
 .menu {
-  position: "fixed";
+  position: fixed;
   z-index: 100;
   left: 0;
   top: 0;
-  width: "100%";
-  height: "51px";
-  background: "rgba(255;255;255;0.95)";
-  border-bottom: "1px solid #aaa";
+  width: 100%;
+  height: 51px;
+  background: rgba(255;255;255;0.95);
+  border-bottom: 1px solid #aaa;
 }
 
 .wrapper {
-  position: "relative";
-  border-top: "1px solid white";
-  border-bottom: "1px solid white";
+  position: relative;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
 }
 
 .main {
   opacity: 0.9;
-  position: "relative";
-  margin-top: "calc(10vh)";
-  margin-bottom: "210px";
+  position: relative;
+  margin-top: calc(10vh);
+  margin-bottom: 210px;
   margin-left: 0;
   margin-right: 0;
-  padding: "10px";
-  min-height: "calc(45vh)";
+  padding: 10px;
+  min-height: calc(45vh);
 }
 
 .link {
-  text-decoration: "none";
-  font-family: "Open Sans";
-  color: "#222";
+  text-decoration: none;
+  font-family: Open Sans;
+  color: #222;
 }
 
 .logo {
-  position: "fixed";
+  position: fixed;
   z-index: -3;
-  width: "100%";
-  text-align: "center";
-  top: "10vh";
-  justify-content: "center";
-  font-variant: "small-caps";
-  font-size: "2.5em";
-  color: "#eee";
+  width: 100%;
+  text-align: center;
+  top: 10vh;
+  justify-content: center;
+  font-variant: small-caps;
+  font-size: 2.5em;
+  color: #eee;
 }
 
 hidden {
-  visibility: "hidden";
+  visibility: hidden;
 }
 
 menuButton {
-  height: "52px";
-  font-size: "1.0em";
+  height: 52px;
+  font-size: 1em;
 }
 
 .trigram {
-  font-size: "1.8em";
-  padding-right: "7px";
-  margin-top: "-5px";
+  font-size: 1.8em;
+  padding-right: 7px;
+  margin-top: -5px;
 }
 
 list-item {
-  display: "block";
+  display: block;
 }
 
 .staticMain {
-  padding: ".25em 1em .5em 1em";
-  display: "flex";
-  flex-direction: "column";
+  padding: 0.25em 1em 0.5em 1em;
+  display: flex;
+  flex-direction: column;
 }
 
 .euLogo {
-  text-align: "center";
+  text-align: center;
 }
 
 .euLogo img {
-  display: "inline";
-  height: "180px";
+  display: inline;
+  height: 180px;
 }
 
 .euText {
-  margin: "10px 20px";
-  display: "inline";
-  max-width: "250px";
-  font-size: "0.65em";
+  margin: 10px 20px;
+  display: inline;
+  max-width: 250px;
+  font-size: 0.65em;
 }
 
 .logoImageWrapper {
-  width: "95%";
-  text-align: "center";
+  width: 95%;
+  text-align: center;
 }
 
 .logoImage {
-  width: "20vh";
-  max-width: "90vw";
-  float: "right";
+  width: 20vh;
+  max-width: 90vw;
+  float: right;
 }
 
 .footer {
   z-index: -4;
-  width: "100%";
+  width: 100%;
   bottom: 0;
   left: 0;
-  padding: "20px 40px";
-  background: "white";
-  display: "flex";
-  align-items: "center";
-  justify-content: "center";
+  padding: 20px 40px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.9;
 }
 
 .heading {
-  margin-top: "30px";
+  margin-top: 30px;
 }
 
 .pSpace {
-  padding-bottom: "20px";
+  padding-bottom: 20px;
 }
 
 .pSpace p a {
-  padding-right: "4px";
+  padding-right: 4px;
 }
 
 @media screen and (min-width: 660px) {
   .main {
-    margin-left: "20px";
-    margin-right: "20px";
+    margin-left: 20px;
+    margin-right: 20px;
   }
   .menuButton {
-    font-size: "1.2em";
+    font-size: 1.2em;
   }
   .trigram {
-    font-size: "2.0em";
-    margin-top: "-7px";
+    font-size: 2em;
+    margin-top: -7px;
   }
   .euText {
-    font-size: "1em";
+    font-size: 1em;
   }
   .logo {
-    font-size: "4em";
-    color: "#222";
+    font-size: 4em;
+    color: #222;
   }
 }
