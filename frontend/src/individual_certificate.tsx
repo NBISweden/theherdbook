@@ -118,15 +118,13 @@ export function IndividualCertificate({
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
-            console.log(data);
             setIndividual(data);
             setShowForm(true);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
