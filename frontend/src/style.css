@@ -141,34 +141,39 @@ list-item {
   }
 }
 
-table {
+.table {
   height: 100%;
   padding: 5px;
   overflow-y: scroll;
 }
 
-columnLabel {
+.sortedTable {
+  padding: 5px;
+  overflow-y: scroll;
+}
+
+.columnLabel {
   padding-right: 30px;
 }
 
-columnSelect {
+.columnSelect {
   z-index: 15;
 }
 
-loading {
+.loading {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-functionLink {
+.functionLink {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
 }
 
-sorted {
+.sorted {
   border: 0;
   clip: rect(0 0 0 0);
   height: 1;
@@ -180,6 +185,10 @@ sorted {
   width: 1;
 }
 
-search {
+.search {
   float: right;
+}
+
+.bottomButton {
+  float: left;
 }

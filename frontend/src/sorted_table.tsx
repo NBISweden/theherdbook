@@ -19,44 +19,6 @@ import {
   Button,
 } from "@material-ui/core";
 
-const useStyles = makeStyles({
-  table: {
-    padding: "5px",
-    overflowY: "scroll",
-  },
-  columnLabel: {
-    paddingRight: "30px",
-  },
-  columnSelect: {
-    zIndex: 15,
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  functionLink: {
-    color: "blue",
-    textDecoration: "underline",
-    cursor: "pointer",
-  },
-  sorted: {
-    border: 0,
-    clip: "rect(0 0 0 0)",
-    height: 1,
-    margin: -1,
-    overflow: "hidden",
-    padding: 0,
-    position: "absolute",
-    top: 20,
-    width: 1,
-  },
-  bottomButton: {
-    float: "left",
-  },
-});
-
 /**
  * Column definition with sorting information. `sortBy` is used to tell the
  * sorting function which sub-field to sort by if the column value is an object,
@@ -176,7 +138,6 @@ export function SortedTable({
   data,
   ...props
 }: { columns: Column[]; data: any[] } & Record<string, any>) {
-  const styles = useStyles();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(props.rowsPerPage ?? 25);
   const [selected, setSelected] = React.useState(null as number | null);
@@ -234,7 +195,7 @@ export function SortedTable({
   return (
     <>
       <div
-        className={props.className ?? styles.table}
+        className={props.className ?? table}
         style={props.style ?? props.style}
       >
         {data ? (
@@ -261,7 +222,7 @@ export function SortedTable({
                         >
                           {column.label}
                           {orderBy === column.field ? (
-                            <span className={styles.sorted}>
+                            <span className="sorted">
                               {order === "desc"
                                 ? "sorted descending"
                                 : "sorted ascending"}
@@ -316,7 +277,7 @@ export function SortedTable({
             </TableContainer>
             {props.addButton && (
               <Button
-                className={styles.bottomButton}
+                className="bottomButton"
                 variant="contained"
                 color="primary"
                 onClick={props.addButton}
@@ -336,7 +297,7 @@ export function SortedTable({
           </>
         ) : (
           <>
-            <div className={styles.loading}>
+            <div className="loading">
               <h2>Laddar</h2>
               <CircularProgress />
             </div>
