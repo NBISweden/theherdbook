@@ -162,7 +162,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
-  const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
@@ -253,7 +252,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
-            setIsNew(false);
           },
           (error) => {
             console.error(error);
@@ -427,7 +425,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     label="Certifikat"
                     className={style.control}
                     variant={inputVariant}
@@ -438,7 +436,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
                 </div>
                 <TextField
-                  disabled={!(isNew || canManage)}
+                  disabled={!canManage}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -449,7 +447,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 />
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     options={sexOptions ?? []}
                     value={
                       sexOptions.find(
@@ -472,7 +470,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
 
                   <KeyboardDatePicker
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     autoOk
                     variant="inline"
                     className={style.control}
@@ -490,7 +488,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     options={motherOptions ?? []}
                     value={
                       motherOptions.find(
@@ -512,7 +510,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     options={fatherOptions ?? []}
                     value={
                       fatherOptions.find(
@@ -536,7 +534,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     options={colorOptions ?? []}
                     value={
                       colorOptions.find(
@@ -558,7 +556,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     label="Färgantecking"
                     variant={inputVariant}
                     className={style.control}
