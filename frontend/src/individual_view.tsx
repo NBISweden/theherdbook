@@ -286,7 +286,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>{individual?.notes ?? "-"}</dd>
                 </dl>
               </div>
-              {user?.canEdit(id) && (
+              {user?.canEdit(individual.herd.herd) && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -296,19 +296,40 @@ export function IndividualView({ id }: { id: string }) {
                   Redigera individ
                 </Button>
               )}
-              {user?.canEdit(id) && !hasDigitalCert && !hasPaperCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(<IndividualCertificate id={id} action={"issue"} />)
-                  }
-                >
-                  Skapa nytt certifikat
-                </Button>
-              )}
-              {user?.canEdit(id) && hasDigitalCert && (
+              {user?.canEdit(individual.origin_herd.herd) &&
+                !hasDigitalCert &&
+                !hasPaperCert && (
+                  <Button
+                    className={style.editButton}
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      popup(<IndividualCertificate id={id} action={"issue"} />)
+                    }
+                  >
+                    Skapa nytt certifikat
+                  </Button>
+                )}
+              {individual.origin_herd.herd !== individual.herd.herd &&
+                user?.canEdit(individual.herd.herd) &&
+                !hasDigitalCert &&
+                !hasPaperCert && (
+                  <>
+                    <Button
+                      className={style.editButton}
+                      disabled
+                      variant="contained"
+                      color="primary"
+                    >
+                      Skapa nytt certifikat
+                    </Button>
+                    <p>
+                      Kontakta ägaren till kaninens ursprungsbesättning. Bara
+                      hon/han kan skapa ett nytt certifikat.
+                    </p>
+                  </>
+                )}
+              {user?.canEdit(individual.herd.herd) && hasDigitalCert && (
                 <>
                   <Button
                     aria-controls="simple-menu"
@@ -392,7 +413,7 @@ export function IndividualView({ id }: { id: string }) {
                       }
                     })}
                 </ul>
-                {user?.canEdit(id) && (
+                {user?.canEdit(individual.herd.herd) && (
                   <Button
                     className={style.editButton}
                     variant="outlined"
