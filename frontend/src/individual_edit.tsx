@@ -248,21 +248,17 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
-      : userMessage(
-          "You do not have permission to edit this individual",
-          "error"
-        );
-  }, [id, user]);
+      : userMessage("Något gick fel.", "error");
+  }, [id]);
 
   /**
    * Updates a single field in `individual`.
