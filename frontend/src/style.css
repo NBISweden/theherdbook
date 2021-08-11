@@ -81,13 +81,7 @@ list-item {
 .euText {
   margin: 10px 20px;
   display: inline;
-  max-width: 250px;
   font-size: 0.65em;
-}
-
-.logoImageWrapper {
-  width: 95%;
-  text-align: center;
 }
 
 .logoImage {
@@ -104,9 +98,8 @@ list-item {
   padding: 20px 40px;
   background: white;
   display: flex;
-  align-items: center;
-  justify-content: center;
   opacity: 0.9;
+  text-align: center;
 }
 
 .heading {
