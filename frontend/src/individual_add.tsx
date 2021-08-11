@@ -466,7 +466,6 @@ export function IndividualAdd({
         <IndividualForm
           onUpdateIndividual={handleUpdateIndividual}
           individual={individual}
-          canEdit={user?.canEdit(herdId)}
           formAction={FormAction.AddIndividual}
           colorKey={colorKey}
           colorError={colorError}

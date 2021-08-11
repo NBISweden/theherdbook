@@ -15,6 +15,7 @@ import {
   Individual,
   OptionType,
 } from "@app/data_context_global";
+import { useUserContext } from "./user_context";
 
 const useStyles = makeStyles({
   adminPane: {
@@ -86,8 +87,6 @@ export enum FormAction {
 
 export function IndividualForm({
   individual,
-  canManage,
-  canEdit,
   onUpdateIndividual,
   formAction,
   colorKey,
@@ -98,8 +97,6 @@ export function IndividualForm({
   litterError,
 }: {
   individual: Individual;
-  canManage?: boolean;
-  canEdit: boolean;
   onUpdateIndividual: any;
   formAction: FormAction;
   colorKey?: number;
@@ -110,7 +107,14 @@ export function IndividualForm({
   litterError: boolean;
 }) {
   const { colors } = useDataContext();
+  const { user } = useUserContext();
   const style = useStyles();
+
+  // returns true if you are an admin or the manager of the genebank the individual belongs to
+  const canManage: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.genebank);
+  }, [user, individual]);
+
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
@@ -164,7 +168,6 @@ export function IndividualForm({
               ) : formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                 <>
                   <TextField
-                    disabled={!canEdit}
                     required
                     error={numberError}
                     label="Nummer"
@@ -176,7 +179,6 @@ export function IndividualForm({
                     }}
                   />
                   <TextField
-                    disabled={!canEdit}
                     label="Certifikatnummer"
                     className={style.control}
                     variant={inputVariant}
@@ -194,7 +196,6 @@ export function IndividualForm({
               )}
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canEdit}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -204,7 +205,6 @@ export function IndividualForm({
                   }}
                 />
                 <KeyboardDatePicker
-                  disabled={!canEdit}
                   required
                   error={birthDateError}
                   autoOk
@@ -224,7 +224,6 @@ export function IndividualForm({
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
-                  disabled={!canEdit}
                   options={sexOptions ?? []}
                   value={
                     sexOptions.find(
@@ -248,7 +247,6 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
-                  disabled={!canEdit}
                   required
                   error={litterError}
                   label="Antal födda i kullen"
@@ -264,7 +262,6 @@ export function IndividualForm({
               <div className={style.flexRow}>
                 <Autocomplete
                   key={colorKey}
-                  disabled={!canEdit}
                   options={colorOptions ?? []}
                   value={
                     colorOptions.find(
@@ -288,7 +285,6 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
-                  disabled={!canEdit}
                   label="Avvikande hårlag"
                   variant={inputVariant}
                   className={style.control}
@@ -302,7 +298,6 @@ export function IndividualForm({
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canEdit}
                   label="Färg på buken"
                   className={style.control}
                   variant={inputVariant}
@@ -315,7 +310,6 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
-                  disabled={!canEdit}
                   label="Ögonfärg"
                   className={style.control}
                   variant={inputVariant}
@@ -327,7 +321,6 @@ export function IndividualForm({
               </div>
               <div className={style.flexRow}>
                 <TextField
-                  disabled={!canEdit}
                   label="Klofärg(er)"
                   className={style.control}
                   variant={inputVariant}
@@ -337,7 +330,6 @@ export function IndividualForm({
                   }}
                 />
                 <Autocomplete
-                  disabled={!canEdit}
                   options={photoOptions ?? []}
                   getOptionLabel={(option: OptionType) => option.label}
                   renderInput={(params) => (
@@ -353,7 +345,6 @@ export function IndividualForm({
               </div>
               <div></div>
               <TextField
-                disabled={!canEdit}
                 label="Anteckningar"
                 variant={inputVariant}
                 className={style.wideControl}
