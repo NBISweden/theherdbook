@@ -209,8 +209,6 @@ export function Footer() {
       </div>
 
       <Typography className="euText">
-        <br></br>
-        <br></br>
         Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands- och
         Mellerudskanin. Stödet går till genbanksbesättningarna,
         medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och

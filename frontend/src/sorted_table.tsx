@@ -195,7 +195,7 @@ export function SortedTable({
   return (
     <>
       <div
-        className={props.className ?? table}
+        className={props.className ?? "table"}
         style={props.style ?? props.style}
       >
         {data ? (
