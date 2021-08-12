@@ -34,59 +34,6 @@ import {
 import { get, updateHerd, createHerd } from "@app/communication";
 import { FieldWithPermission } from "@app/field_with_permission";
 
-// Define styles for the form
-const useStyles = makeStyles({
-  form: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  simpleField: {
-    width: "100%",
-  },
-  title: {
-    fontSize: "2em",
-    borderBottom: "1px solid lightgrey",
-    margin: "5px 0 20px 0",
-  },
-  subheading: {
-    fontSize: 14,
-    borderBottom: "1px solid lightgrey",
-    margin: "20px 0 5px 0",
-  },
-  formCard: {
-    padding: "15px",
-    margin: "10px",
-    maxWidth: "450px",
-    border: "1px solid grey",
-    borderRadius: "5px",
-  },
-  editButton: {
-    float: "right",
-    margin: "20px 0 0 0",
-  },
-  editLink: {
-    color: "blue",
-    "&:hover": {
-      color: "purple",
-      cursor: "pointer",
-    },
-  },
-  spanTitle: {
-    fontWeight: "bold",
-    marginLeft: "20px",
-  },
-  contactInfo: {
-    marginBottom: "30px",
-  },
-  permissionGroup: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  permissionField: {
-    width: "200px",
-  },
-});
-
 const defaultValues: Herd = {
   id: -1,
   genebank: -1,
@@ -142,7 +89,6 @@ export function HerdForm({
   const [currentView, setCurrentView] = React.useState(view);
   const [isNew, setNew] = React.useState(false);
   const history = useHistory();
-  const classes = useStyles();
 
   const contactFields: ContactField[] = [
     { field: "name", label: "Namn" },
@@ -301,10 +247,10 @@ export function HerdForm({
       {(loading && <h2>Loading...</h2>) || (
         <>
           {change && user?.canEdit(herd.herd) && (
-            <div className={classes.editButton}>
+            <div className="editButton">
               [{" "}
               <a
-                className={classes.editLink}
+                className="editLink"
                 onClick={() =>
                   setCurrentView(currentView == "form" ? "info" : "form")
                 }
@@ -314,16 +260,16 @@ export function HerdForm({
               ]
             </div>
           )}
-          <h1 className={classes.title}>
+          <h1 className="titleHerd">
             {herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}
           </h1>
           {(currentView == "form" && user && user.canEdit(herd.herd) && (
             <>
-              <form className={classes.form}>
+              <form className="form">
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                  <div className={classes.formCard}>
+                  <div className="formCard">
                     <Typography
-                      className={classes.title}
+                      className="titleHerd"
                       color="primary"
                       gutterBottom
                     >
@@ -360,9 +306,9 @@ export function HerdForm({
                     />
                   </div>
 
-                  <div className={classes.formCard}>
+                  <div className="formCard">
                     <Typography
-                      className={classes.title}
+                      className="titleHerd"
                       color="primary"
                       gutterBottom
                     >
@@ -371,7 +317,7 @@ export function HerdForm({
 
                     <TextField
                       label="Besättningsnamn"
-                      className={classes.simpleField}
+                      className="simpleField"
                       value={herd.herd_name}
                       variant={inputVariant}
                       onChange={(e: any) => {
@@ -398,7 +344,7 @@ export function HerdForm({
                       autoOk
                       variant="inline"
                       inputVariant={inputVariant}
-                      className={classes.simpleField}
+                      className="simpleField"
                       label="Startdatum"
                       format={dateFormat}
                       value={herd.start_date ?? ""}
@@ -411,7 +357,7 @@ export function HerdForm({
                     />
                     <TextField
                       label="Besättnings-ID"
-                      className={classes.simpleField}
+                      className="simpleField"
                       disabled={!isNew}
                       value={herd.herd}
                       variant={inputVariant}
@@ -438,7 +384,7 @@ export function HerdForm({
                           {...params}
                           label="Genbank"
                           variant={inputVariant}
-                          className={classes.permissionField}
+                          className="permissionField"
                           margin="normal"
                         />
                       )}
@@ -447,10 +393,7 @@ export function HerdForm({
                       }}
                     />
 
-                    <Typography
-                      className={classes.subheading}
-                      color="textSecondary"
-                    >
+                    <Typography className="subheading" color="textSecondary">
                       Besättningen har{" "}
                       {herd?.individuals ? herd.individuals.length : 0}{" "}
                       individer
@@ -467,10 +410,10 @@ export function HerdForm({
               </Button>
             </>
           )) || (
-            <div className={classes.contactInfo}>
+            <div className="contactInfo">
               {herd.name && (
                 <>
-                  <span className={classes.spanTitle}>Kontaktperson: </span>
+                  <span className="spanTitle">Kontaktperson: </span>
                   {herd.name}
                   {herd.email && (
                     <>
