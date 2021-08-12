@@ -400,10 +400,14 @@ class Breeding(BaseModel):
 
         indexes = ((("mother", "father", "birth_date"), True),)
 
+    @staticmethod
     def next_individual_number(herd, birth_date, breeding_event):
         """
         Returns the number for the next individual in a litter for a given year and herd.
         """
+        if isinstance(birth_date, str):
+            birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
+            assert(isinstance(birth_date, datetime))
 
         try:
             events = (

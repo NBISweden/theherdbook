@@ -832,7 +832,7 @@ def form_to_individual(form, user=None):
     # Update individual fields by looping through all fields on an Individual
     # object.
     for key in vars(Individual).keys():
-        if key in form:
+        if form.get(key, None) is not None:
             if key.startswith("_"):
                 continue
             if key and key.endswith("date"):
