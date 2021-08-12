@@ -214,13 +214,13 @@ export function BreedingForm({
     return true;
   };
 
-  const createEmptyIndividual = (individual: Individual): boolean => {
+  const createEmptyIndividual = (individual: Individual): any => {
     post("/api/individual", individual).then(
       (json) => {
         switch (json.status) {
           case "success": {
             userMessage("Kaninen har lagts till i din besättning.", "success");
-            return true;
+            break;
           }
           case "error": {
             switch (json.message) {
@@ -228,36 +228,35 @@ export function BreedingForm({
                 {
                   userMessage("Du är inte inloggad.", "error");
                 }
-                return false;
+                break;
               case "Individual must have a valid herd":
                 {
                   userMessage("Besättningen kunde inte hittas.", "error");
                 }
-                return false;
+                break;
               case "Forbidden": {
                 userMessage(
                   "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
                   "error"
                 );
-                return false;
+                break;
               }
               default: {
                 userMessage(
                   "Något gick fel. Det här borde inte hända.",
                   "error"
                 );
-                return false;
+                break;
               }
             }
           }
         }
+        return json.status;
       },
       (error) => {
         userMessage("Något gick fel.", "error");
-        return false;
       }
     );
-    return false;
   };
 
   /**
@@ -324,7 +323,6 @@ export function BreedingForm({
         userMessage("Något gick fel", "error");
         return;
       }
-      console.log(breeding.litter_size);
 
       const originHerdNameID: HerdNameID = {
         herd: herdId,
@@ -341,17 +339,14 @@ export function BreedingForm({
         genebank: genebank?.name,
         certificate: null,
         number: null,
-        birth_date: breeding.birth_date,
+        birth_date: newBirthData.date,
         father: fatherInd,
         mother: motherInd,
-        color: null,
         color_note: null,
         death_date: null,
         death_note: null,
-        litter: breeding.id ? breeding.id : 0,
+        litter: null,
         notes: null,
-        weights: null,
-        bodyfat: null,
         herd_tracking: null,
         herd_active: true,
         active: false,
@@ -361,11 +356,12 @@ export function BreedingForm({
         claw_color: null,
         hair_notes: "",
         selling_date: null,
-        breeding: null,
+        breeding: newBirthData.id ? newBirthData.id : 0,
       };
       for (let i = 0; i < breeding.litter_size; i++) {
-        let success: boolean = createEmptyIndividual(emptyIndividual);
-        if (!success) {
+        await new Promise((r) => setTimeout(r, 2000));
+        status = createEmptyIndividual(emptyIndividual);
+        if (!status || status == "error") {
           break;
         }
       }
