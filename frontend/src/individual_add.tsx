@@ -467,7 +467,11 @@ export function IndividualAdd({
     const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
       number: numberParts
-        ? numberParts[0] + "-" + numberParts[1][0] + numberParts[1][1]
+        ? numberParts[0] +
+          "-" +
+          numberParts[1][0] +
+          numberParts[1][1] +
+          numberParts[1][2]
         : null,
       origin_herd: individual.origin_herd,
       birth_date: individual.birth_date,
