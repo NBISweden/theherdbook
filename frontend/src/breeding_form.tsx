@@ -319,7 +319,7 @@ export function BreedingForm({
     if (!!newBirth) {
       userMessage("Sparat!", "success");
       handleBreedingsChanged();
-      if (!breeding.litter_size || !herdId) {
+      if (!herdId) {
         userMessage("Något gick fel", "error");
         return;
       }
@@ -346,7 +346,7 @@ export function BreedingForm({
         death_date: null,
         death_note: null,
         litter: null,
-        notes: null,
+        notes: "",
         herd_tracking: null,
         herd_active: true,
         active: false,
