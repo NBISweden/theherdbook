@@ -48,6 +48,9 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     padding: "20px 0",
   },
+  formWrapper: {
+    padding: "3em 3em 0 3em",
+  },
 });
 
 export function IndividualCertificate({
@@ -332,18 +335,20 @@ export function IndividualCertificate({
         </div>
       ) : individual && showForm ? (
         <>
-          <IndividualForm
-            individual={individual}
-            canManage={canManage}
-            canEdit={canEdit}
-            onUpdateIndividual={handleUpdateIndividual}
-            formAction={FormAction.handleCertificate}
-            colorError={colorError}
-            numberError={numberError}
-            sexError={sexError}
-            birthDateError={birthDateError}
-            litterError={litterError}
-          />
+          <div className={style.formWrapper}>
+            <IndividualForm
+              individual={individual}
+              canManage={canManage}
+              canEdit={canEdit}
+              onUpdateIndividual={handleUpdateIndividual}
+              formAction={FormAction.handleCertificate}
+              colorError={colorError}
+              numberError={numberError}
+              sexError={sexError}
+              birthDateError={birthDateError}
+              litterError={litterError}
+            />
+          </div>
           <div className={style.paneControls}>
             <Button
               variant="contained"

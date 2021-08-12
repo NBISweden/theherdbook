@@ -74,7 +74,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-type TabValue = "list" | "pedigree";
+type TabValue = "list" | "pedigree" | "breeding";
 
 /**
  * Shows herd information, with a list of all individuals belonging to that
@@ -144,6 +144,7 @@ export function HerdView({ id }: { id: string | undefined }) {
             variant="fullWidth"
           >
             <Tab label="Lista över individer" value="list" />
+            <Tab label="Parningstillfällen" value="breeding" />
             <Tab label="Släktträd för besättningen" value="pedigree" />
           </Tabs>
         </AppBar>
@@ -173,6 +174,9 @@ export function HerdView({ id }: { id: string | undefined }) {
             </div>
           )}
         </TabPanel>
+        <TabPanel value={activeTab} index="breeding">
+          <BreedingList id={id} />
+        </TabPanel>
         <TabPanel value={activeTab} index="pedigree">
           <div style={{ marginTop: 10, display: "flex" }}>
             <label style={{ margin: "auto" }}>
@@ -195,7 +199,6 @@ export function HerdView({ id }: { id: string | undefined }) {
             />
           )}
         </TabPanel>
-        <BreedingList id={id} />
       </Paper>
     </>
   );

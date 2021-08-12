@@ -40,6 +40,13 @@ const useStyles = makeStyles({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: "0 3em 3em 3em ",
+    width: "40%",
+    ["@media (max-width: 2000px)"]: {
+      width: "60%",
+    },
+    ["@media (max-width: 1250px)"]: {
+      width: "100%",
+    },
   },
   control: {
     margin: "0.3em",
@@ -49,8 +56,7 @@ const useStyles = makeStyles({
   ancestorBox: {
     display: "flex",
     flexDirection: "column",
-    margin: "0 0 4em 0",
-    flexBasis: "30em",
+    margin: "2em 0 0 0",
     padding: "0 3em",
   },
   ancestorInput: {
@@ -59,7 +65,15 @@ const useStyles = makeStyles({
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
-    alignItems: "end",
+    flexDirection: "column",
+    width: "40%",
+    ["@media (max-width: 2000px)"]: {
+      width: "60%",
+    },
+    ["@media (max-width: 1250px)"]: {
+      width: "100%",
+    },
+    padding: "3em",
   },
   responseBox: {
     maxWidth: "65em",
@@ -96,7 +110,7 @@ export function IndividualAdd({
 }) {
   const [individual, setIndividual] = React.useState({} as Individual);
   const [currentGenebank, setCurrentGenebank] = React.useState(
-    genebank ? genebank : (undefined as Genebank | undefined)
+    undefined as Genebank | undefined
   );
   const [success, setSuccess] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
@@ -134,17 +148,18 @@ export function IndividualAdd({
   };
 
   React.useEffect(() => {
-    // if there is no genebank, generate it from the herdId
-    if (!currentGenebank) {
-      const originGenebank = genebanks.find((currentGenebank) =>
-        currentGenebank.herds.filter((herd) => herd.herd == herdId)
+    if (!!genebank) {
+      setCurrentGenebank(genebank);
+    } else {
+      const originGenebank = genebanks.find((g) =>
+        g.herds.filter((herd) => herd.herd == herdId)
       );
       setCurrentGenebank(originGenebank);
     }
     if (herdId) {
       handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
     }
-  }, [herdId]);
+  }, [herdId, genebank]);
 
   // add the field genebank to the individual to get the color options in the form
   // make sure it also is triggered after resetBlank has been called
@@ -230,6 +245,10 @@ export function IndividualAdd({
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
     }
+    if (!/^([a-zA-Z][0-9]+-[0-9][0-9][0-9][0-9]+)$/.test(individual.number)) {
+      userMessage("Individens nummer har fel format.", "warning");
+      return false;
+    }
     if (individual.litter <= 0 || individual.litter > 9) {
       userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
       return false;
@@ -269,9 +288,7 @@ export function IndividualAdd({
     const originHerd = currentGenebank?.herds.find(
       (herd: LimitedHerd) => herd.herd == originHerdNumber
     );
-    if (
-      !(originHerd && originHerd.herd_name && originHerd.herd && originHerd.id)
-    ) {
+    if (!(originHerd && originHerd.herd && originHerd.id)) {
       userMessage(
         "Första delen i individens nummer motsvarar ingen besättning.",
         "warning"
@@ -279,7 +296,7 @@ export function IndividualAdd({
       return;
     }
     const originHerdNameID: HerdNameID = {
-      herd_name: originHerd.herd_name,
+      herd_name: originHerd.herd_name ?? null,
       herd: originHerd.herd,
       id: originHerd.id,
     };
@@ -327,7 +344,7 @@ export function IndividualAdd({
       );
       const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
-        return updatedBreeding.id;
+        return modifiedBreedingUpdates.id;
       }
     }
 
@@ -449,7 +466,13 @@ export function IndividualAdd({
   const resetSibling = () => {
     const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
-      number: numberParts ? numberParts[0] + "-" : null,
+      number: numberParts
+        ? numberParts[0] +
+          "-" +
+          numberParts[1][0] +
+          numberParts[1][1] +
+          numberParts[1][2]
+        : null,
       origin_herd: individual.origin_herd,
       birth_date: individual.birth_date,
       mother: individual.mother,
@@ -463,18 +486,7 @@ export function IndividualAdd({
   return (
     <>
       <div className={style.inputBox}>
-        <IndividualForm
-          onUpdateIndividual={handleUpdateIndividual}
-          individual={individual}
-          canEdit={user?.canEdit(herdId)}
-          formAction={FormAction.AddIndividual}
-          colorKey={colorKey}
-          colorError={colorError}
-          numberError={numberError}
-          sexError={sexError}
-          birthDateError={birthDateError}
-          litterError={litterError}
-        />
+        <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
@@ -505,8 +517,26 @@ export function IndividualAdd({
               <TextField {...params} label="Välj far" variant="outlined" />
             )}
           />
-          {!herdId && (
-            <>
+        </div>
+        <div className={style.ancestorBox}>
+          <h2>Fyll i uppgifterna om kaninen</h2>
+          <IndividualForm
+            genebank={currentGenebank}
+            onUpdateIndividual={handleUpdateIndividual}
+            individual={individual}
+            canEdit={user?.canEdit(herdId)}
+            formAction={FormAction.AddIndividual}
+            colorKey={colorKey}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
+          />
+        </div>
+        {!herdId && (
+          <>
+            <div className={style.ancestorBox}>
               <h2 className={style.sellingTitle}>
                 Fyll i bara om kaninen har sålts
               </h2>
@@ -516,9 +546,9 @@ export function IndividualAdd({
                 herdKey={herdKey}
                 onUpdateIndividual={handleUpdateIndividual}
               />
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
         {success && (
           <>
             <div className={style.bottomBox}>
