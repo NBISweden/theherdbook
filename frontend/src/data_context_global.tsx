@@ -45,14 +45,14 @@ export interface Individual extends LimitedIndividual {
   birth_date: string | null;
   mother: LimitedIndividual | null;
   father: LimitedIndividual | null;
-  color: string | null;
+  color?: string | null;
   color_note: string | null;
   death_date: string | null;
   death_note: string | null;
   litter: number | null;
   notes: string | null;
-  weights: Array<DateWeight> | null;
-  bodyfat: Array<DateBodyfat> | null;
+  weights?: Array<DateWeight> | null;
+  bodyfat?: Array<DateBodyfat> | null;
   herd_tracking: Array<DateValue> | null;
   herd_active: boolean;
   active: boolean;
