@@ -24,6 +24,7 @@ from utils.database import HerdTracking  # isort: skip
 from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
+from utils.database import next_individual_number  # isort: skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
@@ -872,7 +873,7 @@ def add_individual(form, user_uuid):
         return {"status": "error", "message": "Forbidden"}
 
     if form.get("number", None) is None and "breeding" in form:
-        form["number"] = Breeding.next_individual_number(
+        form["number"] = next_individual_number(
             herd=form["herd"],
             birth_date=form["birth_date"],
             breeding_event=form["breeding"],
