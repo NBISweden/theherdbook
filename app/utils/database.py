@@ -407,7 +407,7 @@ class Breeding(BaseModel):
         """
         if isinstance(birth_date, str):
             birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
-            assert(isinstance(birth_date, datetime))
+            assert isinstance(birth_date, datetime)
 
         try:
             events = (
