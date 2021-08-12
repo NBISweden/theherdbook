@@ -113,24 +113,15 @@ export interface Breeding {
   [key: string]: any;
   id?: number;
   breed_date: string | null;
-  breed_notes: string;
+  breed_notes?: string;
   father: string;
   mother: string;
   birth_date: string | null;
-  birth_notes: string;
+  birth_notes?: string;
   litter_size: number | null;
 }
 
-export interface ExtendedBreeding {
-  [key: string]: any;
-  id?: number;
-  breed_date: string | null;
-  breed_notes: string;
-  father: string;
-  mother: string;
-  birth_date: string | null;
-  birth_notes: string;
-  litter_size: number | null;
+export interface ExtendedBreeding extends Breeding {
   mother_name: string | null | undefined;
   father_name: string | null | undefined;
 }
