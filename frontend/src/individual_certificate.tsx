@@ -143,14 +143,8 @@ export function IndividualCertificate({
    */
   React.useEffect(() => {
     const formatDate = (fullDate: string) => {
-      const date = new Date(fullDate);
-      const year = date.getFullYear().toString();
-      const monthInt = date.getMonth() + 1;
-      const month =
-        monthInt < 10 ? "0" + monthInt.toString() : monthInt.toString();
-      const dayInt = date.getDate();
-      const day = dayInt < 10 ? "0" + dayInt.toString() : dayInt.toString();
-      const dateString = `${year}-${month}-${day}`;
+      const date = new Date(fullDate).toISOString();
+      const dateString = date.split("T")[0];
       return dateString;
     };
     if (
