@@ -135,6 +135,34 @@ export function IndividualCertificate({
           "error"
         );
   }, [id, user]);
+
+  /**
+   * The API sends the birth date in a format like this:
+   * "Thu, 08 Jul 2021 00:00:00 GMT".
+   * This function turns it into a format like this: "YYYY-MM-DD"
+   */
+  React.useEffect(() => {
+    const formatDate = (fullDate: string) => {
+      const date = new Date(fullDate);
+      const year = date.getFullYear().toString();
+      const monthInt = date.getMonth() + 1;
+      const month =
+        monthInt < 10 ? "0" + monthInt.toString() : monthInt.toString();
+      const dayInt = date.getDate();
+      const day = dayInt < 10 ? "0" + dayInt.toString() : dayInt.toString();
+      const dateString = `${year}-${month}-${day}`;
+      return dateString;
+    };
+    if (
+      // check if the birth date is still in the wrong format,
+      // i.e. has more than 10 characters
+      individual?.birth_date &&
+      individual.birth_date.length > 10
+    ) {
+      handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
+    }
+  }, [individual?.birth_date]);
+
   /**
    * Updates a single field in `individual`.
    *
