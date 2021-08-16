@@ -23,7 +23,6 @@ from peewee import (
     FloatField,
     ForeignKeyField,
     IntegerField,
-    JOIN,
     Model,
     OperationalError,
     PostgresqlDatabase,
