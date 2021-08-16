@@ -64,11 +64,16 @@ services:
               source: ./R
               target: /code
     s3backend:
-        command: server /data
+        command: -c 'echo s3user:x:$$(stat -c %u /data):0:s3 user:/:/bin/sh >> /etc/passwd && su s3user -c "mkdir -p /data/$${S3_BUCKET} && minio server /data"'
+        entrypoint: /bin/sh
         container_name: s3backend
         environment:
             - MINIO_ACCESS_KEY=accesskeytest
             - MINIO_SECRET_KEY=secretkeytest
+        env_file:
+            - ./.docker/main-api-variables.env
+        volumes:
+            - ./s3data:/data
         healthcheck:
             test: ["CMD", "curl", "-fkq", "http://localhost:9000/minio/health/live"]
             interval: 5s
