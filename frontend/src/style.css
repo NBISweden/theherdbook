@@ -1,5 +1,23 @@
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
+@import url("https://fonts.googleapis.com/css?family=Roboto");
 
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background: #ddd center / cover no-repeat url("/images/background.jpg") fixed;
+  margin: 0;
+  padding: 0 5px;
+  min-height: calc(100vh - 56px);
+  width: 100%;
+}
+
+/* Used in navigation.tsx ============================================================================ */
 .menu {
   position: fixed;
   z-index: 100;
@@ -65,6 +83,8 @@ list-item {
   display: block;
 }
 
+/* Used in static_pages.tsx ======================================================================= */
+
 .staticMain {
   padding: 0.25em 1em 0.5em 1em;
   display: flex;
@@ -102,7 +122,7 @@ list-item {
   background: white;
   display: flex;
   opacity: 0.9;
-  text-align: center;
+  text-align: justify;
 }
 
 .heading {
@@ -140,7 +160,16 @@ list-item {
     font-size: 4em;
     color: #222;
   }
+  /* stylelint-disable */
+  body {
+    background: #ddd center / cover no-repeat url("/images/background.jpg")
+      fixed;
+    padding: 0 20px;
+  }
+  /* stylelint-enable */
 }
+
+/* Used in filter_table.tsx, genebank_view.tsx and sorted_table.tsx ==================================== */
 
 .table {
   height: 100%;
@@ -148,10 +177,14 @@ list-item {
   overflow-y: scroll;
 }
 
+/* Used in filter_table.tsx, sorted_table.tsx =========================================================== */
+
 .sortedTable {
   padding: 5px;
   overflow-y: scroll;
 }
+
+/* Used in filter_table.tsx ============================================================================= */
 
 .columnLabel {
   padding-right: 30px;
@@ -174,6 +207,7 @@ list-item {
   cursor: pointer;
 }
 
+/* Used in filter_table.tsx and sorted_table.tsx ======================================================= */
 .sorted {
   border: 0;
   clip: rect(0 0 0 0);
@@ -186,6 +220,7 @@ list-item {
   width: 1;
 }
 
+/* Used in filter_table.tsx =========================================================================== */
 .search {
   float: right;
 }
@@ -207,10 +242,12 @@ list-item {
   color: blue;
 }
 
+/* Used in herd_view.tsx ============================================================================= */
 .container {
   padding: 20px;
 }
 
+/* Used in herdForm.tsx ============================================================================== */
 form {
   display: flex;
   flex-direction: row;

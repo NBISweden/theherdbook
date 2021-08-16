@@ -471,7 +471,7 @@ export function FilterTable({
                         >
                           {column.label}
                           {orderBy === column.field ? (
-                            <span className="sorted">
+                            <span className="sortedTable">
                               {order === "desc"
                                 ? "sorted descending"
                                 : "sorted ascending"}

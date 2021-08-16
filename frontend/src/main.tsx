@@ -11,27 +11,6 @@ import { WithMessageContext } from "@app/message_context";
 import { WithBreedingContext } from "@app/breeding_context";
 import { Navigation } from "@app/navigation";
 
-const CSS = sc.createGlobalStyle`
-  html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-  }
-  body {
-    font-family: 'Roboto';
-    background: #ddd left / cover no-repeat url('/images/background.jpg') fixed;
-    margin: 0;
-    padding: 0 5px;
-    min-height: calc(100vh - 56px);
-    width: 100%;
-    @media (min-width:660px): {
-      background: #ddd center / cover no-repeat url('/images/background.jpg') fixed;
-      padding: 0 20px;
-    },
-  }
-`;
-
 const Main = (
   <>
     <CssBaseline />
@@ -46,7 +25,6 @@ const Main = (
         </WithUserContext>
       </WithDataContext>
     </BrowserRouter>
-    <CSS />
   </>
 );
 

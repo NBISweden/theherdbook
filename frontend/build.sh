@@ -5,6 +5,7 @@ esbuild                                          \
     --outdir=dist                                \
     --loader:.png=file                           \
     --loader:.jpg=file                           \
+    --external:/images/*                         \
     --target=es6                                 \
     --minify                                     \
     "--define:process.env.NODE_ENV='production'" \
