@@ -30,6 +30,7 @@ import { IndividualCertificate } from "./individual_certificate";
 import { CertificateVerification } from "./certificate_verification";
 import { CertificateDownload } from "./certificate_download";
 import { IndividualSell } from "./individual_sell";
+import { HerdView } from "@app/herd_view";
 
 const useStyles = makeStyles({
   body: {
@@ -369,7 +370,16 @@ export function IndividualView({ id }: { id: string }) {
                     individual.herd_tracking.map((herdTrack: any, i) => {
                       if (herdTrack.herd) {
                         return (
-                          <Link to={`/herd/${herdTrack.herd}`} key={i}>
+                          <Link
+                            onClick={() =>
+                              popup(
+                                <HerdView id={herdTrack.herd} />,
+                                `/herd/${herdTrack.herd}`,
+                                true
+                              )
+                            }
+                            key={i}
+                          >
                             <li>
                               {asLocale(herdTrack.date)}: {herdLabel(herdTrack)}
                             </li>
@@ -402,7 +412,14 @@ export function IndividualView({ id }: { id: string }) {
                     <li>
                       Mor:
                       {individual.mother ? (
-                        <Link to={`/individual/${individual.mother.number}`}>
+                        <Link
+                          onClick={() =>
+                            popup(
+                              <IndividualView id={individual.mother.number} />,
+                              `/individual/${individual.mother.number}`
+                            )
+                          }
+                        >
                           {individualLabel(individual.mother)}
                         </Link>
                       ) : (
@@ -412,7 +429,14 @@ export function IndividualView({ id }: { id: string }) {
                     <li>
                       Far:
                       {individual.father ? (
-                        <Link to={`/individual/${individual.father.number}`}>
+                        <Link
+                          onClick={() =>
+                            popup(
+                              <IndividualView id={individual.father.number} />,
+                              `/individual/${individual.father.number}`
+                            )
+                          }
+                        >
                           {individualLabel(individual.father)}
                         </Link>
                       ) : (
@@ -436,7 +460,14 @@ export function IndividualView({ id }: { id: string }) {
                             : inactiveIcon
                           : deadIcon}
                       </span>
-                      <Link to={`/individual/${child.number}`}>
+                      <Link
+                        onClick={() =>
+                          popup(
+                            <IndividualView id={child.number} />,
+                            `/individual/${child.number}`
+                          )
+                        }
+                      >
                         {individualLabel(child)}
                       </Link>
                     </li>
