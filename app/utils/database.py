@@ -429,9 +429,7 @@ def next_individual_number(herd, birth_date, breeding_event):
         if litter_size == 0:
             next_litter += 1
 
-        ind_number = (
-            f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
-        )
+        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
 
         return ind_number
 
