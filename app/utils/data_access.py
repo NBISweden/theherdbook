@@ -24,6 +24,7 @@ from utils.database import HerdTracking  # isort: skip
 from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
+from utils.database import next_individual_number  # isort: skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
@@ -792,6 +793,14 @@ def form_to_individual(form, user=None):
             if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
+    # Make sure a valid breeding id is passed
+    if "breeding" in form:
+        try:
+            with DATABASE.atomic():
+                form["breeding"] = Breeding.get(Breeding.id == form["breeding"])
+        except DoesNotExist:
+            raise ValueError(f"Unknown breeding event: '{form['breeding']}''")
+
     # Color is stored as name in the form, but needs to be converted to id
     if "color" in form:
         try:
@@ -824,7 +833,7 @@ def form_to_individual(form, user=None):
     # Update individual fields by looping through all fields on an Individual
     # object.
     for key in vars(Individual).keys():
-        if key in form:
+        if form.get(key, None) is not None:
             if key.startswith("_"):
                 continue
             if key and key.endswith("date"):
@@ -862,6 +871,13 @@ def add_individual(form, user_uuid):
 
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}
+
+    if form.get("number", None) is None and "breeding" in form:
+        form["number"] = next_individual_number(
+            herd=form["herd"],
+            birth_date=form["birth_date"],
+            breeding_event=form["breeding"],
+        )
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}

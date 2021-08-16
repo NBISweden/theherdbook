@@ -401,6 +401,43 @@ class Breeding(BaseModel):
         indexes = ((("mother", "father", "birth_date"), True),)
 
 
+def next_individual_number(herd, birth_date, breeding_event):
+    """
+    Returns the number for the next individual in a litter for a given year and herd.
+    """
+    if isinstance(birth_date, str):
+        birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
+        assert isinstance(birth_date, datetime)
+    try:
+        events = (
+            Breeding.select(Breeding.id)
+            .join(Individual, on=(Breeding.id == Individual.breeding))
+            .join(Herd, on=(Herd.id == Individual.origin_herd))
+            .where((Herd.herd == herd))
+            .distinct()
+        )
+
+        next_litter = len(events)
+
+        individuals = (
+            Individual.select(Individual).where(
+                Individual.breeding == str(breeding_event)
+            )
+        ).execute()
+
+        litter_size = len(individuals)
+        if litter_size == 0:
+            next_litter += 1
+
+        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+
+        return ind_number
+
+    except DoesNotExist:
+        pass
+    return None
+
+
 class Individual(BaseModel):
     """
     Table for individual animals.

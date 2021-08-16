@@ -7,9 +7,9 @@ export interface NameID {
 }
 
 export interface HerdNameID {
-  herd_name: string;
+  herd_name?: string;
   herd: string;
-  id: number;
+  id?: number;
 }
 
 export interface DateValue {
@@ -31,28 +31,28 @@ export interface DateBodyfat {
 }
 
 export interface LimitedIndividual {
-  id: number;
-  name: string | null;
-  number: string;
+  id?: number;
+  name?: string | null;
+  number: string | null;
   sex?: string;
 }
 
 export interface Individual extends LimitedIndividual {
   herd: HerdNameID | string;
   origin_herd?: HerdNameID;
-  genebank: string;
+  genebank?: string;
   certificate: string | null;
   birth_date: string | null;
   mother: LimitedIndividual | null;
   father: LimitedIndividual | null;
-  color: string | null;
+  color?: string | null;
   color_note: string | null;
   death_date: string | null;
   death_note: string | null;
   litter: number | null;
   notes: string | null;
-  weights: Array<DateWeight> | null;
-  bodyfat: Array<DateBodyfat> | null;
+  weights?: Array<DateWeight> | null;
+  bodyfat?: Array<DateBodyfat> | null;
   herd_tracking: Array<DateValue> | null;
   herd_active: boolean;
   active: boolean;
