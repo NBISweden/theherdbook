@@ -23,6 +23,7 @@ from peewee import (
     FloatField,
     ForeignKeyField,
     IntegerField,
+    JOIN,
     Model,
     OperationalError,
     PostgresqlDatabase,
@@ -408,33 +409,44 @@ def next_individual_number(herd, birth_date, breeding_event):
     if isinstance(birth_date, str):
         birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
         assert isinstance(birth_date, datetime)
+        try:
 
-    try:
-        events = (
-            Breeding.select(Breeding)
-            .join(Individual, on=(Breeding.id == Individual.breeding))
-            .join(Herd, on=(Herd.id == Individual.origin_herd))
-            .where((Herd.herd == herd))
-            .distinct()
-        ).execute()
+            current_herd = HerdTracking.select(
+                HerdTracking.herd.alias("herd"),
+                HerdTracking.herd_tracking_date.alias("ht_date"),
+                HerdTracking.individual.alias("i_id"),
+            ).distinct()
 
-        next_litter = len(events)
-
-        individuals = (
-            Individual.select(Individual).where(
-                Individual.breeding == str(breeding_event)
+            events = (
+                Breeding.select(Breeding.id)
+                .join(Individual, on=(Breeding.id == Individual.breeding))
+                .join(current_herd, on=(Individual.id == current_herd.c.i_id))
+                .join(Herd, on=(Herd.id == current_herd.c.herd))
+                .where((Herd.herd == herd))
+                .distinct()
             )
-        ).execute()
 
-        litter_size = len(individuals)
+            next_litter = len(events)
 
-        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+            individuals = (
+                Individual.select(Individual).where(
+                    Individual.breeding == str(breeding_event)
+                )
+            ).execute()
 
-        return ind_number
+            litter_size = len(individuals)
+            if litter_size == 0:
+                next_litter += 1
 
-    except DoesNotExist:
-        pass
-    return None
+            ind_number = (
+                f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+            )
+
+            return ind_number
+
+        except DoesNotExist:
+            pass
+        return None
 
 
 class Individual(BaseModel):
