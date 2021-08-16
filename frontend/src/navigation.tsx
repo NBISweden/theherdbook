@@ -1,7 +1,12 @@
 import * as React from "react";
 import { Switch, Route, useLocation, Redirect, Link } from "react-router-dom";
 
-import { makeStyles } from "@material-ui/core/styles";
+import {
+  makeStyles,
+  createMuiTheme,
+  ThemeProvider,
+} from "@material-ui/core/styles";
+import { svSE } from "@material-ui/core/locale";
 import Paper from "@material-ui/core/Paper";
 import HomeIcon from "@material-ui/icons/Home";
 import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
@@ -186,6 +191,7 @@ export function Navigation() {
   const is_admin = !!(user?.is_manager || user?.is_admin);
   const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const is_logged_in = !!user;
+  const theme = createMuiTheme({}, svSE);
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -337,100 +343,108 @@ export function Navigation() {
 
   return (
     <>
-      {/* Insert the tab menu */}
-      <div className={classes.menu}>
-        <Button
-          aria-controls="customized-menu"
-          aria-haspopup="true"
-          className={classes.menuButton}
-          onClick={handleClick}
+      <ThemeProvider theme={theme}>
+        {/* Insert the tab menu */}
+        <div className={classes.menu}>
+          <Button
+            aria-controls="customized-menu"
+            aria-haspopup="true"
+            className={classes.menuButton}
+            onClick={handleClick}
+          >
+            <span className={classes.trigram}>☰</span>
+            <Typography variant="subtitle1">Menu</Typography>
+          </Button>
+
+          <StyledMenu
+            id="customized-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            {tabs.map((tab) => (
+              <Link
+                to={tab.path ?? "/"}
+                className={classes.link}
+                style={{ display: tab.visible === false ? "none" : undefined }}
+                onClick={() => {
+                  tab.on_click && tab.on_click();
+                  handleClose();
+                }}
+              >
+                <StyledMenuItem>
+                  <ListItemIcon>{tab.icon}</ListItemIcon>
+                  <ListItemText primary={tab.label} />
+                </StyledMenuItem>
+              </Link>
+            ))}
+          </StyledMenu>
+
+          {/* <Tabs centered/> */}
+        </div>
+        <h1 className={`${classes.logo} ${!showLogoText && classes.hidden}`}>
+          Föreningen <br />
+          Gotlandskaninen
+        </h1>
+        <div
+          className={`${classes.logoImageWrapper} ${
+            !showLogo && classes.hidden
+          }`}
         >
-          <span className={classes.trigram}>☰</span>
-          <Typography variant="subtitle1">Menu</Typography>
-        </Button>
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            className={classes.logoImage}
+          />
+        </div>
 
-        <StyledMenu
-          id="customized-menu"
-          anchorEl={anchorEl}
-          keepMounted
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-        >
-          {tabs.map((tab) => (
-            <Link
-              to={tab.path ?? "/"}
-              className={classes.link}
-              style={{ display: tab.visible === false ? "none" : undefined }}
-              onClick={() => {
-                tab.on_click && tab.on_click();
-                handleClose();
-              }}
-            >
-              <StyledMenuItem>
-                <ListItemIcon>{tab.icon}</ListItemIcon>
-                <ListItemText primary={tab.label} />
-              </StyledMenuItem>
-            </Link>
-          ))}
-        </StyledMenu>
+        {/* Declare routes, and what component should be rendered for each
+         * route.
+         */}
 
-        {/* <Tabs centered/> */}
-      </div>
-      <h1 className={`${classes.logo} ${!showLogoText && classes.hidden}`}>
-        Föreningen <br />
-        Gotlandskaninen
-      </h1>
-      <div
-        className={`${classes.logoImageWrapper} ${!showLogo && classes.hidden}`}
-      >
-        <img src="/images/logo.png" alt="logo" className={classes.logoImage} />
-      </div>
+        <div className={classes.wrapper}>
+          <Paper className={classes.main}>
+            <Switch>
+              {TabbedRoutes}
+              <ui.Routed path="/herd/:id">
+                {(params) => (
+                  <Restricted>
+                    <HerdView id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/individual/:id">
+                {(params) => (
+                  <Restricted>
+                    <IndividualView id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/individual-pedigree/:id/:generations?">
+                {(params) => (
+                  <Restricted>
+                    <IndividualPedigree
+                      id={params.id}
+                      generations={params.generations ? +params.generations : 5}
+                    />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/herd-pedigree/:id">
+                {(params) => (
+                  <Restricted>
+                    <HerdPedigree id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <Route path="/">Welcome!</Route>
+            </Switch>
+          </Paper>
+        </div>
 
-      {/* Declare routes, and what component should be rendered for each
-       * route.
-       */}
-
-      <div className={classes.wrapper}>
-        <Paper className={classes.main}>
-          <Switch>
-            {TabbedRoutes}
-            <ui.Routed path="/herd/:id">
-              {(params) => (
-                <Restricted>
-                  <HerdView id={params.id} />
-                </Restricted>
-              )}
-            </ui.Routed>
-            <ui.Routed path="/individual/:id">
-              {(params) => (
-                <Restricted>
-                  <IndividualView id={params.id} />
-                </Restricted>
-              )}
-            </ui.Routed>
-            <ui.Routed path="/individual-pedigree/:id/:generations?">
-              {(params) => (
-                <Restricted>
-                  <IndividualPedigree
-                    id={params.id}
-                    generations={params.generations ? +params.generations : 5}
-                  />
-                </Restricted>
-              )}
-            </ui.Routed>
-            <ui.Routed path="/herd-pedigree/:id">
-              {(params) => (
-                <Restricted>
-                  <HerdPedigree id={params.id} />
-                </Restricted>
-              )}
-            </ui.Routed>
-            <Route path="/">Welcome!</Route>
-          </Switch>
-        </Paper>
-      </div>
-
-      <Footer />
+        <Footer />
+      </ThemeProvider>
     </>
   );
 }
