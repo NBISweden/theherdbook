@@ -413,7 +413,6 @@ def next_individual_number(herd, birth_date, breeding_event):
 
             current_herd = HerdTracking.select(
                 HerdTracking.herd.alias("herd"),
-                HerdTracking.herd_tracking_date.alias("ht_date"),
                 HerdTracking.individual.alias("i_id"),
             ).distinct()
 
