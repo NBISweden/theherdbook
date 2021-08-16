@@ -415,7 +415,7 @@ def next_individual_number(herd, birth_date, breeding_event):
             .join(Herd, on=(Herd.id == Individual.origin_herd))
             .where((Herd.herd == herd))
             .distinct()
-        )
+        ).execute()
 
         next_litter = len(events)
 
