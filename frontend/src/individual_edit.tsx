@@ -162,6 +162,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [certType, setCertType] = React.useState("unknown" as string);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
@@ -173,6 +174,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
   const style = useStyles();
+
+  const certTypeOptions: OptionType[] = [
+    { value: "digital", label: "Digital" },
+    { value: "paper", label: "Papper" },
+    { value: "none", label: "Inget" },
+    { value: "unknown", label: "Okänt" },
+  ];
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -259,6 +267,23 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         )
       : userMessage("Något gick fel.", "error");
   }, [id]);
+
+  /**
+   * Set certificate type according to individual data
+   */
+  React.useEffect(() => {
+    if (!!individual?.certificate) {
+      setCertType("paper");
+    } else if (!!individual?.digital_certificate) {
+      setCertType("digital");
+    } else {
+      setCertType("none");
+    }
+  }, [individual]);
+
+  const onCertTypeChange = (type: string) => {
+    setCertType(type);
+  };
 
   /**
    * Updates a single field in `individual`.
@@ -420,14 +445,46 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                       updateField("number", event.currentTarget.value);
                     }}
                   />
+                  <Autocomplete
+                    options={certTypeOptions ?? []}
+                    value={certTypeOptions.find(
+                      (option) =>
+                        option.value == certType ??
+                        certTypeOptions[certTypeOptions.length - 1]
+                    )}
+                    getOptionLabel={(option: OptionType) => option.label}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Certifikattyp"
+                        className={style.control}
+                        variant={inputVariant}
+                        margin="normal"
+                      />
+                    )}
+                    onChange={(event: any, newValue: OptionType) =>
+                      onCertTypeChange(newValue?.value ?? "unknown")
+                    }
+                  />
                   <TextField
                     disabled={!canManage}
                     label="Certifikat"
                     className={style.control}
                     variant={inputVariant}
-                    value={individual.certificate ?? ""}
+                    value={
+                      individual.certificate ??
+                      individual.digital_certificate ??
+                      ""
+                    }
                     onChange={(event) => {
-                      updateField("certificate", event.currentTarget.value);
+                      if (!!individual.certificate) {
+                        updateField("certificate", event.currentTarget.value);
+                      } else if (!!individual.digital_certificate) {
+                        updateField(
+                          "digital_certificate",
+                          event.currentTarget.value
+                        );
+                      }
                     }}
                   />
                 </div>
