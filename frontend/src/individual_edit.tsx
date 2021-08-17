@@ -162,7 +162,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
-  const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
@@ -249,22 +248,17 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
-            setIsNew(false);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
-      : userMessage(
-          "You do not have permission to edit this individual",
-          "error"
-        );
-  }, [id, user]);
+      : userMessage("Något gick fel.", "error");
+  }, [id]);
 
   /**
    * Updates a single field in `individual`.
@@ -417,7 +411,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     Kan endast ändras av genbanksansvarig
                   </div>
                   <TextField
-                    disabled
+                    disabled={!canManage}
                     label="Nummer"
                     className={style.control}
                     variant={inputVariant}
@@ -427,7 +421,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     label="Certifikat"
                     className={style.control}
                     variant={inputVariant}
@@ -438,7 +432,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
                 </div>
                 <TextField
-                  disabled={!(isNew || canManage)}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -449,7 +442,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 />
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={sexOptions ?? []}
                     value={
                       sexOptions.find(
@@ -472,7 +464,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
 
                   <KeyboardDatePicker
-                    disabled={!(isNew || canManage)}
                     autoOk
                     variant="inline"
                     className={style.control}
@@ -490,7 +481,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={motherOptions ?? []}
                     value={
                       motherOptions.find(
@@ -512,7 +502,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={fatherOptions ?? []}
                     value={
                       fatherOptions.find(
@@ -536,7 +525,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={colorOptions ?? []}
                     value={
                       colorOptions.find(
@@ -558,7 +546,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
                     label="Färgantecking"
                     variant={inputVariant}
                     className={style.control}

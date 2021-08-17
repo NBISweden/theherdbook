@@ -89,16 +89,6 @@ export function IndividualCertificate({
   const { userMessage } = useMessageContext();
   const style = useStyles();
 
-  // returns true if you are an admin or the manager of the genebank the individual belongs to
-  const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank);
-  }, [user, individual]);
-
-  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
-  const canEdit: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.number);
-  }, [user, individual]);
-
   // Limited version of the individual to be used for the preview
   const certificateData = {
     claw_color: individual?.claw_color,
@@ -118,15 +108,13 @@ export function IndividualCertificate({
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
-            console.log(data);
             setIndividual(data);
             setShowForm(true);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
@@ -357,20 +345,16 @@ export function IndividualCertificate({
         </div>
       ) : individual && showForm ? (
         <>
-          <div className={style.formWrapper}>
-            <IndividualForm
-              individual={individual}
-              canManage={canManage}
-              canEdit={canEdit}
-              onUpdateIndividual={handleUpdateIndividual}
-              formAction={FormAction.handleCertificate}
-              colorError={colorError}
-              numberError={numberError}
-              sexError={sexError}
-              birthDateError={birthDateError}
-              litterError={litterError}
-            />
-          </div>
+          <IndividualForm
+            individual={individual}
+            onUpdateIndividual={handleUpdateIndividual}
+            formAction={FormAction.handleCertificate}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
+          />
           <div className={style.paneControls}>
             <Button
               variant="contained"
