@@ -212,7 +212,9 @@ export function Footer() {
         medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
         utbildningar, transport av värdefulla djur samt obduktioner.
       </Typography>
-      <img src="/images/logo.png" alt="logo" className="logoImage" />
+      <div>
+        <img src="/images/logo.png" alt="logo" className="logoImage" />
+      </div>
     </div>
   );
 }
