@@ -18,7 +18,6 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
-import { makeStyles } from "@material-ui/core/styles";
 import { useDataContext } from "@app/data_context";
 import { useUserContext } from "@app/user_context";
 import { useMessageContext } from "@app/message_context";

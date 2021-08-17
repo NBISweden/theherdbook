@@ -101,7 +101,7 @@ list-item {
 }
 
 .euText {
-  margin: 10px 20px;
+  margin: 10px 10px;
   display: inline;
   font-size: 0.65em;
 }
@@ -122,7 +122,7 @@ list-item {
   background: white;
   display: flex;
   opacity: 0.9;
-  text-align: justify;
+  text-align: left;
 }
 
 .heading {
@@ -137,6 +137,7 @@ list-item {
   padding-right: 4px;
 }
 
+/* desktop */
 @media screen and (min-width: 660px) {
   .main {
     margin-left: 20px;
@@ -167,6 +168,22 @@ list-item {
     padding: 0 20px;
   }
   /* stylelint-enable */
+}
+
+@media screen and (max-width: 320px) {
+  .logoImage {
+    width: 10vh;
+    height: 10vh;
+  }
+
+  .euLogo img {
+    display: inline;
+    height: 10vh;
+  }
+
+  .euText {
+    font-size: 0.5em;
+  }
 }
 
 /* Used in filter_table.tsx, genebank_view.tsx and sorted_table.tsx ==================================== */
@@ -307,4 +324,16 @@ form {
 
 .permissionField {
   width: 200px;
+}
+
+/*  Used in field_with_permission.tsx */
+.permissionFieldExtended {
+  width: 200px;
+  margin-top: 0;
+  margin-left: 5px;
+}
+
+,
+.buttonBar {
+  padding: 5px;
 }

@@ -3,7 +3,6 @@
  */
 
 import * as React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import { Typography } from "@material-ui/core";
 import "./style.css";
 
@@ -207,7 +206,6 @@ export function Footer() {
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
-
       <Typography className="euText">
         Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands- och
         Mellerudskanin. Stödet går till genbanksbesättningarna,

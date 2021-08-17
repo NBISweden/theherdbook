@@ -2,7 +2,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import styled, * as sc from "styled-components";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import { makeStyles } from "@material-ui/core/styles";
 import { BrowserRouter } from "react-router-dom";
 
 import { WithUserContext } from "@app/user_context";
