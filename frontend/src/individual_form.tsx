@@ -256,7 +256,6 @@ export function IndividualForm({
                     <></>
                   )}
                   <KeyboardDatePicker
-                    disabled={!canEdit}
                     required
                     error={birthDateError}
                     autoOk
@@ -327,25 +326,6 @@ export function IndividualForm({
                     onUpdateIndividual("name", event.currentTarget.value);
                   }}
                 />
-                <KeyboardDatePicker
-                  required
-                  error={birthDateError}
-                  autoOk
-                  variant="inline"
-                  className={style.control}
-                  inputVariant={inputVariant}
-                  label="Födelsedatum"
-                  format={dateFormat}
-                  value={individual.birth_date ?? null}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(date, value) => {
-                    value && onUpdateIndividual("birth_date", value);
-                  }}
-                />
-              </div>
-              <div className={style.flexRow}>
                 <Autocomplete
                   options={sexOptions ?? []}
                   className={style.controlWidth}
@@ -370,22 +350,11 @@ export function IndividualForm({
                     onUpdateIndividual("sex", newValue?.value ?? "");
                   }}
                 />
-                <TextField
-                  required
-                  error={litterError}
-                  label="Antal födda i kullen"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.litter ?? 0}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual("litter", +event.currentTarget.value);
-                  }}
-                />
               </div>
               <div className={style.flexRow}>
                 <Autocomplete
                   key={colorKey}
+                  className={style.controlWidth}
                   options={colorOptions ?? []}
                   value={
                     colorOptions.find(
@@ -409,7 +378,10 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
-                  label="Avvikande hårlag"
+                  required
+                  error={litterError}
+                  label="Antal födda i kullen"
+                  className={`${style.control} ${style.controlWidth}`}
                   variant={inputVariant}
                   value={individual.litter ?? 0}
                   type="number"
@@ -466,18 +438,32 @@ export function IndividualForm({
                   )}
                 />
               </div>
-              <div></div>
-              <TextField
-                label="Anteckningar"
-                variant={inputVariant}
-                className={style.wideControl}
-                multiline
-                rows={4}
-                value={individual.notes ?? ""}
-                onChange={(event) => {
-                  onUpdateIndividual("notes", event.currentTarget.value);
-                }}
-              />
+              <div className={style.flexRow}>
+                <TextField
+                  label="Avvikande hårlag"
+                  variant={inputVariant}
+                  className={style.wideControl}
+                  multiline
+                  rows={1}
+                  value={individual.hair_notes ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("hair_notes", event.currentTarget.value);
+                  }}
+                />
+              </div>
+              <div className={style.flexRow}>
+                <TextField
+                  label="Anteckningar"
+                  variant={inputVariant}
+                  className={style.wideControl}
+                  multiline
+                  rows={4}
+                  value={individual.notes ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("notes", event.currentTarget.value);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </MuiPickersUtilsProvider>

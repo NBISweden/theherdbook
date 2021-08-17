@@ -486,17 +486,7 @@ export function IndividualAdd({
   return (
     <>
       <div className={style.inputBox}>
-        <IndividualForm
-          onUpdateIndividual={handleUpdateIndividual}
-          individual={individual}
-          formAction={FormAction.AddIndividual}
-          colorKey={colorKey}
-          colorError={colorError}
-          numberError={numberError}
-          sexError={sexError}
-          birthDateError={birthDateError}
-          litterError={litterError}
-        />
+        <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
@@ -534,7 +524,6 @@ export function IndividualAdd({
             genebank={currentGenebank}
             onUpdateIndividual={handleUpdateIndividual}
             individual={individual}
-            canEdit={user?.canEdit(herdId)}
             formAction={FormAction.AddIndividual}
             colorKey={colorKey}
             colorError={colorError}

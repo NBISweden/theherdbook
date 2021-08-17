@@ -89,11 +89,6 @@ export function IndividualCertificate({
   const { userMessage } = useMessageContext();
   const style = useStyles();
 
-  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
-  const canEdit: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.number);
-  }, [user, individual]);
-
   // Limited version of the individual to be used for the preview
   const certificateData = {
     claw_color: individual?.claw_color,
