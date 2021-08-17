@@ -26,28 +26,6 @@ import { IndividualEdit } from "@app/individual_edit";
 import { useUserContext } from "@app/user_context";
 import { BreedingList } from "./breeding_list";
 
-const useStyles = makeStyles({
-  container: {
-    padding: "20px",
-  },
-  title: {
-    fontSize: "1.33em",
-    fontWeight: "bold",
-  },
-  animalList: {
-    cursor: "pointer",
-    "&:hover": {
-      color: "blue",
-    },
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
-
 interface TabPanelProps
   extends React.DetailedHTMLProps<
     React.HTMLAttributes<HTMLDivElement>,
@@ -90,11 +68,11 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
-  const pedigree = React.useMemo(
-    () => herdPedigree(genebanks, id, 5, algo),
-    [genebanks, id, algo]
-  );
-  const style = useStyles();
+  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [
+    genebanks,
+    id,
+    algo,
+  ]);
 
   React.useEffect(() => {
     if (id) {
@@ -125,7 +103,7 @@ export function HerdView({ id }: { id: string | undefined }) {
 
   return (
     <>
-      <Paper className={style.container}>
+      <Paper className="container">
         {React.useMemo(
           () => (
             <HerdForm id={id} view="info" />
@@ -168,7 +146,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               }
             />
           ) : (
-            <div className={style.loading}>
+            <div className="loading">
               <h2>Loading Individuals</h2>
               <CircularProgress />
             </div>

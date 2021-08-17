@@ -4,29 +4,12 @@
  */
 import React from "react";
 import { TextField } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import { Autocomplete } from "@material-ui/lab";
 import {
   inputVariant,
   OptionType,
   PrivacyLevel,
 } from "@app/data_context_global";
-
-// Define styles for the form
-const useStyles = makeStyles({
-  simpleField: {
-    width: "100%",
-  },
-  permissionGroup: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  permissionField: {
-    width: "200px",
-    marginTop: 0,
-    marginLeft: "5px",
-  },
-});
 
 /**
  * The FieldWithPermission function provides an input field, with the input tag
@@ -48,8 +31,6 @@ export function FieldWithPermission({
   permission: PrivacyLevel | undefined;
   setValue: Function;
 }) {
-  const classes = useStyles();
-
   const options = [
     { value: "private", label: "Endast Manager" },
     { value: "authenticated", label: "Endast Inloggade" },
@@ -58,10 +39,10 @@ export function FieldWithPermission({
 
   return (
     <>
-      <div className={classes.permissionGroup}>
+      <div className="permissionGroup">
         <TextField
           label={label}
-          className={classes.simpleField}
+          className="simpleField"
           value={value}
           variant={inputVariant}
           onChange={(e: any) => {
@@ -80,7 +61,7 @@ export function FieldWithPermission({
                 {...params}
                 label="Synlighet"
                 variant={inputVariant}
-                className={classes.permissionField}
+                className="permissionFieldExtended"
                 margin="normal"
               />
             )}

@@ -2,7 +2,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import styled, * as sc from "styled-components";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import { makeStyles } from "@material-ui/core/styles";
 import { BrowserRouter } from "react-router-dom";
 
 import { WithUserContext } from "@app/user_context";
@@ -10,27 +9,6 @@ import { WithDataContext } from "@app/data_context";
 import { WithMessageContext } from "@app/message_context";
 import { WithBreedingContext } from "@app/breeding_context";
 import { Navigation } from "@app/navigation";
-
-const CSS = sc.createGlobalStyle`
-  html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-  }
-  body {
-    font-family: 'Roboto';
-    background: #ddd left / cover no-repeat url('/images/background.jpg') fixed;
-    margin: 0;
-    padding: 0 5px;
-    min-height: calc(100vh - 56px);
-    width: 100%;
-    @media (min-width:660px): {
-      background: #ddd center / cover no-repeat url('/images/background.jpg') fixed;
-      padding: 0 20px;
-    },
-  }
-`;
 
 const Main = (
   <>
@@ -46,7 +24,6 @@ const Main = (
         </WithUserContext>
       </WithDataContext>
     </BrowserRouter>
-    <CSS />
   </>
 );
 

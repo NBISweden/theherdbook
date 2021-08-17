@@ -1,11 +1,7 @@
 import * as React from "react";
 import { Switch, Route, useLocation, Redirect, Link } from "react-router-dom";
 
-import {
-  makeStyles,
-  createMuiTheme,
-  ThemeProvider,
-} from "@material-ui/core/styles";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { svSE } from "@material-ui/core/locale";
 import Paper from "@material-ui/core/Paper";
 import HomeIcon from "@material-ui/icons/Home";
@@ -54,92 +50,7 @@ import {
 } from "@material-ui/core";
 import { MenuProps } from "@material-ui/core/Menu";
 
-// Define styles for tab menu
-const useStyles = makeStyles({
-  menu: {
-    position: "fixed",
-    zIndex: 100,
-    left: 0,
-    top: 0,
-    width: "100%",
-    height: "51px",
-    background: "rgba(255,255,255,0.95)",
-    borderBottom: "1px solid #aaa",
-  },
-  wrapper: {
-    position: "relative",
-    borderTop: "1px solid white",
-    borderBottom: "1px solid white",
-  },
-  main: {
-    opacity: 0.9,
-    position: "relative",
-    marginTop: "calc(8vh)",
-    marginBottom: "210px",
-    marginLeft: 0,
-    marginRight: 0,
-    padding: "10px",
-    minHeight: "calc(100vh - 271px)",
-    ["@media (min-width:660px)"]: {
-      marginLeft: "20px",
-      marginRight: "20px",
-    },
-  },
-  link: {
-    textDecoration: "none",
-    fontFamily: "Open Sans",
-    color: "#222",
-  },
-  logo: {
-    position: "fixed",
-    zIndex: -3,
-    width: "100%",
-    textAlign: "center",
-    top: "10vh",
-    justifyContent: "center",
-    fontVariant: "small-caps",
-    fontSize: "2.5em",
-    color: "#eee",
-    ["@media (min-width:660px)"]: {
-      fontSize: "4em",
-      color: "#222",
-    },
-  },
-  hidden: {
-    visibility: "hidden",
-  },
-  logoImageWrapper: {
-    position: "fixed",
-    zIndex: -4,
-    width: "95%",
-    textAlign: "center",
-    top: "80vh",
-  },
-  logoImage: {
-    width: "15vh",
-    maxWidth: "90vw",
-    float: "right",
-  },
-  menuButton: {
-    height: "52px",
-    fontSize: "1.0em",
-    ["@media (min-width:660px)"]: {
-      fontSize: "1.2em",
-    },
-  },
-  trigram: {
-    fontSize: "1.8em",
-    paddingRight: "7px",
-    marginTop: "-5px",
-    ["@media (min-width:660px)"]: {
-      fontSize: "2.0em",
-      marginTop: "-7px",
-    },
-  },
-  listItem: {
-    display: "block",
-  },
-});
+import "./style.css";
 
 const StyledMenu = withStyles({
   paper: {
@@ -183,7 +94,6 @@ function Restricted(props: { children: React.ReactElement }) {
 }
 
 export function Navigation() {
-  const classes = useStyles();
   const { logout } = useUserContext();
   const { user } = useUserContext();
   const [showLogo, setShowLogo] = React.useState(true);
@@ -345,14 +255,14 @@ export function Navigation() {
     <>
       <ThemeProvider theme={theme}>
         {/* Insert the tab menu */}
-        <div className={classes.menu}>
+        <div className="menu">
           <Button
             aria-controls="customized-menu"
             aria-haspopup="true"
-            className={classes.menuButton}
+            className="menuButton"
             onClick={handleClick}
           >
-            <span className={classes.trigram}>☰</span>
+            <span className="trigram">☰</span>
             <Typography variant="subtitle1">Menu</Typography>
           </Button>
 
@@ -366,7 +276,7 @@ export function Navigation() {
             {tabs.map((tab) => (
               <Link
                 to={tab.path ?? "/"}
-                className={classes.link}
+                className="link"
                 style={{ display: tab.visible === false ? "none" : undefined }}
                 onClick={() => {
                   tab.on_click && tab.on_click();
@@ -380,31 +290,15 @@ export function Navigation() {
               </Link>
             ))}
           </StyledMenu>
-
           {/* <Tabs centered/> */}
-        </div>
-        <h1 className={`${classes.logo} ${!showLogoText && classes.hidden}`}>
-          Föreningen <br />
-          Gotlandskaninen
-        </h1>
-        <div
-          className={`${classes.logoImageWrapper} ${
-            !showLogo && classes.hidden
-          }`}
-        >
-          <img
-            src="/images/logo.png"
-            alt="logo"
-            className={classes.logoImage}
-          />
         </div>
 
         {/* Declare routes, and what component should be rendered for each
          * route.
          */}
 
-        <div className={classes.wrapper}>
-          <Paper className={classes.main}>
+        <div className="wrapper">
+          <Paper className="main">
             <Switch>
               {TabbedRoutes}
               <ui.Routed path="/herd/:id">
