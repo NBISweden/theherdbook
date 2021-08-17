@@ -221,7 +221,7 @@ export function SortedTable({
                         >
                           {column.label}
                           {orderBy === column.field ? (
-                            <span className="sortedTable">
+                            <span className="sorted">
                               {order === "desc"
                                 ? "sorted descending"
                                 : "sorted ascending"}
