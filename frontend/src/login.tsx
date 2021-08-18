@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 
-import { CircularProgress, makeStyles } from "@material-ui/core";
+import { CircularProgress } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import TextField from "@material-ui/core/TextField";
@@ -17,15 +17,6 @@ import { post, get } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { inputVariant } from "@app/data_context_global";
 
-const useStyles = makeStyles({
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
-
 /**
  * Shows login and logout in a form, submits it to the user context callbacks
  */
@@ -37,7 +28,6 @@ export function Login() {
   const [authenticators, setAuthenticators] = useState([]);
   const { userMessage } = useMessageContext();
 
-  const styles = useStyles();
   const history = useHistory();
   const location = useLocation();
   const { from } = location.state || { from: { pathname: "/" } };
@@ -70,7 +60,7 @@ export function Login() {
 
   if (user != null) {
     return (
-      <div className={styles.loading}>
+      <div className="loading">
         <CircularProgress />
       </div>
     );
@@ -215,7 +205,7 @@ export function Login() {
       </form>
     </Dialog>
   ) : (
-    <div className={styles.loading}>
+    <div className="loading">
       <CircularProgress />
     </div>
   );

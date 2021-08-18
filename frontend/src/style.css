@@ -279,7 +279,7 @@ list-item {
 }
 
 /* Used in herdForm.tsx  */
-form {
+.herdForm {
   display: flex;
   flex-direction: row;
 }
