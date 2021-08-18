@@ -392,7 +392,14 @@ export function IndividualForm({
                           }}
                         />
                       ) : (
-                        <p>Certifikatnummer - välj typ först.</p>
+                        <TextField
+                          label="Certifikatnummer - välj typ först"
+                          disabled
+                          className={`${style.control} ${style.controlWidth}`}
+                          variant={inputVariant}
+                          value={null}
+                          onChange={() => {}}
+                        />
                       )}
                     </div>
                   </>
