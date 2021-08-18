@@ -24,13 +24,19 @@ import { useUserContext } from "./user_context";
 const useStyles = makeStyles({
   adminPane: {
     width: "100%",
-    padding: "15px 0 5px 10px",
+    padding: "15px 10px 5px 10px",
+    marginBottom: "2em",
     border: "1px solid lightgrey",
     position: "relative",
     display: "flex",
     flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
     background:
       "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
+  },
+  certNumber: {
+    margin: "0.3em",
   },
   control: {
     margin: "0.3em",
@@ -221,101 +227,131 @@ export function IndividualForm({
                       onUpdateIndividual("number", event.currentTarget.value);
                     }}
                   />
+                  {individual.digital_certificate ? (
+                    <p className={style.certNumber}>
+                      Certifikatnummer: {individual.digital_certificate}
+                    </p>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               ) : (
                 <></>
               )}
               <>
-                <div className={style.flexRow}>
-                  {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
-                    <Autocomplete
-                      options={herdOptions}
-                      noOptionsText={"Välj härstamningen först"}
-                      getOptionLabel={(option: OptionType) => option.label}
-                      className={style.controlWidth}
-                      value={
-                        herdOptions.find(
-                          (option) =>
-                            option.value.herd == individual.origin_herd?.herd
-                        ) ?? null
-                      }
-                      onChange={(event, value) =>
-                        onUpdateIndividual("origin_herd", value?.value)
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Välj ursprungsbesättning"
-                          className={style.control}
-                          variant={inputVariant}
-                          margin="normal"
-                        />
-                      )}
+                {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
+                  <>
+                    <div className={style.flexRow}>
+                      <Autocomplete
+                        options={herdOptions}
+                        noOptionsText={"Välj härstamningen först"}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        className={style.controlWidth}
+                        value={
+                          herdOptions.find(
+                            (option) =>
+                              option.value.herd == individual.origin_herd?.herd
+                          ) ?? null
+                        }
+                        onChange={(event, value) =>
+                          onUpdateIndividual("origin_herd", value?.value)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Välj ursprungsbesättning"
+                            className={style.control}
+                            variant={inputVariant}
+                            margin="normal"
+                          />
+                        )}
+                      />
+
+                      <KeyboardDatePicker
+                        required
+                        error={birthDateError}
+                        autoOk
+                        variant="inline"
+                        className={`${style.control} ${style.controlWidth}`}
+                        inputVariant={inputVariant}
+                        label="Födelsedatum"
+                        format={dateFormat}
+                        value={individual.birth_date ?? null}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        onChange={(date, value) => {
+                          value && onUpdateIndividual("birth_date", value);
+                        }}
+                      />
+                    </div>
+                    <div className={style.flexRow}>
+                      <TextField
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className={`${style.control} ${style.controlWidth}`}
+                        variant={inputVariant}
+                        value={
+                          individual.number?.split("-")[1] ?? individual.number
+                        }
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              {individual.origin_herd?.herd
+                                ? `${individual.origin_herd?.herd} -`
+                                : `${
+                                    individual.genebank
+                                      ? individual.genebank[0]
+                                      : "X"
+                                  }XXX-`}
+                            </InputAdornment>
+                          ),
+                        }}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            `${individual.origin_herd?.herd}-${event.currentTarget.value}`
+                          );
+                        }}
+                      />
+                      <TextField
+                        label="Certifikatnummer"
+                        className={`${style.control} ${style.controlWidth}`}
+                        variant={inputVariant}
+                        value={individual.certificate ?? ""}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "certificate",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    </div>{" "}
+                  </>
+                ) : formAction == FormAction.handleCertificate ? (
+                  <div className={style.flexRow}>
+                    <KeyboardDatePicker
+                      required
+                      error={birthDateError}
+                      autoOk
+                      variant="inline"
+                      className={`${style.control} ${style.controlWidth}`}
+                      inputVariant={inputVariant}
+                      label="Födelsedatum"
+                      format={dateFormat}
+                      value={individual.birth_date ?? null}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      onChange={(date, value) => {
+                        value && onUpdateIndividual("birth_date", value);
+                      }}
                     />
-                  ) : (
-                    <></>
-                  )}
-                  <KeyboardDatePicker
-                    required
-                    error={birthDateError}
-                    autoOk
-                    variant="inline"
-                    className={`${style.control} ${style.controlWidth}`}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? null}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && onUpdateIndividual("birth_date", value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <TextField
-                    required
-                    error={numberError}
-                    label="Individnummer"
-                    className={`${style.control} ${style.controlWidth}`}
-                    variant={inputVariant}
-                    value={
-                      individual.number?.split("-")[1] ?? individual.number
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {individual.origin_herd?.herd
-                            ? `${individual.origin_herd?.herd} -`
-                            : `${
-                                individual.genebank
-                                  ? individual.genebank[0]
-                                  : "X"
-                              }XXX-`}
-                        </InputAdornment>
-                      ),
-                    }}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "number",
-                        `${individual.origin_herd?.herd}-${event.currentTarget.value}`
-                      );
-                    }}
-                  />
-                  <TextField
-                    label="Certifikatnummer"
-                    className={`${style.control} ${style.controlWidth}`}
-                    variant={inputVariant}
-                    value={individual.certificate ?? ""}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "certificate",
-                        event.currentTarget.value
-                      );
-                    }}
-                  />
-                </div>
+                  </div>
+                ) : (
+                  <></>
+                )}
               </>
               <div className={style.flexRow}>
                 <TextField
