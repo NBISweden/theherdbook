@@ -264,7 +264,7 @@ export function HerdForm({
           </h1>
           {(currentView == "form" && user && user.canEdit(herd.herd) && (
             <>
-              <form className="form">
+              <form className="herdForm">
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <div className="formCard">
                     <Typography

@@ -279,7 +279,7 @@ list-item {
 }
 
 /* Used in herdForm.tsx  */
-form {
+.herdForm {
   display: flex;
   flex-direction: row;
 }
@@ -354,7 +354,7 @@ form {
 .permissionFieldExtended {
   width: 200px;
   margin-top: 0;
-  margin-left: 5px;
+  margin-left: 45px;
 }
 
 /*  Used in genebanks.tsx, register.tsx and testbreed_form.tsx */

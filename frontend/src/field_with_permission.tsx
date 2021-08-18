@@ -62,7 +62,8 @@ export function FieldWithPermission({
                 label="Synlighet"
                 variant={inputVariant}
                 className="permissionFieldExtended"
-                margin="normal"
+                fullWidth={false}
+                style={{ marginLeft: "45px" }}
               />
             )}
             onChange={(event: any, newValue: OptionType | null) => {
