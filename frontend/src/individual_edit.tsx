@@ -280,6 +280,19 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
 
   const onCertTypeChange = (type: string) => {
     setCertType(type);
+    if (type == "digital") {
+      updateField("certificate", null);
+    }
+    if (type == "paper") {
+      updateField("digital_certificate", null);
+    } else {
+      if (!!individual?.digital_certificate) {
+        updateField("digital_certificate", null);
+      }
+      if (!!individual?.certificate) {
+        updateField("certificate", null);
+      }
+    }
   };
 
   const handleCertNumber = (number: string) => {
@@ -475,25 +488,42 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                         onCertTypeChange(newValue?.value ?? "unknown")
                       }
                     />
-                    <TextField
-                      disabled={!canManage}
-                      label="Certifikatnummer"
-                      placeholder={
-                        certType == "unknown" || certType == "none"
-                          ? "Välj certifikattyp först."
-                          : ""
-                      }
-                      className={style.control}
-                      variant={inputVariant}
-                      value={
-                        individual.certificate ??
-                        individual.digital_certificate ??
-                        ""
-                      }
-                      onChange={(event) => {
-                        handleCertNumber(event.currentTarget.value);
-                      }}
-                    />
+                    {certType == "paper" ? (
+                      <TextField
+                        disabled={!canManage}
+                        label="Certifikatnummer papper"
+                        className={style.control}
+                        variant={inputVariant}
+                        value={individual.certificate ?? ""}
+                        onChange={(event) => {
+                          updateField("certificate", event.currentTarget.value);
+                        }}
+                      />
+                    ) : certType == "digital" ? (
+                      <TextField
+                        disabled={!canManage}
+                        label="Certifikatnummer digital"
+                        className={style.control}
+                        variant={inputVariant}
+                        value={individual.digital_certificate ?? ""}
+                        onChange={(event) => {
+                          updateField(
+                            "digital_certificate",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        label="Certifikatnummer"
+                        disabled
+                        placeholder="Välj typ först."
+                        className={style.control}
+                        variant={inputVariant}
+                        value={"Välj certifikattyp först."}
+                        onChange={() => {}}
+                      />
+                    )}
                   </div>
                 </div>
                 <TextField
