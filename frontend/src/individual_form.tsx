@@ -84,7 +84,7 @@ const useStyles = makeStyles({
     left: "10px",
   },
   wideControl: {
-    margin: "5px",
+    margin: "5px 0",
     minWidth: "195px",
     width: "100%",
     paddingRight: "5px",
@@ -120,6 +120,7 @@ export function IndividualForm({
   litterError: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
+  const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
   const style = useStyles();
@@ -179,6 +180,13 @@ export function IndividualForm({
     getParents();
   }, [individual.father?.number, individual.mother?.number]);
 
+  const certTypeOptions: OptionType[] = [
+    { value: "digital", label: "Digital" },
+    { value: "paper", label: "Papper" },
+    { value: "none", label: "Inget certifikat" },
+    { value: "unknown", label: "Okänt" },
+  ];
+
   const sexOptions = [
     { value: "female", label: "Hona" },
     { value: "male", label: "Hane" },
@@ -203,6 +211,27 @@ export function IndividualForm({
       onUpdateIndividual("number", year);
     }
   }, [individual.birth_date]);
+
+  const onCertTypeChange = (type: string) => {
+    setCertType(type);
+  };
+
+  const handleCertNumber = (number: string) => {
+    if (certType == "paper") {
+      onUpdateIndividual("certificate", number);
+    } else if (certType == "digital") {
+      onUpdateIndividual("digital_certificate", number);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!!individual.certificate) {
+      onUpdateIndividual("digital_certificate", null);
+    }
+    if (!!individual.digital_certificate) {
+      onUpdateIndividual("certificate", null);
+    }
+  }, [individual.certificate, individual.digital_certificate]);
 
   return (
     <>
@@ -246,7 +275,7 @@ export function IndividualForm({
                         options={herdOptions}
                         noOptionsText={"Välj härstamningen först"}
                         getOptionLabel={(option: OptionType) => option.label}
-                        className={style.controlWidth}
+                        className={style.wideControl}
                         value={
                           herdOptions.find(
                             (option) =>
@@ -266,7 +295,8 @@ export function IndividualForm({
                           />
                         )}
                       />
-
+                    </div>
+                    <div className={style.flexRow}>
                       <KeyboardDatePicker
                         required
                         error={birthDateError}
@@ -284,8 +314,7 @@ export function IndividualForm({
                           value && onUpdateIndividual("birth_date", value);
                         }}
                       />
-                    </div>
-                    <div className={style.flexRow}>
+
                       <TextField
                         required
                         error={numberError}
@@ -315,19 +344,45 @@ export function IndividualForm({
                           );
                         }}
                       />
+                    </div>{" "}
+                    <div className={style.flexRow}>
+                      <Autocomplete
+                        disabled={!canManage}
+                        className={style.controlWidth}
+                        options={certTypeOptions ?? []}
+                        value={certTypeOptions.find(
+                          (option) =>
+                            option.value == certType ??
+                            certTypeOptions[certTypeOptions.length - 1]
+                        )}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Certifikattyp"
+                            className={style.control}
+                            variant={inputVariant}
+                            margin="normal"
+                          />
+                        )}
+                        onChange={(event: any, newValue: OptionType) =>
+                          onCertTypeChange(newValue?.value ?? "unknown")
+                        }
+                      />
                       <TextField
                         label="Certifikatnummer"
                         className={`${style.control} ${style.controlWidth}`}
                         variant={inputVariant}
-                        value={individual.certificate ?? ""}
+                        value={
+                          individual.certificate ??
+                          individual.digital_certificate ??
+                          null
+                        }
                         onChange={(event) => {
-                          onUpdateIndividual(
-                            "certificate",
-                            event.currentTarget.value
-                          );
+                          handleCertNumber(event.currentTarget.value);
                         }}
                       />
-                    </div>{" "}
+                    </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ? (
                   <div className={style.flexRow}>
