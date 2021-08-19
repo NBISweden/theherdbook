@@ -407,3 +407,11 @@ list-item {
 .header {
   font-size: 1.2em;
 }
+
+/* Used in certificate_download.tsx */
+.paneControls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  padding: 20px 0;
+}
