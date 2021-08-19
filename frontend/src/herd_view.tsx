@@ -12,10 +12,10 @@ import {
   Paper,
   Tab,
   Tabs,
+  Typography,
 } from "@material-ui/core";
 import { get } from "@app/communication";
 import { Herd, Individual } from "@app/data_context_global";
-import { HerdForm } from "@app/herdForm";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "@app/data_context";
 import { herdPedigree } from "@app/pedigree";
@@ -68,11 +68,10 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
-  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [
-    genebanks,
-    id,
-    algo,
-  ]);
+  const pedigree = React.useMemo(
+    () => herdPedigree(genebanks, id, 5, algo),
+    [genebanks, id, algo]
+  );
 
   React.useEffect(() => {
     if (id) {
@@ -104,12 +103,7 @@ export function HerdView({ id }: { id: string | undefined }) {
   return (
     <>
       <Paper className="container">
-        {React.useMemo(
-          () => (
-            <HerdForm id={id} view="info" />
-          ),
-          [id]
-        )}
+        <Typography variant="h5">Besättning {id}</Typography>
 
         <AppBar position="static" color="default">
           <Tabs
