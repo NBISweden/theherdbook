@@ -212,6 +212,13 @@ export function IndividualForm({
     }
   }, [individual.birth_date]);
 
+  /**
+   * This is to make sure there never is a value in the local state for
+   * both digital and paper certificate, only for one (or none) of them.
+   * Without this, redundant values could be remaining in the state if the user
+   * changes the cert type after putting in a number.
+   *
+   */
   const onCertTypeChange = (type: string) => {
     setCertType(type);
     if (type == "digital") {
