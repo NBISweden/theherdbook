@@ -206,12 +206,12 @@ export function Footer() {
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
-      <Typography className="euText">
+      <div className="euText">
         Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands- och
         Mellerudskanin. Stödet går till genbanksbesättningarna,
         medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
         utbildningar, transport av värdefulla djur samt obduktioner.
-      </Typography>
+      </div>
       <div>
         <img src="/images/logo.png" alt="logo" className="logoImage" />
       </div>
