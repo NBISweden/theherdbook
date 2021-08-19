@@ -352,7 +352,7 @@ export function BreedingForm({
 
   return (
     <>
-      <form>
+      <form className="breedingForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle

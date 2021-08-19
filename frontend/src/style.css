@@ -379,3 +379,31 @@ list-item {
 .wideControl {
   width: 100%;
 }
+
+/* Used in breeding_list.tsx */
+.breeding {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Used in breeding_list.tsx */
+.breedingTable {
+  padding: 10px 0;
+  margin: 0;
+  transition: width 0.5s;
+}
+
+/* Used in breeding_list.tsx */
+.breedingListForm {
+  padding: 10px 0;
+  margin: 0;
+  border: 1px solid lightgrey;
+  border-radius: 3px;
+  overflow-x: hidden;
+  transition: width 0.5s;
+}
+
+.header {
+  font-size: 1.2em;
+}

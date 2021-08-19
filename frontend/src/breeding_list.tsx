@@ -4,7 +4,6 @@
  *       form to handle breedings.
  */
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
@@ -13,36 +12,6 @@ import { Breeding, ExtendedBreeding } from "./data_context_global";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
-
-const useStyles = makeStyles({
-  breeding: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  table: {
-    padding: "10px 0",
-    margin: 0,
-    transition: "width .5s",
-  },
-  form: {
-    padding: "10px 0",
-    margin: 0,
-    border: "1px solid lightgrey",
-    borderRadius: "3px",
-    overflowX: "hidden",
-    transition: "width .5s",
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    fontSize: "1.2em",
-  },
-});
 
 /**
  * The BreedingList function. This function fetches breeding information for a
@@ -57,7 +26,6 @@ export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
-  const style = useStyles();
 
   // Parent information from the genebank
   const parents = React.useMemo(() => {
@@ -143,21 +111,21 @@ export function BreedingList({ id }: { id: string | undefined }) {
   return (
     <>
       <Typography variant="h5">Parningstillfällen</Typography>
-      <div className={style.breeding}>
+      <div className="breeding">
         <SortedTable
           columns={columns}
           data={extendedBreedings}
           addButton={() => {
             setActive("new");
           }}
-          className={style.table}
+          className="breedingTable"
           onClick={(row: any[]) => {
             setActive(row);
           }}
           rowsPerPage={10}
           style={{ width: active ? "60%" : "calc(100% - 2px)" }}
         />
-        <div className={style.form} style={{ width: active ? "40%" : 0 }}>
+        <div className="breedingListForm" style={{ width: active ? "40%" : 0 }}>
           <BreedingForm
             data={active}
             herdId={id}
