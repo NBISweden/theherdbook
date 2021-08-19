@@ -286,20 +286,12 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     if (type == "paper") {
       updateField("digital_certificate", null);
     } else {
-      if (!!individual?.digital_certificate) {
+      if (individual?.digital_certificate !== null) {
         updateField("digital_certificate", null);
       }
-      if (!!individual?.certificate) {
+      if (individual?.certificate !== null) {
         updateField("certificate", null);
       }
-    }
-  };
-
-  const handleCertNumber = (number: string) => {
-    if (certType == "paper") {
-      updateField("certificate", number);
-    } else if (certType == "digital") {
-      updateField("digital_certificate", number);
     }
   };
 

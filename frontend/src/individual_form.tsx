@@ -220,10 +220,10 @@ export function IndividualForm({
     if (type == "paper") {
       onUpdateIndividual("digital_certificate", null);
     } else {
-      if (!!individual.digital_certificate) {
+      if (individual.digital_certificate !== null) {
         onUpdateIndividual("digital_certificate", null);
       }
-      if (!!individual.certificate) {
+      if (individual.certificate !== null) {
         onUpdateIndividual("certificate", null);
       }
     }
@@ -370,7 +370,7 @@ export function IndividualForm({
                           label="Certifikatnummer papper"
                           className={`${style.control} ${style.controlWidth}`}
                           variant={inputVariant}
-                          value={individual.certificate ?? ""}
+                          value={individual.certificate ?? null}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "certificate",
@@ -383,7 +383,7 @@ export function IndividualForm({
                           label="Certifikatnummer digital"
                           className={`${style.control} ${style.controlWidth}`}
                           variant={inputVariant}
-                          value={individual.digital_certificate ?? ""}
+                          value={individual.digital_certificate ?? null}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "digital_certificate",
