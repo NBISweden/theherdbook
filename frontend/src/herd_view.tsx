@@ -69,7 +69,11 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
   const pedigree = React.useMemo(
+<<<<<<< HEAD
     () => herdPedigree(genebanks, id, 5, algo),
+=======
+    () => herdPedigree(genebanks, id, 3, algo),
+>>>>>>> Reduce generations to 3
     [genebanks, id, algo]
   );
 
