@@ -389,11 +389,10 @@ export function FilterTable({
     setOrderBy(property);
   };
 
-  const createSortHandler = (property: keyof Individual) => (
-    event: React.MouseEvent<unknown>
-  ) => {
-    handleRequestSort(event, property);
-  };
+  const createSortHandler =
+    (property: keyof Individual) => (event: React.MouseEvent<unknown>) => {
+      handleRequestSort(event, property);
+    };
 
   return (
     <>
@@ -517,7 +516,9 @@ export function FilterTable({
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => popup(<IndividualAdd herdId={id} />)}
+                onClick={() =>
+                  popup(<IndividualAdd herdId={id} />, "/owner", true)
+                }
               >
                 Lägg till
               </Button>
