@@ -103,10 +103,7 @@ export function HerdView({ id }: { id: string | undefined }) {
   return (
     <>
       <Paper className="container">
-        {herd && (
-            <HerdForm id={id} view="info" fromHerd={herd} />
-        )
-        }
+        {herd && <HerdForm id={id} view="info" fromHerd={herd} />}
 
         <AppBar position="static" color="default">
           <Tabs
