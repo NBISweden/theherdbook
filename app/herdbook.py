@@ -53,7 +53,8 @@ APP.config.update(
     # SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development
     # workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Strict",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE="None",
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="filesystem",
