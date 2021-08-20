@@ -73,10 +73,12 @@ export function HerdForm({
   id,
   view = "form",
   change = true,
+  fromHerd,
 }: {
   id: string | undefined;
   view: "form" | "info";
   change: boolean;
+  fromHerd: Herd | undefined;
 }) {
   const { genebanks, setGenebanks } = useDataContext();
   const { user } = useUserContext();
@@ -109,6 +111,10 @@ export function HerdForm({
     setHerd({ ...defaultValues });
     setPostalcode("");
     setPostalcity("");
+    if (fromHerd) {
+      setHerd(fromHerd)
+    }
+    else {
     if (id == "new" || !id) {
       setNew(true);
     } else {
@@ -143,6 +149,7 @@ export function HerdForm({
         (error) => console.error(error)
       );
     }
+  }
     setLoading(false);
   }, [id]);
 

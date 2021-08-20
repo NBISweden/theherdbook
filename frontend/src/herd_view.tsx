@@ -68,11 +68,10 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
-  const pedigree = React.useMemo(() => herdPedigree(genebanks, id, 5, algo), [
-    genebanks,
-    id,
-    algo,
-  ]);
+  const pedigree = React.useMemo(
+    () => herdPedigree(genebanks, id, 5, algo),
+    [genebanks, id, algo]
+  );
 
   React.useEffect(() => {
     if (id) {
@@ -104,12 +103,7 @@ export function HerdView({ id }: { id: string | undefined }) {
   return (
     <>
       <Paper className="container">
-        {React.useMemo(
-          () => (
-            <HerdForm id={id} view="info" />
-          ),
-          [id]
-        )}
+        {herd && <HerdForm id={id} view="info" fromHerd={herd} />}
 
         <AppBar position="static" color="default">
           <Tabs
