@@ -12,10 +12,10 @@ import {
   Paper,
   Tab,
   Tabs,
-  Typography,
 } from "@material-ui/core";
 import { get } from "@app/communication";
 import { Herd, Individual } from "@app/data_context_global";
+import { HerdForm } from "@app/herdForm";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "@app/data_context";
 import { herdPedigree } from "@app/pedigree";
@@ -103,7 +103,10 @@ export function HerdView({ id }: { id: string | undefined }) {
   return (
     <>
       <Paper className="container">
-        <Typography variant="h5">Besättning {id}</Typography>
+        {herd && (
+            <HerdForm id={id} view="info" fromHerd={herd} />
+        )
+        }
 
         <AppBar position="static" color="default">
           <Tabs
