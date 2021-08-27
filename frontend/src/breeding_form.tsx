@@ -3,7 +3,6 @@
  *       users to create and update breeding events in the database.
  */
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -33,23 +32,6 @@ import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import { get, patch, post } from "./communication";
 import { useBreedingContext } from "./breeding_context";
 
-const useStyles = makeStyles({
-  form: {
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    padding: "20px",
-  },
-  formBox: {
-    border: "1px solid lightgrey",
-    borderRadius: "8px",
-    padding: "10px",
-  },
-  wideControl: {
-    width: "100%",
-  },
-});
-
 const emptyBreeding: Breeding = {
   breed_date: null,
   breed_notes: "",
@@ -75,7 +57,6 @@ export function BreedingForm({
   handleBreedingsChanged: () => void;
   handleActive: (breeding: Breeding) => void;
 }) {
-  const style = useStyles();
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -371,12 +352,12 @@ export function BreedingForm({
 
   return (
     <>
-      <form>
+      <form className="breedingForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle
           </Typography>
-          <div className={style.formBox}>
+          <div className="formBox">
             <KeyboardDatePicker
               autoOk
               disableFuture
@@ -387,7 +368,7 @@ export function BreedingForm({
               inputVariant={inputVariant}
               label="Parningsdatum"
               format={dateFormat}
-              className={style.wideControl}
+              className="wideControl"
               value={formState.breed_date ?? null}
               InputLabelProps={{
                 shrink: true,
@@ -408,7 +389,7 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Mor"
-                  className={style.wideControl}
+                  className="wideControl"
                   variant={inputVariant}
                   margin="normal"
                 />
@@ -431,7 +412,7 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Far"
-                  className={style.wideControl}
+                  className="wideControl"
                   variant={inputVariant}
                   margin="normal"
                 />
@@ -445,7 +426,7 @@ export function BreedingForm({
             <TextField
               label="Anteckningar om parningstillfället"
               variant={inputVariant}
-              className={style.wideControl}
+              className="wideControl"
               multiline
               rows={2}
               value={formState.breed_notes ?? ""}
@@ -464,7 +445,7 @@ export function BreedingForm({
           {showBirthForm ? (
             <>
               <Typography variant="h6">Födsel</Typography>
-              <div className={style.formBox}>
+              <div className="formBox">
                 <KeyboardDatePicker
                   autoOk
                   disableFuture
@@ -475,7 +456,7 @@ export function BreedingForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  className={style.wideControl}
+                  className="wideControl"
                   value={formState.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
@@ -488,7 +469,7 @@ export function BreedingForm({
                   label="Kullstorlek"
                   value={formState.litter_size ?? ""}
                   type="number"
-                  className={style.wideControl}
+                  className="wideControl"
                   variant={inputVariant}
                   InputLabelProps={{
                     shrink: true,
@@ -500,7 +481,7 @@ export function BreedingForm({
                 <TextField
                   label="Anteckningar om födseln"
                   variant={inputVariant}
-                  className={style.wideControl}
+                  className="wideControl"
                   multiline
                   rows={2}
                   value={formState.birth_notes ?? ""}
