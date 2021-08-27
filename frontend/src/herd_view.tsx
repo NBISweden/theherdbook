@@ -68,13 +68,14 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
+  const [pedigreeView, setPedigreeView] = React.useState(false as boolean);
+
+  const triggerPedigreeViewState = () => {
+    setPedigreeView(true);
+  };
   const pedigree = React.useMemo(
-<<<<<<< HEAD
-    () => herdPedigree(genebanks, id, 5, algo),
-=======
-    () => herdPedigree(genebanks, id, 3, algo),
->>>>>>> Reduce generations to 3
-    [genebanks, id, algo]
+    () => pedigreeView && herdPedigree(genebanks, id, 3, algo),
+    [genebanks, id, algo, pedigreeView]
   );
 
   React.useEffect(() => {
@@ -121,7 +122,11 @@ export function HerdView({ id }: { id: string | undefined }) {
           >
             <Tab label="Lista över individer" value="list" />
             <Tab label="Parningstillfällen" value="breeding" />
-            <Tab label="Släktträd för besättningen" value="pedigree" />
+            <Tab
+              label="Släktträd för besättningen"
+              value="pedigree"
+              onClick={triggerPedigreeViewState}
+            />
           </Tabs>
         </AppBar>
 
@@ -166,7 +171,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               </select>
             </label>
           </div>
-          {pedigree && (
+          {pedigreeView && (
             <PedigreeNetwork
               pedigree={pedigree}
               onClick={(node: string) =>
