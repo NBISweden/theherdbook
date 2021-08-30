@@ -498,7 +498,7 @@ class TestDataAccess(DatabaseTest):
                 "genebank": self.genebanks[0].name,
                 "herd_active": ind.current_herd.is_active
                 or ind.current_herd.is_active is None,
-                "active": active,
+                "is_active": active,
                 "alive": ind.death_date is None and not ind.death_note,
                 "children": len(ind.children),
             }
