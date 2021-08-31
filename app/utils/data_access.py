@@ -1201,7 +1201,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     },
                     "genebank": i["genebank_name"],
                     "herd_active": i["herd_active"] or i["herd_active"] is None,
-                    "active": as_date(i["ht_date"]) > max_report_time
+                    "is_active": as_date(i["ht_date"]) > max_report_time
                     and (i["herd_active"] or i["herd_active"] is None)
                     and i["death_date"] is None
                     and not i["death_note"],

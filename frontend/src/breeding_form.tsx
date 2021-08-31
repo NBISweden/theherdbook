@@ -330,7 +330,7 @@ export function BreedingForm({
         notes: "",
         herd_tracking: null,
         herd_active: true,
-        active: false,
+        is_active: false,
         alive: true,
         belly_color: null,
         eye_color: null,

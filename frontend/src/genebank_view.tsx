@@ -34,7 +34,7 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
             filters={[
               { field: "alive", label: "Visa döda" },
               { field: "herd_active", label: "Visa inaktiva besättningar" },
-              { field: "active", label: "Visa inaktiva djur" },
+              { field: "is_active", label: "Visa inaktiva djur" },
             ]}
           />
         ) : (

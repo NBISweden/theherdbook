@@ -55,7 +55,7 @@ export interface Individual extends LimitedIndividual {
   bodyfat?: Array<DateBodyfat> | null;
   herd_tracking: Array<DateValue> | null;
   herd_active: boolean;
-  active: boolean;
+  is_active: boolean;
   alive: boolean;
   belly_color: string | null;
   eye_color: string | null;
@@ -215,7 +215,7 @@ export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
       return [];
     }
     return genebank?.individuals.filter(
-      (i) => i.sex == sex && i.active == true
+      (i) => i.sex == sex && i.is_active == true
     );
   }, [genebank]);
 }

@@ -476,7 +476,7 @@ export function IndividualView({ id }: { id: string }) {
                     <li key={child.number}>
                       <span className={style.listIcon}>
                         {child.alive
-                          ? child.active
+                          ? child.is_active
                             ? activeIcon
                             : inactiveIcon
                           : deadIcon}

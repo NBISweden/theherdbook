@@ -137,7 +137,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               title={"Individer i besättningen"}
               filters={[
                 { field: "alive", label: "Visa döda" },
-                { field: "active", label: "Visa inaktiva djur" },
+                { field: "is_active", label: "Visa inaktiva djur" },
               ]}
               action={
                 user?.canEdit(id)

@@ -588,6 +588,23 @@ class Individual(BaseModel):
 
         return data
 
+    @property
+    def active(self):
+        """
+        Returns if an individual fullfils the requirements to be active.
+        """
+        is_active = (
+            self.is_active
+            and not self.death_date
+            and not self.death_note
+            and self.latest_herdtracking_entry
+            and (
+                self.latest_herdtracking_entry.herd_tracking_date
+                > (datetime.now() - timedelta(days=366)).date()
+            )
+        )
+        return is_active
+
     def list_info(self):
         """
         Returns the information that is to be viewed in the main individuals
@@ -619,17 +636,6 @@ class Individual(BaseModel):
             else None
         )
 
-        is_active = (
-            self.is_active
-            and not self.death_date
-            and not self.death_note
-            and self.latest_herdtracking_entry
-            and (
-                self.latest_herdtracking_entry.herd_tracking_date
-                > (datetime.now() - timedelta(days=366)).date()
-            )
-        )
-
         return {
             "id": self.id,
             "name": self.name,
@@ -637,7 +643,7 @@ class Individual(BaseModel):
             "sex": self.sex,
             "father": father,
             "mother": mother,
-            "is_active": is_active,
+            "is_active": self.active,
         }
 
     class Meta:  # pylint: disable=too-few-public-methods
