@@ -24,13 +24,19 @@ import { useUserContext } from "./user_context";
 const useStyles = makeStyles({
   adminPane: {
     width: "100%",
-    padding: "15px 0 5px 10px",
+    padding: "15px 10px 5px 10px",
+    marginBottom: "2em",
     border: "1px solid lightgrey",
     position: "relative",
     display: "flex",
     flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
     background:
       "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
+  },
+  certNumber: {
+    margin: "0.3em",
   },
   control: {
     margin: "0.3em",
@@ -78,7 +84,7 @@ const useStyles = makeStyles({
     left: "10px",
   },
   wideControl: {
-    margin: "5px",
+    margin: "5px 0",
     minWidth: "195px",
     width: "100%",
     paddingRight: "5px",
@@ -114,6 +120,7 @@ export function IndividualForm({
   litterError: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
+  const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
   const style = useStyles();
@@ -173,6 +180,13 @@ export function IndividualForm({
     getParents();
   }, [individual.father?.number, individual.mother?.number]);
 
+  const certTypeOptions: OptionType[] = [
+    { value: "digital", label: "Digital" },
+    { value: "paper", label: "Papper" },
+    { value: "none", label: "Inget certifikat" },
+    { value: "unknown", label: "Okänd" },
+  ];
+
   const sexOptions = [
     { value: "female", label: "Hona" },
     { value: "male", label: "Hane" },
@@ -198,6 +212,30 @@ export function IndividualForm({
     }
   }, [individual.birth_date]);
 
+  /**
+   * This is to make sure there never is a value in the local state for
+   * both digital and paper certificate, only for one (or none) of them.
+   * Without this, redundant values could be remaining in the state if the user
+   * changes the cert type after putting in a number.
+   *
+   */
+  const onCertTypeChange = (type: string) => {
+    setCertType(type);
+    if (type == "digital") {
+      onUpdateIndividual("certificate", null);
+    }
+    if (type == "paper") {
+      onUpdateIndividual("digital_certificate", null);
+    } else {
+      if (individual.digital_certificate !== null) {
+        onUpdateIndividual("digital_certificate", null);
+      }
+      if (individual.certificate !== null) {
+        onUpdateIndividual("certificate", null);
+      }
+    }
+  };
+
   return (
     <>
       <div className={style.form}>
@@ -221,101 +259,180 @@ export function IndividualForm({
                       onUpdateIndividual("number", event.currentTarget.value);
                     }}
                   />
+                  {individual.digital_certificate ? (
+                    <p className={style.certNumber}>
+                      Certifikatnummer: {individual.digital_certificate}
+                    </p>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               ) : (
                 <></>
               )}
               <>
-                <div className={style.flexRow}>
-                  {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
-                    <Autocomplete
-                      options={herdOptions}
-                      noOptionsText={"Välj härstamningen först"}
-                      getOptionLabel={(option: OptionType) => option.label}
-                      className={style.controlWidth}
-                      value={
-                        herdOptions.find(
+                {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
+                  <>
+                    <div className={style.flexRow}>
+                      <Autocomplete
+                        options={herdOptions}
+                        noOptionsText={"Välj härstamningen först"}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        className={style.wideControl}
+                        value={
+                          herdOptions.find(
+                            (option) =>
+                              option.value.herd == individual.origin_herd?.herd
+                          ) ?? null
+                        }
+                        onChange={(event, value) =>
+                          onUpdateIndividual("origin_herd", value?.value)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Välj ursprungsbesättning"
+                            className={style.control}
+                            variant={inputVariant}
+                            margin="normal"
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className={style.flexRow}>
+                      <KeyboardDatePicker
+                        required
+                        error={birthDateError}
+                        autoOk
+                        variant="inline"
+                        className={`${style.control} ${style.controlWidth}`}
+                        inputVariant={inputVariant}
+                        label="Födelsedatum"
+                        format={dateFormat}
+                        value={individual.birth_date ?? null}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        onChange={(date, value) => {
+                          value && onUpdateIndividual("birth_date", value);
+                        }}
+                      />
+
+                      <TextField
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className={`${style.control} ${style.controlWidth}`}
+                        variant={inputVariant}
+                        value={
+                          individual.number?.split("-")[1] ?? individual.number
+                        }
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              {individual.origin_herd?.herd
+                                ? `${individual.origin_herd?.herd} -`
+                                : `${
+                                    individual.genebank
+                                      ? individual.genebank[0]
+                                      : "X"
+                                  }XXX-`}
+                            </InputAdornment>
+                          ),
+                        }}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            `${individual.origin_herd?.herd}-${event.currentTarget.value}`
+                          );
+                        }}
+                      />
+                    </div>{" "}
+                    <div className={style.flexRow}>
+                      <Autocomplete
+                        disabled={!canManage}
+                        className={style.controlWidth}
+                        options={certTypeOptions ?? []}
+                        value={certTypeOptions.find(
                           (option) =>
-                            option.value.herd == individual.origin_herd?.herd
-                        ) ?? null
-                      }
-                      onChange={(event, value) =>
-                        onUpdateIndividual("origin_herd", value?.value)
-                      }
-                      renderInput={(params) => (
+                            option.value == certType ??
+                            certTypeOptions[certTypeOptions.length - 1]
+                        )}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Certifikattyp"
+                            className={style.control}
+                            variant={inputVariant}
+                            margin="normal"
+                          />
+                        )}
+                        onChange={(event: any, newValue: OptionType) =>
+                          onCertTypeChange(newValue?.value ?? "unknown")
+                        }
+                      />
+                      {certType == "paper" ? (
                         <TextField
-                          {...params}
-                          label="Välj ursprungsbesättning"
-                          className={style.control}
+                          label="Certifikatnummer papper"
+                          className={`${style.control} ${style.controlWidth}`}
                           variant={inputVariant}
-                          margin="normal"
+                          value={individual.certificate ?? null}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "certificate",
+                              event.currentTarget.value
+                            );
+                          }}
+                        />
+                      ) : certType == "digital" ? (
+                        <TextField
+                          label="Certifikatnummer digital"
+                          className={`${style.control} ${style.controlWidth}`}
+                          variant={inputVariant}
+                          value={individual.digital_certificate ?? null}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "digital_certificate",
+                              event.currentTarget.value
+                            );
+                          }}
+                        />
+                      ) : (
+                        <TextField
+                          label="Certifikatnummer - välj typ först"
+                          disabled
+                          className={`${style.control} ${style.controlWidth}`}
+                          variant={inputVariant}
+                          value={null}
+                          onChange={() => {}}
                         />
                       )}
+                    </div>
+                  </>
+                ) : formAction == FormAction.handleCertificate ? (
+                  <div className={style.flexRow}>
+                    <KeyboardDatePicker
+                      required
+                      error={birthDateError}
+                      autoOk
+                      variant="inline"
+                      className={`${style.control} ${style.controlWidth}`}
+                      inputVariant={inputVariant}
+                      label="Födelsedatum"
+                      format={dateFormat}
+                      value={individual.birth_date ?? null}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      onChange={(date, value) => {
+                        value && onUpdateIndividual("birth_date", value);
+                      }}
                     />
-                  ) : (
-                    <></>
-                  )}
-                  <KeyboardDatePicker
-                    required
-                    error={birthDateError}
-                    autoOk
-                    variant="inline"
-                    className={`${style.control} ${style.controlWidth}`}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? null}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && onUpdateIndividual("birth_date", value);
-                    }}
-                  />
-                </div>
-                <div className={style.flexRow}>
-                  <TextField
-                    required
-                    error={numberError}
-                    label="Individnummer"
-                    className={`${style.control} ${style.controlWidth}`}
-                    variant={inputVariant}
-                    value={
-                      individual.number?.split("-")[1] ?? individual.number
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {individual.origin_herd?.herd
-                            ? `${individual.origin_herd?.herd} -`
-                            : `${
-                                individual.genebank
-                                  ? individual.genebank[0]
-                                  : "X"
-                              }XXX-`}
-                        </InputAdornment>
-                      ),
-                    }}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "number",
-                        `${individual.origin_herd?.herd}-${event.currentTarget.value}`
-                      );
-                    }}
-                  />
-                  <TextField
-                    label="Certifikatnummer"
-                    className={`${style.control} ${style.controlWidth}`}
-                    variant={inputVariant}
-                    value={individual.certificate ?? ""}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "certificate",
-                        event.currentTarget.value
-                      );
-                    }}
-                  />
-                </div>
+                  </div>
+                ) : (
+                  <></>
+                )}
               </>
               <div className={style.flexRow}>
                 <TextField

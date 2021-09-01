@@ -92,25 +92,9 @@ export function IndividualView({ id }: { id: string }) {
   const [certificateUrl, setCertificateUrl] = React.useState(
     undefined as string | undefined
   );
-  const [hasPaperCert, setHasPaperCert] = React.useState(false as boolean);
-  const [hasDigitalCert, setHasDigitalCert] = React.useState(false as boolean);
   // state to control the certificate menu button
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
-
-  //checks if the individual has a certificate, and if yes whether it's a paper or digital one
-  const getCertificateType = (individual: Individual) => {
-    if (individual.certificate === null) {
-      setHasPaperCert(false);
-      setHasDigitalCert(false);
-    } else if (parseInt(individual.certificate, 10) < 100000) {
-      setHasPaperCert(true);
-      setHasDigitalCert(false);
-    } else if (parseInt(individual.certificate, 10) >= 100000) {
-      setHasPaperCert(false);
-      setHasDigitalCert(true);
-    }
-  };
 
   // funtions to control the certificate menu button
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -204,16 +188,6 @@ export function IndividualView({ id }: { id: string }) {
     );
   }, [id]);
 
-  //show the right buttons
-  React.useEffect(() => {
-    if (individual) {
-      getCertificateType(individual);
-    } else {
-      setHasPaperCert(false);
-      setHasDigitalCert(false);
-    }
-  }, [individual]);
-
   return (
     <>
       <div className={style.body}>
@@ -297,8 +271,8 @@ export function IndividualView({ id }: { id: string }) {
                 </Button>
               )}
               {user?.canEdit(individual.origin_herd.herd) &&
-                !hasDigitalCert &&
-                !hasPaperCert && (
+                !individual.digital_certificate &&
+                !individual.certificate && (
                   <Button
                     className={style.editButton}
                     variant="contained"
@@ -312,8 +286,8 @@ export function IndividualView({ id }: { id: string }) {
                 )}
               {individual.origin_herd.herd !== individual.herd.herd &&
                 user?.canEdit(individual.herd.herd) &&
-                !hasDigitalCert &&
-                !hasPaperCert && (
+                !individual.certificate &&
+                !individual.digital_certificate && (
                   <>
                     <Button
                       className={style.editButton}
@@ -329,60 +303,61 @@ export function IndividualView({ id }: { id: string }) {
                     </p>
                   </>
                 )}
-              {user?.canEdit(individual.herd.herd) && hasDigitalCert && (
-                <>
-                  <Button
-                    aria-controls="simple-menu"
-                    aria-haspopup="true"
-                    variant="contained"
-                    color="primary"
-                    className={style.editButton}
-                    onClick={handleClick}
-                  >
-                    Certifikat{" "}
-                    <ArrowForward fontSize="small" className={style.icon} />
-                  </Button>
-                  <Menu
-                    id="simple-menu"
-                    anchorEl={anchorEl}
-                    keepMounted
-                    open={Boolean(anchorEl)}
-                    onClose={handleClose}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        handleClose();
-                        downloadCertificate();
-                      }}
+              {user?.canEdit(individual.herd.herd) &&
+                !!individual.digital_certificate && (
+                  <>
+                    <Button
+                      aria-controls="simple-menu"
+                      aria-haspopup="true"
+                      variant="contained"
+                      color="primary"
+                      className={style.editButton}
+                      onClick={handleClick}
                     >
-                      Ladda ner
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleClose();
-                        popup(
-                          <IndividualCertificate id={id} action={"update"} />
-                        );
-                      }}
+                      Certifikat{" "}
+                      <ArrowForward fontSize="small" className={style.icon} />
+                    </Button>
+                    <Menu
+                      id="simple-menu"
+                      anchorEl={anchorEl}
+                      keepMounted
+                      open={Boolean(anchorEl)}
+                      onClose={handleClose}
                     >
-                      Uppdatera
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        handleClose();
-                        popup(
-                          <CertificateVerification
-                            id={id}
-                            individual={individual}
-                          />
-                        );
-                      }}
-                    >
-                      Verifiera
-                    </MenuItem>
-                  </Menu>
-                </>
-              )}
+                      <MenuItem
+                        onClick={() => {
+                          handleClose();
+                          downloadCertificate();
+                        }}
+                      >
+                        Ladda ner
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleClose();
+                          popup(
+                            <IndividualCertificate id={id} action={"update"} />
+                          );
+                        }}
+                      >
+                        Uppdatera
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          handleClose();
+                          popup(
+                            <CertificateVerification
+                              id={id}
+                              individual={individual}
+                            />
+                          );
+                        }}
+                      >
+                        Verifiera
+                      </MenuItem>
+                    </Menu>
+                  </>
+                )}
               <div>
                 <h3>Besättningshistoria</h3>
                 <ul className={style.herdList}>

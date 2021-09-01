@@ -59,6 +59,10 @@ const useStyles = makeStyles({
       flexDirection: "row",
     },
   },
+  flexColumn: {
+    display: "flex",
+    flexDirection: "column",
+  },
   flexRow: {
     display: "flex",
     flexDirection: "row",
@@ -105,7 +109,7 @@ const useStyles = makeStyles({
     border: "1px solid lightgrey",
     position: "relative",
     display: "flex",
-    flexDirection: "row",
+    flexDirection: "column",
     background:
       "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
   },
@@ -116,9 +120,7 @@ const useStyles = makeStyles({
     fontSize: "2.3em",
   },
   paneTitle: {
-    position: "absolute",
-    top: "0px",
-    left: "10px",
+    margin: "5px",
   },
   paneControls: {
     display: "flex",
@@ -162,6 +164,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [certType, setCertType] = React.useState("unknown" as string);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
@@ -173,6 +176,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
   const style = useStyles();
+
+  const certTypeOptions: OptionType[] = [
+    { value: "digital", label: "Digital" },
+    { value: "paper", label: "Papper" },
+    { value: "none", label: "Inget certifikat" },
+    { value: "unknown", label: "Okänt" },
+  ];
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -246,12 +256,20 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
 
   /**
    * Fetch individual data from the backend
+   * and set certificate type according to individual data
    */
   React.useEffect(() => {
     id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
+            if (!!data?.certificate) {
+              setCertType("paper");
+            } else if (!!data?.digital_certificate) {
+              setCertType("digital");
+            } else {
+              setCertType("none");
+            }
           },
           (error) => {
             userMessage(error, "error");
@@ -259,6 +277,30 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         )
       : userMessage("Något gick fel.", "error");
   }, [id]);
+
+  /**
+   * This is to make sure there never is a value in the local state for
+   * both digital and paper certificate, only for one (or none) of them.
+   * Without this, redundant values could be remaining in the state if the user
+   * changes the cert type after putting in a number.
+   *
+   */
+  const onCertTypeChange = (type: string) => {
+    setCertType(type);
+    if (type == "digital") {
+      updateField("certificate", null);
+    }
+    if (type == "paper") {
+      updateField("digital_certificate", null);
+    } else {
+      if (individual?.digital_certificate !== null) {
+        updateField("digital_certificate", null);
+      }
+      if (individual?.certificate !== null) {
+        updateField("certificate", null);
+      }
+    }
+  };
 
   /**
    * Updates a single field in `individual`.
@@ -407,29 +449,81 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               <div className={style.formPane}>
                 <div className={style.titleText}>Redigera Individ</div>
                 <div className={style.adminPane}>
-                  <div className={style.paneTitle}>
-                    Kan endast ändras av genbanksansvarig
+                  <div className={style.flexColumn}>
+                    <p className={style.paneTitle}>
+                      Kan endast ändras av genbanksansvarig
+                    </p>
+                    <TextField
+                      disabled={!canManage}
+                      label="Nummer"
+                      className={style.control}
+                      variant={inputVariant}
+                      value={individual.number ?? ""}
+                      onChange={(event) => {
+                        updateField("number", event.currentTarget.value);
+                      }}
+                    />
                   </div>
-                  <TextField
-                    disabled={!canManage}
-                    label="Nummer"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.number ?? ""}
-                    onChange={(event) => {
-                      updateField("number", event.currentTarget.value);
-                    }}
-                  />
-                  <TextField
-                    disabled={!canManage}
-                    label="Certifikat"
-                    className={style.control}
-                    variant={inputVariant}
-                    value={individual.certificate ?? ""}
-                    onChange={(event) => {
-                      updateField("certificate", event.currentTarget.value);
-                    }}
-                  />
+                  <div className={style.flexRow}>
+                    <Autocomplete
+                      disabled={!canManage}
+                      options={certTypeOptions ?? []}
+                      value={certTypeOptions.find(
+                        (option) =>
+                          option.value == certType ??
+                          certTypeOptions[certTypeOptions.length - 1]
+                      )}
+                      getOptionLabel={(option: OptionType) => option.label}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Certifikattyp"
+                          className={style.control}
+                          variant={inputVariant}
+                          margin="normal"
+                        />
+                      )}
+                      onChange={(event: any, newValue: OptionType) =>
+                        onCertTypeChange(newValue?.value ?? "unknown")
+                      }
+                    />
+                    {certType == "paper" ? (
+                      <TextField
+                        disabled={!canManage}
+                        label="Certifikatnummer papper"
+                        className={style.control}
+                        variant={inputVariant}
+                        value={individual.certificate ?? ""}
+                        onChange={(event) => {
+                          updateField("certificate", event.currentTarget.value);
+                        }}
+                      />
+                    ) : certType == "digital" ? (
+                      <TextField
+                        disabled={!canManage}
+                        label="Certifikatnummer digital"
+                        className={style.control}
+                        variant={inputVariant}
+                        value={individual.digital_certificate ?? ""}
+                        onChange={(event) => {
+                          updateField(
+                            "digital_certificate",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        label="Certifikatnummer"
+                        disabled
+                        placeholder="Välj typ först."
+                        className={style.control}
+                        variant={inputVariant}
+                        value={"Välj certifikattyp först."}
+                        onChange={() => {}}
+                      />
+                    )}
+                  </div>
                 </div>
                 <TextField
                   label="Namn"

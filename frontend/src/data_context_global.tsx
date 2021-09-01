@@ -42,6 +42,7 @@ export interface Individual extends LimitedIndividual {
   origin_herd?: HerdNameID;
   genebank?: string;
   certificate: string | null;
+  digital_certificate?: string | null;
   birth_date: string | null;
   mother: LimitedIndividual | null;
   father: LimitedIndividual | null;
