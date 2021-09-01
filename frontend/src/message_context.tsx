@@ -8,7 +8,7 @@ import {
   DialogContent,
   Snackbar,
 } from "@material-ui/core";
-import MuiAlert from "@material-ui/lab/Alert";
+import Alert from "@material-ui/lab/Alert";
 import { unstable_batchedUpdates } from "react-dom";
 
 /**
@@ -20,7 +20,7 @@ export type MessageLevel = "error" | "warning" | "info" | "success";
 
 export interface MessageContext {
   userMessage(msg: string, level: MessageLevel): void;
-  popup(content: JSX.Element, link: string | undefined): void;
+  popup(content: JSX.Element, link: string | undefined, full?: boolean): void;
 }
 const emptyContext: MessageContext = {
   userMessage() {},
@@ -47,6 +47,7 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
   const [dialogLink, setDialogLink] = React.useState(
     undefined as string | undefined
   );
+  const [fullWidth, setFullWidth] = React.useState(false);
 
   function userMessage(message: string, severity: MessageLevel) {
     // print json format if the message isn't a string.
@@ -59,11 +60,18 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
     setShowMessage(true);
   }
 
-  function popup(content: JSX.Element, link: string | undefined) {
+  function popup(
+    content: JSX.Element,
+    link: string | undefined,
+    full?: boolean
+  ) {
     unstable_batchedUpdates(() => {
       setDialogLink(link);
       setDialogContent(content);
       setShowDialog(true);
+      if (full) {
+        setFullWidth(full);
+      }
     });
   }
 
@@ -74,11 +82,12 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
     setShowMessage(false);
   };
 
-  const handleCloseDialog = (event: any, reason: string) => {
+  const handleCloseDialog = () => {
     unstable_batchedUpdates(() => {
       setDialogLink(undefined);
       setDialogContent(<></>);
       setShowDialog(false);
+      setFullWidth(false);
     });
   };
 
@@ -89,6 +98,7 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
         open={showDialog}
         keepMounted
         maxWidth={"xl"}
+        fullWidth={fullWidth}
         onClose={handleCloseDialog}
       >
         <DialogContent>{dialogContent}</DialogContent>
@@ -98,7 +108,7 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
               <Button color="primary">Öppna i eget fönster</Button>
             </Link>
           )}
-          <Button onClick={() => setShowDialog(false)} color="primary">
+          <Button onClick={handleCloseDialog} color="primary">
             Stäng
           </Button>
         </DialogActions>
@@ -108,14 +118,14 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
         autoHideDuration={5000}
         onClose={handleCloseMessage}
       >
-        <MuiAlert
+        <Alert
           elevation={6}
           variant="filled"
           onClose={handleCloseMessage}
           severity={severity}
         >
           {message}
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     </MessageContext.Provider>
   );

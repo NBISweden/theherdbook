@@ -29,6 +29,8 @@ import { IndividualEdit } from "@app/individual_edit";
 import { IndividualCertificate } from "./individual_certificate";
 import { CertificateVerification } from "./certificate_verification";
 import { CertificateDownload } from "./certificate_download";
+import { IndividualSell } from "./individual_sell";
+import { HerdView } from "@app/herd_view";
 
 const useStyles = makeStyles({
   body: {
@@ -262,7 +264,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>
                     {individual &&
                       individual.weights &&
-                      individual.weights.length > 1 && (
+                      individual.weights.length >= 1 && (
                         <ul className={style.herdList}>
                           {individual.weights
                             .sort(
@@ -284,7 +286,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>{individual?.notes ?? "-"}</dd>
                 </dl>
               </div>
-              {user?.canEdit(id) && (
+              {user?.canEdit(individual.herd.herd) && (
                 <Button
                   className={style.editButton}
                   variant="contained"
@@ -294,19 +296,40 @@ export function IndividualView({ id }: { id: string }) {
                   Redigera individ
                 </Button>
               )}
-              {user?.canEdit(id) && !hasDigitalCert && !hasPaperCert && (
-                <Button
-                  className={style.editButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={() =>
-                    popup(<IndividualCertificate id={id} action={"issue"} />)
-                  }
-                >
-                  Skapa nytt certifikat
-                </Button>
-              )}
-              {user?.canEdit(id) && hasDigitalCert && (
+              {user?.canEdit(individual.origin_herd.herd) &&
+                !hasDigitalCert &&
+                !hasPaperCert && (
+                  <Button
+                    className={style.editButton}
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      popup(<IndividualCertificate id={id} action={"issue"} />)
+                    }
+                  >
+                    Skapa nytt certifikat
+                  </Button>
+                )}
+              {individual.origin_herd.herd !== individual.herd.herd &&
+                user?.canEdit(individual.herd.herd) &&
+                !hasDigitalCert &&
+                !hasPaperCert && (
+                  <>
+                    <Button
+                      className={style.editButton}
+                      disabled
+                      variant="contained"
+                      color="primary"
+                    >
+                      Skapa nytt certifikat
+                    </Button>
+                    <p>
+                      Kontakta ägaren till kaninens ursprungsbesättning. Bara
+                      hon/han kan skapa ett nytt certifikat.
+                    </p>
+                  </>
+                )}
+              {user?.canEdit(individual.herd.herd) && hasDigitalCert && (
                 <>
                   <Button
                     aria-controls="simple-menu"
@@ -368,7 +391,16 @@ export function IndividualView({ id }: { id: string }) {
                     individual.herd_tracking.map((herdTrack: any, i) => {
                       if (herdTrack.herd) {
                         return (
-                          <Link to={`/herd/${herdTrack.herd}`} key={i}>
+                          <Link
+                            onClick={() =>
+                              popup(
+                                <HerdView id={herdTrack.herd} />,
+                                `/herd/${herdTrack.herd}`,
+                                true
+                              )
+                            }
+                            key={i}
+                          >
                             <li>
                               {asLocale(herdTrack.date)}: {herdLabel(herdTrack)}
                             </li>
@@ -381,6 +413,18 @@ export function IndividualView({ id }: { id: string }) {
                       }
                     })}
                 </ul>
+                {user?.canEdit(individual.herd.herd) && (
+                  <Button
+                    className={style.editButton}
+                    variant="outlined"
+                    color="primary"
+                    onClick={() =>
+                      popup(<IndividualSell individual={individual} />)
+                    }
+                  >
+                    Sälj individ
+                  </Button>
+                )}
               </div>
               <div>
                 <h3>Föräldrar</h3>
@@ -389,7 +433,14 @@ export function IndividualView({ id }: { id: string }) {
                     <li>
                       Mor:
                       {individual.mother ? (
-                        <Link to={`/individual/${individual.mother.number}`}>
+                        <Link
+                          onClick={() =>
+                            popup(
+                              <IndividualView id={individual.mother.number} />,
+                              `/individual/${individual.mother.number}`
+                            )
+                          }
+                        >
                           {individualLabel(individual.mother)}
                         </Link>
                       ) : (
@@ -399,7 +450,14 @@ export function IndividualView({ id }: { id: string }) {
                     <li>
                       Far:
                       {individual.father ? (
-                        <Link to={`/individual/${individual.father.number}`}>
+                        <Link
+                          onClick={() =>
+                            popup(
+                              <IndividualView id={individual.father.number} />,
+                              `/individual/${individual.father.number}`
+                            )
+                          }
+                        >
                           {individualLabel(individual.father)}
                         </Link>
                       ) : (
@@ -418,12 +476,19 @@ export function IndividualView({ id }: { id: string }) {
                     <li key={child.number}>
                       <span className={style.listIcon}>
                         {child.alive
-                          ? child.active
+                          ? child.is_active
                             ? activeIcon
                             : inactiveIcon
                           : deadIcon}
                       </span>
-                      <Link to={`/individual/${child.number}`}>
+                      <Link
+                        onClick={() =>
+                          popup(
+                            <IndividualView id={child.number} />,
+                            `/individual/${child.number}`
+                          )
+                        }
+                      >
                         {individualLabel(child)}
                       </Link>
                     </li>

@@ -1,14 +1,21 @@
 import * as React from "react";
-import { Switch, Route, useLocation, Redirect } from "react-router-dom";
+import { Switch, Route, useLocation, Redirect, Link } from "react-router-dom";
 
-import { makeStyles } from "@material-ui/core/styles";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import { svSE } from "@material-ui/core/locale";
 import Paper from "@material-ui/core/Paper";
 import HomeIcon from "@material-ui/icons/Home";
 import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
+import ContactMail from "@material-ui/icons/ContactMail";
+import ForumIcon from "@material-ui/icons/Forum";
 import VpnKeyIcon from "@material-ui/icons/VpnKey";
 import MeetingRoom from "@material-ui/icons/MeetingRoom";
 import GroupIcon from "@material-ui/icons/Group";
+import PersonAddIcon from "@material-ui/icons/PersonAdd";
 import PostAddIcon from "@material-ui/icons/PostAdd";
+import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
+import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
+import EcoIcon from "@material-ui/icons/Eco";
 
 import { Login } from "@app/login";
 import { Genebanks } from "@app/genebanks";
@@ -22,17 +29,59 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
+import {
+  About,
+  Gotlandskaninen,
+  Mellerudskaninen,
+  Medlem,
+  Kontakt,
+  Footer,
+} from "@app/static_pages";
+import { Forum } from "@app/forum";
 import * as ui from "@app/ui_utils";
+import {
+  Button,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Typography,
+  withStyles,
+} from "@material-ui/core";
+import { MenuProps } from "@material-ui/core/Menu";
 
-// Define styles for tab menu
-const useStyles = makeStyles({
+import "./style.css";
+
+const StyledMenu = withStyles({
+  paper: {
+    border: "1px solid #d3d4d5",
+  },
+})((props: MenuProps) => (
+  <Menu
+    elevation={0}
+    getContentAnchorEl={null}
+    anchorOrigin={{
+      vertical: "bottom",
+      horizontal: "center",
+    }}
+    transformOrigin={{
+      vertical: "top",
+      horizontal: "center",
+    }}
+    {...props}
+  />
+));
+
+const StyledMenuItem = withStyles((theme) => ({
   root: {
-    flexGrow: 1,
+    "&:focus": {
+      backgroundColor: theme.palette.primary.main,
+      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+        color: theme.palette.common.white,
+      },
+    },
   },
-  main: {
-    height: "calc(100% - 72px)",
-  },
-});
+}))(MenuItem);
 
 function Restricted(props: { children: React.ReactElement }) {
   const { user } = useUserContext();
@@ -45,21 +94,47 @@ function Restricted(props: { children: React.ReactElement }) {
 }
 
 export function Navigation() {
-  const classes = useStyles();
   const { logout } = useUserContext();
   const { user } = useUserContext();
+  const [showLogo, setShowLogo] = React.useState(true);
+  const [showLogoText, setShowLogoText] = React.useState(false);
   const is_admin = !!(user?.is_manager || user?.is_admin);
   const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const is_logged_in = !!user;
+  const theme = createMuiTheme({}, svSE);
 
   const tabs: ui.RoutedTab[] = [
     {
       label: "Hem",
       path: "/",
       exact: true,
-      component: "Welcome!",
+      component: <About />,
       visible: true,
       icon: <HomeIcon />,
+    },
+    {
+      label: "Gotlandskaninen",
+      path: "/gotlandskaninen",
+      exact: true,
+      component: <Gotlandskaninen />,
+      visible: true,
+      icon: <EcoIcon />,
+    },
+    {
+      label: "Mellerudskaninen",
+      path: "/mellerudskaninen",
+      exact: true,
+      component: <Mellerudskaninen />,
+      visible: true,
+      icon: <EmojiNatureIcon />,
+    },
+    {
+      label: "Forum",
+      path: "/forum",
+      exact: true,
+      component: <Forum />,
+      visible: is_logged_in,
+      icon: <ForumIcon />,
     },
     {
       label: "Genbanker",
@@ -95,7 +170,7 @@ export function Navigation() {
         </Restricted>
       ),
       visible: is_owner,
-      icon: <GroupIcon />,
+      icon: <NaturePeopleIcon />,
     },
     {
       label: "Registrera",
@@ -132,6 +207,15 @@ export function Navigation() {
     },
 
     {
+      label: "Bli Medlem",
+      path: "/medlem",
+      exact: true,
+      component: <Medlem />,
+      visible: !is_logged_in,
+      icon: <PersonAddIcon />,
+    },
+
+    {
       label: "Logga in",
       path: "/login",
       component: <Login />,
@@ -146,58 +230,115 @@ export function Navigation() {
       on_click: logout,
       icon: <VpnKeyIcon />,
     },
+    {
+      label: "Kontakt",
+      path: "/kontakt",
+      exact: true,
+      component: <Kontakt />,
+      visible: true,
+      icon: <ContactMail />,
+    },
   ];
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
   return (
     <>
-      {/* Insert the tab menu */}
-      <Paper className={classes.root}>
-        <Tabs centered />
-      </Paper>
+      <ThemeProvider theme={theme}>
+        {/* Insert the tab menu */}
+        <div className="menu">
+          <Button
+            aria-controls="customized-menu"
+            aria-haspopup="true"
+            className="menuButton"
+            onClick={handleClick}
+          >
+            <span className="trigram">☰</span>
+            <Typography variant="subtitle1">Menu</Typography>
+          </Button>
 
-      {/* Declare routes, and what component should be rendered for each
-       * route.
-       */}
+          <StyledMenu
+            id="customized-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            {tabs.map((tab) => (
+              <Link
+                to={tab.path ?? "/"}
+                className="link"
+                style={{ display: tab.visible === false ? "none" : undefined }}
+                onClick={() => {
+                  tab.on_click && tab.on_click();
+                  handleClose();
+                }}
+              >
+                <StyledMenuItem>
+                  <ListItemIcon>{tab.icon}</ListItemIcon>
+                  <ListItemText primary={tab.label} />
+                </StyledMenuItem>
+              </Link>
+            ))}
+          </StyledMenu>
+          {/* <Tabs centered/> */}
+        </div>
 
-      <div className={classes.main}>
-        <Switch>
-          {TabbedRoutes}
-          <ui.Routed path="/herd/:id">
-            {(params) => (
-              <Restricted>
-                <HerdView id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/individual/:id">
-            {(params) => (
-              <Restricted>
-                <IndividualView id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/individual-pedigree/:id/:generations?">
-            {(params) => (
-              <Restricted>
-                <IndividualPedigree
-                  id={params.id}
-                  generations={params.generations ? +params.generations : 5}
-                />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <ui.Routed path="/herd-pedigree/:id">
-            {(params) => (
-              <Restricted>
-                <HerdPedigree id={params.id} />
-              </Restricted>
-            )}
-          </ui.Routed>
-          <Route path="/">Welcome!</Route>
-        </Switch>
-      </div>
+        {/* Declare routes, and what component should be rendered for each
+         * route.
+         */}
+
+        <div className="wrapper">
+          <Paper className="main">
+            <Switch>
+              {TabbedRoutes}
+              <ui.Routed path="/herd/:id">
+                {(params) => (
+                  <Restricted>
+                    <HerdView id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/individual/:id">
+                {(params) => (
+                  <Restricted>
+                    <IndividualView id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/individual-pedigree/:id/:generations?">
+                {(params) => (
+                  <Restricted>
+                    <IndividualPedigree
+                      id={params.id}
+                      generations={params.generations ? +params.generations : 5}
+                    />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <ui.Routed path="/herd-pedigree/:id">
+                {(params) => (
+                  <Restricted>
+                    <HerdPedigree id={params.id} />
+                  </Restricted>
+                )}
+              </ui.Routed>
+              <Route path="/">Welcome!</Route>
+            </Switch>
+          </Paper>
+        </div>
+
+        <Footer />
+      </ThemeProvider>
     </>
   );
 }

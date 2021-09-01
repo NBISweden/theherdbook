@@ -48,6 +48,9 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     padding: "20px 0",
   },
+  formWrapper: {
+    padding: "3em 3em 0 3em",
+  },
 });
 
 export function IndividualCertificate({
@@ -74,21 +77,17 @@ export function IndividualCertificate({
   //States to make pdf-preview-library work
   const [numPages, setNumPages] = React.useState(null);
   const [pageNumber, setPageNumber] = React.useState(1);
+  // Error states for mandatory form fields
+  const [numberError, setNumberError] = React.useState(false as boolean);
+  const [colorError, setColorError] = React.useState(false as boolean);
+  const [sexError, setSexError] = React.useState(false as boolean);
+  const [birthDateError, setBirthDateError] = React.useState(false as boolean);
+  const [litterError, setLitterError] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
   const style = useStyles();
-
-  // returns true if you are an admin or the manager of the genebank the individual belongs to
-  const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank);
-  }, [user, individual]);
-
-  //returns true if you own the herd the indvidual belongs to, are an admin or the manager of the individual's genebank
-  const canEdit: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.number);
-  }, [user, individual]);
 
   // Limited version of the individual to be used for the preview
   const certificateData = {
@@ -109,15 +108,13 @@ export function IndividualCertificate({
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
-            console.log(data);
             setIndividual(data);
             setShowForm(true);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
@@ -126,6 +123,28 @@ export function IndividualCertificate({
           "error"
         );
   }, [id, user]);
+
+  /**
+   * The API sends the birth date in a format like this:
+   * "Thu, 08 Jul 2021 00:00:00 GMT".
+   * This function turns it into a format like this: "YYYY-MM-DD"
+   */
+  React.useEffect(() => {
+    const formatDate = (fullDate: string) => {
+      const date = new Date(fullDate).toISOString();
+      const dateString = date.split("T")[0];
+      return dateString;
+    };
+    if (
+      // check if the birth date is still in the wrong format,
+      // i.e. has more than 10 characters
+      individual?.birth_date &&
+      individual.birth_date.length > 10
+    ) {
+      handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
+    }
+  }, [individual?.birth_date]);
+
   /**
    * Updates a single field in `individual`.
    *
@@ -139,19 +158,62 @@ export function IndividualCertificate({
     individual && setIndividual({ ...individual, [field]: value });
   };
 
-  // Used to activate the button for ordering the certificate
-  async function authenticate(username: string, password: string) {
-    return await post("/api/login", { username, password }).then(
-      (data) => {
-        data ? setIsUserGood(true) : setIsUserGood(false);
-        return data;
-      },
-      (error) => {
-        userMessage("Något gick fel.", "error");
-        return "error";
-      }
-    );
-  }
+  // check if all mandatory fields are filled before moving on to preview
+  const handlePreview = () => {
+    let error: boolean = false;
+    if (!individual?.number) {
+      setNumberError(true);
+      error = true;
+    }
+    if (!individual?.color) {
+      setColorError(true);
+      error = true;
+    }
+    if (!individual?.sex) {
+      setSexError(true);
+      error = true;
+    }
+    if (!individual?.birth_date) {
+      setBirthDateError(true);
+      error = true;
+    }
+    if (!individual?.litter) {
+      setLitterError(true);
+      error = true;
+    }
+    if (error) {
+      userMessage("Fyll i alla obligatoriska fält.", "warning");
+      return;
+    }
+    setShowForm(false);
+    setShowSummary(true);
+    previewCertificate(id, certificateData);
+  };
+
+  // remove error layout from input fields when user has added an input
+  React.useEffect(() => {
+    if (individual?.color) {
+      setColorError(false);
+    }
+    if (individual?.number) {
+      setNumberError(false);
+    }
+    if (individual?.sex) {
+      setSexError(false);
+    }
+    if (individual?.birth_date) {
+      setBirthDateError(false);
+    }
+    if (individual?.litter) {
+      setLitterError(false);
+    }
+  }, [
+    individual?.color,
+    individual?.number,
+    individual?.sex,
+    individual?.birth_date,
+    individual?.litter,
+  ]);
 
   // Returns a preview of the certificate that will be shown as an image
   // using the React-pdf library.
@@ -173,6 +235,20 @@ export function IndividualCertificate({
         userMessage(error.message, "error");
       });
   };
+
+  // Used to activate the button for ordering the certificate
+  async function authenticate(username: string, password: string) {
+    return await post("/api/login", { username, password }).then(
+      (data) => {
+        data ? setIsUserGood(true) : setIsUserGood(false);
+        return data;
+      },
+      (error) => {
+        userMessage("Något gick fel.", "error");
+        return "error";
+      }
+    );
+  }
 
   // Returns the signed, new certificate.
   const issueCertificate = (id: string, content: any) => {
@@ -254,7 +330,7 @@ export function IndividualCertificate({
   };
   // jscpd:ignore-end
 
-  // This function is necessary to make the previw work.
+  // This function is necessary to make the preview work.
   // Built into the library.
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -271,10 +347,13 @@ export function IndividualCertificate({
         <>
           <IndividualForm
             individual={individual}
-            canManage={canManage}
-            canEdit={canEdit}
             onUpdateIndividual={handleUpdateIndividual}
             formAction={FormAction.handleCertificate}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
           />
           <div className={style.paneControls}>
             <Button
@@ -286,15 +365,7 @@ export function IndividualCertificate({
             >
               {"Tillbaka"}
             </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                setShowForm(false);
-                setShowSummary(true);
-                previewCertificate(id, certificateData);
-              }}
-            >
+            <Button variant="contained" color="primary" onClick={handlePreview}>
               {"Förhandsgranska"}
             </Button>
           </div>

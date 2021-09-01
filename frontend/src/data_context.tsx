@@ -2,7 +2,17 @@ import * as React from "react";
 
 import { get } from "@app/communication";
 
-import { Color, DataContext, Genebank, NameID } from "@app/data_context_global";
+import {
+  Birth,
+  Breeding,
+  Color,
+  DataContext,
+  Genebank,
+  NameID,
+  LimitedBreeding,
+} from "@app/data_context_global";
+import { patch, post } from "./communication";
+import { useMessageContext } from "./message_context";
 
 /**
  * The data context holds genebank, herd, and individual data, as well as
@@ -24,6 +34,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
   const [colors, setColors] = React.useState(
     {} as { [genebank: string]: Color[] }
   );
+  const { userMessage } = useMessageContext();
 
   async function fetchAndSet(
     url: string,
@@ -180,7 +191,14 @@ export function WithDataContext(props: { children: React.ReactNode }) {
 
   return (
     <DataContext.Provider
-      value={{ genebanks, users, colors, setGenebanks, setUsers, loadData }}
+      value={{
+        genebanks,
+        users,
+        colors,
+        setGenebanks,
+        setUsers,
+        loadData,
+      }}
     >
       {props.children}
     </DataContext.Provider>

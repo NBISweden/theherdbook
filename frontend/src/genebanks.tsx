@@ -7,24 +7,16 @@ import React, { useState } from "react";
 import { useDataContext } from "@app/data_context";
 
 import { Genebank } from "@app/data_context_global";
-import { Button, Paper, makeStyles } from "@material-ui/core";
+import { Button, Paper } from "@material-ui/core";
 
 import { Link, useRouteMatch, useHistory } from "react-router-dom";
 import { GenebankView } from "@app/genebank_view";
-
-// Define styles
-const useStyles = makeStyles({
-  buttonBar: {
-    padding: "5px",
-  },
-});
 
 /**
  * Provides buttons to select which genebank to view, which is then done with
  * the GenebankView function.
  */
 export function Genebanks() {
-  const styles = useStyles();
   const { url } = useRouteMatch();
   const history = useHistory();
   const { genebanks } = useDataContext();
@@ -48,7 +40,7 @@ export function Genebanks() {
   return (
     <>
       <Paper>
-        <div className={styles.buttonBar}>
+        <div className="buttonBar">
           {genebanks.length > 1 &&
             genebanks.map((g: Genebank, i: number) => {
               return (

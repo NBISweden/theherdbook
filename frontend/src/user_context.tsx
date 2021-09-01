@@ -94,6 +94,7 @@ export function WithUserContext(props: { children: React.ReactNode }) {
   }
 
   function canEdit(id: string) {
+    // the argument can be the id of either a herd or a genebank
     if (!user) {
       return false;
     }
@@ -102,22 +103,6 @@ export function WithUserContext(props: { children: React.ReactNode }) {
       return true;
     }
 
-    // id is an individual.
-    // currently no permissions are on the individual level, but it's added as
-    // a future-proofing option.
-    if (/^([a-zA-Z][0-9]+-[0-9]+)$/.test(id)) {
-      const herd: string = id.split("-")[0];
-      const genebank = genebanks.find((genebank) =>
-        genebank.herds.some((h) => h.herd == herd)
-      );
-      // you can edit if you own the herd, or are manager of the genebank
-      if (
-        user.is_owner?.includes(herd) ||
-        (genebank && user.is_manager?.includes(+genebank.id))
-      ) {
-        return true;
-      }
-    }
     // id is a herd
     else if (/^([a-zA-Z]X?[0-9]+)$/.test(id)) {
       const genebank = genebanks.find((genebank) =>

@@ -7,9 +7,9 @@ export interface NameID {
 }
 
 export interface HerdNameID {
-  herd_name: string;
+  herd_name?: string;
   herd: string;
-  id: number;
+  id?: number;
 }
 
 export interface DateValue {
@@ -31,31 +31,31 @@ export interface DateBodyfat {
 }
 
 export interface LimitedIndividual {
-  id: number;
-  name: string | null;
-  number: string;
+  id?: number;
+  name?: string | null;
+  number: string | null;
   sex?: string;
 }
 
 export interface Individual extends LimitedIndividual {
-  herd: HerdNameID;
+  herd: HerdNameID | string;
   origin_herd?: HerdNameID;
-  genebank: string;
+  genebank?: string;
   certificate: string | null;
   birth_date: string | null;
   mother: LimitedIndividual | null;
   father: LimitedIndividual | null;
-  color: string | null;
+  color?: string | null;
   color_note: string | null;
   death_date: string | null;
   death_note: string | null;
   litter: number | null;
   notes: string | null;
-  weights: Array<DateWeight> | null;
-  bodyfat: Array<DateBodyfat> | null;
+  weights?: Array<DateWeight> | null;
+  bodyfat?: Array<DateBodyfat> | null;
   herd_tracking: Array<DateValue> | null;
   herd_active: boolean;
-  active: boolean;
+  is_active: boolean;
   alive: boolean;
   belly_color: string | null;
   eye_color: string | null;
@@ -100,6 +100,37 @@ export interface Herd extends LimitedHerd {
   longitude: string | null;
   coordinates_privacy?: PrivacyLevel;
   individuals?: Individual[];
+}
+
+export interface LimitedBreeding {
+  date: string | null;
+  mother: string;
+  father: string;
+  notes?: string;
+}
+
+export interface Breeding {
+  [key: string]: any;
+  id?: number;
+  breed_date: string | null;
+  breed_notes?: string;
+  father: string;
+  mother: string;
+  birth_date: string | null;
+  birth_notes?: string;
+  litter_size: number | null;
+}
+
+export interface ExtendedBreeding extends Breeding {
+  mother_name: string | null | undefined;
+  father_name: string | null | undefined;
+}
+
+export interface Birth {
+  id: number;
+  date: string;
+  litter: number | null;
+  notes?: string;
 }
 
 export interface Color {
@@ -184,7 +215,7 @@ export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
       return [];
     }
     return genebank?.individuals.filter(
-      (i) => i.sex == sex && i.active == true
+      (i) => i.sex == sex && i.is_active == true
     );
   }, [genebank]);
 }

@@ -4,29 +4,12 @@
  */
 import React from "react";
 import { TextField } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import { Autocomplete } from "@material-ui/lab";
 import {
   inputVariant,
   OptionType,
   PrivacyLevel,
 } from "@app/data_context_global";
-
-// Define styles for the form
-const useStyles = makeStyles({
-  simpleField: {
-    width: "100%",
-  },
-  permissionGroup: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  permissionField: {
-    width: "200px",
-    marginTop: 0,
-    marginLeft: "5px",
-  },
-});
 
 /**
  * Regexp validation of the supported types, email, tel, url, and text, where
@@ -80,8 +63,6 @@ export function FieldWithPermission({
   setValue: Function;
   fieldType: LimitedInputType
 }) {
-  const classes = useStyles();
-
   const options = [
     { value: "private", label: "Endast Manager" },
     { value: "authenticated", label: "Endast Inloggade" },
@@ -90,10 +71,10 @@ export function FieldWithPermission({
 
   return (
     <>
-      <div className={classes.permissionGroup}>
+      <div className="permissionGroup">
         <TextField
           label={label}
-          className={classes.simpleField}
+          className="simpleField"
           error={!validateType(fieldType, value)}
           value={value}
           type={fieldType ?? 'text'}
@@ -114,8 +95,9 @@ export function FieldWithPermission({
                 {...params}
                 label="Synlighet"
                 variant={inputVariant}
-                className={classes.permissionField}
-                margin="normal"
+                className="permissionFieldExtended"
+                fullWidth={false}
+                style={{ marginLeft: "45px" }}
               />
             )}
             onChange={(event: any, newValue: OptionType | null) => {

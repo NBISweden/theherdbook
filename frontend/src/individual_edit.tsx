@@ -34,6 +34,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { Autocomplete } from "@material-ui/lab";
+import NumberFormat from "react-number-format";
 
 const useStyles = makeStyles({
   loading: {
@@ -125,6 +126,34 @@ const useStyles = makeStyles({
   },
 });
 
+// interface and function that make the react-number-format library work
+// used to allow input of decimal commas for weight record
+interface NumberFormatCustomProps {
+  inputRef: (instance: NumberFormat | null) => void;
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+}
+
+const NumberFormatCustom = (props: NumberFormatCustomProps) => {
+  const { inputRef, onChange, ...other } = props;
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.value,
+          },
+        });
+      }}
+      isNumericString
+      decimalSeparator=","
+    />
+  );
+};
+
 /**
  * This function allows a user (with the required permissions) to edit an
  * individual given by `id`, or add a new individual if no `id` is given.
@@ -133,11 +162,10 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
-  const [isNew, setIsNew] = React.useState(!!id as boolean);
   const [bodyfat, setBodyfat] = React.useState("normal");
-  const [weight, setWeight] = React.useState(3.0);
-  const [hullDate, setHullDate] = React.useState(asLocale());
-  const [weightDate, setWeightDate] = React.useState(asLocale());
+  const [weight, setWeight] = React.useState(null as number | null);
+  const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
+  const [weightDate, setWeightDate] = React.useState(null as string | null);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
   const { userMessage } = useMessageContext();
@@ -192,6 +220,12 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       });
   }, [genebankIndividuals]);
 
+  const translateBodyfat: Map<string, string> = new Map([
+    ["low", "låg"],
+    ["normal", "normal"],
+    ["high", "hög"],
+  ]);
+
   const asIndividual = (
     number: string | undefined
   ): LimitedIndividual | null => {
@@ -214,22 +248,17 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * Fetch individual data from the backend
    */
   React.useEffect(() => {
-    user && user.canEdit(id)
+    id
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
-            setIsNew(false);
           },
           (error) => {
-            console.error(error);
             userMessage(error, "error");
           }
         )
-      : userMessage(
-          "You do not have permission to edit this individual",
-          "error"
-        );
-  }, [id, user]);
+      : userMessage("Något gick fel.", "error");
+  }, [id]);
 
   /**
    * Updates a single field in `individual`.
@@ -242,6 +271,104 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     value: Individual[T]
   ) => {
     individual && setIndividual({ ...individual, [field]: value });
+  };
+
+  const isDateOkay = (date: string) => {
+    const recordDate = new Date(date).getTime();
+    const today = new Date().getTime();
+    if (today - recordDate < 0) {
+      userMessage("Ange ett datum som inte ligger i framtiden.", "warning");
+      return false;
+    } else {
+      return true;
+    }
+  };
+
+  const handleNewWeight = () => {
+    if (!weightDate) {
+      userMessage("Ange ett datum för viktmätningen", "warning");
+      return;
+    }
+    if (weight && weight <= 0) {
+      userMessage("Ange en vikt större än 0.", "warning");
+      return;
+    }
+    if (!isDateOkay(weightDate)) {
+      return;
+    }
+
+    // update the local individual state
+    updateField("weights", [
+      ...individual?.weights,
+      { date: weightDate, weight: weight },
+    ]);
+
+    const newWeightRecord = {
+      number: individual?.number,
+      herd: individual?.herd,
+      weights: [...individual?.weights, { date: weightDate, weight: weight }],
+    };
+
+    // send weight record to the backend
+    patch("/api/individual", newWeightRecord)
+      .then((json) => {
+        if (json.status == "success") {
+          userMessage("Viktmätningen har lagts till.", "success");
+          return;
+        } else {
+          userMessage("Något gick fel.", "error");
+        }
+      })
+      .then(() => {
+        setWeight(null);
+        setWeightDate(null);
+      })
+      .catch((error) => {
+        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
+      });
+  };
+
+  const handleNewBodyfat = () => {
+    if (!bodyfatDate) {
+      userMessage("Ange ett datum för hullmätningen", "warning");
+      return;
+    }
+    if (!isDateOkay(bodyfatDate)) {
+      return;
+    }
+
+    // update the local individual state
+    updateField("bodyfat", [
+      ...individual?.bodyfat,
+      { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
+    ]);
+
+    const newBodyfatRecord = {
+      number: individual?.number,
+      herd: individual?.herd,
+      bodyfat: [
+        ...individual?.bodyfat,
+        { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
+      ],
+    };
+
+    // send bodyfat record to the backend
+    patch("/api/individual", newBodyfatRecord)
+      .then((json) => {
+        if (json.status == "success") {
+          userMessage("Hullmätningen har lagts till.", "success");
+          return;
+        } else {
+          userMessage("Något gick fel.", "error");
+        }
+      })
+      .then(() => {
+        setBodyfat("normal");
+        setBodyfatDate(null);
+      })
+      .catch((error) => {
+        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
+      });
   };
 
   /**
@@ -284,7 +411,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     Kan endast ändras av genbanksansvarig
                   </div>
                   <TextField
-                    disabled
+                    disabled={!canManage}
                     label="Nummer"
                     className={style.control}
                     variant={inputVariant}
@@ -294,7 +421,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
+                    disabled={!canManage}
                     label="Certifikat"
                     className={style.control}
                     variant={inputVariant}
@@ -305,7 +432,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
                 </div>
                 <TextField
-                  disabled={!(isNew || canManage)}
                   label="Namn"
                   className={style.control}
                   variant={inputVariant}
@@ -316,7 +442,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 />
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={sexOptions ?? []}
                     value={
                       sexOptions.find(
@@ -339,7 +464,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   />
 
                   <KeyboardDatePicker
-                    disabled={!(isNew || canManage)}
                     autoOk
                     variant="inline"
                     className={style.control}
@@ -357,7 +481,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={motherOptions ?? []}
                     value={
                       motherOptions.find(
@@ -379,7 +502,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={fatherOptions ?? []}
                     value={
                       fatherOptions.find(
@@ -403,7 +525,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 </div>
                 <div className={style.flexRow}>
                   <Autocomplete
-                    disabled={!(isNew || canManage)}
                     options={colorOptions ?? []}
                     value={
                       colorOptions.find(
@@ -425,7 +546,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                   <TextField
-                    disabled={!(isNew || canManage)}
                     label="Färgantecking"
                     variant={inputVariant}
                     className={style.control}
@@ -466,7 +586,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                               className={style.scriptLink}
                               onClick={() => removeMeasure("weights", i)}
                             >
-                              Delete
+                              Radera
                             </a>
                             ]
                           </span>
@@ -498,18 +618,19 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     label="Vikt"
                     className={style.control}
                     value={weight}
-                    type="number"
                     variant={inputVariant}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">Kg</InputAdornment>
                       ),
+                      inputProps: { min: 0 },
+                      inputComponent: NumberFormatCustom as any,
                     }}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     onChange={(e: any) => {
-                      setWeight(e.target.value);
+                      setWeight(+e.target.value);
                     }}
                   />
                 </div>
@@ -517,12 +638,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => {
-                    updateField("weights", [
-                      ...individual?.weights,
-                      { date: weightDate, weight: weight },
-                    ]);
-                  }}
+                  onClick={() => handleNewWeight()}
                 >
                   {"Lägg till viktmätning"}
                 </Button>
@@ -534,14 +650,16 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     individual.bodyfat &&
                       individual.bodyfat.map((b: DateBodyfat, i: number) => (
                         <li key={i} className={style.measureList}>
-                          {`${asLocale(b.date)} - ${b.bodyfat}`}
+                          {`${asLocale(b.date)} - ${translateBodyfat.get(
+                            b.bodyfat
+                          )}`}
                           <span className={style.listButton}>
                             [
                             <a
                               className={style.scriptLink}
                               onClick={() => removeMeasure("bodyfat", i)}
                             >
-                              Delete
+                              Radera
                             </a>
                             ]
                           </span>
@@ -557,13 +675,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     inputVariant={inputVariant}
                     label="Mätningsdatum"
                     format={dateFormat}
-                    value={hullDate}
+                    value={bodyfatDate}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     onChange={
                       (date, value) => {
-                        value && setHullDate(value);
+                        value && setBodyfatDate(value);
                       }
 
                       // jscpd:ignore-end
@@ -574,7 +692,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     value={
                       bodyfatOptions.find(
                         (option) => option.value == bodyfat
-                      ) ?? sexOptions[1]
+                      ) ?? bodyfatOptions[1]
                     }
                     getOptionLabel={(option: OptionType) => option.label}
                     renderInput={(params) => (
@@ -595,10 +713,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   variant="contained"
                   color="primary"
                   onClick={() => {
-                    updateField("bodyfat", [
-                      ...individual?.bodyfat,
-                      { date: hullDate, bodyfat: bodyfat as BodyFat },
-                    ]);
+                    handleNewBodyfat();
                   }}
                 >
                   {"Lägg till hullmätning"}

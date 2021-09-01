@@ -4,7 +4,6 @@
  *       belonging to that herd.
  */
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 import {
   AppBar,
   Box,
@@ -25,28 +24,6 @@ import { IndividualView } from "@app/individual_view";
 import { IndividualEdit } from "@app/individual_edit";
 import { useUserContext } from "@app/user_context";
 import { BreedingList } from "./breeding_list";
-
-const useStyles = makeStyles({
-  container: {
-    padding: "20px",
-  },
-  title: {
-    fontSize: "1.33em",
-    fontWeight: "bold",
-  },
-  animalList: {
-    cursor: "pointer",
-    "&:hover": {
-      color: "blue",
-    },
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 interface TabPanelProps
   extends React.DetailedHTMLProps<
@@ -74,7 +51,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-type TabValue = "list" | "pedigree";
+type TabValue = "list" | "pedigree" | "breeding";
 
 /**
  * Shows herd information, with a list of all individuals belonging to that
@@ -90,11 +67,15 @@ export function HerdView({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
+  const [pedigreeView, setPedigreeView] = React.useState(false as boolean);
+
+  const triggerPedigreeViewState = () => {
+    setPedigreeView(true);
+  };
   const pedigree = React.useMemo(
-    () => herdPedigree(genebanks, id, 5, algo),
-    [genebanks, id, algo]
+    () => pedigreeView && herdPedigree(genebanks, id, 3, algo),
+    [genebanks, id, algo, pedigreeView]
   );
-  const style = useStyles();
 
   React.useEffect(() => {
     if (id) {
@@ -125,13 +106,8 @@ export function HerdView({ id }: { id: string | undefined }) {
 
   return (
     <>
-      <Paper className={style.container}>
-        {React.useMemo(
-          () => (
-            <HerdForm id={id} view="info" />
-          ),
-          [id]
-        )}
+      <Paper className="container">
+        {herd && <HerdForm id={id} view="info" fromHerd={herd} />}
 
         <AppBar position="static" color="default">
           <Tabs
@@ -144,7 +120,12 @@ export function HerdView({ id }: { id: string | undefined }) {
             variant="fullWidth"
           >
             <Tab label="Lista över individer" value="list" />
-            <Tab label="Släktträd för besättningen" value="pedigree" />
+            <Tab label="Parningstillfällen" value="breeding" />
+            <Tab
+              label="Släktträd för besättningen"
+              value="pedigree"
+              onClick={triggerPedigreeViewState}
+            />
           </Tabs>
         </AppBar>
 
@@ -156,7 +137,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               title={"Individer i besättningen"}
               filters={[
                 { field: "alive", label: "Visa döda" },
-                { field: "active", label: "Visa inaktiva djur" },
+                { field: "is_active", label: "Visa inaktiva djur" },
               ]}
               action={
                 user?.canEdit(id)
@@ -167,11 +148,14 @@ export function HerdView({ id }: { id: string | undefined }) {
               }
             />
           ) : (
-            <div className={style.loading}>
+            <div className="loading">
               <h2>Loading Individuals</h2>
               <CircularProgress />
             </div>
           )}
+        </TabPanel>
+        <TabPanel value={activeTab} index="breeding">
+          <BreedingList id={id} />
         </TabPanel>
         <TabPanel value={activeTab} index="pedigree">
           <div style={{ marginTop: 10, display: "flex" }}>
@@ -186,7 +170,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               </select>
             </label>
           </div>
-          {pedigree && (
+          {pedigreeView && (
             <PedigreeNetwork
               pedigree={pedigree}
               onClick={(node: string) =>
@@ -195,7 +179,6 @@ export function HerdView({ id }: { id: string | undefined }) {
             />
           )}
         </TabPanel>
-        <BreedingList id={id} />
       </Paper>
     </>
   );

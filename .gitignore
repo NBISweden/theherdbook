@@ -43,3 +43,6 @@ config.ini
 config/*
 ^config/README.md
 ^config/updates/README.md
+
+# s3 data storage
+s3data/*

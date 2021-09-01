@@ -4,55 +4,14 @@
  *       form to handle breedings.
  */
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
 
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
+import { Breeding, ExtendedBreeding } from "./data_context_global";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
-
-const useStyles = makeStyles({
-  breeding: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  table: {
-    padding: "10px 0",
-    margin: 0,
-    transition: "width .5s",
-  },
-  form: {
-    padding: "10px 0",
-    margin: 0,
-    border: "1px solid lightgrey",
-    borderRadius: "3px",
-    overflowX: "hidden",
-    transition: "width .5s",
-  },
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    fontSize: "1.2em",
-  },
-});
-
-export interface Breeding {
-  id?: number;
-  breed_date: string;
-  breed_notes: string;
-  father: string;
-  mother: string;
-  birth_date: string;
-  birth_notes: string;
-  litter_size: number;
-}
 
 /**
  * The BreedingList function. This function fetches breeding information for a
@@ -60,10 +19,13 @@ export interface Breeding {
  */
 export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
+  const [extendedBreedings, setExtendedBreedings] = React.useState(
+    [] as ExtendedBreeding[]
+  );
   const [active, setActive] = React.useState(null as any);
+  const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
-  const style = useStyles();
 
   // Parent information from the genebank
   const parents = React.useMemo(() => {
@@ -75,6 +37,25 @@ export function BreedingList({ id }: { id: string | undefined }) {
     });
   }, [genebanks, breedingEvents]);
 
+  // add parents names to the breeding events
+  React.useEffect(() => {
+    const breedings: ExtendedBreeding[] = breedingEvents.map((breeding) => {
+      const mother = parents.find((parent) => {
+        return parent.number == breeding.mother;
+      });
+      const father = parents.find((parent) => {
+        return parent.number == breeding.father;
+      });
+      const newBreeding: ExtendedBreeding = {
+        ...breeding,
+        mother_name: mother?.name,
+        father_name: father?.name,
+      };
+      return newBreeding;
+    });
+    setExtendedBreedings(breedings);
+  }, [breedingEvents, parents]);
+
   const columns: Column[] = [
     {
       field: "breed_date",
@@ -84,7 +65,9 @@ export function BreedingList({ id }: { id: string | undefined }) {
     },
     { field: "breed_notes", label: "Parningsanteckningar", hidden: true },
     { field: "mother", label: "Moder", sortAs: "numbers", hidden: false },
+    { field: "mother_name", label: "Moderns namn", hidden: false },
     { field: "father", label: "Fader", sortAs: "numbers", hidden: false },
+    { field: "father_name", label: "Faderns namn", hidden: false },
     {
       field: "birth_date",
       sortAs: "date",
@@ -102,38 +85,53 @@ export function BreedingList({ id }: { id: string | undefined }) {
   ];
 
   React.useEffect(() => {
-    if (id) {
-      get(`/api/breeding/${id}`).then(
-        (data: { breedings: Breeding[] }) => {
-          data && setBreedingEvents(data.breedings);
-        },
-        (error) => {
-          console.error(error);
-          userMessage(error, "error");
-        }
-      );
+    if (id && breedingsChanged) {
+      get(`/api/breeding/${id}`)
+        .then(
+          (data: { breedings: Breeding[] }) => {
+            data && setBreedingEvents(data.breedings);
+          },
+          (error) => {
+            console.error(error);
+            userMessage(error, "error");
+          }
+        )
+        .then(() => setBreedingsChanged(false));
     }
-  }, [id]);
+  }, [id, breedingsChanged]);
+
+  const handleBreedingsChanged = () => {
+    setBreedingsChanged(true);
+  };
+
+  const handleActive = (breeding: Breeding) => {
+    setActive(breeding);
+  };
 
   return (
     <>
       <Typography variant="h5">Parningstillfällen</Typography>
-      <div className={style.breeding}>
+      <div className="breeding">
         <SortedTable
           columns={columns}
-          data={breedingEvents}
+          data={extendedBreedings}
           addButton={() => {
             setActive("new");
           }}
-          className={style.table}
+          className="breedingTable"
           onClick={(row: any[]) => {
             setActive(row);
           }}
           rowsPerPage={10}
           style={{ width: active ? "60%" : "calc(100% - 2px)" }}
         />
-        <div className={style.form} style={{ width: active ? "40%" : 0 }}>
-          <BreedingForm data={active} herdId={id} />
+        <div className="breedingListForm" style={{ width: active ? "40%" : 0 }}>
+          <BreedingForm
+            data={active}
+            herdId={id}
+            handleBreedingsChanged={handleBreedingsChanged}
+            handleActive={handleActive}
+          />
         </div>
       </div>
     </>
