@@ -83,6 +83,10 @@ export function BreedingForm({
     formState && setFormState({ ...formState, [label]: value });
   };
 
+  const originHerdNameID: HerdNameID = {
+    herd: herdId,
+  };
+
   const genebank: Genebank | undefined = React.useMemo(() => {
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
   }, [genebanks]);
@@ -92,7 +96,7 @@ export function BreedingForm({
       return [];
     }
     return genebank?.individuals
-      .filter((i) => i.sex == "female")
+      .filter((i) => i.sex == "female" && i.herd.herd == originHerdNameID.herd)
       .map((i) => {
         return { value: i.number, label: individualLabel(i) };
       });
@@ -305,9 +309,6 @@ export function BreedingForm({
         return;
       }
 
-      const originHerdNameID: HerdNameID = {
-        herd: herdId,
-      };
       const fatherInd: LimitedIndividual = {
         number: breeding.father,
       };
