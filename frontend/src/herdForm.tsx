@@ -31,7 +31,7 @@ import {
   OptionType,
 } from "@app/data_context_global";
 import { get, updateHerd, createHerd } from "@app/communication";
-import { FieldWithPermission } from "@app/field_with_permission";
+import { FieldWithPermission, LimitedInputType } from "@app/field_with_permission";
 
 const defaultValues: Herd = {
   id: -1,
@@ -62,7 +62,7 @@ const defaultValues: Herd = {
   individuals: [],
 };
 
-type ContactField = { field: keyof Herd; label: string };
+type ContactField = {field: keyof Herd, label: string, type?: LimitedInputType};
 
 /**
  * Provides herd management forms for setting herd metadata. The form will
@@ -94,9 +94,9 @@ export function HerdForm({
   const contactFields: ContactField[] = [
     { field: "name", label: "Namn" },
     { field: "email", label: "E-mail" },
-    { field: "mobile_phone", label: "Mobiltelefon" },
-    { field: "wire_phone", label: "Fast telefon" },
-    { field: "www", label: "Hemsida" },
+    { field: "mobile_phone", label: "Mobiltelefon", type: 'email' },
+    { field: "wire_phone", label: "Fast telefon", type: 'tel' },
+    { field: "www", label: "Hemsida", type: 'tel' },
     { field: "physical_address", label: "Gatuadress" },
   ];
 
@@ -292,6 +292,7 @@ export function HerdForm({
                           herd[`${field.field}_privacy` as keyof Herd] ?? null
                         }
                         setValue={setFormField}
+                        fieldType={field.type ?? 'text'}
                       />
                     ))}
                     <TextField
