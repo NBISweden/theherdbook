@@ -66,7 +66,6 @@ get_rabbits<-function(genebank_id){
   }
   
    print("Calling optisel")
-
    Pedi <- optiSel::prePed(rabbits)
    print("Return from optisel")
 
@@ -84,12 +83,12 @@ get_all_individuals <- function(genebank_id) {
   tmp<-do.call('rbind', 
         lapply(js$individuals, 
                function(x) { 
-                 unlist(x)[c('number','father.number', 'mother.number','sex', 'birth_date','active')]
+                 unlist(x)[c('number','father.number', 'mother.number','sex', 'birth_date','is_active')]
                }
           )
     )
    #Force columnames fix for mellerud data where first ind does not have father or mother. 
-   colnames(tmp)<-c('number','father.number', 'mother.number','sex', 'birth_date','active')
+   colnames(tmp)<-c('number','father.number', 'mother.number','sex', 'birth_date','is_active')
    if (length(tmp) == 0) {
    return(NULL)
   }
@@ -100,7 +99,7 @@ get_all_individuals <- function(genebank_id) {
   	     Born = as.numeric(substr(birth_date, 1, 4)),
 	     .after=4),
 	   birth_date = NULL),
-    Indiv=number, Sire=father.number, Dam=mother.number, Sex=sex, is_active = active)
+    Indiv=number, Sire=father.number, Dam=mother.number, Sex=sex, is_active=is_active)
 
   names(df)<-c("Indiv","Sire","Dam","Sex", "Born", "is_active")
   return (df)
