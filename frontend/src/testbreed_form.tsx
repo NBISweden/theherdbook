@@ -10,12 +10,22 @@ import { createFilterOptions } from "@material-ui/lab/Autocomplete";
 import { TextField, Button, Typography, Paper } from "@material-ui/core";
 
 import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from "@material-ui/pickers";
+
+import DateFnsUtils from "@date-io/date-fns";
+
+import {
   activeIndividuals,
+  individualsFromDate,
   individualLabel,
   Individual,
   LimitedIndividual,
   Genebank,
+  dateFormat,
 } from "@app/data_context_global";
+import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { InbreedingRecommendation } from "@app/testbreed_recommendation";
@@ -108,6 +118,8 @@ export function InbreedingForm() {
   const style = useStyles();
   const { url } = useRouteMatch();
   const history = useHistory();
+  const { user } = useUserContext();
+  const is_admin = !!(user?.is_manager || user?.is_admin);
   const { genebanks } = useDataContext();
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
@@ -117,7 +129,9 @@ export function InbreedingForm() {
     emptyIndividuals as testBreedIndividuals
   );
   const [labels, setLabels] = React.useState(emptyLabels as ancestorLabels);
-
+  let defaultDate = new Date();
+  defaultDate.setFullYear(defaultDate.getFullYear() - 10);
+  const [fromDate, setFromDate] = React.useState(defaultDate as Date);
   // Updates which genebank is targeted
   const subpath = location.pathname.replace(url, "").trim().replace(/\//, "");
   React.useLayoutEffect(() => {
@@ -135,16 +149,6 @@ export function InbreedingForm() {
     }
   }, [subpath, genebank, genebanks]);
 
-  const activeFemales: Individual[] = activeIndividuals(genebank, "female");
-  const activeFemalesLimited: LimitedIndividual[] = activeFemales.map((i) => {
-    return { id: i.id, name: i.name, number: i.number };
-  });
-
-  const activeMales: Individual[] = activeIndividuals(genebank, "male");
-  const activeMalesLimited: LimitedIndividual[] = activeMales.map((i) => {
-    return { id: i.id, name: i.name, number: i.number };
-  });
-
   const filterOptions = createFilterOptions<Individual>({
     limit: 300,
   });
@@ -157,6 +161,37 @@ export function InbreedingForm() {
     (femaleGrandParentDefined && maleGrandParentDefined) ||
     (individuals.female && maleGrandParentDefined) ||
     (individuals.male && femaleGrandParentDefined);
+
+  const limitedInds = (inds: Individual[]): LimitedIndividual[] => {
+    const active = inds.map((i) => {
+      return { id: i.id, name: i.name, number: i.number };
+    });
+    return active;
+  };
+
+  const getData = (sex: string): Individual[] => {
+    const inds = !is_admin
+      ? activeIndividuals(genebank, sex)
+      : individualsFromDate(genebank, sex, fromDate);
+    return inds;
+  };
+
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState(
+    limitedInds([])
+  );
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
+    limitedInds([])
+  );
+
+  const [activeMales, setActiveMales] = React.useState([]);
+  const [activeFemales, setActiveFemales] = React.useState([]);
+
+  React.useEffect(() => {
+    setActiveFemales(getData("female"));
+    setActiveMales(getData("male"));
+    setActiveFemalesLimited(limitedInds(getData("female")));
+    setActiveMalesLimited(limitedInds(getData("male")));
+  }, [fromDate, genebank]);
 
   return (
     <>
@@ -182,7 +217,26 @@ export function InbreedingForm() {
               );
             })}
         </div>
+        <div className={style.lineBreak}></div>
         <form className={style.form}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <KeyboardDatePicker
+              autoOk
+              variant="inline"
+              inputVariant={inputVariant}
+              disableFuture={false}
+              className="simpleField"
+              label="Äldsta födelsedatum"
+              format={dateFormat}
+              value={fromDate}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(value: Date) => {
+                fromDate && setFromDate(value);
+              }}
+            />
+          </MuiPickersUtilsProvider>
           <div className={style.chooseAncestor}>
             <Autocomplete
               className={style.inputAncestor}
@@ -341,7 +395,9 @@ export function InbreedingForm() {
                 setIndividuals({ ...individuals, ...{ maleGM: newValue } });
                 setLabels({
                   ...labels,
-                  ...{ maleGMLabel: newValue ? individualLabel(newValue) : "" },
+                  ...{
+                    maleGMLabel: newValue ? individualLabel(newValue) : "",
+                  },
                 });
               }}
               filterOptions={filterOptions}
@@ -372,7 +428,9 @@ export function InbreedingForm() {
                 setIndividuals({ ...individuals, ...{ maleGF: newValue } });
                 setLabels({
                   ...labels,
-                  ...{ maleGFLabel: newValue ? individualLabel(newValue) : "" },
+                  ...{
+                    maleGFLabel: newValue ? individualLabel(newValue) : "",
+                  },
                 });
               }}
               filterOptions={filterOptions}

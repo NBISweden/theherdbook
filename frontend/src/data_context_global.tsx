@@ -211,14 +211,27 @@ export function asLocale(dateString?: string) {
  * @param sex the sex of the active individuals
  */
 export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
-  return React.useMemo(() => {
     if (!genebank) {
       return [];
     }
-    return genebank?.individuals.filter(
+        return genebank?.individuals.filter(
       (i) => i.sex == sex && i.is_active == true
     );
-  }, [genebank]);
+}
+
+/**
+ * Returns alive individuals of given sex in the genebank from a given date
+ * @param genebank the genebank data to filter active individuals from
+ * @param sex the sex of the active individuals
+ * @param fromDate the latest birth date from which individuals should be retrieved
+ */
+ export function individualsFromDate(genebank: Genebank | undefined, sex: string, fromDate: Date) {
+    if (!genebank) {
+      return [];
+    }
+        return genebank?.individuals.filter(
+      (i) => i.sex == sex && i.alive && new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
+    );
 }
 
 const emptyContext: DataContext = {
