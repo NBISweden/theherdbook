@@ -66,7 +66,6 @@ get_rabbits<-function(genebank_id){
   }
   
    print("Calling optisel")
-   print(rabbits)
    Pedi <- optiSel::prePed(rabbits)
    print("Return from optisel")
 
