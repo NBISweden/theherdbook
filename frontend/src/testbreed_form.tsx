@@ -17,8 +17,8 @@ import {
 import DateFnsUtils from "@date-io/date-fns";
 
 import {
-  activeIndividuals,
-  individualsFromDate,
+  getIndividuals,
+  toLimitedIndividuals,
   individualLabel,
   Individual,
   LimitedIndividual,
@@ -119,7 +119,7 @@ export function InbreedingForm() {
   const { url } = useRouteMatch();
   const history = useHistory();
   const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const is_admin = !!user?.is_admin;
   const { genebanks } = useDataContext();
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
@@ -162,35 +162,29 @@ export function InbreedingForm() {
     (individuals.female && maleGrandParentDefined) ||
     (individuals.male && femaleGrandParentDefined);
 
-  const limitedInds = (inds: Individual[]): LimitedIndividual[] => {
-    const active = inds.map((i) => {
-      return { id: i.id, name: i.name, number: i.number };
-    });
-    return active;
-  };
-
-  const getData = (sex: string): Individual[] => {
-    const inds = !is_admin
-      ? activeIndividuals(genebank, sex)
-      : individualsFromDate(genebank, sex, fromDate);
-    return inds;
-  };
-
-  const [activeMalesLimited, setActiveMalesLimited] = React.useState(
-    limitedInds([])
-  );
-  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
-    limitedInds([])
-  );
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
 
   const [activeMales, setActiveMales] = React.useState([]);
   const [activeFemales, setActiveFemales] = React.useState([]);
 
   React.useEffect(() => {
-    setActiveFemales(getData("female"));
-    setActiveMales(getData("male"));
-    setActiveFemalesLimited(limitedInds(getData("female")));
-    setActiveMalesLimited(limitedInds(getData("male")));
+    setActiveFemales(
+      getIndividuals("female", is_admin, genebank, fromDate, undefined)
+    );
+    setActiveMales(
+      getIndividuals("male", is_admin, genebank, fromDate, undefined)
+    );
+    setActiveFemalesLimited(
+      toLimitedIndividuals(
+        getIndividuals("female", is_admin, genebank, fromDate, undefined)
+      )
+    );
+    setActiveMalesLimited(
+      toLimitedIndividuals(
+        getIndividuals("male", is_admin, genebank, fromDate, undefined)
+      )
+    );
   }, [fromDate, genebank]);
 
   return (
@@ -224,6 +218,7 @@ export function InbreedingForm() {
               autoOk
               variant="inline"
               inputVariant={inputVariant}
+              disabled={is_admin ? false : true}
               disableFuture={false}
               className="simpleField"
               label="Äldsta födelsedatum"
