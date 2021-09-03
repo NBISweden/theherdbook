@@ -238,8 +238,12 @@ export function activeIndividuals(
 export function individualsFromDate(
   genebank: Genebank | undefined,
   sex: string,
-  fromDate: Date
+  fromDate: Date,
+  herdId: string | undefined
 ) {
+  const originHerdNameID: HerdNameID = {
+    herd: herdId,
+  };
   if (!genebank) {
     return [];
   }
@@ -247,6 +251,7 @@ export function individualsFromDate(
     (i) =>
       i.sex == sex &&
       i.alive &&
+      (herdId ? i.herd.herd == originHerdNameID.herd : true) &&
       new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
   );
 }
@@ -262,14 +267,14 @@ export const toLimitedIndividuals = (
 
 export const getIndividuals = (
   sex: string,
-  is_admin: boolean,
+  canSelect: boolean,
   genebank: Genebank,
   fromDate: Date,
   herdId: string | undefined
 ): Individual[] => {
-  const inds = !is_admin
-    ? activeIndividuals(genebank, sex, herdId)
-    : individualsFromDate(genebank, sex, fromDate);
+  const inds = canSelect
+  ? individualsFromDate(genebank, sex, fromDate, herdId)
+  : activeIndividuals(genebank, sex, herdId);
   return inds;
 };
 

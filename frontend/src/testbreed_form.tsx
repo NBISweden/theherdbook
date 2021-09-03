@@ -119,7 +119,8 @@ export function InbreedingForm() {
   const { url } = useRouteMatch();
   const history = useHistory();
   const { user } = useUserContext();
-  const is_admin = !!user?.is_admin;
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const { genebanks } = useDataContext();
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
@@ -170,19 +171,17 @@ export function InbreedingForm() {
 
   React.useEffect(() => {
     setActiveFemales(
-      getIndividuals("female", is_admin, genebank, fromDate, undefined)
+      getIndividuals("female", true, genebank, fromDate, undefined)
     );
-    setActiveMales(
-      getIndividuals("male", is_admin, genebank, fromDate, undefined)
-    );
+    setActiveMales(getIndividuals("male", true, genebank, fromDate, undefined));
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals("female", is_admin, genebank, fromDate, undefined)
+        getIndividuals("female", true, genebank, fromDate, undefined)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", is_admin, genebank, fromDate, undefined)
+        getIndividuals("male", true, genebank, fromDate, undefined)
       )
     );
   }, [fromDate, genebank]);
@@ -214,23 +213,25 @@ export function InbreedingForm() {
         <div className={style.lineBreak}></div>
         <form className={style.form}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker
-              autoOk
-              variant="inline"
-              inputVariant={inputVariant}
-              disabled={is_admin ? false : true}
-              disableFuture={false}
-              className="simpleField"
-              label="Äldsta födelsedatum"
-              format={dateFormat}
-              value={fromDate}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(value: Date) => {
-                fromDate && setFromDate(value);
-              }}
-            />
+            {is_admin ||
+              (is_owner && (
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant={inputVariant}
+                  disableFuture={false}
+                  className="simpleField"
+                  label="Äldsta födelsedatum"
+                  format={dateFormat}
+                  value={fromDate}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(value: Date) => {
+                    fromDate && setFromDate(value);
+                  }}
+                />
+              ))}
           </MuiPickersUtilsProvider>
           <div className={style.chooseAncestor}>
             <Autocomplete

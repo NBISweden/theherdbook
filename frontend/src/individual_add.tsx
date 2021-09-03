@@ -132,7 +132,8 @@ export function IndividualAdd({
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const is_admin = !!user?.is_admin;
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -159,12 +160,24 @@ export function IndividualAdd({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals("female", is_admin, currentGenebank, fromDate, herdId)
+        getIndividuals(
+          "female",
+          is_admin || is_owner,
+          currentGenebank,
+          fromDate,
+          herdId
+        )
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", is_admin, currentGenebank, fromDate, undefined)
+        getIndividuals(
+          "male",
+          is_admin || is_owner,
+          currentGenebank,
+          fromDate,
+          undefined
+        )
       )
     );
   }, [fromDate, currentGenebank, herdId]);
@@ -487,23 +500,25 @@ export function IndividualAdd({
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker
-              autoOk
-              variant="inline"
-              inputVariant={inputVariant}
-              disabled={is_admin ? false : true}
-              disableFuture={false}
-              className="simpleField"
-              label="Äldsta födelsedatum"
-              format={dateFormat}
-              value={fromDate}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(value: Date) => {
-                fromDate && setFromDate(value);
-              }}
-            />
+            {is_admin ||
+              (is_owner && (
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant={inputVariant}
+                  disableFuture={false}
+                  className="simpleField"
+                  label="Äldsta födelsedatum"
+                  format={dateFormat}
+                  value={fromDate}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(value: Date) => {
+                    fromDate && setFromDate(value);
+                  }}
+                />
+              ))}
           </MuiPickersUtilsProvider>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
