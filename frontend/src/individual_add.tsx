@@ -12,6 +12,9 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
+  getIndividuals,
+  toLimitedIndividuals,
+  dateFormat,
   Birth,
   Breeding,
   locale,
@@ -122,8 +125,14 @@ export function IndividualAdd({
   const [sexError, setSexError] = React.useState(false as boolean);
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
+  let defaultDate = new Date();
+  defaultDate.setFullYear(defaultDate.getFullYear() - 10);
+  const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
+  const is_admin = !!user?.is_admin;
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -148,6 +157,19 @@ export function IndividualAdd({
   };
 
   React.useEffect(() => {
+    setActiveFemalesLimited(
+      toLimitedIndividuals(
+        getIndividuals("female", is_admin, currentGenebank, fromDate, herdId)
+      )
+    );
+    setActiveMalesLimited(
+      toLimitedIndividuals(
+        getIndividuals("male", is_admin, currentGenebank, fromDate, herdId)
+      )
+    );
+  }, [fromDate, currentGenebank, herdId]);
+
+  React.useEffect(() => {
     if (!!genebank) {
       setCurrentGenebank(genebank);
     } else {
@@ -168,30 +190,6 @@ export function IndividualAdd({
       handleUpdateIndividual("genebank", currentGenebank.name);
     }
   }, [currentGenebank, individual]);
-
-  const activeFemales: Individual[] = activeIndividuals(
-    currentGenebank,
-    "female"
-  );
-  const activeMales: Individual[] = activeIndividuals(currentGenebank, "male");
-
-  const limitedFemales: LimitedIndividual[] = activeFemales.map(
-    (individual) => {
-      return {
-        id: individual.id,
-        name: individual.name,
-        number: individual.number,
-      };
-    }
-  );
-
-  const limitedMales: LimitedIndividual[] = activeMales.map((individual) => {
-    return {
-      id: individual.id,
-      name: individual.name,
-      number: individual.number,
-    };
-  });
 
   // remove error layout from input fields when user has added an input
   React.useEffect(() => {
@@ -488,10 +486,29 @@ export function IndividualAdd({
       <div className={style.inputBox}>
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <KeyboardDatePicker
+              autoOk
+              variant="inline"
+              inputVariant={inputVariant}
+              disabled={is_admin ? false : true}
+              disableFuture={false}
+              className="simpleField"
+              label="Äldsta födelsedatum"
+              format={dateFormat}
+              value={fromDate}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(value: Date) => {
+                fromDate && setFromDate(value);
+              }}
+            />
+          </MuiPickersUtilsProvider>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
             className={style.ancestorInput}
-            options={limitedFemales}
+            options={activeFemalesLimited}
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }
@@ -505,7 +522,7 @@ export function IndividualAdd({
           />
           <Autocomplete
             className={style.ancestorInput}
-            options={limitedMales}
+            options={activeMalesLimited}
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }
