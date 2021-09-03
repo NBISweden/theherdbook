@@ -215,7 +215,7 @@ export function activeIndividuals(
   sex: string,
   herdId: string | undefined
 ) {
-  const originHerdNameID: HerdNameID = {
+  const origin: HerdNameID = {
     herd: herdId,
   };
   if (!genebank) {
@@ -225,7 +225,7 @@ export function activeIndividuals(
     (i) =>
       i.sex == sex &&
       i.is_active == true &&
-      (herdId ? i.herd.herd == originHerdNameID.herd : true)
+      (herdId ? i.herd.herd == origin.herd : true)
   );
 }
 
@@ -273,8 +273,8 @@ export const getIndividuals = (
   herdId: string | undefined
 ): Individual[] => {
   const inds = canSelect
-  ? individualsFromDate(genebank, sex, fromDate, herdId)
-  : activeIndividuals(genebank, sex, herdId);
+    ? individualsFromDate(genebank, sex, fromDate, herdId)
+    : activeIndividuals(genebank, sex, herdId);
   return inds;
 };
 
