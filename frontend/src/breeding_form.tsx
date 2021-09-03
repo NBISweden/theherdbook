@@ -94,7 +94,7 @@ export function BreedingForm({
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", is_admin, genebank, fromDate, herdId)
+        getIndividuals("male", is_admin, genebank, fromDate, undefined)
       )
     );
   }, [fromDate, genebank]);

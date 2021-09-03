@@ -164,7 +164,7 @@ export function IndividualAdd({
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", is_admin, currentGenebank, fromDate, herdId)
+        getIndividuals("male", is_admin, currentGenebank, fromDate, undefined)
       )
     );
   }, [fromDate, currentGenebank, herdId]);
