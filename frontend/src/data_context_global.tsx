@@ -210,13 +210,23 @@ export function asLocale(dateString?: string) {
  * @param genebank the genebank data to filter active individuals from
  * @param sex the sex of the active individuals
  */
-export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
-    if (!genebank) {
-      return [];
-    }
-        return genebank?.individuals.filter(
-      (i) => i.sex == sex && i.is_active == true
-    );
+export function activeIndividuals(
+  genebank: Genebank | undefined,
+  sex: string,
+  herdId: string | undefined
+) {
+  const originHerdNameID: HerdNameID = {
+    herd: herdId,
+  };
+  if (!genebank) {
+    return [];
+  }
+  return genebank?.individuals.filter(
+    (i) =>
+      i.sex == sex &&
+      i.is_active == true &&
+      (herdId ? i.herd.herd == originHerdNameID.herd : true)
+  );
 }
 
 /**
@@ -225,14 +235,43 @@ export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
  * @param sex the sex of the active individuals
  * @param fromDate the latest birth date from which individuals should be retrieved
  */
- export function individualsFromDate(genebank: Genebank | undefined, sex: string, fromDate: Date) {
-    if (!genebank) {
-      return [];
-    }
-        return genebank?.individuals.filter(
-      (i) => i.sex == sex && i.alive && new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
-    );
+export function individualsFromDate(
+  genebank: Genebank | undefined,
+  sex: string,
+  fromDate: Date
+) {
+  if (!genebank) {
+    return [];
+  }
+  return genebank?.individuals.filter(
+    (i) =>
+      i.sex == sex &&
+      i.alive &&
+      new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
+  );
 }
+
+export const toLimitedIndividuals = (
+  inds: Individual[]
+): LimitedIndividual[] => {
+  const active = inds.map((i) => {
+    return { id: i.id, name: i.name, number: i.number };
+  });
+  return active;
+};
+
+export const getIndividuals = (
+  sex: string,
+  is_admin: boolean,
+  genebank: Genebank,
+  fromDate: Date,
+  herdId: string | undefined
+): Individual[] => {
+  const inds = !is_admin
+    ? activeIndividuals(genebank, sex, herdId)
+    : individualsFromDate(genebank, sex, fromDate);
+  return inds;
+};
 
 const emptyContext: DataContext = {
   genebanks: [],
