@@ -130,8 +130,6 @@ export function InbreedingForm() {
   const { url } = useRouteMatch();
   const history = useHistory();
   const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const { genebanks } = useDataContext();
   const [genebank, setGenebank] = React.useState(
     undefined as Genebank | undefined
@@ -235,25 +233,22 @@ export function InbreedingForm() {
             {showFromDateFilter ? (
               <>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                  {is_admin ||
-                    (is_owner && (
-                      <KeyboardDatePicker
-                        autoOk
-                        variant="inline"
-                        inputVariant={inputVariant}
-                        disableFuture
-                        className="simpleField"
-                        label="Född tidigast"
-                        format={dateFormat}
-                        value={fromDate}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                        onChange={(value: Date) => {
-                          fromDate && setFromDate(value);
-                        }}
-                      />
-                    ))}
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    inputVariant={inputVariant}
+                    disableFuture
+                    className="simpleField"
+                    label="Född tidigast"
+                    format={dateFormat}
+                    value={fromDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(value: Date) => {
+                      fromDate && setFromDate(value);
+                    }}
+                  />
                 </MuiPickersUtilsProvider>
               </>
             ) : (
