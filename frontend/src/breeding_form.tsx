@@ -133,7 +133,7 @@ export function BreedingForm({
     const birthDate: Date | number = new Date(birthDateString);
     const daysBetween =
       (birthDate.getTime() - breedingDate.getTime()) / 86400000;
-    if (daysBetween < 28 || daysBetween > 32) {
+    if (daysBetween < 26 || daysBetween > 38) {
       userMessage(
         "Parningsdatum och födelsedatum passar inte ihop.",
         "warning"
