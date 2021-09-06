@@ -435,7 +435,7 @@ export function BreedingForm({
               autoOk
               variant="inline"
               inputVariant={inputVariant}
-              disableFuture={false}
+              disableFuture
               className="simpleField"
               label="Äldsta födelsedatum på far"
               format={dateFormat}

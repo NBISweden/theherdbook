@@ -219,7 +219,7 @@ export function InbreedingForm() {
                   autoOk
                   variant="inline"
                   inputVariant={inputVariant}
-                  disableFuture={false}
+                  disableFuture
                   className="simpleField"
                   label="Äldsta födelsedatum"
                   format={dateFormat}

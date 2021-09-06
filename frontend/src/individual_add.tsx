@@ -158,24 +158,12 @@ export function IndividualAdd({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals(
-          "female",
-          true,
-          currentGenebank,
-          fromDate,
-          herdId
-        )
+        getIndividuals("female", true, currentGenebank, fromDate, herdId)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals(
-          "male",
-          true,
-          currentGenebank,
-          fromDate,
-          undefined
-        )
+        getIndividuals("male", true, currentGenebank, fromDate, undefined)
       )
     );
   }, [fromDate, currentGenebank, herdId]);
@@ -498,23 +486,23 @@ export function IndividualAdd({
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <KeyboardDatePicker
-                  autoOk
-                  variant="inline"
-                  inputVariant={inputVariant}
-                  disableFuture={false}
-                  className="simpleField"
-                  label="Äldsta födelsedatum"
-                  format={dateFormat}
-                  value={fromDate}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(value: Date) => {
-                    fromDate && setFromDate(value);
-                  }}
-                />
-              ))
+            <KeyboardDatePicker
+              autoOk
+              variant="inline"
+              inputVariant={inputVariant}
+              disableFuture
+              className="simpleField"
+              label="Äldsta födelsedatum"
+              format={dateFormat}
+              value={fromDate}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(value: Date) => {
+                fromDate && setFromDate(value);
+              }}
+            />
+            ))
           </MuiPickersUtilsProvider>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
