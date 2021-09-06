@@ -173,7 +173,7 @@ export function BreedingForm({
     }
 
     if (
-      (userInput.litter_size !== null || userInput.birth_notes !== "") &&
+      (userInput.litter_size !== null || userInput.birth_notes !== null) &&
       userInput.birth_date == null
     ) {
       userMessage(
@@ -263,10 +263,67 @@ export function BreedingForm({
         breeding,
         breedingMatch
       );
+      const isBirthUpdate = !!(
+        !breedingMatch.birth_date &&
+        !!modifiedBreedingUpdates.birth_date &&
+        !!modifiedBreedingUpdates.litter_size
+      );
       const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
         userMessage("Parningstillfället har uppdaterats.", "success");
         handleBreedingsChanged();
+
+        // if event was updated with birth information for the first time,
+        // create empty individuals
+        if (isBirthUpdate) {
+          if (!herdId) {
+            userMessage("Något gick fel", "error");
+            return;
+          }
+          const originHerdNameID: HerdNameID = {
+            herd: herdId,
+          };
+          const fatherInd: LimitedIndividual = {
+            number: breeding.father,
+          };
+          const motherInd: LimitedIndividual = {
+            number: breeding.mother,
+          };
+          const emptyIndividual: Individual = {
+            herd: herdId,
+            origin_herd: originHerdNameID,
+            genebank: genebank?.name,
+            certificate: null,
+            number: null,
+            birth_date: modifiedBreedingUpdates.birth_date,
+            father: fatherInd,
+            mother: motherInd,
+            color_note: null,
+            death_date: null,
+            death_note: null,
+            litter: null,
+            notes: "",
+            herd_tracking: null,
+            herd_active: true,
+            is_active: false,
+            alive: true,
+            belly_color: null,
+            eye_color: null,
+            claw_color: null,
+            hair_notes: "",
+            selling_date: null,
+            breeding: modifiedBreedingUpdates.id
+              ? modifiedBreedingUpdates.id
+              : 0,
+          };
+          for (let i = 0; i < breeding.litter_size; i++) {
+            await new Promise((r) => setTimeout(r, 2000));
+            status = createEmptyIndividual(emptyIndividual);
+            if (!status || status == "error") {
+              break;
+            }
+          }
+        }
         return;
       }
     }
