@@ -132,8 +132,6 @@ export function IndividualAdd({
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -162,7 +160,7 @@ export function IndividualAdd({
       toLimitedIndividuals(
         getIndividuals(
           "female",
-          is_admin || is_owner,
+          true,
           currentGenebank,
           fromDate,
           herdId
@@ -173,7 +171,7 @@ export function IndividualAdd({
       toLimitedIndividuals(
         getIndividuals(
           "male",
-          is_admin || is_owner,
+          true,
           currentGenebank,
           fromDate,
           undefined
@@ -500,8 +498,6 @@ export function IndividualAdd({
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            {is_admin ||
-              (is_owner && (
                 <KeyboardDatePicker
                   autoOk
                   variant="inline"
@@ -518,7 +514,7 @@ export function IndividualAdd({
                     fromDate && setFromDate(value);
                   }}
                 />
-              ))}
+              ))
           </MuiPickersUtilsProvider>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete

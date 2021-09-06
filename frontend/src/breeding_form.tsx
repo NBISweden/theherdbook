@@ -75,8 +75,6 @@ export function BreedingForm({
   const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
-  const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
 
   const genebank: Genebank | undefined = React.useMemo(() => {
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
@@ -90,24 +88,12 @@ export function BreedingForm({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals(
-          "female",
-          is_admin || is_owner,
-          genebank,
-          fromDate,
-          herdId
-        )
+        getIndividuals("female", true, genebank, fromDate, herdId)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals(
-          "male",
-          is_admin || is_owner,
-          genebank,
-          fromDate,
-          undefined
-        )
+        getIndividuals("male", true, genebank, fromDate, undefined)
       )
     );
   }, [fromDate, genebank]);
@@ -445,25 +431,23 @@ export function BreedingForm({
                 newValue && setFormField("father", newValue.number);
               }}
             />
-            {is_admin ||
-              (is_owner && (
-                <KeyboardDatePicker
-                  autoOk
-                  variant="inline"
-                  inputVariant={inputVariant}
-                  disableFuture={false}
-                  className="simpleField"
-                  label="Äldsta födelsedatum på far"
-                  format={dateFormat}
-                  value={fromDate}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(value: Date) => {
-                    fromDate && setFromDate(value);
-                  }}
-                />
-              ))}
+            <KeyboardDatePicker
+              autoOk
+              variant="inline"
+              inputVariant={inputVariant}
+              disableFuture={false}
+              className="simpleField"
+              label="Äldsta födelsedatum på far"
+              format={dateFormat}
+              value={fromDate}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(value: Date) => {
+                fromDate && setFromDate(value);
+              }}
+            />
+            ))
             <TextField
               label="Anteckningar om parningstillfället"
               variant={inputVariant}
