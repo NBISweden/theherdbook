@@ -197,7 +197,7 @@ export function BreedingForm({
     return true;
   };
 
-  const createEmptyIndividual = (individual: Individual): any => {
+  const postEmptyIndividual = (individual: Individual): any => {
     post("/api/individual", individual).then(
       (json) => {
         switch (json.status) {
@@ -242,19 +242,11 @@ export function BreedingForm({
     );
   };
 
-  /**
-   * Function to save the user input to the database.
-   * Error handling happens from within the functions imported from data_context.
-   * (updateBreeding, createBreeding and createBirth)
-   */
-  const saveBreeding = async (breeding: Breeding): Promise<any> => {
-    const isInputValid = validateUserInput(breeding);
-    if (!isInputValid) {
-      return;
-    }
-
-    handleActive(breeding);
-
+  const createEmptyIndividual = async (
+    breeding: Breeding,
+    birthUpdates: Breeding | Birth,
+    amount: number
+  ) => {
     if (!herdId) {
       userMessage("Något gick fel", "error");
       return;
@@ -268,11 +260,14 @@ export function BreedingForm({
     const motherInd: LimitedIndividual = {
       number: breeding.mother,
     };
-    const individualDummy = {
+    const emptyIndividual = {
       herd: herdId,
       origin_herd: originHerdNameID,
       genebank: genebank?.name,
       certificate: null,
+      birth_date: birthUpdates.birth_date
+        ? birthUpdates.birth_date
+        : birthUpdates.date,
       number: null,
       father: fatherInd,
       mother: motherInd,
@@ -290,7 +285,30 @@ export function BreedingForm({
       claw_color: null,
       hair_notes: "",
       selling_date: null,
+      breeding: birthUpdates.id ? birthUpdates.id : 0,
     };
+    for (let i = 0; i < amount; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      let status = postEmptyIndividual(emptyIndividual);
+      if (!status || status == "error") {
+        break;
+      }
+    }
+    return;
+  };
+
+  /**
+   * Function to save the user input to the database.
+   * Error handling happens from within the functions imported from data_context.
+   * (updateBreeding, createBreeding and createBirth)
+   */
+  const saveBreeding = async (breeding: Breeding): Promise<any> => {
+    const isInputValid = validateUserInput(breeding);
+    if (!isInputValid) {
+      return;
+    }
+
+    handleActive(breeding);
 
     if (data !== "new") {
       const breedingMatch = await findBreedingMatch(herdId, breeding);
@@ -314,19 +332,7 @@ export function BreedingForm({
         if (newIndsNumber == 0) {
           return;
         }
-        const emptyIndividual: Individual = {
-          ...individualDummy,
-          birth_date: modifiedBreedingUpdates.birth_date,
-          breeding: modifiedBreedingUpdates.id ? modifiedBreedingUpdates.id : 0,
-        };
-        for (let i = 0; i < newIndsNumber; i++) {
-          await new Promise((r) => setTimeout(r, 2000));
-          let status = createEmptyIndividual(emptyIndividual);
-          if (!status || status == "error") {
-            break;
-          }
-        }
-
+        createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
         return;
       }
     }
@@ -360,18 +366,7 @@ export function BreedingForm({
     if (!!newBirth) {
       userMessage("Sparat!", "success");
       handleBreedingsChanged();
-      const emptyIndividual: Individual = {
-        ...individualDummy,
-        birth_date: newBirthData.date,
-        breeding: newBirthData.id ? newBirthData.id : 0,
-      };
-      for (let i = 0; i < breeding.litter_size; i++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        let status = createEmptyIndividual(emptyIndividual);
-        if (!status || status == "error") {
-          break;
-        }
-      }
+      createEmptyIndividual(breeding, newBirthData, breeding.litter_size);
     }
     return;
   };
