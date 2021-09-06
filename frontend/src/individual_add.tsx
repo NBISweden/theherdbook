@@ -3,6 +3,7 @@ import React from "react";
 import { Box, Button, makeStyles, TextField } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
 import { CheckCircle } from "@material-ui/icons";
+import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -65,6 +66,16 @@ const useStyles = makeStyles({
   ancestorInput: {
     margin: "1em 0",
   },
+  datum: {
+    width: "70%",
+    height: "100%",
+    padding: "10px",
+    paddingBottom: "20px",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "left",
+  },
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
@@ -115,6 +126,7 @@ export function IndividualAdd({
   const [currentGenebank, setCurrentGenebank] = React.useState(
     undefined as Genebank | undefined
   );
+  const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
   const [herdKey, setHerdKey] = React.useState(0 as number);
@@ -485,25 +497,6 @@ export function IndividualAdd({
       <div className={style.inputBox}>
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker
-              autoOk
-              variant="inline"
-              inputVariant={inputVariant}
-              disableFuture
-              className="simpleField"
-              label="Äldsta födelsedatum"
-              format={dateFormat}
-              value={fromDate}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(value: Date) => {
-                fromDate && setFromDate(value);
-              }}
-            />
-            ))
-          </MuiPickersUtilsProvider>
           <h2>Lägg till härstamningen</h2>
           <Autocomplete
             className={style.ancestorInput}
@@ -519,6 +512,40 @@ export function IndividualAdd({
               <TextField {...params} label="Välj mor" variant="outlined" />
             )}
           />
+          <div className={style.datum}>
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false ? "Filtrera far" : "Dölja"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    inputVariant={inputVariant}
+                    disableFuture
+                    className="simpleField"
+                    label="Född tidigast"
+                    format={dateFormat}
+                    value={fromDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(value: Date) => {
+                      fromDate && setFromDate(value);
+                    }}
+                  />
+                </MuiPickersUtilsProvider>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+          <div className={style.lineBreak}></div>
           <Autocomplete
             className={style.ancestorInput}
             options={activeMalesLimited}

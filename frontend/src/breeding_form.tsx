@@ -24,7 +24,6 @@ import {
   LimitedIndividual,
 } from "@app/data_context_global";
 
-import { useUserContext } from "@app/user_context";
 import { Button, TextField, Typography } from "@material-ui/core";
 import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
@@ -74,7 +73,7 @@ export function BreedingForm({
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
   const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
-  const { user } = useUserContext();
+  const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
 
   const genebank: Genebank | undefined = React.useMemo(() => {
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
@@ -404,6 +403,35 @@ export function BreedingForm({
                 newValue && setFormField("mother", newValue.number);
               }}
             />
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false ? "Filtrera far" : "Dölja"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant={inputVariant}
+                  disableFuture
+                  className="simpleField"
+                  label="Född tidigast"
+                  format={dateFormat}
+                  value={fromDate}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(value: Date) => {
+                    fromDate && setFromDate(value);
+                  }}
+                />
+              </>
+            ) : (
+              <></>
+            )}
             <Autocomplete
               options={activeMalesLimited ?? []}
               value={
@@ -431,23 +459,6 @@ export function BreedingForm({
                 newValue && setFormField("father", newValue.number);
               }}
             />
-            <KeyboardDatePicker
-              autoOk
-              variant="inline"
-              inputVariant={inputVariant}
-              disableFuture
-              className="simpleField"
-              label="Äldsta födelsedatum på far"
-              format={dateFormat}
-              value={fromDate}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(value: Date) => {
-                fromDate && setFromDate(value);
-              }}
-            />
-            ))
             <TextField
               label="Anteckningar om parningstillfället"
               variant={inputVariant}

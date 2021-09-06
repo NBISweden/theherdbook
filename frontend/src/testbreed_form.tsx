@@ -8,6 +8,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Autocomplete } from "@material-ui/lab";
 import { createFilterOptions } from "@material-ui/lab/Autocomplete";
 import { TextField, Button, Typography, Paper } from "@material-ui/core";
+import { ExpandMore, ExpandLess } from "@material-ui/icons";
 
 import {
   MuiPickersUtilsProvider,
@@ -44,6 +45,16 @@ const useStyles = makeStyles({
     height: "100%",
     padding: "10px",
     paddingBottom: "90px",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  datum: {
+    width: "30%",
+    height: "100%",
+    padding: "10px",
+    paddingBottom: "20px",
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
@@ -130,6 +141,7 @@ export function InbreedingForm() {
     emptyIndividuals as testBreedIndividuals
   );
   const [labels, setLabels] = React.useState(emptyLabels as ancestorLabels);
+  const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -212,27 +224,43 @@ export function InbreedingForm() {
         </div>
         <div className={style.lineBreak}></div>
         <form className={style.form}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            {is_admin ||
-              (is_owner && (
-                <KeyboardDatePicker
-                  autoOk
-                  variant="inline"
-                  inputVariant={inputVariant}
-                  disableFuture
-                  className="simpleField"
-                  label="Äldsta födelsedatum"
-                  format={dateFormat}
-                  value={fromDate}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(value: Date) => {
-                    fromDate && setFromDate(value);
-                  }}
-                />
-              ))}
-          </MuiPickersUtilsProvider>
+          <div className={style.datum}>
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false ? "Filtrera föräldrarna" : "Dölja"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  {is_admin ||
+                    (is_owner && (
+                      <KeyboardDatePicker
+                        autoOk
+                        variant="inline"
+                        inputVariant={inputVariant}
+                        disableFuture
+                        className="simpleField"
+                        label="Född tidigast"
+                        format={dateFormat}
+                        value={fromDate}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        onChange={(value: Date) => {
+                          fromDate && setFromDate(value);
+                        }}
+                      />
+                    ))}
+                </MuiPickersUtilsProvider>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+          <div className={style.lineBreak}></div>
           <div className={style.chooseAncestor}>
             <Autocomplete
               className={style.inputAncestor}
