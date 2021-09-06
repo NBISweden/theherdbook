@@ -318,7 +318,7 @@ export function BreedingForm({
         };
         for (let i = 0; i < newIndsNumber; i++) {
           await new Promise((r) => setTimeout(r, 2000));
-          status = createEmptyIndividual(emptyIndividual);
+          let status = createEmptyIndividual(emptyIndividual);
           if (!status || status == "error") {
             break;
           }
@@ -398,7 +398,7 @@ export function BreedingForm({
       };
       for (let i = 0; i < breeding.litter_size; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        status = createEmptyIndividual(emptyIndividual);
+        let status = createEmptyIndividual(emptyIndividual);
         if (!status || status == "error") {
           break;
         }
