@@ -743,7 +743,7 @@ def form_to_individual(form, user=None):
     """
 
     # check user permissions
-    if not user.can_edit(form["herd"]):
+    if not user.can_edit(form.get("herd", "")):
         raise PermissionError
 
     # check if the individual exists in the datbase

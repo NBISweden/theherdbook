@@ -268,18 +268,22 @@ class TestDataAccess(DatabaseTest):
                 "number": self.individuals[0].number,
                 "certificate": "new-cert",
                 "birth_date": datetime.now() - timedelta(days=30),
+                "herd": self.herds[0].herd,
             },
             "unknown_color": {
                 "number": self.individuals[0].number,
                 "color": "ultra-beige",
+                "herd": self.herds[0].herd,
             },
             "unknown_origin": {
                 "number": self.individuals[0].number,
+                "herd": self.herds[0].herd,
                 "origin_herd": {"herd": "does-not-exist"},
             },
             "valid": {
                 "number": self.individuals[0].number,
                 "birth_date": datetime.now() - timedelta(days=30),
+                "herd": self.herds[0].herd,
             },
         }
         self.assertRaises(
