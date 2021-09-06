@@ -255,6 +255,43 @@ export function BreedingForm({
 
     handleActive(breeding);
 
+    if (!herdId) {
+      userMessage("Något gick fel", "error");
+      return;
+    }
+    const originHerdNameID: HerdNameID = {
+      herd: herdId,
+    };
+    const fatherInd: LimitedIndividual = {
+      number: breeding.father,
+    };
+    const motherInd: LimitedIndividual = {
+      number: breeding.mother,
+    };
+    const individualDummy = {
+      herd: herdId,
+      origin_herd: originHerdNameID,
+      genebank: genebank?.name,
+      certificate: null,
+      number: null,
+      father: fatherInd,
+      mother: motherInd,
+      color_note: null,
+      death_date: null,
+      death_note: null,
+      litter: null,
+      notes: "",
+      herd_tracking: null,
+      herd_active: true,
+      is_active: false,
+      alive: true,
+      belly_color: null,
+      eye_color: null,
+      claw_color: null,
+      hair_notes: "",
+      selling_date: null,
+    };
+
     if (data !== "new") {
       const breedingMatch = await findBreedingMatch(herdId, breeding);
       if (!breedingMatch) {
@@ -277,43 +314,9 @@ export function BreedingForm({
         if (newIndsNumber == 0) {
           return;
         }
-
-        if (!herdId) {
-          userMessage("Något gick fel", "error");
-          return;
-        }
-        const originHerdNameID: HerdNameID = {
-          herd: herdId,
-        };
-        const fatherInd: LimitedIndividual = {
-          number: breeding.father,
-        };
-        const motherInd: LimitedIndividual = {
-          number: breeding.mother,
-        };
         const emptyIndividual: Individual = {
-          herd: herdId,
-          origin_herd: originHerdNameID,
-          genebank: genebank?.name,
-          certificate: null,
-          number: null,
+          ...individualDummy,
           birth_date: modifiedBreedingUpdates.birth_date,
-          father: fatherInd,
-          mother: motherInd,
-          color_note: null,
-          death_date: null,
-          death_note: null,
-          litter: null,
-          notes: "",
-          herd_tracking: null,
-          herd_active: true,
-          is_active: false,
-          alive: true,
-          belly_color: null,
-          eye_color: null,
-          claw_color: null,
-          hair_notes: "",
-          selling_date: null,
           breeding: modifiedBreedingUpdates.id ? modifiedBreedingUpdates.id : 0,
         };
         for (let i = 0; i < newIndsNumber; i++) {
@@ -357,43 +360,9 @@ export function BreedingForm({
     if (!!newBirth) {
       userMessage("Sparat!", "success");
       handleBreedingsChanged();
-      if (!herdId) {
-        userMessage("Något gick fel", "error");
-        return;
-      }
-
-      const originHerdNameID: HerdNameID = {
-        herd: herdId,
-      };
-      const fatherInd: LimitedIndividual = {
-        number: breeding.father,
-      };
-      const motherInd: LimitedIndividual = {
-        number: breeding.mother,
-      };
       const emptyIndividual: Individual = {
-        herd: herdId,
-        origin_herd: originHerdNameID,
-        genebank: genebank?.name,
-        certificate: null,
-        number: null,
+        ...individualDummy,
         birth_date: newBirthData.date,
-        father: fatherInd,
-        mother: motherInd,
-        color_note: null,
-        death_date: null,
-        death_note: null,
-        litter: null,
-        notes: "",
-        herd_tracking: null,
-        herd_active: true,
-        is_active: false,
-        alive: true,
-        belly_color: null,
-        eye_color: null,
-        claw_color: null,
-        hair_notes: "",
-        selling_date: null,
         breeding: newBirthData.id ? newBirthData.id : 0,
       };
       for (let i = 0; i < breeding.litter_size; i++) {
