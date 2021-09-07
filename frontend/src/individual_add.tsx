@@ -512,7 +512,7 @@ export function IndividualAdd({
               {showFromDateFilter == false
                 ? is_admin
                   ? "Filtrera kaniner"
-                  : "Filtrera honar"
+                  : "Filtrera hanar"
                 : "Dölj"}
               {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
             </Button>
