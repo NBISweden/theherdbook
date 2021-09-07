@@ -9,6 +9,8 @@ import {
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
 import {
+  individualsFromDate,
+  toLimitedIndividuals,
   Birth,
   Breeding,
   dateFormat,
@@ -16,10 +18,8 @@ import {
   HerdNameID,
   individualLabel,
   inputVariant,
-  LimitedHerd,
   LimitedBreeding,
   locale,
-  OptionType,
   Individual,
   LimitedIndividual,
 } from "@app/data_context_global";
@@ -69,10 +69,35 @@ export function BreedingForm({
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
+  let defaultDate = new Date();
+  defaultDate.setFullYear(defaultDate.getFullYear() - 10);
+  const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
+  const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
+
+  const genebank: Genebank | undefined = React.useMemo(() => {
+    return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
+  }, [genebanks]);
+
   React.useEffect(
     () => setFormState(!data || data == "new" ? emptyBreeding : data),
     [data]
   );
+
+  React.useEffect(() => {
+    setActiveFemalesLimited(
+      toLimitedIndividuals(
+        individualsFromDate(genebank, "female", fromDate, herdId)
+      )
+    );
+    setActiveMalesLimited(
+      toLimitedIndividuals(
+        individualsFromDate(genebank, "male", fromDate, undefined)
+      )
+    );
+  }, [fromDate, genebank]);
+
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
    * undefined).
@@ -83,32 +108,6 @@ export function BreedingForm({
   ) => {
     formState && setFormState({ ...formState, [label]: value });
   };
-
-  const genebank: Genebank | undefined = React.useMemo(() => {
-    return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
-  }, [genebanks]);
-
-  const allFemales: OptionType[] = React.useMemo(() => {
-    if (!genebank) {
-      return [];
-    }
-    return genebank?.individuals
-      .filter((i) => i.sex == "female")
-      .map((i) => {
-        return { value: i.number, label: individualLabel(i) };
-      });
-  }, [genebank]);
-
-  const allMales: OptionType[] = React.useMemo(() => {
-    if (!genebank) {
-      return [];
-    }
-    return genebank?.individuals
-      .filter((i) => i.sex == "male")
-      .map((i) => {
-        return { value: i.number, label: individualLabel(i) };
-      });
-  }, [genebank]);
 
   const autoFillBreedDate = (dateString: string) => {
     let breedDate: Date | number = new Date(dateString);
@@ -399,13 +398,17 @@ export function BreedingForm({
               }}
             />
             <Autocomplete
-              options={allFemales ?? []}
+              options={activeFemalesLimited ?? []}
               value={
-                allFemales.find((option) => option.value == formState.mother) ??
-                null
+                activeFemalesLimited.find(
+                  (option: LimitedIndividual) =>
+                    option.number == formState.mother
+                ) ?? null
               }
               // jscpd:ignore-start
-              getOptionLabel={(option: OptionType) => option.label}
+              getOptionLabel={(option: LimitedIndividual) =>
+                individualLabel(option)
+              }
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -417,18 +420,51 @@ export function BreedingForm({
               )}
               // jscpd:ignore-end
 
-              onChange={(event: any, newValue: OptionType | null) => {
-                newValue && setFormField("mother", newValue.value);
+              onChange={(event: any, newValue: LimitedIndividual | null) => {
+                newValue && setFormField("mother", newValue.number);
               }}
             />
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <KeyboardDatePicker
+                  autoOk
+                  variant="inline"
+                  inputVariant={inputVariant}
+                  disableFuture
+                  className="simpleField"
+                  label="Född tidigast"
+                  format={dateFormat}
+                  value={fromDate}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(value: Date) => {
+                    fromDate && setFromDate(value);
+                  }}
+                />
+              </>
+            ) : (
+              <></>
+            )}
             <Autocomplete
-              options={allMales ?? []}
+              options={activeMalesLimited ?? []}
               value={
-                allMales.find((option) => option.value == formState.father) ??
-                null
+                activeMalesLimited.find(
+                  (option: LimitedIndividual) =>
+                    option.number == formState.father
+                ) ?? null
               }
               // jscpd:ignore-start
-              getOptionLabel={(option: OptionType) => option.label}
+              getOptionLabel={(option: LimitedIndividual) =>
+                individualLabel(option)
+              }
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -440,8 +476,8 @@ export function BreedingForm({
               )}
               // jscpd:ignore-end
 
-              onChange={(event: any, newValue: OptionType | null) => {
-                newValue && setFormField("father", newValue.value);
+              onChange={(event: any, newValue: LimitedIndividual | null) => {
+                newValue && setFormField("father", newValue.number);
               }}
             />
             <TextField

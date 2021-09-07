@@ -3,6 +3,7 @@ import React from "react";
 import { Box, Button, makeStyles, TextField } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
 import { CheckCircle } from "@material-ui/icons";
+import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -12,6 +13,9 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
+  individualsFromDate,
+  toLimitedIndividuals,
+  dateFormat,
   Birth,
   Breeding,
   locale,
@@ -61,6 +65,16 @@ const useStyles = makeStyles({
   },
   ancestorInput: {
     margin: "1em 0",
+  },
+  datum: {
+    width: "70%",
+    height: "100%",
+    padding: "10px",
+    paddingBottom: "20px",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "left",
   },
   inputBox: {
     display: "flex",
@@ -112,6 +126,7 @@ export function IndividualAdd({
   const [currentGenebank, setCurrentGenebank] = React.useState(
     undefined as Genebank | undefined
   );
+  const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
   const [herdKey, setHerdKey] = React.useState(0 as number);
@@ -122,8 +137,14 @@ export function IndividualAdd({
   const [sexError, setSexError] = React.useState(false as boolean);
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
+  let defaultDate = new Date();
+  defaultDate.setFullYear(defaultDate.getFullYear() - 10);
+  const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
+  const is_admin = !!(user?.is_manager || user?.is_admin);
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -148,6 +169,24 @@ export function IndividualAdd({
   };
 
   React.useEffect(() => {
+    setActiveFemalesLimited(
+      toLimitedIndividuals(
+        individualsFromDate(
+          currentGenebank,
+          "female",
+          is_admin ? fromDate : new Date(1900, 1, 1),
+          herdId
+        )
+      )
+    );
+    setActiveMalesLimited(
+      toLimitedIndividuals(
+        individualsFromDate(currentGenebank, "male", fromDate, undefined)
+      )
+    );
+  }, [fromDate, currentGenebank, herdId]);
+
+  React.useEffect(() => {
     if (!!genebank) {
       setCurrentGenebank(genebank);
     } else {
@@ -168,30 +207,6 @@ export function IndividualAdd({
       handleUpdateIndividual("genebank", currentGenebank.name);
     }
   }, [currentGenebank, individual]);
-
-  const activeFemales: Individual[] = activeIndividuals(
-    currentGenebank,
-    "female"
-  );
-  const activeMales: Individual[] = activeIndividuals(currentGenebank, "male");
-
-  const limitedFemales: LimitedIndividual[] = activeFemales.map(
-    (individual) => {
-      return {
-        id: individual.id,
-        name: individual.name,
-        number: individual.number,
-      };
-    }
-  );
-
-  const limitedMales: LimitedIndividual[] = activeMales.map((individual) => {
-    return {
-      id: individual.id,
-      name: individual.name,
-      number: individual.number,
-    };
-  });
 
   // remove error layout from input fields when user has added an input
   React.useEffect(() => {
@@ -489,9 +504,46 @@ export function IndividualAdd({
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
+          <div className={style.datum}>
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false
+                ? is_admin
+                  ? "Filtrera kaniner"
+                  : "Filtrera hanar"
+                : "Dölj"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="inline"
+                    inputVariant={inputVariant}
+                    disableFuture
+                    className="simpleField"
+                    label="Född tidigast"
+                    format={dateFormat}
+                    value={fromDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(value: Date) => {
+                      fromDate && setFromDate(value);
+                    }}
+                  />
+                </MuiPickersUtilsProvider>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
           <Autocomplete
             className={style.ancestorInput}
-            options={limitedFemales}
+            options={activeFemalesLimited}
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }
@@ -503,9 +555,10 @@ export function IndividualAdd({
               <TextField {...params} label="Välj mor" variant="outlined" />
             )}
           />
+          <div className={style.lineBreak}></div>
           <Autocomplete
             className={style.ancestorInput}
-            options={limitedMales}
+            options={activeMalesLimited}
             getOptionLabel={(option: LimitedIndividual) =>
               individualLabel(option)
             }

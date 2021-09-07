@@ -206,20 +206,41 @@ export function asLocale(dateString?: string) {
 }
 
 /**
- * Returns active individuals of given sex in the genebank
+ * Returns alive individuals of given sex in the genebank from a given date
  * @param genebank the genebank data to filter active individuals from
  * @param sex the sex of the active individuals
+ * @param fromDate the latest birth date from which individuals should be retrieved
+ * @param herdId the id of the herd to filter individual data
  */
-export function activeIndividuals(genebank: Genebank | undefined, sex: string) {
-  return React.useMemo(() => {
-    if (!genebank) {
-      return [];
-    }
-    return genebank?.individuals.filter(
-      (i) => i.sex == sex && i.is_active == true
-    );
-  }, [genebank]);
+export function individualsFromDate(
+  genebank: Genebank | undefined,
+  sex: string,
+  fromDate: Date,
+  herdId: string | undefined
+) {
+  const originHerdNameID: HerdNameID = {
+    herd: herdId,
+  };
+  if (!genebank) {
+    return [];
+  }
+  return genebank?.individuals.filter(
+    (i) =>
+      i.sex == sex &&
+      i.alive &&
+      (herdId ? i.herd.herd == originHerdNameID.herd : true) &&
+      new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
+  );
 }
+
+export const toLimitedIndividuals = (
+  inds: Individual[]
+): LimitedIndividual[] => {
+  const active = inds.map((i) => {
+    return { id: i.id, name: i.name, number: i.number };
+  });
+  return active;
+};
 
 const emptyContext: DataContext = {
   genebanks: [],
