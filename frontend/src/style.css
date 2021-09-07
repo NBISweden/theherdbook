@@ -150,56 +150,6 @@ list-item {
   padding-right: 4px;
 }
 
-/* desktop */
-@media screen and (min-width: 660px) {
-  .main {
-    margin-left: 20px;
-    margin-right: 20px;
-  }
-
-  .menuButton {
-    font-size: 1.2em;
-  }
-
-  .trigram {
-    font-size: 2em;
-    margin-top: -7px;
-  }
-
-  .euText {
-    font-size: 1em;
-  }
-
-  .logo {
-    font-size: 4em;
-    color: #222;
-  }
-  /* stylelint-disable */
-  body {
-    background: #ddd center / cover no-repeat url("/images/background.jpg")
-      fixed;
-    padding: 0 20px;
-  }
-  /* stylelint-enable */
-}
-
-/* mobile */
-@media screen and (max-width: 320px) {
-  .logoImage {
-    width: 8vh;
-    height: 8vh;
-  }
-
-  .euLogo img {
-    display: inline;
-    height: 8vh;
-  }
-
-  .euText {
-    font-size: 0.6em;
-  }
-}
-
 /* Used in filter_table.tsx, genebank_view.tsx and sorted_table.tsx */
 .table {
   height: 100%;
@@ -444,4 +394,143 @@ list-item {
 
 .centerbutton {
   width: 80%;
+}
+
+.adminPane {
+  width: 100%;
+  padding: 15px 10px 5px 10px;
+  margin-bottom: 2em;
+  border: 1px solid lightgrey;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  background: repeating-linear-gradient(
+    135deg,
+    white,
+    white 25px,
+    rgba(0, 0, 0, 0.05) 25px,
+    rgba(0, 0, 0, 0.05) 50px
+  );
+}
+
+.certNumber {
+  margin: 0.3em;
+}
+
+.control {
+  margin: 0.3em;
+  padding-right: 0.5em;
+}
+
+.controlWidth {
+  width: 50%;
+}
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  justify-content: start;
+}
+
+.flexRowOrColumn {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.individualForm {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.formPane {
+  border-right: none;
+  width: 100%;
+  padding-right: 5px;
+}
+
+.formPane:last-child {
+  padding-left: 5px;
+  padding-right: 0;
+  border-right: none;
+}
+
+.paneTitle {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+}
+
+.wideControl {
+  margin: 5px 0;
+  min-width: 195px;
+  width: 100%;
+  padding-right: 5px;
+}
+
+/* desktop */
+@media screen and (min-width: 660px) {
+  .main {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .menuButton {
+    font-size: 1.2em;
+  }
+
+  .trigram {
+    font-size: 2em;
+    margin-top: -7px;
+  }
+
+  .euText {
+    font-size: 1em;
+  }
+
+  .logo {
+    font-size: 4em;
+    color: #222;
+  }
+  /* stylelint-disable */
+  body {
+    background: #ddd center / cover no-repeat url("/images/background.jpg")
+      fixed;
+    padding: 0 20px;
+  }
+
+  .formPanel {
+    border-right: 1px solid lightgrey;
+  }
+
+  .formPanel {
+    border-right: 1px solid lightgrey;
+  }
+
+  .flexRowOrColumn {
+    flex-direction: row;
+  }
+  /* stylelint-enable */
+}
+
+/* mobile */
+@media screen and (max-width: 320px) {
+  .logoImage {
+    width: 8vh;
+    height: 8vh;
+  }
+
+  .euLogo img {
+    display: inline;
+    height: 8vh;
+  }
+
+  .euText {
+    font-size: 0.6em;
+  }
 }
