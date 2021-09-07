@@ -376,6 +376,24 @@ while [ "$year" -le 2019 ]; do
 	year=$(( year + 1 ))
 done | psql --quiet
 
+# Fix up the body fat data
+psql --quiet<<-'END_SQL'
+	UPDATE	bodyfat
+	SET	bodyfat = 'low'
+	WHERE	bodyfat = 'm';
+
+	UPDATE	bodyfat
+	SET	bodyfat = 'normal'
+	WHERE	bodyfat = 'n';
+
+	UPDATE	bodyfat
+	SET	bodyfat = 'high'
+	WHERE	bodyfat = 'f';
+
+	DELETE FROM 	bodyfat
+	WHERE	bodyfat NOT IN ('low', 'normal', 'high');
+END_SQL
+
 if [ ! -f "$3" ]; then
 	# No herd info
 	exit 0
