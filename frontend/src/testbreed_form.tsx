@@ -227,7 +227,7 @@ export function InbreedingForm() {
               color="primary"
               onClick={() => setShowFromDateFilter(!showFromDateFilter)}
             >
-              {showFromDateFilter == false ? "Filtrera föräldrarna" : "Dölja"}
+              {showFromDateFilter == false ? "Filtrera föräldrarna" : "Dölj"}
               {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
             </Button>
             {showFromDateFilter ? (

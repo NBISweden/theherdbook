@@ -407,7 +407,7 @@ export function BreedingForm({
               color="primary"
               onClick={() => setShowFromDateFilter(!showFromDateFilter)}
             >
-              {showFromDateFilter == false ? "Filtrera far" : "Dölja"}
+              {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
               {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
             </Button>
             {showFromDateFilter ? (
