@@ -406,6 +406,7 @@ list-item {
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
+
   background: repeating-linear-gradient(
     135deg,
     white,
@@ -462,11 +463,11 @@ list-item {
 
 .paneTitle {
   position: absolute;
-  top: 0px;
+  top: 0;
   left: 10px;
 }
 
-.wideControl {
+.wideControlInd {
   margin: 5px 0;
   min-width: 195px;
   width: 100%;

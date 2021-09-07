@@ -128,8 +128,8 @@ export function IndividualForm({
   ]; //should be boolean but doesn't work together with the OptionType
   // also decide how this should be stored in the backend
 
-  React.useEffect(() => 
-    if (!!genebank) 
+  React.useEffect(() => {
+    if (!!genebank) {
       onUpdateIndividual("genebank", genebank.name);
     }
   }, [genebank]);
@@ -207,7 +207,7 @@ export function IndividualForm({
                         options={herdOptions}
                         noOptionsText={"Välj härstamningen först"}
                         getOptionLabel={(option: OptionType) => option.label}
-                        className="wideControl"
+                        className="wideControlInd"
                         value={
                           herdOptions.find(
                             (option) =>
@@ -488,7 +488,7 @@ export function IndividualForm({
                 <TextField
                   label="Avvikande hårlag"
                   variant={inputVariant}
-                  className="wideControl"
+                  className="wideControlInd"
                   multiline
                   rows={1}
                   value={individual.hair_notes ?? ""}
@@ -501,7 +501,7 @@ export function IndividualForm({
                 <TextField
                   label="Anteckningar"
                   variant={inputVariant}
-                  className="wideControl"
+                  className="wideControlInd"
                   multiline
                   rows={4}
                   value={individual.notes ?? ""}
