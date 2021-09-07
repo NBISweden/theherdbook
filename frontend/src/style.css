@@ -396,6 +396,7 @@ list-item {
   width: 80%;
 }
 
+/* Used in individual_form.tsx */
 .adminPane {
   width: 100%;
   padding: 15px 10px 5px 10px;
@@ -417,19 +418,23 @@ list-item {
   /* stylelint-enable */
 }
 
+/* Used in individual_form.tsx */
 .certNumber {
   margin: 0.3em;
 }
 
+/* Used in individual_form.tsx */
 .control {
   margin: 0.3em;
   padding-right: 0.5em;
 }
 
+/* Used in individual_form.tsx */
 .controlWidth {
   width: 50%;
 }
 
+/* Used in individual_form.tsx */
 .flexRow {
   display: flex;
   flex-direction: row;
@@ -437,6 +442,7 @@ list-item {
   justify-content: start;
 }
 
+/* Used in individual_form.tsx */
 .flexRowOrColumn {
   display: flex;
   flex-direction: column;
@@ -444,30 +450,35 @@ list-item {
   overflow-y: auto;
 }
 
+/* Used in individual_form.tsx */
 .individualForm {
   display: flex;
   overflow: hidden;
   flex-direction: column;
 }
 
+/* Used in individual_form.tsx */
 .formPane {
   border-right: none;
   width: 100%;
   padding-right: 5px;
 }
 
+/* Used in individual_form.tsx */
 .formPane:last-child {
   padding-left: 5px;
   padding-right: 0;
   border-right: none;
 }
 
+/* Used in individual_form.tsx */
 .paneTitle {
   position: absolute;
   top: 0;
   left: 10px;
 }
 
+/* Used in individual_form.tsx */
 .wideControlInd {
   margin: 5px 0;
   min-width: 195px;
