@@ -9,6 +9,7 @@ import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
 import { Breeding, ExtendedBreeding } from "./data_context_global";
+import { useUserContext } from "./user_context";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
@@ -26,6 +27,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
   const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
+  const { user } = useUserContext();
 
   // Parent information from the genebank
   const parents = React.useMemo(() => {
@@ -115,9 +117,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         <SortedTable
           columns={columns}
           data={extendedBreedings}
-          addButton={() => {
-            setActive("new");
-          }}
+          addButton={id && user?.canEdit(id) ? () => setActive("new") : null}
           className="breedingTable"
           onClick={(row: any[]) => {
             setActive(row);
