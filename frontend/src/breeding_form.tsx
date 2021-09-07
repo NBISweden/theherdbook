@@ -135,7 +135,7 @@ export function BreedingForm({
       (birthDate.getTime() - breedingDate.getTime()) / 86400000;
     if (daysBetween < 26 || daysBetween > 38) {
       userMessage(
-        "Parningsdatum och födelsedatum passar inte ihop.",
+        "Tiden mellan parningsdatum och födelsedatum ska vara mellan 26 och 38 dagar.",
         "warning"
       );
       return false;
