@@ -377,7 +377,7 @@ while [ "$year" -le 2019 ]; do
 done | psql --quiet
 
 # Fix up the body fat data
-cat <<-END_SQL
+psql --quiet<<-'END_SQL'
 	UPDATE	bodyfat
 	SET	bodyfat = 'low'
 	WHERE	bodyfat = 'm';
