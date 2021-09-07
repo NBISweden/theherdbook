@@ -64,6 +64,7 @@ export function BreedingForm({
     updateBreeding,
     findBreedingMatch,
     modifyBreedingUpdates,
+    checkBirthUpdate,
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
@@ -173,7 +174,8 @@ export function BreedingForm({
     }
 
     if (
-      (userInput.litter_size !== null || userInput.birth_notes !== "") &&
+      (userInput.litter_size !== null ||
+        userInput.birth_notes !== (null || "")) &&
       userInput.birth_date == null
     ) {
       userMessage(
@@ -195,7 +197,7 @@ export function BreedingForm({
     return true;
   };
 
-  const createEmptyIndividual = (individual: Individual): any => {
+  const postEmptyIndividual = (individual: Individual): any => {
     post("/api/individual", individual).then(
       (json) => {
         switch (json.status) {
@@ -240,6 +242,61 @@ export function BreedingForm({
     );
   };
 
+  const createEmptyIndividual = async (
+    breeding: Breeding,
+    birthUpdates: Breeding | Birth,
+    amount: number
+  ) => {
+    if (!herdId) {
+      userMessage("Något gick fel", "error");
+      return;
+    }
+    const originHerdNameID: HerdNameID = {
+      herd: herdId,
+    };
+    const fatherInd: LimitedIndividual = {
+      number: breeding.father,
+    };
+    const motherInd: LimitedIndividual = {
+      number: breeding.mother,
+    };
+    const emptyIndividual = {
+      herd: herdId,
+      origin_herd: originHerdNameID,
+      genebank: genebank?.name,
+      certificate: null,
+      birth_date: birthUpdates.birth_date
+        ? birthUpdates.birth_date
+        : birthUpdates.date,
+      number: null,
+      father: fatherInd,
+      mother: motherInd,
+      color_note: null,
+      death_date: null,
+      death_note: null,
+      litter: null,
+      notes: "",
+      herd_tracking: null,
+      herd_active: true,
+      is_active: false,
+      alive: true,
+      belly_color: null,
+      eye_color: null,
+      claw_color: null,
+      hair_notes: "",
+      selling_date: null,
+      breeding: birthUpdates.id ? birthUpdates.id : 0,
+    };
+    for (let i = 0; i < amount; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      let status = postEmptyIndividual(emptyIndividual);
+      if (!status || status == "error") {
+        break;
+      }
+    }
+    return;
+  };
+
   /**
    * Function to save the user input to the database.
    * Error handling happens from within the functions imported from data_context.
@@ -263,10 +320,19 @@ export function BreedingForm({
         breeding,
         breedingMatch
       );
+      const newIndsNumber = checkBirthUpdate(
+        breedingMatch,
+        modifiedBreedingUpdates
+      );
       const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
       if (!!updatedBreeding) {
         userMessage("Parningstillfället har uppdaterats.", "success");
         handleBreedingsChanged();
+
+        if (newIndsNumber == 0) {
+          return;
+        }
+        createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
         return;
       }
     }
@@ -300,52 +366,7 @@ export function BreedingForm({
     if (!!newBirth) {
       userMessage("Sparat!", "success");
       handleBreedingsChanged();
-      if (!herdId) {
-        userMessage("Något gick fel", "error");
-        return;
-      }
-
-      const originHerdNameID: HerdNameID = {
-        herd: herdId,
-      };
-      const fatherInd: LimitedIndividual = {
-        number: breeding.father,
-      };
-      const motherInd: LimitedIndividual = {
-        number: breeding.mother,
-      };
-      const emptyIndividual: Individual = {
-        herd: herdId,
-        origin_herd: originHerdNameID,
-        genebank: genebank?.name,
-        certificate: null,
-        number: null,
-        birth_date: newBirthData.date,
-        father: fatherInd,
-        mother: motherInd,
-        color_note: null,
-        death_date: null,
-        death_note: null,
-        litter: null,
-        notes: "",
-        herd_tracking: null,
-        herd_active: true,
-        is_active: false,
-        alive: true,
-        belly_color: null,
-        eye_color: null,
-        claw_color: null,
-        hair_notes: "",
-        selling_date: null,
-        breeding: newBirthData.id ? newBirthData.id : 0,
-      };
-      for (let i = 0; i < breeding.litter_size; i++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        status = createEmptyIndividual(emptyIndividual);
-        if (!status || status == "error") {
-          break;
-        }
-      }
+      createEmptyIndividual(breeding, newBirthData, breeding.litter_size);
     }
     return;
   };

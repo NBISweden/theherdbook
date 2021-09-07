@@ -10,6 +10,7 @@ export interface BreedingContext {
   updateBreeding(breedingData: Breeding): Promise<any>;
   findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
   modifyBreedingUpdates(updates: Breeding, breedingMatch: Breeding): Breeding;
+  checkBirthUpdate(breeding: Breeding, breedingUpdates: Breeding): number;
 }
 
 const emptyBreedingContext: BreedingContext = {
@@ -27,6 +28,9 @@ const emptyBreedingContext: BreedingContext = {
       birth_notes: "",
       litter_size: null,
     };
+  },
+  checkBirthUpdate() {
+    return 0;
   },
 };
 
@@ -188,6 +192,27 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     }
     return newUpdates;
   };
+
+  /**
+   * When a breeding event is updated, this function checks if birth information was updated
+   * and how many empty individuals should be created (can be 0).
+   * @param breeding the breeding that is being updated
+   * @param breedingUpdates the updates input by the user
+   * @returns number of new individuals that should be created
+   */
+  const checkBirthUpdate = (breeding: Breeding, breedingUpdates: Breeding) => {
+    if (!(breedingUpdates.birth_date && breedingUpdates.litter_size)) {
+      return 0;
+    }
+    if (!breeding.litter_size) {
+      return breedingUpdates.litter_size;
+    }
+    if (breeding.litter_size < breedingUpdates.litter_size) {
+      return breedingUpdates.litter_size - breeding.litter_size;
+    }
+    return 0;
+  };
+
   return (
     <BreedingContext.Provider
       value={{
@@ -196,6 +221,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
         updateBreeding,
         findBreedingMatch,
         modifyBreedingUpdates,
+        checkBirthUpdate,
       }}
     >
       {props.children}
