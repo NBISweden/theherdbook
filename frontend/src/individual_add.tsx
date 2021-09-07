@@ -144,6 +144,7 @@ export function IndividualAdd({
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
+  const is_admin = !!(user?.is_manager || user?.is_admin);
   const { genebanks } = useDataContext();
   const {
     createBreeding,
@@ -170,7 +171,12 @@ export function IndividualAdd({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(currentGenebank, "female", fromDate, herdId)
+        individualsFromDate(
+          currentGenebank,
+          "female",
+          is_admin ? fromDate : new Date(1900, 1, 1),
+          herdId
+        )
       )
     );
     setActiveMalesLimited(
@@ -498,26 +504,16 @@ export function IndividualAdd({
         <h1>Registrera en ny kanin</h1>
         <div className={style.ancestorBox}>
           <h2>Lägg till härstamningen</h2>
-          <Autocomplete
-            className={style.ancestorInput}
-            options={activeFemalesLimited}
-            getOptionLabel={(option: LimitedIndividual) =>
-              individualLabel(option)
-            }
-            value={individual.mother ?? null}
-            onChange={(event, newValue) =>
-              handleUpdateIndividual("mother", newValue)
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Välj mor" variant="outlined" />
-            )}
-          />
           <div className={style.datum}>
             <Button
               color="primary"
               onClick={() => setShowFromDateFilter(!showFromDateFilter)}
             >
-              {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
+              {showFromDateFilter == false
+                ? is_admin
+                  ? "Filtrera kaniner"
+                  : "Filtrera honar"
+                : "Dölj"}
               {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
             </Button>
             {showFromDateFilter ? (
@@ -545,6 +541,20 @@ export function IndividualAdd({
               <></>
             )}
           </div>
+          <Autocomplete
+            className={style.ancestorInput}
+            options={activeFemalesLimited}
+            getOptionLabel={(option: LimitedIndividual) =>
+              individualLabel(option)
+            }
+            value={individual.mother ?? null}
+            onChange={(event, newValue) =>
+              handleUpdateIndividual("mother", newValue)
+            }
+            renderInput={(params) => (
+              <TextField {...params} label="Välj mor" variant="outlined" />
+            )}
+          />
           <div className={style.lineBreak}></div>
           <Autocomplete
             className={style.ancestorInput}
