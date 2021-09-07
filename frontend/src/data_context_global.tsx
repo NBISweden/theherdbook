@@ -206,34 +206,11 @@ export function asLocale(dateString?: string) {
 }
 
 /**
- * Returns active individuals of given sex in the genebank
- * @param genebank the genebank data to filter active individuals from
- * @param sex the sex of the active individuals
- */
-export function activeIndividuals(
-  genebank: Genebank | undefined,
-  sex: string,
-  herdId: string | undefined
-) {
-  const origin: HerdNameID = {
-    herd: herdId,
-  };
-  if (!genebank) {
-    return [];
-  }
-  return genebank?.individuals.filter(
-    (i) =>
-      i.sex == sex &&
-      i.is_active == true &&
-      (herdId ? i.herd.herd == origin.herd : true)
-  );
-}
-
-/**
  * Returns alive individuals of given sex in the genebank from a given date
  * @param genebank the genebank data to filter active individuals from
  * @param sex the sex of the active individuals
  * @param fromDate the latest birth date from which individuals should be retrieved
+ * @param herdId the id of the herd to filter individual data
  */
 export function individualsFromDate(
   genebank: Genebank | undefined,
@@ -263,19 +240,6 @@ export const toLimitedIndividuals = (
     return { id: i.id, name: i.name, number: i.number };
   });
   return active;
-};
-
-export const getIndividuals = (
-  sex: string,
-  canSelect: boolean,
-  genebank: Genebank,
-  fromDate: Date,
-  herdId: string | undefined
-): Individual[] => {
-  const inds = canSelect
-    ? individualsFromDate(genebank, sex, fromDate, herdId)
-    : activeIndividuals(genebank, sex, herdId);
-  return inds;
 };
 
 const emptyContext: DataContext = {

@@ -13,7 +13,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
 import {
-  getIndividuals,
+  individualsFromDate,
   toLimitedIndividuals,
   dateFormat,
   Birth,
@@ -170,12 +170,12 @@ export function IndividualAdd({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals("female", true, currentGenebank, fromDate, herdId)
+        individualsFromDate(currentGenebank, "female", fromDate, herdId)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", true, currentGenebank, fromDate, undefined)
+        individualsFromDate(currentGenebank, "male", fromDate, undefined)
       )
     );
   }, [fromDate, currentGenebank, herdId]);

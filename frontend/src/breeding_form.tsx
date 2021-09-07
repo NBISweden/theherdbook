@@ -9,7 +9,7 @@ import {
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
 import {
-  getIndividuals,
+  individualsFromDate,
   toLimitedIndividuals,
   Birth,
   Breeding,
@@ -87,12 +87,12 @@ export function BreedingForm({
   React.useEffect(() => {
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals("female", true, genebank, fromDate, herdId)
+        individualsFromDate(genebank, "female", fromDate, herdId)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", true, genebank, fromDate, undefined)
+        individualsFromDate(genebank, "male", fromDate, undefined)
       )
     );
   }, [fromDate, genebank]);

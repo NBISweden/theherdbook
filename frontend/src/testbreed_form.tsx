@@ -18,7 +18,7 @@ import {
 import DateFnsUtils from "@date-io/date-fns";
 
 import {
-  getIndividuals,
+  individualsFromDate,
   toLimitedIndividuals,
   individualLabel,
   Individual,
@@ -181,17 +181,17 @@ export function InbreedingForm() {
 
   React.useEffect(() => {
     setActiveFemales(
-      getIndividuals("female", true, genebank, fromDate, undefined)
+      individualsFromDate(genebank, "female", fromDate, undefined)
     );
-    setActiveMales(getIndividuals("male", true, genebank, fromDate, undefined));
+    setActiveMales(individualsFromDate(genebank, "male", fromDate, undefined));
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        getIndividuals("female", true, genebank, fromDate, undefined)
+        individualsFromDate(genebank, "female", fromDate, undefined)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        getIndividuals("male", true, genebank, fromDate, undefined)
+        individualsFromDate(genebank, "male", fromDate, undefined)
       )
     );
   }, [fromDate, genebank]);
