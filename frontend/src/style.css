@@ -406,7 +406,7 @@ list-item {
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
-
+  /* stylelint-disable */
   background: repeating-linear-gradient(
     135deg,
     white,
@@ -414,6 +414,7 @@ list-item {
     rgba(0, 0, 0, 0.05) 25px,
     rgba(0, 0, 0, 0.05) 50px
   );
+  /* stylelint-enable */
 }
 
 .certNumber {
