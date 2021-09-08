@@ -391,6 +391,10 @@ def external_login_handler(service):
         None,
         validated=True,
         fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
+        privileges=[
+            {"level": "viewer", "genebank": 1},
+            {"level": "viewer", "genebank": 2},
+        ],
     )
 
     if not user:
