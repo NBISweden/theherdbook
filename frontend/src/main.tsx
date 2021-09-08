@@ -16,11 +16,11 @@ const Main = (
     <BrowserRouter>
       <WithDataContext>
         <WithUserContext>
-          <WithMessageContext>
-            <WithBreedingContext>
+          <WithBreedingContext>
+            <WithMessageContext>
               <Navigation />
-            </WithBreedingContext>
-          </WithMessageContext>
+            </WithMessageContext>
+          </WithBreedingContext>
         </WithUserContext>
       </WithDataContext>
     </BrowserRouter>

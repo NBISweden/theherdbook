@@ -34,7 +34,7 @@ const emptyBreedingContext: BreedingContext = {
   },
 };
 
-export const BreedingContext = React.createContext(emptyBreedingContext);
+const BreedingContext = React.createContext(emptyBreedingContext);
 
 export const useBreedingContext = () => {
   return React.useContext(BreedingContext);
