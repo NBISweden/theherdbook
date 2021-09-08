@@ -34,7 +34,7 @@ const emptyBreedingContext: BreedingContext = {
   },
 };
 
-export const BreedingContext = React.createContext(emptyBreedingContext);
+const BreedingContext = React.createContext(emptyBreedingContext);
 
 export const useBreedingContext = () => {
   return React.useContext(BreedingContext);
@@ -62,7 +62,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
   /**
    * Function that can be used to create a new breeding event
    **/
-  const createBreeding = async (
+   const createBreeding = async (
     breedingData: LimitedBreeding
   ): Promise<any> => {
     const breedingEvent: {
