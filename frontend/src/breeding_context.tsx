@@ -62,7 +62,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
   /**
    * Function that can be used to create a new breeding event
    **/
-   const createBreeding = async (
+  const createBreeding = async (
     breedingData: LimitedBreeding
   ): Promise<any> => {
     const breedingEvent: {
