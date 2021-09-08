@@ -1,6 +1,6 @@
 import React from "react";
 
-import { InputAdornment, TextField } from "@material-ui/core";
+import { InputAdornment, StylesProvider, TextField } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -246,7 +246,6 @@ export function IndividualForm({
                           value && onUpdateIndividual("birth_date", value);
                         }}
                       />
-
                       <TextField
                         required
                         error={numberError}

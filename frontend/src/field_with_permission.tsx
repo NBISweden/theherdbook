@@ -18,28 +18,34 @@ import {
  * @param fieldType
  * @param value
  */
-function validateType(fieldType: LimitedInputType, value: string | null): boolean {
+function validateType(
+  fieldType: LimitedInputType,
+  value: string | null
+): boolean {
   if (!value) {
-    return true
+    return true;
   }
   switch (fieldType) {
-    case 'email':
+    case "email":
       // Validation with w3c regexp from emailregex.com
-      return !!value.match(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
-    case 'url':
+      return !!value.match(
+        /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
+      );
+    case "url":
       // validation from urlregex.com
-      return !!value.match(/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/)
-    case 'tel':
+      return !!value.match(
+        /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/
+      );
+    case "tel":
       // very general match - basically allow anything that starts with
       // `+<num>(0)` or `0`, followed by any combination of numbers, whitespace
       // and dashes.
-      return !!value.match(/^(\+?[0-9]{1,3}\(0\)|0)[\s0-9\-]+$/)
+      return !!value.match(/^(\+?[0-9]{1,3}\(0\)|0)[\s0-9\-]+$/);
   }
-  return true
+  return true;
 }
 
-
-export type LimitedInputType = 'text' | 'tel' | 'url' | 'email';
+export type LimitedInputType = "text" | "tel" | "url" | "email";
 
 /**
  * The FieldWithPermission function provides an input field, with the input tag
@@ -54,14 +60,14 @@ export function FieldWithPermission({
   value,
   permission,
   setValue,
-  fieldType = 'text'
+  fieldType = "text",
 }: {
   field: string;
   label: string;
   value: string | null;
   permission: PrivacyLevel | undefined;
   setValue: Function;
-  fieldType: LimitedInputType
+  fieldType: LimitedInputType;
 }) {
   const options = [
     { value: "private", label: "Endast Manager" },
@@ -77,12 +83,12 @@ export function FieldWithPermission({
           className="simpleField"
           error={!validateType(fieldType, value)}
           value={value}
-          type={fieldType ?? 'text'}
+          type={fieldType ?? "text"}
           variant={inputVariant}
           onChange={(e: any) => {
-            setValue(field, e.target.value)
+            setValue(field, e.target.value);
           }}
-          />
+        />
         {permission !== undefined && (
           <Autocomplete
             options={options ?? []}
@@ -97,7 +103,6 @@ export function FieldWithPermission({
                 variant={inputVariant}
                 className="permissionFieldExtended"
                 fullWidth={false}
-                style={{ marginLeft: "45px" }}
               />
             )}
             onChange={(event: any, newValue: OptionType | null) => {
