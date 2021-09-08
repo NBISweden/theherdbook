@@ -764,21 +764,13 @@ def form_to_individual(form, user=None):
         and individual.current_herd.genebank_id in user.is_manager
     )
 
-    admin_fields = [
-        "certificate",
-        "name",
-        "sex",
-        "birth_date",
-        "color_note",
-        "mother",
-        "father",
-        "color",
-    ]
+    admin_fields = ["digital_certificate", "certificate", "number"]
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            if "number" in form[admin_field]:  # parents
+            fields = form.get(admin_field, None)
+            if fields and "number" in fields:  # parents
                 changed = (
                     form[admin_field]["number"]
                     != getattr(individual, admin_field).number
