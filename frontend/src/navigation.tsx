@@ -335,9 +335,8 @@ export function Navigation() {
               <Route path="/">Welcome!</Route>
             </Switch>
           </Paper>
+          <Footer />
         </div>
-
-        <Footer />
       </ThemeProvider>
     </>
   );

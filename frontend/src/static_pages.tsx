@@ -3,7 +3,7 @@
  */
 
 import * as React from "react";
-import { Typography } from "@material-ui/core";
+import { Paper, Typography } from "@material-ui/core";
 import "./style.css";
 
 // jscpd:ignore-start
@@ -202,7 +202,7 @@ export function Kontakt() {
 
 export function Footer() {
   return (
-    <div className="footer">
+    <Paper className="footer">
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
@@ -215,7 +215,7 @@ export function Footer() {
       <div>
         <img src="/images/logo.png" alt="logo" className="logoImage" />
       </div>
-    </div>
+    </Paper>
   );
 }
 // jscpd:ignore-end

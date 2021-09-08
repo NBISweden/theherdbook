@@ -41,7 +41,7 @@ body {
   opacity: 0.9;
   position: relative;
   margin-top: calc(10vh);
-  margin-bottom: 210px;
+  margin-bottom: 100px;
   margin-left: 0;
   margin-right: 0;
   padding: 10px;
@@ -127,9 +127,7 @@ list-item {
 .footer {
   z-index: -4;
   width: 100%;
-  bottom: 0;
-  left: 0;
-  padding: 20px 40px;
+  padding: 20px;
   background: white;
   display: flex;
   opacity: 0.9;
