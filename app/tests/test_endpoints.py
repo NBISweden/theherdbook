@@ -69,7 +69,7 @@ class TestEndpoints(FlaskTest):
         """
         Checks that `herdbook.get_user` returns the correct user.
         """
-        for test_user in [self.admin, self.manager, self.specialist, self.owner]:
+        for test_user in [self.admin, self.manager, self.viewer, self.owner]:
             user_data = {
                 "email": test_user.email,
                 "fullname": test_user.fullname,
@@ -103,7 +103,7 @@ class TestEndpoints(FlaskTest):
                         "name": u.username,
                         "fullname": u.fullname,
                     }
-                    for u in [self.admin, self.specialist, self.manager, self.owner]
+                    for u in [self.admin, self.viewer, self.manager, self.owner]
                 ],
             ),
             (
@@ -115,10 +115,10 @@ class TestEndpoints(FlaskTest):
                         "name": u.username,
                         "fullname": u.fullname,
                     }
-                    for u in [self.specialist, self.manager, self.owner]
+                    for u in [self.viewer, self.manager, self.owner]
                 ],
             ),
-            (self.specialist, None),
+            (self.viewer, None),
             (self.owner, None),
         ]
 

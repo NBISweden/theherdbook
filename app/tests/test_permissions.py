@@ -28,12 +28,12 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(self.admin.is_admin)
         self.assertEqual(self.admin.accessible_genebanks, [1, 2])
 
-    def test_specialist(self):
+    def test_viewer(self):
         """
-        Checks that the specialist role has the correct permissions.
+        Checks that the viewer role has the correct permissions.
         """
-        self.assertFalse(self.specialist.is_admin)
-        self.assertEqual(self.specialist.accessible_genebanks, [1])
+        self.assertFalse(self.viewer.is_admin)
+        self.assertEqual(self.viewer.accessible_genebanks, [1])
 
     def test_manager(self):
         """
@@ -58,8 +58,8 @@ class TestPermissions(DatabaseTest):
         genebank_ids = [g["id"] for g in da.get_genebanks(self.admin.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id in genebank_ids)
-        # specialist
-        genebank_ids = [g["id"] for g in da.get_genebanks(self.specialist.uuid)]
+        # viewer
+        genebank_ids = [g["id"] for g in da.get_genebanks(self.viewer.uuid)]
         self.assertTrue(self.genebanks[0].id in genebank_ids)
         self.assertTrue(self.genebanks[1].id not in genebank_ids)
         # manager
@@ -79,9 +79,9 @@ class TestPermissions(DatabaseTest):
         # admin
         self.assertTrue(da.get_genebank(self.genebanks[0].id, self.admin.uuid))
         self.assertTrue(da.get_genebank(self.genebanks[1].id, self.admin.uuid))
-        # specialist
-        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.specialist.uuid))
-        self.assertFalse(da.get_genebank(self.genebanks[1].id, self.specialist.uuid))
+        # viewer
+        self.assertTrue(da.get_genebank(self.genebanks[0].id, self.viewer.uuid))
+        self.assertFalse(da.get_genebank(self.genebanks[1].id, self.viewer.uuid))
         # manager
         self.assertTrue(da.get_genebank(self.genebanks[0].id, self.manager.uuid))
         self.assertFalse(da.get_genebank(self.genebanks[1].id, self.manager.uuid))
@@ -95,7 +95,7 @@ class TestPermissions(DatabaseTest):
         for all test users.
         """
 
-        for user in [self.admin, self.manager, self.specialist, self.owner]:
+        for user in [self.admin, self.manager, self.viewer, self.owner]:
             for herd in db.Herd.select():
 
                 value = da.get_herd(herd.herd, user.uuid)
@@ -125,18 +125,18 @@ class TestPermissions(DatabaseTest):
             ),
             {"status": "success"},
         )
-        # specialist
+        # viewer
         self.assertNotEqual(
             da.add_herd(
                 {"genebank": self.genebanks[0].id, "herd": "test3"},
-                self.specialist.uuid,
+                self.viewer.uuid,
             ),
             {"status": "success"},
         )
         self.assertNotEqual(
             da.add_herd(
                 {"genebank": self.genebanks[1].id, "herd": "test4"},
-                self.specialist.uuid,
+                self.viewer.uuid,
             ),
             {"status": "success"},
         )
@@ -176,15 +176,11 @@ class TestPermissions(DatabaseTest):
         self.assertTrue(da.get_individual(self.individuals[0].number, self.admin.uuid))
         self.assertTrue(da.get_individual(self.individuals[1].number, self.admin.uuid))
         self.assertTrue(da.get_individual(self.individuals[2].number, self.admin.uuid))
-        # specialist
-        self.assertTrue(
-            da.get_individual(self.individuals[0].number, self.specialist.uuid)
-        )
-        self.assertTrue(
-            da.get_individual(self.individuals[1].number, self.specialist.uuid)
-        )
+        # viewer
+        self.assertTrue(da.get_individual(self.individuals[0].number, self.viewer.uuid))
+        self.assertTrue(da.get_individual(self.individuals[1].number, self.viewer.uuid))
         self.assertFalse(
-            da.get_individual(self.individuals[2].number, self.specialist.uuid)
+            da.get_individual(self.individuals[2].number, self.viewer.uuid)
         )
         # manager
         self.assertTrue(
@@ -209,8 +205,8 @@ class TestPermissions(DatabaseTest):
         # admin
         user_ids = [u["id"] for u in da.get_users(self.admin.uuid)]
         self.assertEqual(user_ids, [1, 2, 3, 4])
-        # specialist
-        user_ids = da.get_users(self.specialist.uuid)
+        # viewer
+        user_ids = da.get_users(self.viewer.uuid)
         self.assertEqual(user_ids, None)
         # manager
         user_ids = [u["id"] for u in da.get_users(self.manager.uuid)]
@@ -227,22 +223,22 @@ class TestPermissions(DatabaseTest):
         # admin
         self.assertTrue(self.admin.has_role("admin"))
         self.assertFalse(self.admin.has_role("manager", 1))
-        self.assertFalse(self.admin.has_role("specialist", 1))
+        self.assertFalse(self.admin.has_role("viewer", 1))
         self.assertFalse(self.admin.has_role("owner", 1))
-        # specialist
-        self.assertFalse(self.specialist.has_role("admin"))
-        self.assertFalse(self.specialist.has_role("manager", 1))
-        self.assertTrue(self.specialist.has_role("specialist", 1))
-        self.assertFalse(self.specialist.has_role("owner", 1))
+        # viewer
+        self.assertFalse(self.viewer.has_role("admin"))
+        self.assertFalse(self.viewer.has_role("manager", 1))
+        self.assertTrue(self.viewer.has_role("viewer", 1))
+        self.assertFalse(self.viewer.has_role("owner", 1))
         # manager
         self.assertFalse(self.manager.has_role("admin"))
         self.assertTrue(self.manager.has_role("manager", 1))
-        self.assertFalse(self.manager.has_role("specialist", 1))
+        self.assertFalse(self.manager.has_role("viewer", 1))
         self.assertFalse(self.manager.has_role("owner", 1))
         # owner
         self.assertFalse(self.owner.has_role("admin"))
         self.assertFalse(self.owner.has_role("manager", 1))
-        self.assertFalse(self.owner.has_role("specialist", 1))
+        self.assertFalse(self.owner.has_role("viewer", 1))
         self.assertTrue(self.owner.has_role("owner", 1))
 
     def test_update_role(self):
@@ -263,9 +259,7 @@ class TestPermissions(DatabaseTest):
         # insufficient permissions
         operation = {"action": "add", "role": "manager", "user": 1, "genebank": 1}
         self.assertEqual(da.update_role(operation, self.owner.uuid)["status"], "error")
-        self.assertEqual(
-            da.update_role(operation, self.specialist.uuid)["status"], "error"
-        )
+        self.assertEqual(da.update_role(operation, self.viewer.uuid)["status"], "error")
         operation["genebank"] = 2
         self.assertEqual(
             da.update_role(operation, self.manager.uuid)["status"], "error"
@@ -328,17 +322,17 @@ class TestPermissions(DatabaseTest):
         self.assertEqual(self.manager.can_edit(self.individuals[1].number), True)
         self.assertEqual(self.manager.can_edit(self.individuals[2].number), False)
 
-        # Specialist
-        self.assertEqual(self.specialist.can_edit(self.genebanks[0].name), False)
-        self.assertEqual(self.specialist.can_edit(self.genebanks[1].name), False)
+        # viewer
+        self.assertEqual(self.viewer.can_edit(self.genebanks[0].name), False)
+        self.assertEqual(self.viewer.can_edit(self.genebanks[1].name), False)
 
-        self.assertEqual(self.specialist.can_edit(self.herds[0].herd), False)
-        self.assertEqual(self.specialist.can_edit(self.herds[1].herd), False)
-        self.assertEqual(self.specialist.can_edit(self.herds[2].herd), False)
+        self.assertEqual(self.viewer.can_edit(self.herds[0].herd), False)
+        self.assertEqual(self.viewer.can_edit(self.herds[1].herd), False)
+        self.assertEqual(self.viewer.can_edit(self.herds[2].herd), False)
 
-        self.assertEqual(self.specialist.can_edit(self.individuals[0].number), False)
-        self.assertEqual(self.specialist.can_edit(self.individuals[1].number), False)
-        self.assertEqual(self.specialist.can_edit(self.individuals[2].number), False)
+        self.assertEqual(self.viewer.can_edit(self.individuals[0].number), False)
+        self.assertEqual(self.viewer.can_edit(self.individuals[1].number), False)
+        self.assertEqual(self.viewer.can_edit(self.individuals[2].number), False)
 
         # Owner
         self.assertEqual(self.owner.can_edit(self.genebanks[0].name), False)

@@ -483,7 +483,7 @@ def update_role(operation, user_uuid=None):
 
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | specialist,
+         role: owner | manager | viewer,
          user: <id>,
          herd | genebank: <id>
         }
@@ -512,10 +512,9 @@ def update_role(operation, user_uuid=None):
     ):
         valid = False
     elif (
-        operation.get("role", {}) not in ["owner", "manager", "specialist"]
+        operation.get("role", {}) not in ["owner", "manager", "viewer"]
         or (
-            operation["role"] in ["manager", "specialist"]
-            and not operation.get("genebank")
+            operation["role"] in ["manager", "viewer"] and not operation.get("genebank")
         )
         or (operation["role"] in ["owner"] and not operation.get("herd"))
     ):

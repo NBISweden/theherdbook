@@ -225,7 +225,7 @@ def manage_roles():
     status a json status message.
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | specialist,
+         role: owner | manager | viewer,
          user: <id>,
          herd | genebank: <id>
         }

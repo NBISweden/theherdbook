@@ -80,7 +80,7 @@ const defaultValues: ManagedUser = {
 const PermissionLevels = [
   { value: "owner", label: "Owner" },
   { value: "manager", label: "Manager" },
-  { value: "specialist", label: "Genetic Specialist" },
+  { value: "viewer", label: "Viewer" },
 ];
 /**
  * Provides a form for changing user metadata and user roles. The form will
@@ -233,7 +233,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
   type Operation = { action: "remove" | "add"; user: number | "new" };
   type HerdOperation = Operation & { role: "owner"; herd: number };
   type GenebankOperation = Operation & {
-    role: "manager" | "specialist";
+    role: "manager" | "viewer";
     genebank: number | undefined;
   };
   const updateRole = (operation: HerdOperation | GenebankOperation) => {
