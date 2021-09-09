@@ -62,7 +62,6 @@ docker-compose build
 docker-compose up
 ```
 
-
 You can also use the script `run-with-prebuilt-images.sh`, that uses the precompiled images generated
 in the production server. This option is much faster and therefore more recommended.
 
@@ -180,3 +179,27 @@ autocreate = yes
 in the `[google]` section.
 
 In short, you need to set up OAuth 2.0 with the `openid` scope (and optionally the `.../userinfo.email` scope to allow automatic creation). Once you've done that, provide the `Client secret` as `secret` and `Client ID` as `key` in the `[google]` section in `auth.ini`.
+
+#### Automatic herd ownerships
+
+The google authenticator driver also supports automatically creating herd
+ownership links at the time of account creation. This requires using a custom
+domain / Google workspace.
+
+To use that, you need to enable the `Admin SDK API` in the google developer
+console. Next, create a service account under "Credentials" in your project and
+create and download keys for the service account in JSON format.
+
+Note the `Unique ID` for the service account. Head over to the
+[workspace console](https://admin.google.com/) and add a domain wide delegation
+(under Security -> API controls).
+
+Create a domain wide delegation for the unique id from the service account with
+the scope `https://www.googleapis.com/auth/admin.directory.user.readonly`.
+
+Once this is done, you can add the key JSON file to the `config` directory.
+Also modify the `auth.ini` in the `[google]` section, adding `herdattribute`
+describing what attribute to be used for tying the user to herd(s). Other keys
+needed are `credentialsfile` which should be the name of the key file for the
+servicea count as well as `lookupuser` which should be set to the e-mail of an
+administrative user for the domain.
