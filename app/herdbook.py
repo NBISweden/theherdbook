@@ -225,7 +225,7 @@ def manage_roles():
     status a json status message.
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | specialist,
+         role: owner | manager | viewer,
          user: <id>,
          herd | genebank: <id>
         }
@@ -391,6 +391,10 @@ def external_login_handler(service):
         None,
         validated=True,
         fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
+        privileges=[
+            {"level": "viewer", "genebank": 1},
+            {"level": "viewer", "genebank": 2},
+        ],
     )
 
     if not user:

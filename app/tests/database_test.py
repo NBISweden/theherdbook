@@ -194,11 +194,11 @@ class DatabaseTest(unittest.TestCase):
             bodyfat.save()
 
         self.admin = da.register_user("admin", "pass")
-        self.specialist = da.register_user("spec", "pass")
+        self.viewer = da.register_user("spec", "pass")
         self.manager = da.register_user("man", "pass")
         self.owner = da.register_user("owner", "pass")
         self.admin.add_role("admin", None)
-        self.specialist.add_role("specialist", self.genebanks[0].id)
+        self.viewer.add_role("viewer", self.genebanks[0].id)
         self.manager.add_role("manager", self.genebanks[0].id)
         self.owner.add_role("owner", self.herds[0].id)
 

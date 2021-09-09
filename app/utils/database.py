@@ -271,7 +271,7 @@ class Herd(BaseModel):
             access_level = "private"
         elif user:
             for role in user.privileges:
-                if role["level"] in ["specialist", "manager"]:
+                if role["level"] in ["viewer", "manager"]:
                     if role["genebank"] == self.genebank.id:
                         access_level = "private"
                         break
@@ -733,7 +733,7 @@ class User(BaseModel, UserMixin):
         The privileges are a list of roles, formatted as:
         [
             {'level': 'admin'} |
-            {'level': 'specialist' | 'manager', 'genebank': id} |
+            {'level': 'viewer' | 'manager', 'genebank': id} |
             {'level': 'owner', 'herd': id}
         ]
         """
@@ -765,17 +765,17 @@ class User(BaseModel, UserMixin):
         Add `level` with `target_id` to the user privilege list. Allowed
         level/target_id combinations are:
             - level: admin, (no target)
-            - level: specialist, genebank: target_id
+            - level: viewer, genebank: target_id
             - level: manager, genebank: target_id
             - level: owner, herd: target_id
         """
 
         privs = self.privileges
-        if level not in ["admin", "specialist", "manager", "owner"]:
+        if level not in ["admin", "viewer", "manager", "owner"]:
             logging.error("Unknown role level %s", level)
             return
         role = {"level": level}
-        if level in ["specialist", "manager"]:
+        if level in ["viewer", "manager"]:
             role["genebank"] = target_id
         elif level == "owner":
             role["herd"] = target_id
@@ -790,7 +790,7 @@ class User(BaseModel, UserMixin):
 
         Allowed level/target_id combinations are:
             - level: admin, (no target)
-            - level: specialist, genebank: target_id
+            - level: viewer, genebank: target_id
             - level: manager, genebank: target_id
             - level: owner, herd: target_id
         """
@@ -798,7 +798,7 @@ class User(BaseModel, UserMixin):
             if role["level"] == level:
                 if level == "admin":
                     return True
-                if level in ["specialist", "manager"] and target_id == role["genebank"]:
+                if level in ["viewer", "manager"] and target_id == role["genebank"]:
                     return True
                 if level == "owner" and target_id == role["herd"]:
                     return True
@@ -811,7 +811,7 @@ class User(BaseModel, UserMixin):
 
         Allowed level/target_id combinations are:
             - level: admin, (no target)
-            - level: specialist, genebank: target_id
+            - level: viewer, genebank: target_id
             - level: manager, genebank: target_id
             - level: owner, herd: target_id
         """
@@ -820,7 +820,7 @@ class User(BaseModel, UserMixin):
             if role["level"] == level:
                 if level == "admin":
                     continue
-                if level in ["specialist", "manager"] and target_id == role["genebank"]:
+                if level in ["viewer", "manager"] and target_id == role["genebank"]:
                     continue
                 if level == "owner" and target_id == role["herd"]:
                     continue
@@ -869,7 +869,7 @@ class User(BaseModel, UserMixin):
             return [g.id for g in Genebank(database=DATABASE).select()]
         has_access = []
         for role in self.privileges:
-            if role["level"] in ["specialist", "manager"]:
+            if role["level"] in ["viewer", "manager"]:
                 has_access += [role["genebank"]]
             elif role["level"] == "owner":
                 herd = Herd.get(role["herd"])

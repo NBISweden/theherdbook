@@ -51,7 +51,7 @@ class TestDataAccess(DatabaseTest):
             {"status": "error", "message": "forbidden"},
         )
         self.assertDictEqual(
-            da.add_user(valid_form, self.specialist.uuid),
+            da.add_user(valid_form, self.viewer.uuid),
             {"status": "error", "message": "forbidden"},
         )
 
@@ -169,7 +169,7 @@ class TestDataAccess(DatabaseTest):
         """
         self.assertIsNone(da.get_genebanks("invalid-uuid"))
 
-        for user in [self.admin, self.manager, self.specialist, self.owner]:
+        for user in [self.admin, self.manager, self.viewer, self.owner]:
             for herd in self.herds:
                 value = da.get_herd(herd.herd, user.uuid)
                 target = db.Herd.get(db.Herd.herd == herd.herd).filtered_dict(user)
@@ -228,7 +228,7 @@ class TestDataAccess(DatabaseTest):
             invalid_user, {"status": "error", "message": "Not logged in"}
         )
 
-        not_permitted = da.update_herd(forms["valid"], self.specialist.uuid)
+        not_permitted = da.update_herd(forms["valid"], self.viewer.uuid)
         self.assertDictEqual(not_permitted, {"status": "error", "message": "Forbidden"})
 
         valid_owner = da.update_herd(forms["valid"], self.owner.uuid)
@@ -287,7 +287,7 @@ class TestDataAccess(DatabaseTest):
             },
         }
         self.assertRaises(
-            PermissionError, da.form_to_individual, forms["valid"], self.specialist
+            PermissionError, da.form_to_individual, forms["valid"], self.viewer
         )
         self.assertRaises(
             ValueError, da.form_to_individual, forms["invalid_number"], self.admin
@@ -346,7 +346,7 @@ class TestDataAccess(DatabaseTest):
         )
 
         self.assertEqual(
-            da.add_individual(forms["valid"], self.specialist.uuid),
+            da.add_individual(forms["valid"], self.viewer.uuid),
             {"status": "error", "message": "Forbidden"},
         )
 
@@ -391,7 +391,7 @@ class TestDataAccess(DatabaseTest):
         )
 
         self.assertEqual(
-            da.add_individual(forms["valid"], self.specialist.uuid),
+            da.add_individual(forms["valid"], self.viewer.uuid),
             {"status": "error", "message": "Forbidden"},
         )
 
@@ -554,7 +554,7 @@ class TestDataAccess(DatabaseTest):
         self.assertEqual(da.get_breeding_events("does_not_exist", self.admin.uuid), [])
         # lacking permissions
         self.assertEqual(
-            da.get_breeding_events(self.herds[2].herd, self.specialist.uuid), []
+            da.get_breeding_events(self.herds[2].herd, self.viewer.uuid), []
         )
 
         breeding = db.Breeding.get(self.breeding[-1].id)

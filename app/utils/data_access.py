@@ -73,6 +73,10 @@ def add_user(form, user_uuid=None):
     password = form.get("password", None)
     username = form.get("username", None)
     validated = form.get("validated", False)
+    privileges = [
+        {"level": "viewer", "genebank": 1},
+        {"level": "viewer", "genebank": 2},
+    ]
     if not email or not password:
         return {"status": "error", "message": "missing data"}
 
@@ -80,7 +84,7 @@ def add_user(form, user_uuid=None):
         if User.select().where(User.email == email).first():
             return {"status": "error", "message": "already exists"}
 
-    user = register_user(email, password, username, validated)
+    user = register_user(email, password, username, validated, privileges)
     return {"status": "created", "data": user.id}
 
 
@@ -483,7 +487,7 @@ def update_role(operation, user_uuid=None):
 
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | specialist,
+         role: owner | manager | viewer,
          user: <id>,
          herd | genebank: <id>
         }
@@ -512,10 +516,9 @@ def update_role(operation, user_uuid=None):
     ):
         valid = False
     elif (
-        operation.get("role", {}) not in ["owner", "manager", "specialist"]
+        operation.get("role", {}) not in ["owner", "manager", "viewer"]
         or (
-            operation["role"] in ["manager", "specialist"]
-            and not operation.get("genebank")
+            operation["role"] in ["manager", "viewer"] and not operation.get("genebank")
         )
         or (operation["role"] in ["owner"] and not operation.get("herd"))
     ):

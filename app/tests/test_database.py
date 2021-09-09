@@ -133,8 +133,8 @@ class TestDatabase(DatabaseTest):
         self.assertDictEqual(gb0_herds[0], gb0_expected[0])
         self.assertDictEqual(gb0_herds[1], gb0_expected[1])
 
-        # specialist
-        gb0_herds = self.genebanks[0].get_herds(self.specialist)
+        # viewer
+        gb0_herds = self.genebanks[0].get_herds(self.viewer)
         self.assertDictEqual(gb0_herds[0], gb0_expected[0])
         self.assertDictEqual(gb0_herds[1], gb0_expected[1])
 
@@ -200,9 +200,9 @@ class TestDatabase(DatabaseTest):
         self.assertDictEqual(h0_result, h0_expected)
         self.assertDictEqual(h1_result, h1_expected)
 
-        # specialist
-        h0_result = self.herds[0].filtered_dict(self.specialist)
-        h1_result = self.herds[1].filtered_dict(self.specialist)
+        # viewer
+        h0_result = self.herds[0].filtered_dict(self.viewer)
+        h1_result = self.herds[1].filtered_dict(self.viewer)
         self.assertDictEqual(h0_result, h0_expected)
         self.assertDictEqual(h1_result, h1_expected)
 
@@ -436,8 +436,8 @@ class TestDatabase(DatabaseTest):
             [{"level": "manager", "genebank": self.genebanks[0].id}],
         )
         self.assertListEqual(
-            self.specialist.privileges,
-            [{"level": "specialist", "genebank": self.genebanks[0].id}],
+            self.viewer.privileges,
+            [{"level": "viewer", "genebank": self.genebanks[0].id}],
         )
         self.assertListEqual(
             self.owner.privileges, [{"level": "owner", "herd": self.herds[0].id}]
@@ -449,46 +449,34 @@ class TestDatabase(DatabaseTest):
         """
         self.assertEqual(self.admin.has_role("admin"), True)
         self.assertEqual(self.manager.has_role("admin"), False)
-        self.assertEqual(self.specialist.has_role("admin"), False)
+        self.assertEqual(self.viewer.has_role("admin"), False)
         self.assertEqual(self.owner.has_role("admin"), False)
 
         self.assertEqual(self.admin.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(self.manager.has_role("manager", self.genebanks[0].id), True)
-        self.assertEqual(
-            self.specialist.has_role("manager", self.genebanks[0].id), False
-        )
+        self.assertEqual(self.viewer.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(self.owner.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(self.admin.has_role("manager", self.genebanks[1].id), False)
         self.assertEqual(self.manager.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(
-            self.specialist.has_role("manager", self.genebanks[1].id), False
-        )
+        self.assertEqual(self.viewer.has_role("manager", self.genebanks[1].id), False)
         self.assertEqual(self.owner.has_role("manager", self.genebanks[1].id), False)
 
-        self.assertEqual(self.admin.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(
-            self.manager.has_role("specialist", self.genebanks[0].id), False
-        )
-        self.assertEqual(
-            self.specialist.has_role("specialist", self.genebanks[0].id), True
-        )
-        self.assertEqual(self.owner.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(self.admin.has_role("specialist", self.genebanks[1].id), False)
-        self.assertEqual(
-            self.manager.has_role("specialist", self.genebanks[1].id), False
-        )
-        self.assertEqual(
-            self.specialist.has_role("specialist", self.genebanks[1].id), False
-        )
-        self.assertEqual(self.owner.has_role("specialist", self.genebanks[1].id), False)
+        self.assertEqual(self.admin.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(self.manager.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(self.viewer.has_role("viewer", self.genebanks[0].id), True)
+        self.assertEqual(self.owner.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(self.admin.has_role("viewer", self.genebanks[1].id), False)
+        self.assertEqual(self.manager.has_role("viewer", self.genebanks[1].id), False)
+        self.assertEqual(self.viewer.has_role("viewer", self.genebanks[1].id), False)
+        self.assertEqual(self.owner.has_role("viewer", self.genebanks[1].id), False)
 
         self.assertEqual(self.admin.has_role("owner", self.herds[0].id), False)
         self.assertEqual(self.manager.has_role("owner", self.herds[0].id), False)
-        self.assertEqual(self.specialist.has_role("owner", self.herds[0].id), False)
+        self.assertEqual(self.viewer.has_role("owner", self.herds[0].id), False)
         self.assertEqual(self.owner.has_role("owner", self.herds[0].id), True)
         self.assertEqual(self.admin.has_role("owner", self.herds[1].id), False)
         self.assertEqual(self.manager.has_role("owner", self.herds[1].id), False)
-        self.assertEqual(self.specialist.has_role("owner", self.herds[1].id), False)
+        self.assertEqual(self.viewer.has_role("owner", self.herds[1].id), False)
         self.assertEqual(self.owner.has_role("owner", self.herds[1].id), False)
 
     def test_user_change_roles(self):
@@ -500,8 +488,8 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), False)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
 
@@ -509,17 +497,17 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), True)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), False)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
 
-        user.add_role("specialist", self.genebanks[1].id)
+        user.add_role("viewer", self.genebanks[1].id)
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), True)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), True)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), True)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
 
@@ -527,8 +515,8 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), True)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), True)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), True)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), True)
 
@@ -537,32 +525,32 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), True)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), True)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), True)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
         user.remove_role("manager", self.genebanks[0].id)
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), True)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), True)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
-        user.remove_role("specialist", self.genebanks[1].id)
+        user.remove_role("viewer", self.genebanks[1].id)
         self.assertEqual(user.has_role("admin"), True)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), False)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
         user.remove_role("admin")
         self.assertEqual(user.has_role("admin"), False)
         self.assertEqual(user.has_role("manager", self.genebanks[0].id), False)
         self.assertEqual(user.has_role("manager", self.genebanks[1].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[0].id), False)
-        self.assertEqual(user.has_role("specialist", self.genebanks[1].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[0].id), False)
+        self.assertEqual(user.has_role("viewer", self.genebanks[1].id), False)
         self.assertEqual(user.has_role("owner", self.herds[0].id), False)
         self.assertEqual(user.has_role("owner", self.herds[1].id), False)
 
@@ -572,7 +560,7 @@ class TestDatabase(DatabaseTest):
         """
         self.assertEqual(self.admin.is_admin, True)
         self.assertEqual(self.manager.is_admin, False)
-        self.assertEqual(self.specialist.is_admin, False)
+        self.assertEqual(self.viewer.is_admin, False)
         self.assertEqual(self.owner.is_admin, False)
 
     def test_user_is_manager(self):
@@ -581,7 +569,7 @@ class TestDatabase(DatabaseTest):
         """
         self.assertEqual(self.admin.is_manager, None)
         self.assertEqual(self.manager.is_manager, [self.genebanks[0].id])
-        self.assertEqual(self.specialist.is_manager, None)
+        self.assertEqual(self.viewer.is_manager, None)
         self.assertEqual(self.owner.is_manager, None)
 
     def test_user_is_owner(self):
@@ -590,7 +578,7 @@ class TestDatabase(DatabaseTest):
         """
         self.assertEqual(self.admin.is_owner, None)
         self.assertEqual(self.manager.is_owner, None)
-        self.assertEqual(self.specialist.is_owner, None)
+        self.assertEqual(self.viewer.is_owner, None)
         self.assertEqual(self.owner.is_owner, [self.herds[0].herd])
 
     def test_user_accessible_genebanks(self):
@@ -602,7 +590,7 @@ class TestDatabase(DatabaseTest):
             [self.genebanks[0].id, self.genebanks[1].id],
         )
         self.assertEqual(self.manager.accessible_genebanks, [self.genebanks[0].id])
-        self.assertEqual(self.specialist.accessible_genebanks, [self.genebanks[0].id])
+        self.assertEqual(self.viewer.accessible_genebanks, [self.genebanks[0].id])
         self.assertEqual(self.owner.accessible_genebanks, [self.genebanks[0].id])
 
     def test_user_frontend_data(self):
@@ -634,7 +622,7 @@ class TestDatabase(DatabaseTest):
             },
         )
         self.assertDictEqual(
-            self.specialist.frontend_data(),
+            self.viewer.frontend_data(),
             {
                 "email": "spec",
                 "username": None,
@@ -665,7 +653,7 @@ class TestDatabase(DatabaseTest):
         # object reference comparison is intentional here
         self.assertListEqual(self.admin.get_genebanks(), self.genebanks)
         self.assertListEqual(self.manager.get_genebanks(), [self.genebanks[0]])
-        self.assertListEqual(self.specialist.get_genebanks(), [self.genebanks[0]])
+        self.assertListEqual(self.viewer.get_genebanks(), [self.genebanks[0]])
         self.assertListEqual(self.owner.get_genebanks(), [self.genebanks[0]])
 
     def test_user_get_genebank(self):
@@ -682,9 +670,9 @@ class TestDatabase(DatabaseTest):
         g_0["herds"] = self.genebanks[0].get_herds(self.manager)
         self.assertDictEqual(self.manager.get_genebank(self.genebanks[0].id), g_0)
         self.assertEqual(self.manager.get_genebank(self.genebanks[1].id), None)
-        g_0["herds"] = self.genebanks[0].get_herds(self.specialist)
-        self.assertDictEqual(self.specialist.get_genebank(self.genebanks[0].id), g_0)
-        self.assertEqual(self.specialist.get_genebank(self.genebanks[1].id), None)
+        g_0["herds"] = self.genebanks[0].get_herds(self.viewer)
+        self.assertDictEqual(self.viewer.get_genebank(self.genebanks[0].id), g_0)
+        self.assertEqual(self.viewer.get_genebank(self.genebanks[1].id), None)
         g_0["herds"] = self.genebanks[0].get_herds(self.owner)
         self.assertDictEqual(self.owner.get_genebank(self.genebanks[0].id), g_0)
         self.assertEqual(self.owner.get_genebank(self.genebanks[1].id), None)
@@ -711,14 +699,14 @@ class TestDatabase(DatabaseTest):
         self.assertEqual(self.manager.can_edit("H2-2"), True)
         self.assertEqual(self.manager.can_edit("H3-3"), False)
 
-        self.assertEqual(self.specialist.can_edit("genebank1"), False)
-        self.assertEqual(self.specialist.can_edit("genebank2"), False)
-        self.assertEqual(self.specialist.can_edit("H1"), False)
-        self.assertEqual(self.specialist.can_edit("H2"), False)
-        self.assertEqual(self.specialist.can_edit("H3"), False)
-        self.assertEqual(self.specialist.can_edit("H1-1"), False)
-        self.assertEqual(self.specialist.can_edit("H2-2"), False)
-        self.assertEqual(self.specialist.can_edit("H3-3"), False)
+        self.assertEqual(self.viewer.can_edit("genebank1"), False)
+        self.assertEqual(self.viewer.can_edit("genebank2"), False)
+        self.assertEqual(self.viewer.can_edit("H1"), False)
+        self.assertEqual(self.viewer.can_edit("H2"), False)
+        self.assertEqual(self.viewer.can_edit("H3"), False)
+        self.assertEqual(self.viewer.can_edit("H1-1"), False)
+        self.assertEqual(self.viewer.can_edit("H2-2"), False)
+        self.assertEqual(self.viewer.can_edit("H3-3"), False)
 
         self.assertEqual(self.owner.can_edit("genebank1"), False)
         self.assertEqual(self.owner.can_edit("genebank2"), False)
