@@ -185,16 +185,15 @@ export function SortedTable({
     setOrderBy(property);
   };
 
-  const createSortHandler = (property: any) => (
-    event: React.MouseEvent<unknown>
-  ) => {
-    handleRequestSort(event, property);
-  };
+  const createSortHandler =
+    (property: any) => (event: React.MouseEvent<unknown>) => {
+      handleRequestSort(event, property);
+    };
 
   return (
     <>
       <div
-        className={props.className ?? "table"}
+        className={props.className ?? "sortedTable"}
         style={props.style ?? props.style}
       >
         {data ? (

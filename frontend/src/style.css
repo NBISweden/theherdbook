@@ -15,6 +15,20 @@ body {
   padding: 0 5px;
   min-height: calc(100vh - 56px);
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Used in static_pages.tsx */
+.footer {
+  z-index: -4;
+  width: 100%;
+  padding: 20px;
+  background: white;
+  opacity: 0.9;
+  flex-shrink: 0;
+  display: flex;
 }
 
 /* Used in navigation.tsx */
@@ -33,7 +47,9 @@ body {
 .wrapper {
   position: relative;
   border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  /* border-bottom: 1px solid white; */
+  flex: 1 0 auto;
+  height: 90%;
 }
 
 /* Used in navigation.tsx */
@@ -41,9 +57,9 @@ body {
   opacity: 0.9;
   position: relative;
   margin-top: calc(10vh);
-  margin-bottom: 210px;
   margin-left: 0;
   margin-right: 0;
+  margin-bottom: 50px;
   padding: 10px;
   min-height: calc(45vh);
 }
@@ -122,16 +138,6 @@ list-item {
   max-width: 30vw;
   height: 15vh;
   float: right;
-}
-
-/* Used in static_pages.tsx */
-.footer {
-  z-index: -4;
-  width: 100%;
-  padding: 20px;
-  background: white;
-  display: flex;
-  opacity: 0.9;
 }
 
 /* Used in static_pages.tsx */
@@ -513,7 +519,6 @@ list-item {
   body {
     background: #ddd center / cover no-repeat url("/images/background.jpg")
       fixed;
-    padding: 0 20px;
   }
 
   .formPane {

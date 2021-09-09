@@ -202,7 +202,7 @@ export function Kontakt() {
 
 export function Footer() {
   return (
-    <Paper className="footer">
+    <div className="footer">
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
@@ -215,7 +215,7 @@ export function Footer() {
       <div>
         <img src="/images/logo.png" alt="logo" className="logoImage" />
       </div>
-    </Paper>
+    </div>
   );
 }
 // jscpd:ignore-end
