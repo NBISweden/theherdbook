@@ -155,7 +155,6 @@ export function IndividualForm({
         if (!father) {
           return;
         }
-        herds.push(father.herd);
       }
       if (individual.mother?.number) {
         mother = await get(`/api/individual/${individual.mother?.number}`);
