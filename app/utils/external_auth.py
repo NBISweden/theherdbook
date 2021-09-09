@@ -6,12 +6,15 @@ Provides helper function needed for external authentication.
 import base64
 import configparser
 import json
+import logging
 import os
 import time
 import typing
 
 import flask_dance.contrib.google
 import flask_dance.contrib.twitter
+import google.auth.transport.requests
+from google.oauth2.service_account.Credentials import from_service_account_file
 
 CONFIGFILE = os.environ.get("AUTHCONFIGFILE", "/config/auth.ini")
 
@@ -128,7 +131,12 @@ def setup_google(app, config):
 
     if config["google"].get("herdattribute", None):
         _config["googleherd"] = config["google"]["herdattribute"]
-        scopes.append("https://www.googleapis.com/auth/admin.directory.user.readonly")
+
+    if config["google"].get("credentialsfile", None):
+        _config["googlecreds"] = config["google"]["credentialsfile"]
+
+    if config["google"].get("lookupuser", None):
+        _config["googlelookup"] = config["google"]["lookupuser"]
 
     danceengine = flask_dance.contrib.google
     blueprint = danceengine.make_google_blueprint(
@@ -152,10 +160,11 @@ def google_idtoken():
     if not flask_dance.contrib.google.google.token:
         return None
 
+    t = flask_dance.contrib.google.google.token["id_token"]
     return json.loads(
         base64.decodebytes(
             bytes(
-                flask_dance.contrib.google.google.token["id_token"].split(".")[1],
+                t.split(".")[1],
                 "ASCII",
             )
             + b"=="  # Add padding, extra padding is harmless, missing blows up
@@ -214,8 +223,8 @@ def google_details():
     if "googledomain" in _config:
         # Do we have an attribute specified for herd?
         userinfo = flask_dance.contrib.google.google.get(
-            "https://admin.googleapis.com/admin/directory/v1/users/%s?projection=full&viewType=domain_public"
-            % idtoken["sub"]
+            "https://admin.googleapis.com/admin/directory/v1/users/"
+            + "%s?projection=full&viewType=domain_public" % idtoken["sub"]
         )
 
         if (
@@ -225,6 +234,65 @@ def google_details():
         ):
             out_token["fullname"] = userinfo.json()["name"]["fullName"]
 
+        oneatt = False
+        for attr in (
+            "googlecreds",
+            "googleherd",
+            "googlelookup",
+            "googlelookup",
+        ):
+            if attr in _config:
+                oneatt = True
+
+        notall = False
+
+        if oneatt:
+            for attr in (
+                "googlecreds",
+                "googleherd",
+                "googlelookup",
+            ):
+                if attr not in _config:
+                    logging.warning(
+                        "One of herd attributes "
+                        + "specified but not enough (must specify all "
+                        + "of herdattribute, credentialsfile "
+                        + "and lookupuser)."
+                    )
+                    notall = True
+
+        if not notall:
+            # Get credentials for an admin account through the service account
+            cpath = "/config/%s" % _config["googlecreds"]
+            admincreds = (
+                from_service_account_file(cpath)
+                .with_subject(_config["googlelookup"])
+                .with_scopes(
+                    [
+                        "https://www.googleapis.com/auth/"
+                        + "admin.directory.user.readonly"
+                    ]
+                )
+            )
+
+            # Prepare for request
+            authed_session = google.auth.transport.requests.AuthorizedSession(
+                admincreds
+            )
+
+            # Get details
+            userinfo_admin = authed_session.get(
+                (
+                    "https://admin.googleapis.com/admin/directory/v1/users/"
+                    + "%s?projection=full&viewType=admin_view" % idtoken["sub"]
+                )
+            )
+
+            uia_js = userinfo_admin.json()
+
+            if uia_js and _config["googleherd"] in uia_js:
+                out_token["herd"] = uia_js[_config["googleherd"]]
+
     if out_token:
         return out_token
 
@@ -233,7 +301,8 @@ def google_details():
 
 def authorized(app, method):
     """
-    Return whatever we have authenticated and authorized through the specified method.
+    Return whatever we have authenticated and authorized
+    through the specified method.
     """
 
     auth = {"twitter": twitter_authorized, "google": google_authorized}
