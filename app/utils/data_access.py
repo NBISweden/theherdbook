@@ -979,7 +979,7 @@ def update_individual(form, user_uuid):
                 update_weights(individual, form["weights"])
             if "bodyfat" in form:
                 update_bodyfat(individual, form["bodyfat"])
-            if "herd" in form:
+            if ("yearly_report_date" in form or "selling_date" in form) and "herd" in form:
                 selling_date = form.get("selling_date", None)
 
                 update_herdtracking_values(
