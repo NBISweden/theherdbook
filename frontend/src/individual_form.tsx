@@ -1,6 +1,6 @@
 import React from "react";
 
-import { InputAdornment, StylesProvider, TextField } from "@material-ui/core";
+import { InputAdornment, TextField } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,

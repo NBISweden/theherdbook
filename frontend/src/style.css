@@ -41,7 +41,7 @@ body {
   opacity: 0.9;
   position: relative;
   margin-top: calc(10vh);
-  margin-bottom: 100px;
+  margin-bottom: 210px;
   margin-left: 0;
   margin-right: 0;
   padding: 10px;
@@ -514,10 +514,6 @@ list-item {
     background: #ddd center / cover no-repeat url("/images/background.jpg")
       fixed;
     padding: 0 20px;
-  }
-
-  .formPane {
-    border-right: 1px solid lightgrey;
   }
 
   .formPane {
