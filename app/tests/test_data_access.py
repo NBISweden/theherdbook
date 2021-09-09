@@ -287,9 +287,6 @@ class TestDataAccess(DatabaseTest):
             },
         }
         self.assertRaises(
-            PermissionError, da.form_to_individual, forms["valid"], self.viewer
-        )
-        self.assertRaises(
             ValueError, da.form_to_individual, forms["invalid_number"], self.admin
         )
         self.assertRaises(

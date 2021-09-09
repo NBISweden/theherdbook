@@ -745,10 +745,6 @@ def form_to_individual(form, user=None):
     a ValueError if there's any detected problems with the data.
     """
 
-    # check user permissions
-    if not user.can_edit(form.get("herd", "")):
-        raise PermissionError
-
     # check if the individual exists in the datbase
     with DATABASE.atomic():
         try:
@@ -979,7 +975,9 @@ def update_individual(form, user_uuid):
                 update_weights(individual, form["weights"])
             if "bodyfat" in form:
                 update_bodyfat(individual, form["bodyfat"])
-            if "herd" in form:
+            if (
+                "yearly_report_date" in form or "selling_date" in form
+            ) and "herd" in form:
                 selling_date = form.get("selling_date", None)
 
                 update_herdtracking_values(
