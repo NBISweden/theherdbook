@@ -31,6 +31,7 @@ import { CertificateVerification } from "./certificate_verification";
 import { CertificateDownload } from "./certificate_download";
 import { IndividualSell } from "./individual_sell";
 import { HerdView } from "@app/herd_view";
+import { IndividualReport } from "./individual_report";
 
 const useStyles = makeStyles({
   body: {
@@ -389,16 +390,28 @@ export function IndividualView({ id }: { id: string }) {
                     })}
                 </ul>
                 {user?.canEdit(individual.herd.herd) && (
-                  <Button
-                    className={style.editButton}
-                    variant="outlined"
-                    color="primary"
-                    onClick={() =>
-                      popup(<IndividualSell individual={individual} />)
-                    }
-                  >
-                    Sälj individ
-                  </Button>
+                  <>
+                    <Button
+                      className={style.editButton}
+                      variant="outlined"
+                      color="primary"
+                      onClick={() =>
+                        popup(<IndividualSell individual={individual} />)
+                      }
+                    >
+                      Sälj individ
+                    </Button>
+                    <Button
+                      className={style.editButton}
+                      variant="outlined"
+                      color="primary"
+                      onClick={() =>
+                        popup(<IndividualReport individual={individual} />)
+                      }
+                    >
+                      Årsrapportera
+                    </Button>
+                  </>
                 )}
               </div>
               <div>
