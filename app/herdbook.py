@@ -387,6 +387,7 @@ def external_login_handler(service):
         return None
 
     accountdetails = utils.external_auth.get_account_details(service)
+
     user = da.register_user(
         accountdetails["email"],
         None,
@@ -417,6 +418,18 @@ def external_login_handler(service):
 
     # FIXME: this is how we "really" log in the user
     session["user_id"] = user.uuid
+
+    # If we got a herd from external, setup ownership
+    if "herd" in accountdetails:
+        for h in accountdetails["herd"].split(","):
+            form = {
+                "action": "add",
+                "role": "owner",
+                "user": user.id,
+                "herd": h.strip(),
+            }
+
+            da.update_role(form, user.uuid)
 
     login_user(user)
 
