@@ -28,3 +28,4 @@ cryptography==3.4.7
 endesive==2.0.5
 boto3==1.17.54
 moto==2.0.8
+google-auth
