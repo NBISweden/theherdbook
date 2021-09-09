@@ -14,7 +14,7 @@ import typing
 import flask_dance.contrib.google
 import flask_dance.contrib.twitter
 import google.auth.transport.requests
-from google.oauth2.service_account.Credentials import from_service_account_file
+from google.oauth2.service_account import Credentials
 
 CONFIGFILE = os.environ.get("AUTHCONFIGFILE", "/config/auth.ini")
 
@@ -265,7 +265,7 @@ def google_details():
             # Get credentials for an admin account through the service account
             cpath = "/config/%s" % _config["googlecreds"]
             admincreds = (
-                from_service_account_file(cpath)
+                Credentials.from_service_account_file(cpath)
                 .with_subject(_config["googlelookup"])
                 .with_scopes(
                     [
