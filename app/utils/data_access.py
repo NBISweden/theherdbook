@@ -745,10 +745,6 @@ def form_to_individual(form, user=None):
     a ValueError if there's any detected problems with the data.
     """
 
-    # check user permissions
-    if not user.can_edit(form.get("herd", "")):
-        raise PermissionError
-
     # check if the individual exists in the datbase
     with DATABASE.atomic():
         try:
