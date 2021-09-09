@@ -11,15 +11,17 @@ import {
   makeStyles,
   Radio,
   RadioGroup,
+  TextField,
   Typography,
 } from "@material-ui/core";
 import { CheckCircle } from "@material-ui/icons";
 
-import { Genebank, Individual } from "@app/data_context_global";
+import { Genebank, Individual, inputVariant } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { IndividualSellingForm } from "./individual_sellingform";
 import { patch } from "./communication";
+import { isJsxAttribute } from "typescript";
 
 const useStyles = makeStyles({
   infoText: {
@@ -60,6 +62,12 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+  },
+  wideControl: {
+    margin: "5px 0",
+    minWidth: "195px",
+    width: "100%",
+    paddingRight: "5px",
   },
 });
 
@@ -126,6 +134,21 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     delete currentIndividual.herd;
     setIndividualToReport(currentIndividual);
   }, []);
+
+  /**
+   * make sure "butchered" and "death notes" always follow isDead
+   * (an alive rabbit can't be butchered=true and can't have death notes)
+   */
+  React.useEffect(() => {
+    if (!isDead) {
+      handleUpdateIndividual("butchered", false);
+    }
+  }, [isDead]);
+  React.useEffect(() => {
+    if (!isDead && !individualToReport.butchered) {
+      handleUpdateIndividual("death_note", "");
+    }
+  }, [isDead, individualToReport.butchered]);
 
   const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
@@ -198,17 +221,38 @@ export function IndividualReport({ individual }: { individual: Individual }) {
               <RadioGroup
                 row
                 aria-label="butchered"
-                value={false}
-                onChange={() => {}}
+                value={individualToReport.butchered ?? false}
+                onChange={() =>
+                  handleUpdateIndividual(
+                    "butchered",
+                    !individualToReport.butchered
+                  )
+                }
               >
                 <FormControlLabel
                   value={false}
-                  control={<Radio />}
+                  control={<Radio disabled={!isDead} />}
                   label="Nej"
                 />
-                <FormControlLabel value={true} control={<Radio />} label="Ja" />
+                <FormControlLabel
+                  value={true}
+                  control={<Radio disabled={!isDead} />}
+                  label="Ja"
+                />
               </RadioGroup>
             </FormControl>
+            <TextField
+              label="Anteckningar om kaninens död"
+              disabled={!isDead}
+              variant={inputVariant}
+              className={style.wideControl}
+              multiline
+              rows={2}
+              value={individualToReport.death_note ?? ""}
+              onChange={(event) => {
+                handleUpdateIndividual("death_note", event.currentTarget.value);
+              }}
+            />
           </div>
           <div>
             <FormControl
