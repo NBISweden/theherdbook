@@ -931,6 +931,9 @@ def update_herdtracking_values(individual, new_herd, user_signature, tracking_da
 
         if len(ht_history):
             current_herd = ht_history[0].herd
+            if ht_history[0].herd_tracking_date > tracking_date.date():
+                logging.error("New herd tracking date is before the latest entry")
+                raise ValueError("New herd tracking date is before the latest entry")
 
         if isinstance(new_herd, str):
             new_herd = Herd.get(Herd.herd == new_herd)
