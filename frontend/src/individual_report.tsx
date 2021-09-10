@@ -41,16 +41,21 @@ const useStyles = makeStyles({
   },
   textContainer: {
     padding: "1.5em 0",
-    minHeight: "11em",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
   },
   formContainer: {
-    maxWidth: "25em",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "15em",
+    justifyContent: "space-around",
   },
   buttonContainer: {
     display: "flex",
+  },
+  datePicker: {
+    maxWidth: "25em",
   },
   responseBox: {
     width: "100%",
@@ -91,7 +96,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
   const [showDeathForm, setShowDeathForm] = React.useState(false);
   const [isDead, setIsDead] = React.useState(false);
   const [reportDate, setReportDate] = React.useState(null as Date | null);
-  const [isStillOwner, setIsStillOwner] = React.useState(true);
+  const [isStillOwner, setIsStillOwner] = React.useState(false);
   const [checked, setChecked] = React.useState(false as boolean);
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
   const [success, setSuccess] = React.useState(false as boolean);
@@ -204,28 +209,22 @@ export function IndividualReport({ individual }: { individual: Individual }) {
           <div className={style.textContainer}>
             <Typography variant="body1" className={style.infoText}>
               För våran årliga rapport ber vi dig att ge oss aktuell information
-              om kaninens status.
-            </Typography>
-            <Typography variant="body1" className={style.infoText}>
-              OBS! Har du sålt kaninen ber vi dig rapportera detta genom att gå
-              via "Sälj individ".
+              om kaninens status. OBS! Har du sålt kaninen ber vi dig rapportera
+              detta genom att gå via "Sälj individ".
             </Typography>
           </div>
           <div className={style.formContainer}>
-            <p>
-              Välj ett datum för din årliga rapport. Nedanstående uppgifterna
-              registreras för det här datumet.
-            </p>
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
               <KeyboardDatePicker
                 autoOk
+                className={style.datePicker}
                 disableFuture
                 /*                 minDate={new Date(individual.herd_tracking[0].date)}
                 minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
-                fullWidth={true}
                 variant="inline"
                 inputVariant="outlined"
                 label="Rapportdatum"
+                helperText="Rapporten registreras på valt datum."
                 format="yyyy-MM-dd"
                 value={reportDate ?? null}
                 InputLabelProps={{
@@ -236,23 +235,24 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                 }}
               />
             </MuiPickersUtilsProvider>
-            <FormControl component="fieldset">
-              <FormLabel component="legend">
-                Kaninen finns fortfarande i min besättning.
-              </FormLabel>
-              <RadioGroup
-                row
-                aria-label="still active"
-                value={isStillOwner}
-                onChange={() => setIsStillOwner(!isStillOwner)}
-              >
-                <FormControlLabel
-                  value={false}
-                  control={<Radio />}
-                  label="Nej"
-                />
-                <FormControlLabel value={true} control={<Radio />} label="Ja" />
-              </RadioGroup>
+            <FormControl
+              required
+              error={error}
+              component="fieldset"
+              disabled={!reportDate}
+              className={style.checkContainer}
+            >
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isStillOwner}
+                    onChange={() => setIsStillOwner(!isStillOwner)}
+                    color="primary"
+                    inputProps={{ "aria-label": "primary checkbox" }}
+                  />
+                }
+                label="Kaninen finns kvar i min besättning på valt datum."
+              ></FormControlLabel>
             </FormControl>
           </div>
           <Button
