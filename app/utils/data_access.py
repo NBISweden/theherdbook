@@ -876,6 +876,8 @@ def add_individual(form, user_uuid):
     birth_date = form.get("birth_date", None)
     if birth_date is None:
         return {"status": "error", "message": "Birth date must be defined"}
+    else:
+        birth_date = validate_date(birth_date)
 
     try:
         individual = form_to_individual(form, user)
@@ -892,10 +894,12 @@ def add_individual(form, user_uuid):
         individual=individual,
         new_herd=individual.origin_herd,
         user_signature=user,
-        tracking_date=form["birth_date"],
+        tracking_date=birth_date,
     )
 
     selling_date = form.get("selling_date", None)
+    if selling_date is not None:
+        selling_date = validate_date(selling_date)
 
     new_herd = None
     if isinstance(form.get("herd", None), dict):
@@ -978,7 +982,7 @@ def update_individual(form, user_uuid):
             if (
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
-                selling_date = form.get("selling_date", None)
+                selling_date = validate_date(form.get("selling_date", None))
 
                 update_herdtracking_values(
                     individual=individual,
