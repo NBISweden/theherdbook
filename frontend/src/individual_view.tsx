@@ -393,7 +393,7 @@ export function IndividualView({ id }: { id: string }) {
                 {user?.canEdit(individual.herd.herd) && (
                   <>
                     {!individual.death_date && !individual.death_note && (
-                      <>
+                      <div className={style.flexColumn}>
                         <Button
                           className={style.editButton}
                           variant="outlined"
@@ -424,7 +424,7 @@ export function IndividualView({ id }: { id: string }) {
                         >
                           Rapportera som död
                         </Button>
-                      </>
+                      </div>
                     )}
                   </>
                 )}
