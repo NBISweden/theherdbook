@@ -9,7 +9,7 @@ import logging
 import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, fn
+from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, Value, fn
 
 # pylint: disable=import-error
 
@@ -919,7 +919,7 @@ def add_individual(form, user_uuid):
                 tracking_date=datetime.utcnow() if not selling_date else selling_date,
             )
         except ValueError as exception:
-            return {"status": "error", "message": f"{exception}"}
+            raise exception
 
     return {"status": "success", "message": "Individual Created"}
 
@@ -991,16 +991,19 @@ def update_individual(form, user_uuid):
             if (
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
-                selling_date = validate_date(form.get("selling_date", None))
+                try:
+                    selling_date = validate_date(form.get("selling_date", None))
 
-                update_herdtracking_values(
-                    individual=individual,
-                    new_herd=form["herd"],
-                    user_signature=user,
-                    tracking_date=datetime.utcnow()
-                    if not selling_date
-                    else selling_date,
-                )
+                    update_herdtracking_values(
+                        individual=individual,
+                        new_herd=form["herd"],
+                        user_signature=user,
+                        tracking_date=datetime.utcnow()
+                        if not selling_date
+                        else selling_date,
+                    )
+                except ValueError as exception:
+                    raise exception
 
             individual.save()
         return {

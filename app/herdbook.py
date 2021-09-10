@@ -575,10 +575,13 @@ def edit_individual():
         }
     """
     form = request.json
-    if request.method == "PATCH":
-        retval = da.update_individual(form, session.get("user_id", None))
-    if request.method == "POST":
-        retval = da.add_individual(form, session.get("user_id", None))
+    try:
+        if request.method == "PATCH":
+            retval = da.update_individual(form, session.get("user_id", None))
+        if request.method == "POST":
+            retval = da.add_individual(form, session.get("user_id", None))
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500
     return jsonify(retval)
 
 
