@@ -392,36 +392,40 @@ export function IndividualView({ id }: { id: string }) {
                 </ul>
                 {user?.canEdit(individual.herd.herd) && (
                   <>
-                    <Button
-                      className={style.editButton}
-                      variant="outlined"
-                      color="primary"
-                      onClick={() =>
-                        popup(<IndividualSell individual={individual} />)
-                      }
-                    >
-                      Sälj individ
-                    </Button>
-                    <Button
-                      className={style.editButton}
-                      variant="outlined"
-                      color="primary"
-                      onClick={() =>
-                        popup(<IndividualReport individual={individual} />)
-                      }
-                    >
-                      Årsrapportera
-                    </Button>
-                    <Button
-                      className={style.editButton}
-                      variant="outlined"
-                      color="primary"
-                      onClick={() =>
-                        popup(<IndividualDeath individual={individual} />)
-                      }
-                    >
-                      Rapportera som död
-                    </Button>
+                    {!individual.death_date && !individual.death_note && (
+                      <>
+                        <Button
+                          className={style.editButton}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() =>
+                            popup(<IndividualSell individual={individual} />)
+                          }
+                        >
+                          Sälj individ
+                        </Button>
+                        <Button
+                          className={style.editButton}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() =>
+                            popup(<IndividualReport individual={individual} />)
+                          }
+                        >
+                          Årsrapportera
+                        </Button>
+                        <Button
+                          className={style.editButton}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() =>
+                            popup(<IndividualDeath individual={individual} />)
+                          }
+                        >
+                          Rapportera som död
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
