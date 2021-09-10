@@ -12,9 +12,11 @@ body {
   font-family: "Roboto", sans-serif;
   background: #ddd center / cover no-repeat url("/images/background.jpg") fixed;
   margin: 0;
-  padding: 0 5px;
   min-height: calc(100vh - 56px);
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Used in navigation.tsx */
@@ -33,7 +35,20 @@ body {
 .wrapper {
   position: relative;
   border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  flex: 1 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+/* Used in static_pages.tsx */
+.footer {
+  z-index: -4;
+  width: 100%;
+  padding: 20px;
+  background: white;
+  opacity: 0.7;
+  flex-shrink: 0;
+  display: flex;
+  height: 200px;
 }
 
 /* Used in navigation.tsx */
@@ -41,11 +56,11 @@ body {
   opacity: 0.9;
   position: relative;
   margin-top: calc(10vh);
-  margin-bottom: 210px;
   margin-left: 0;
   margin-right: 0;
+  margin-bottom: 50px;
   padding: 10px;
-  min-height: calc(45vh);
+  min-height: calc(60vh);
 }
 
 /* Used in navigation.tsx */
@@ -104,7 +119,7 @@ list-item {
 /* Used in static_pages.tsx */
 .euLogo img {
   display: inline;
-  height: 15vh;
+  height: 12vh;
 }
 
 /* Used in static_pages.tsx */
@@ -113,26 +128,15 @@ list-item {
   display: inline;
   font-size: 0.65em;
   text-align: center;
+  flex-grow: 2;
 }
 
 /* Used in static_pages.tsx */
 .logoImage {
-  width: 15vh;
+  width: 12vh;
   max-width: 30vw;
-  height: 15vh;
+  height: 12vh;
   float: right;
-}
-
-/* Used in static_pages.tsx */
-.footer {
-  z-index: -4;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  padding: 20px 40px;
-  background: white;
-  display: flex;
-  opacity: 0.9;
 }
 
 /* Used in static_pages.tsx */
@@ -148,56 +152,6 @@ list-item {
 /* Used in static_pages.tsx */
 .pSpace p a {
   padding-right: 4px;
-}
-
-/* desktop */
-@media screen and (min-width: 660px) {
-  .main {
-    margin-left: 20px;
-    margin-right: 20px;
-  }
-
-  .menuButton {
-    font-size: 1.2em;
-  }
-
-  .trigram {
-    font-size: 2em;
-    margin-top: -7px;
-  }
-
-  .euText {
-    font-size: 1em;
-  }
-
-  .logo {
-    font-size: 4em;
-    color: #222;
-  }
-  /* stylelint-disable */
-  body {
-    background: #ddd center / cover no-repeat url("/images/background.jpg")
-      fixed;
-    padding: 0 20px;
-  }
-  /* stylelint-enable */
-}
-
-/* mobile */
-@media screen and (max-width: 320px) {
-  .logoImage {
-    width: 8vh;
-    height: 8vh;
-  }
-
-  .euLogo img {
-    display: inline;
-    height: 8vh;
-  }
-
-  .euText {
-    font-size: 0.6em;
-  }
 }
 
 /* Used in filter_table.tsx, genebank_view.tsx and sorted_table.tsx */
@@ -444,4 +398,151 @@ list-item {
 
 .centerbutton {
   width: 80%;
+}
+
+/* Used in individual_form.tsx */
+.adminPane {
+  width: 100%;
+  padding: 15px 10px 5px 10px;
+  margin-bottom: 2em;
+  border: 1px solid lightgrey;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  /* stylelint-disable */
+  background: repeating-linear-gradient(
+    135deg,
+    white,
+    white 25px,
+    rgba(0, 0, 0, 0.05) 25px,
+    rgba(0, 0, 0, 0.05) 50px
+  );
+  /* stylelint-enable */
+}
+
+/* Used in individual_form.tsx */
+.certNumber {
+  margin: 0.3em;
+}
+
+/* Used in individual_form.tsx */
+.control {
+  margin: 0.3em;
+  padding-right: 1em;
+}
+
+/* Used in individual_form.tsx */
+.controlWidth {
+  width: 50%;
+}
+
+/* Used in individual_form.tsx */
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  justify-content: start;
+}
+
+/* Used in individual_form.tsx */
+.flexRowOrColumn {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Used in individual_form.tsx */
+.individualForm {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+/* Used in individual_form.tsx */
+.formPane {
+  border-right: none;
+  width: 100%;
+  padding-right: 5px;
+}
+
+/* Used in individual_form.tsx */
+.formPane:last-child {
+  padding-left: 5px;
+  padding-right: 0;
+  border-right: none;
+}
+
+/* Used in individual_form.tsx */
+.paneTitle {
+  position: absolute;
+  top: 0;
+  left: 10px;
+}
+
+/* Used in individual_form.tsx */
+.wideControlInd {
+  margin: 5px 0;
+  min-width: 195px;
+  width: 100%;
+  padding-right: 5px;
+}
+
+/* desktop */
+@media screen and (min-width: 660px) {
+  .main {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .menuButton {
+    font-size: 1.2em;
+  }
+
+  .trigram {
+    font-size: 2em;
+    margin-top: -7px;
+  }
+
+  .euText {
+    font-size: 1em;
+  }
+
+  .logo {
+    font-size: 4em;
+    color: #222;
+  }
+  /* stylelint-disable */
+  body {
+    background: #ddd center / cover no-repeat url("/images/background.jpg")
+      fixed;
+  }
+
+  .formPane {
+    border-right: 1px solid lightgrey;
+  }
+
+  .flexRowOrColumn {
+    flex-direction: row;
+  }
+  /* stylelint-enable */
+}
+
+/* mobile */
+@media screen and (max-width: 320px) {
+  .logoImage {
+    width: 8vh;
+    height: 8vh;
+  }
+
+  .euLogo img {
+    display: inline;
+    height: 8vh;
+  }
+
+  .euText {
+    font-size: 0.6em;
+  }
 }

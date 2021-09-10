@@ -3,7 +3,7 @@
  */
 
 import * as React from "react";
-import { Typography } from "@material-ui/core";
+import { Paper, Typography } from "@material-ui/core";
 import "./style.css";
 
 // jscpd:ignore-start
@@ -206,12 +206,12 @@ export function Footer() {
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
-      <div className="euText">
+      <Typography className="euText">
         Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands- och
         Mellerudskanin. Stödet går till genbanksbesättningarna,
         medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
         utbildningar, transport av värdefulla djur samt obduktioner.
-      </div>
+      </Typography>
       <div>
         <img src="/images/logo.png" alt="logo" className="logoImage" />
       </div>

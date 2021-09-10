@@ -1,5 +1,12 @@
 import * as React from "react";
-import { Switch, Route, useLocation, Redirect, Link } from "react-router-dom";
+import {
+  Switch,
+  Route,
+  useLocation,
+  Redirect,
+  Link,
+  useHistory,
+} from "react-router-dom";
 
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { svSE } from "@material-ui/core/locale";
@@ -102,6 +109,7 @@ export function Navigation() {
   const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const is_logged_in = !!user;
   const theme = createMuiTheme({}, svSE);
+  const history = useHistory();
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -265,6 +273,17 @@ export function Navigation() {
             <span className="trigram">☰</span>
             <Typography variant="subtitle1">Menu</Typography>
           </Button>
+          {is_logged_in && (
+            <Button
+              onClick={() => {
+                history.push("/settings");
+              }}
+            >
+              <b>
+                <Typography variant="subtitle1">{user.username}</Typography>
+              </b>
+            </Button>
+          )}
 
           <StyledMenu
             id="customized-menu"
@@ -336,7 +355,6 @@ export function Navigation() {
             </Switch>
           </Paper>
         </div>
-
         <Footer />
       </ThemeProvider>
     </>
