@@ -14,8 +14,12 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { CheckCircle } from "@material-ui/icons";
-
+import { CheckCircle, ExpandMore, ExpandLess } from "@material-ui/icons";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from "@material-ui/pickers";
+import DateFnsUtils from "@date-io/date-fns";
 import { Genebank, Individual, inputVariant } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
@@ -84,7 +88,10 @@ export function IndividualReport({ individual }: { individual: Individual }) {
   const [individualToReport, setIndividualToReport] = React.useState(
     individual as Individual
   );
+  const [showDeathForm, setShowDeathForm] = React.useState(false);
   const [isDead, setIsDead] = React.useState(false);
+  const [reportDate, setReportDate] = React.useState(null as Date | null);
+  const [isStillOwner, setIsStillOwner] = React.useState(true);
   const [checked, setChecked] = React.useState(false as boolean);
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
   const [success, setSuccess] = React.useState(false as boolean);
@@ -136,8 +143,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
   }, []);
 
   /**
-   * make sure "butchered" and "death notes" always follow isDead
-   * (an alive rabbit can't be butchered=true and can't have death notes)
+   * make sure "butchered", "death notes" and "death_date" always follow isDead
+   * (an alive rabbit can't be butchered=true and can't have death notes or death_date)
    */
   React.useEffect(() => {
     if (!isDead) {
@@ -149,6 +156,15 @@ export function IndividualReport({ individual }: { individual: Individual }) {
       handleUpdateIndividual("death_note", "");
     }
   }, [isDead, individualToReport.butchered]);
+  React.useEffect(() => {
+    if (
+      !isDead &&
+      !individualToReport.butchered &&
+      !individualToReport.death_note
+    ) {
+      handleUpdateIndividual("death_date", null);
+    }
+  }, [isDead, individualToReport.death_note, individualToReport.butchered]);
 
   const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
@@ -194,17 +210,42 @@ export function IndividualReport({ individual }: { individual: Individual }) {
               För våran årliga rapport ber vi dig att ge oss aktuell information
               om kaninens status.
             </Typography>
+            <Typography variant="body1" className={style.infoText}>
+              OBS! Har du sålt kaninen ber vi dig rapportera detta genom att
+              klicka på "Sälj individ".
+            </Typography>
           </div>
           <div className={style.formContainer}>
+            <p>
+              Välj ett datum för din årliga rapport. Nedanstående uppgifterna
+              registreras för det här datumet.
+            </p>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <KeyboardDatePicker
+                autoOk
+                fullWidth={true}
+                variant="inline"
+                inputVariant="outlined"
+                label="Rapportdatum"
+                format="yyyy-MM-dd"
+                value={reportDate ?? null}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(event, newValue) => {
+                  newValue && setReportDate(new Date(newValue));
+                }}
+              />
+            </MuiPickersUtilsProvider>
             <FormControl component="fieldset">
               <FormLabel component="legend">
-                Har kaninen dött under året?
+                Kaninen finns fortfarande i min besättning.
               </FormLabel>
               <RadioGroup
                 row
-                aria-label="death"
-                value={isDead}
-                onChange={() => setIsDead(!isDead)}
+                aria-label="still active"
+                value={isStillOwner}
+                onChange={() => setIsStillOwner(!isStillOwner)}
               >
                 <FormControlLabel
                   value={false}
@@ -214,46 +255,107 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                 <FormControlLabel value={true} control={<Radio />} label="Ja" />
               </RadioGroup>
             </FormControl>
-            <FormControl component="fieldset">
-              <FormLabel component="legend">
-                Har kaninen slaktats (t.ex. för kött, pga platsbrist e.d.)
-              </FormLabel>
-              <RadioGroup
-                row
-                aria-label="butchered"
-                value={individualToReport.butchered ?? false}
-                onChange={() =>
-                  handleUpdateIndividual(
-                    "butchered",
-                    !individualToReport.butchered
-                  )
-                }
-              >
-                <FormControlLabel
-                  value={false}
-                  control={<Radio disabled={!isDead} />}
-                  label="Nej"
-                />
-                <FormControlLabel
-                  value={true}
-                  control={<Radio disabled={!isDead} />}
-                  label="Ja"
-                />
-              </RadioGroup>
-            </FormControl>
-            <TextField
-              label="Anteckningar om kaninens död"
-              disabled={!isDead}
-              variant={inputVariant}
-              className={style.wideControl}
-              multiline
-              rows={2}
-              value={individualToReport.death_note ?? ""}
-              onChange={(event) => {
-                handleUpdateIndividual("death_note", event.currentTarget.value);
-              }}
-            />
           </div>
+          <Button
+            color="primary"
+            onClick={() => setShowDeathForm(!showDeathForm)}
+          >
+            Rapportera som död
+            {showDeathForm == false ? <ExpandMore /> : <ExpandLess />}
+          </Button>
+          {showDeathForm ? (
+            <>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">
+                  Har kaninen dött under året?
+                </FormLabel>
+                <RadioGroup
+                  row
+                  aria-label="death"
+                  value={isDead}
+                  onChange={() => setIsDead(!isDead)}
+                >
+                  <FormControlLabel
+                    value={false}
+                    control={<Radio />}
+                    label="Nej"
+                  />
+                  <FormControlLabel
+                    value={true}
+                    control={<Radio />}
+                    label="Ja"
+                  />
+                </RadioGroup>
+              </FormControl>
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <KeyboardDatePicker
+                  autoOk
+                  disabled={!isDead}
+                  disableFuture
+                  fullWidth={true}
+                  variant="inline"
+                  inputVariant="outlined"
+                  label="Dödsdatum"
+                  format="yyyy-MM-dd"
+                  value={individualToReport.death_date ?? null}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(newValue) => {
+                    newValue &&
+                      handleUpdateIndividual(
+                        "death_date",
+                        newValue?.toString()
+                      );
+                  }}
+                />
+              </MuiPickersUtilsProvider>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">
+                  Har kaninen slaktats (t.ex. för kött, pga platsbrist e.d.)
+                </FormLabel>
+                <RadioGroup
+                  row
+                  aria-label="butchered"
+                  value={individualToReport.butchered ?? false}
+                  onChange={() =>
+                    handleUpdateIndividual(
+                      "butchered",
+                      !individualToReport.butchered
+                    )
+                  }
+                >
+                  <FormControlLabel
+                    value={false}
+                    control={<Radio disabled={!isDead} />}
+                    label="Nej"
+                  />
+                  <FormControlLabel
+                    value={true}
+                    control={<Radio disabled={!isDead} />}
+                    label="Ja"
+                  />
+                </RadioGroup>
+              </FormControl>
+              <TextField
+                label="Anteckningar om kaninens död"
+                disabled={!isDead}
+                variant={inputVariant}
+                className={style.wideControl}
+                multiline
+                rows={2}
+                value={individualToReport.death_note ?? ""}
+                onChange={(event) => {
+                  handleUpdateIndividual(
+                    "death_note",
+                    event.currentTarget.value
+                  );
+                }}
+              />
+            </>
+          ) : (
+            <></>
+          )}
           <div>
             <FormControl
               required
