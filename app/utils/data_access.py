@@ -890,12 +890,15 @@ def add_individual(form, user_uuid):
 
     individual.save()
 
-    update_herdtracking_values(
-        individual=individual,
-        new_herd=individual.origin_herd,
-        user_signature=user,
-        tracking_date=birth_date,
-    )
+    try:
+        update_herdtracking_values(
+            individual=individual,
+            new_herd=individual.origin_herd,
+            user_signature=user,
+            tracking_date=birth_date,
+        )
+    except ValueError as exception:
+        return {"status": "error", "message": f"{exception}"}
 
     selling_date = form.get("selling_date", None)
     if selling_date is not None:
@@ -908,12 +911,15 @@ def add_individual(form, user_uuid):
         new_herd = Herd.get(Herd.herd == form["herd"])
 
     if new_herd and new_herd != individual.origin_herd:
-        update_herdtracking_values(
-            individual=individual,
-            new_herd=new_herd,
-            user_signature=user,
-            tracking_date=datetime.utcnow() if not selling_date else selling_date,
-        )
+        try:
+            update_herdtracking_values(
+                individual=individual,
+                new_herd=new_herd,
+                user_signature=user,
+                tracking_date=datetime.utcnow() if not selling_date else selling_date,
+            )
+        except ValueError as exception:
+            return {"status": "error", "message": f"{exception}"}
 
     return {"status": "success", "message": "Individual Created"}
 
