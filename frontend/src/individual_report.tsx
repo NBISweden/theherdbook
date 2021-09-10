@@ -166,10 +166,6 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     }
   }, [isDead, individualToReport.death_note, individualToReport.butchered]);
 
-  const handleCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked(event.target.checked);
-  };
-
   const sellIndividual = () => {
     if (!checked) {
       setInvalidSale(true);
@@ -223,6 +219,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
               <KeyboardDatePicker
                 autoOk
+                disableFuture
                 fullWidth={true}
                 variant="inline"
                 inputVariant="outlined"
@@ -356,31 +353,6 @@ export function IndividualReport({ individual }: { individual: Individual }) {
           ) : (
             <></>
           )}
-          <div>
-            <FormControl
-              required
-              error={error}
-              component="fieldset"
-              disabled={disabled}
-              className={style.checkContainer}
-            >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={checked}
-                    onChange={handleCheckbox}
-                    color="primary"
-                    inputProps={{ "aria-label": "primary checkbox" }}
-                  />
-                }
-                label="Jag har tagit del av informationen och vill ta bort individen
-            från min besättning."
-              ></FormControlLabel>
-              <FormHelperText hidden={!error}>
-                Bekräfta att du tagit del av informationen.
-              </FormHelperText>
-            </FormControl>
-          </div>
           <div className={style.buttonContainer}>
             <Button
               variant="contained"
