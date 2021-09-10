@@ -14,7 +14,12 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { CheckCircle, ExpandMore, ExpandLess } from "@material-ui/icons";
+import {
+  CheckCircle,
+  ExpandMore,
+  ExpandLess,
+  NavigateNext,
+} from "@material-ui/icons";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -24,6 +29,8 @@ import { Genebank, Individual, inputVariant } from "@app/data_context_global";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { IndividualSellingForm } from "./individual_sellingform";
+import { IndividualSell } from "./individual_sell";
+import { IndividualDeath } from "./individual_death";
 import { patch } from "./communication";
 import { isJsxAttribute } from "typescript";
 
@@ -48,11 +55,20 @@ const useStyles = makeStyles({
   formContainer: {
     display: "flex",
     flexDirection: "column",
-    minHeight: "15em",
+    minHeight: "12em",
+    marginBottom: "2em",
     justifyContent: "space-around",
   },
   buttonContainer: {
     display: "flex",
+    marginTop: "1.5em",
+  },
+  altContainer: {
+    display: "flex",
+    flexDirection: "column",
+    padding: "0.5em 0 2em 0",
+    width: "60%",
+    alignItems: "start",
   },
   datePicker: {
     maxWidth: "25em",
@@ -101,7 +117,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
   const [success, setSuccess] = React.useState(false as boolean);
   const { genebanks } = useDataContext();
-  const { userMessage } = useMessageContext();
+  const { userMessage, popup } = useMessageContext();
   const style = useStyles();
   const disabled: boolean =
     !individualToReport.herd || !individualToReport.selling_date;
@@ -208,9 +224,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
         <>
           <div className={style.textContainer}>
             <Typography variant="body1" className={style.infoText}>
-              För våran årliga rapport ber vi dig att ge oss aktuell information
-              om kaninens status. OBS! Har du sålt kaninen ber vi dig rapportera
-              detta genom att gå via "Sälj individ".
+              För våran årliga rapport ber vi dig bekräfta att kaninen finns
+              kvar i din besättning.
             </Typography>
           </div>
           <div className={style.formContainer}>
@@ -255,107 +270,31 @@ export function IndividualReport({ individual }: { individual: Individual }) {
               ></FormControlLabel>
             </FormControl>
           </div>
-          <Button
-            color="primary"
-            onClick={() => setShowDeathForm(!showDeathForm)}
-          >
-            Rapportera som död
-            {showDeathForm == false ? <ExpandMore /> : <ExpandLess />}
-          </Button>
-          {showDeathForm ? (
-            <>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">
-                  Har kaninen dött under året?
-                </FormLabel>
-                <RadioGroup
-                  row
-                  aria-label="death"
-                  value={isDead}
-                  onChange={() => setIsDead(!isDead)}
-                >
-                  <FormControlLabel
-                    value={false}
-                    control={<Radio />}
-                    label="Nej"
-                  />
-                  <FormControlLabel
-                    value={true}
-                    control={<Radio />}
-                    label="Ja"
-                  />
-                </RadioGroup>
-              </FormControl>
-              <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <KeyboardDatePicker
-                  autoOk
-                  disabled={!isDead}
-                  disableFuture
-                  /*                 minDate={new Date(individual.herd_tracking[0].date)}
-                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
-                  fullWidth={true}
-                  variant="inline"
-                  inputVariant="outlined"
-                  label="Dödsdatum"
-                  format="yyyy-MM-dd"
-                  value={individualToReport.death_date ?? null}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(event, newValue) => {
-                    newValue && handleUpdateIndividual("death_date", newValue);
-                  }}
-                />
-              </MuiPickersUtilsProvider>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">
-                  Har kaninen slaktats (t.ex. för kött, pga platsbrist e.d.)
-                </FormLabel>
-                <RadioGroup
-                  row
-                  aria-label="butchered"
-                  value={individualToReport.butchered ?? false}
-                  onChange={() =>
-                    handleUpdateIndividual(
-                      "butchered",
-                      !individualToReport.butchered
-                    )
-                  }
-                >
-                  <FormControlLabel
-                    value={false}
-                    control={<Radio disabled={!isDead} />}
-                    label="Nej"
-                  />
-                  <FormControlLabel
-                    value={true}
-                    control={<Radio disabled={!isDead} />}
-                    label="Ja"
-                  />
-                </RadioGroup>
-              </FormControl>
-              <TextField
-                label="Anteckningar om kaninens död"
-                disabled={!isDead}
-                variant={inputVariant}
-                className={style.wideControl}
-                multiline
-                rows={2}
-                value={individualToReport.death_note ?? ""}
-                onChange={(event) => {
-                  handleUpdateIndividual(
-                    "death_note",
-                    event.currentTarget.value
-                  );
-                }}
-              />
-            </>
-          ) : (
-            <></>
-          )}
+          <Typography>
+            Finns kaninen inte kvar i din besättning välj istället en av
+            följande alternativ
+          </Typography>
+          <div className={style.altContainer}>
+            <Button
+              color="primary"
+              size="small"
+              onClick={() => popup(<IndividualDeath individual={individual} />)}
+            >
+              Rapportera som död
+              {<NavigateNext />}
+            </Button>
+            <Button
+              color="primary"
+              size="small"
+              onClick={() => popup(<IndividualSell individual={individual} />)}
+            >
+              Sälj individ
+              {<NavigateNext />}
+            </Button>
+          </div>
           <div className={style.buttonContainer}>
             <Button variant="contained" color="primary" onClick={onSave}>
-              Rapportera
+              Bekräfta
             </Button>
           </div>{" "}
         </>

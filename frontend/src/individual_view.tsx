@@ -32,6 +32,7 @@ import { CertificateDownload } from "./certificate_download";
 import { IndividualSell } from "./individual_sell";
 import { HerdView } from "@app/herd_view";
 import { IndividualReport } from "./individual_report";
+import { IndividualDeath } from "./individual_death";
 
 const useStyles = makeStyles({
   body: {
@@ -410,6 +411,16 @@ export function IndividualView({ id }: { id: string }) {
                       }
                     >
                       Årsrapportera
+                    </Button>
+                    <Button
+                      className={style.editButton}
+                      variant="outlined"
+                      color="primary"
+                      onClick={() =>
+                        popup(<IndividualDeath individual={individual} />)
+                      }
+                    >
+                      Rapportera som död
                     </Button>
                   </>
                 )}
