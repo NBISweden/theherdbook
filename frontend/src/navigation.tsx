@@ -265,6 +265,17 @@ export function Navigation() {
             <span className="trigram">☰</span>
             <Typography variant="subtitle1">Menu</Typography>
           </Button>
+          {is_logged_in && (
+            <Button
+              onClick={() => {
+                window.open("/settings", "_self");
+              }}
+            >
+              <b>
+                <Typography variant="subtitle1">{user.username}</Typography>
+              </b>
+            </Button>
+          )}
 
           <StyledMenu
             id="customized-menu"
