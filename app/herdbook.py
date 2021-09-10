@@ -21,6 +21,7 @@ import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
+from flask.logging import default_handler
 from flask_login import (
     LoginManager,
     current_user,
@@ -45,7 +46,7 @@ import utils.external_auth  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
-
+import utils.genebank_logging as gblogging #isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -62,7 +63,10 @@ APP.config.update(
     CACHE_DIR="/tmp",
     CACHE_DEFAULT_TIMEOUT=300,
 )
-
+#gblogging.create_timed_rotating_log("/logs/test.log")
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+root.addHandler(default_handler)
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
 
