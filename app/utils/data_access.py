@@ -876,6 +876,8 @@ def add_individual(form, user_uuid):
     birth_date = form.get("birth_date", None)
     if birth_date is None:
         return {"status": "error", "message": "Birth date must be defined"}
+    else:
+        birth_date = validate_date(birth_date)
 
     try:
         individual = form_to_individual(form, user)
@@ -888,14 +890,19 @@ def add_individual(form, user_uuid):
 
     individual.save()
 
-    update_herdtracking_values(
-        individual=individual,
-        new_herd=individual.origin_herd,
-        user_signature=user,
-        tracking_date=form["birth_date"],
-    )
+    try:
+        update_herdtracking_values(
+            individual=individual,
+            new_herd=individual.origin_herd,
+            user_signature=user,
+            tracking_date=birth_date,
+        )
+    except ValueError as exception:
+        return {"status": "error", "message": f"{exception}"}
 
     selling_date = form.get("selling_date", None)
+    if selling_date is not None:
+        selling_date = validate_date(selling_date)
 
     new_herd = None
     if isinstance(form.get("herd", None), dict):
@@ -904,12 +911,15 @@ def add_individual(form, user_uuid):
         new_herd = Herd.get(Herd.herd == form["herd"])
 
     if new_herd and new_herd != individual.origin_herd:
-        update_herdtracking_values(
-            individual=individual,
-            new_herd=new_herd,
-            user_signature=user,
-            tracking_date=datetime.utcnow() if not selling_date else selling_date,
-        )
+        try:
+            update_herdtracking_values(
+                individual=individual,
+                new_herd=new_herd,
+                user_signature=user,
+                tracking_date=datetime.utcnow() if not selling_date else selling_date,
+            )
+        except ValueError as exception:
+            raise exception
 
     return {"status": "success", "message": "Individual Created"}
 
@@ -927,6 +937,9 @@ def update_herdtracking_values(individual, new_herd, user_signature, tracking_da
 
         if len(ht_history):
             current_herd = ht_history[0].herd
+            if ht_history[0].herd_tracking_date > tracking_date.date():
+                logging.error("New herd tracking date is before the latest entry")
+                raise ValueError("New herd tracking date is before the latest entry")
 
         if isinstance(new_herd, str):
             new_herd = Herd.get(Herd.herd == new_herd)
@@ -978,16 +991,19 @@ def update_individual(form, user_uuid):
             if (
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
-                selling_date = form.get("selling_date", None)
+                try:
+                    selling_date = validate_date(form.get("selling_date", None))
 
-                update_herdtracking_values(
-                    individual=individual,
-                    new_herd=form["herd"],
-                    user_signature=user,
-                    tracking_date=datetime.utcnow()
-                    if not selling_date
-                    else selling_date,
-                )
+                    update_herdtracking_values(
+                        individual=individual,
+                        new_herd=form["herd"],
+                        user_signature=user,
+                        tracking_date=datetime.utcnow()
+                        if not selling_date
+                        else selling_date,
+                    )
+                except ValueError as exception:
+                    raise exception
 
             individual.save()
         return {
