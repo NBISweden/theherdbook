@@ -13,7 +13,6 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
 } from "@material-ui/core";
 import { CheckCircle } from "@material-ui/icons";
 import {
@@ -31,6 +30,7 @@ const useStyles = makeStyles({
   },
   buttonContainer: {
     display: "flex",
+    marginTop: "2em",
   },
   responseBox: {
     width: "100%",
@@ -55,7 +55,7 @@ const useStyles = makeStyles({
   formContainer: {
     display: "flex",
     flexDirection: "column",
-    minHeight: "15em",
+    minHeight: "30em",
     justifyContent: "space-around",
   },
 });
@@ -68,6 +68,13 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
   const [success, setSuccess] = React.useState(false as boolean);
   const style = useStyles();
   const { userMessage } = useMessageContext();
+
+  const getMinDate = () => {
+    const lastTracking = new Date(individual.herd_tracking[0].date);
+    const earliest = new Date(lastTracking.getTime() + 1000 * 60 * 60 * 24);
+    return earliest;
+  };
+  const minDate: Date = getMinDate();
 
   /**
    * Updates a single field in `deadIndividual`.
@@ -82,7 +89,38 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
     deadIndividual && setDeadIndividual({ ...deadIndividual, [field]: value });
   };
 
+  /**
+   * make sure "butchered", "death notes" and "death_date" always follow isDead
+   * (an alive rabbit can't be butchered=true and can't have death notes or death_date)
+   */
+  React.useEffect(() => {
+    if (!isDead) {
+      handleUpdateIndividual("butchered", false);
+    }
+  }, [isDead]);
+  React.useEffect(() => {
+    if (!isDead && !deadIndividual.butchered) {
+      handleUpdateIndividual("death_note", "");
+    }
+  }, [isDead, deadIndividual.butchered]);
+  React.useEffect(() => {
+    if (!isDead && !deadIndividual.butchered && !deadIndividual.death_note) {
+      handleUpdateIndividual("death_date", null);
+    }
+  }, [isDead, deadIndividual.death_note, deadIndividual.butchered]);
+
   const onSave = () => {
+    if (!isDead) {
+      userMessage(
+        "Fyll i formen först. Har kaninen inte dött, tryck 'STÄNG'",
+        "warning"
+      );
+      return;
+    }
+    if (!deadIndividual.death_date) {
+      userMessage("Ange ett dödsdatum.", "warning");
+      return;
+    }
     patch("/api/individual", deadIndividual).then((json) => {
       if (json.status == "success") {
         setSuccess(true);
@@ -130,8 +168,8 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                   autoOk
                   disabled={!isDead}
                   disableFuture
-                  /*                 minDate={new Date(individual.herd_tracking[0].date)}
-                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
+                  minDate={minDate}
+                  minDateMessage="Datumet måste ligga efter senaste rapporteringsdatum."
                   fullWidth={true}
                   variant="inline"
                   inputVariant="outlined"
