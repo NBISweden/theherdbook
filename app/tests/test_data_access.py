@@ -267,7 +267,9 @@ class TestDataAccess(DatabaseTest):
             "admin_update": {
                 "number": self.individuals[0].number,
                 "certificate": "new-cert",
-                "birth_date": datetime.now() - timedelta(days=30),
+                "birth_date": (datetime.now() - timedelta(days=30)).strftime(
+                    "%Y-%m-%d"
+                ),
                 "herd": self.herds[0].herd,
             },
             "unknown_color": {
@@ -312,15 +314,19 @@ class TestDataAccess(DatabaseTest):
                 "herd": self.herds[0].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": "H1-4",
-                "birth_date": datetime.now() - timedelta(days=30),
-                "selling_date": datetime.now() - timedelta(days=10),
+                "birth_date": (datetime.now() - timedelta(days=30)).strftime(
+                    "%Y-%m-%d"
+                ),
+                "selling_date": (datetime.now() - timedelta(days=10)).strftime(
+                    "%Y-%m-%d"
+                ),
             },
             "empty": {
                 "herd": self.herds[1].herd,
                 "origin_herd": {"herd": self.herds[0].herd},
                 "number": None,
                 "breeding": 2,
-                "birth_date": datetime.today(),
+                "birth_date": datetime.today().strftime("%Y-%m-%d"),
                 "selling_date": None,
             },
             "secondempty": {
@@ -328,7 +334,7 @@ class TestDataAccess(DatabaseTest):
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": None,
                 "breeding": 2,
-                "birth_date": datetime.today(),
+                "birth_date": datetime.today().strftime("%Y-%m-%d"),
                 "selling_date": None,
             },
         }
@@ -379,7 +385,9 @@ class TestDataAccess(DatabaseTest):
                 "id": self.individuals[0].id,
                 "number": self.individuals[0].number,
                 "name": "new name",
-                "birth_date": datetime.now() - timedelta(days=30),
+                "birth_date": (datetime.now() - timedelta(days=30)).strftime(
+                    "%Y-%m-%d"
+                ),
             },
         }
         self.assertEqual(
@@ -412,7 +420,9 @@ class TestDataAccess(DatabaseTest):
 
         # Check herd update, we need update to be on a separate date
         forms["valid"]["herd"] = self.herds[1].herd
-        forms["valid"]["selling_date"] = datetime.now() + timedelta(days=2)
+        forms["valid"]["selling_date"] = (datetime.now() + timedelta(days=2)).strftime(
+            "%Y-%m-%d"
+        )
 
         status = da.update_individual(forms["valid"], self.admin.uuid)
 
@@ -451,7 +461,9 @@ class TestDataAccess(DatabaseTest):
 
         for n in range(0, 7):
             da.update_individual(form, self.admin.uuid)
-            form["selling_date"] = datetime.now() - timedelta(days=n * 365)
+            form["selling_date"] = (datetime.now() + timedelta(days=n * 365)).strftime(
+                "%Y-%m-%d"
+            )
 
         # herds 0 and 1 are in genebank 0
         gb0_expected = []
