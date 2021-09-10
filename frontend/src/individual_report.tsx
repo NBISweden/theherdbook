@@ -91,6 +91,13 @@ export function IndividualReport({ individual }: { individual: Individual }) {
   const { userMessage, popup } = useMessageContext();
   const style = useStyles();
 
+  const getMinDate = () => {
+    const lastTracking = new Date(individual.herd_tracking[0].date);
+    const earliest = new Date(lastTracking.getTime() + 1000 * 60 * 60 * 24);
+    return earliest;
+  };
+  const minDate: Date = getMinDate();
+
   const onSave = () => {
     if (!reportDate) {
       userMessage("Ange ett datum för årsrapporten.", "warning");
@@ -130,8 +137,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
         <>
           <div className={style.textContainer}>
             <Typography variant="body1" className={style.infoText}>
-              För våran årliga rapport ber vi dig bekräfta att kaninen finns
-              kvar i din besättning.
+              För våran årliga rapport ber vi dig bekräfta att kaninen finns i
+              din besättning. <br></br> Utgår från datumet du väljer nedan.
             </Typography>
           </div>
           <div className={style.formContainer}>
@@ -140,12 +147,11 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                 autoOk
                 className={style.datePicker}
                 disableFuture
-                /*                 minDate={new Date(individual.herd_tracking[0].date)}
-                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
+                minDate={minDate}
+                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatum."
                 variant="inline"
                 inputVariant="outlined"
-                label="Rapportdatum"
-                helperText="Rapporten registreras på valt datum."
+                label="Datum för årsrapporten"
                 format="yyyy-MM-dd"
                 value={reportDate ?? null}
                 InputLabelProps={{
@@ -184,7 +190,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             </FormControl>
           </div>
           <Typography>
-            Finns kaninen inte kvar i din besättning välj istället en av
+            Finns kaninen inte kvar i din besättning välj istället ett av
             följande alternativ
           </Typography>
           <div className={style.altContainer}>
@@ -207,7 +213,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
           </div>
           <div className={style.buttonContainer}>
             <Button variant="contained" color="primary" onClick={onSave}>
-              Bekräfta
+              Skicka
             </Button>
           </div>{" "}
         </>
