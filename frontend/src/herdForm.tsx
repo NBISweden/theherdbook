@@ -31,7 +31,10 @@ import {
   OptionType,
 } from "@app/data_context_global";
 import { get, updateHerd, createHerd } from "@app/communication";
-import { FieldWithPermission, LimitedInputType } from "@app/field_with_permission";
+import {
+  FieldWithPermission,
+  LimitedInputType,
+} from "@app/field_with_permission";
 
 const defaultValues: Herd = {
   id: -1,
@@ -62,7 +65,11 @@ const defaultValues: Herd = {
   individuals: [],
 };
 
-type ContactField = {field: keyof Herd, label: string, type?: LimitedInputType};
+type ContactField = {
+  field: keyof Herd;
+  label: string;
+  type?: LimitedInputType;
+};
 
 /**
  * Provides herd management forms for setting herd metadata. The form will
@@ -94,9 +101,9 @@ export function HerdForm({
   const contactFields: ContactField[] = [
     { field: "name", label: "Namn" },
     { field: "email", label: "E-mail" },
-    { field: "mobile_phone", label: "Mobiltelefon", type: 'email' },
-    { field: "wire_phone", label: "Fast telefon", type: 'tel' },
-    { field: "www", label: "Hemsida", type: 'tel' },
+    { field: "mobile_phone", label: "Mobiltelefon", type: "email" },
+    { field: "wire_phone", label: "Fast telefon", type: "tel" },
+    { field: "www", label: "Hemsida", type: "tel" },
     { field: "physical_address", label: "Gatuadress" },
   ];
 
@@ -112,44 +119,40 @@ export function HerdForm({
     setPostalcode("");
     setPostalcity("");
     if (fromHerd) {
-      setHerd(fromHerd)
-    }
-    else {
-    if (id == "new" || !id) {
-      setNew(true);
+      setHerd(fromHerd);
     } else {
-      get(`/api/herd/${id}`).then(
-        (data) => {
-          if (data) {
-            // verify the data doesn't have nulls
-            Object.keys(data).forEach((k: string) => {
-              data[k] = data[k] ?? "";
-            });
+      if (id == "new" || !id) {
+        setNew(true);
+      } else {
+        get(`/api/herd/${id}`).then(
+          (data) => {
+            if (data) {
+              // verify the data doesn't have nulls
+              Object.keys(data).forEach((k: string) => {
+                data[k] = data[k] ?? "";
+              });
 
-            unstable_batchedUpdates(() => {
-              // split physical address into address, postcode, postcity
-              if (
-                data?.physical_address &&
-                data.physical_address.includes("|")
-              ) {
-                const [
-                  address,
-                  postcode,
-                  postcity,
-                ] = data.physical_address.split("|");
-                data.physical_address = address;
-                setPostalcode(postcode);
-                setPostalcity(postcity);
-              }
-              setHerd(data);
-              setNew(false);
-            });
-          }
-        },
-        (error) => console.error(error)
-      );
+              unstable_batchedUpdates(() => {
+                // split physical address into address, postcode, postcity
+                if (
+                  data?.physical_address &&
+                  data.physical_address.includes("|")
+                ) {
+                  const [address, postcode, postcity] =
+                    data.physical_address.split("|");
+                  data.physical_address = address;
+                  setPostalcode(postcode);
+                  setPostalcity(postcity);
+                }
+                setHerd(data);
+                setNew(false);
+              });
+            }
+          },
+          (error) => console.error(error)
+        );
+      }
     }
-  }
     setLoading(false);
   }, [id]);
 
@@ -252,171 +255,179 @@ export function HerdForm({
     <>
       {(loading && <h2>Loading...</h2>) || (
         <>
-          {change && (user.canEdit(herd.herd) || user.canEdit(herd.genebank)) && (
-            <div className="editButton">
-              [{" "}
-              <a
-                className="editLink"
-                onClick={() =>
-                  setCurrentView(currentView == "form" ? "info" : "form")
-                }
-              >
-                {currentView == "info" ? "Edit" : "Stop Editing"}
-              </a>
-              ]
-            </div>
-          )}
+          {change &&
+            (user.canEdit(herd.herd) ||
+              user.canEdit(herd.genebank) ||
+              herd.genebank.id < 0) && (
+              <div className="editButton">
+                [{" "}
+                <a
+                  className="editLink"
+                  onClick={() =>
+                    setCurrentView(currentView == "form" ? "info" : "form")
+                  }
+                >
+                  {currentView == "info" ? "Edit" : "Stop Editing"}
+                </a>
+                ]
+              </div>
+            )}
           <h1 className="titleHerd">
             {herd.herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}
           </h1>
-          {(currentView == "form" && user && (user.canEdit(herd.herd) || user.canEdit(herd.genebank)) && (
-            <>
-              <form className="herdForm">
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                  <div className="formCard">
-                    <Typography
-                      className="titleHerd"
-                      color="primary"
-                      gutterBottom
-                    >
-                      Kontaktperson
-                    </Typography>
+          {(currentView == "form" &&
+            user &&
+            (user.canEdit(herd.herd) ||
+              user.canEdit(herd.genebank) ||
+              herd.genebank.id < 0) && (
+              <>
+                <form className="herdForm">
+                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                    <div className="formCard">
+                      <Typography
+                        className="titleHerd"
+                        color="primary"
+                        gutterBottom
+                      >
+                        Kontaktperson
+                      </Typography>
 
-                    {contactFields.map((field) => (
-                      <FieldWithPermission
-                        key={field.field}
-                        field={field.field}
-                        label={field.label}
-                        value={herd[field.field]}
-                        permission={
-                          herd[`${field.field}_privacy` as keyof Herd] ?? null
-                        }
-                        setValue={setFormField}
-                        fieldType={field.type ?? 'text'}
-                      />
-                    ))}
-                    <TextField
-                      label="Postnummer"
-                      value={postalcode}
-                      variant={inputVariant}
-                      onChange={(e: any) => {
-                        setPostalcode(e.target.value);
-                      }}
-                    />
-                    <TextField
-                      label="Postort"
-                      value={postalcity}
-                      variant={inputVariant}
-                      onChange={(e: any) => {
-                        setPostalcity(e.target.value);
-                      }}
-                    />
-                  </div>
-
-                  <div className="formCard">
-                    <Typography
-                      className="titleHerd"
-                      color="primary"
-                      gutterBottom
-                    >
-                      Besättningsinformation
-                    </Typography>
-
-                    <TextField
-                      label="Besättningsnamn"
-                      className="simpleField"
-                      value={herd.herd_name}
-                      variant={inputVariant}
-                      onChange={(e: any) => {
-                        setFormField("herd_name", e.target.value);
-                      }}
-                    />
-                    <FormControlLabel
-                      label="Aktiv"
-                      labelPlacement="end"
-                      control={
-                        <Checkbox
-                          color="primary"
-                          checked={
-                            herd.is_active == null ? false : !!herd.is_active
+                      {contactFields.map((field) => (
+                        <FieldWithPermission
+                          key={field.field}
+                          field={field.field}
+                          label={field.label}
+                          value={herd[field.field]}
+                          permission={
+                            herd[`${field.field}_privacy` as keyof Herd] ?? null
                           }
+                          setValue={setFormField}
+                          fieldType={field.type ?? "text"}
                         />
-                      }
-                      value={herd.is_active}
-                      onChange={(e: any) => {
-                        setFormField("is_active", e.target.checked);
-                      }}
-                    />
-                    <KeyboardDatePicker
-                      autoOk
-                      variant="inline"
-                      inputVariant={inputVariant}
-                      className="simpleField"
-                      label="Startdatum"
-                      format={dateFormat}
-                      value={herd.start_date ?? ""}
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                      onChange={(date, value) => {
-                        value && setFormField("start_date", value);
-                      }}
-                    />
-                    <TextField
-                      label="Besättnings-ID"
-                      className="simpleField"
-                      disabled={!isNew}
-                      value={herd.herd}
-                      variant={inputVariant}
-                      onChange={(e: any) => {
-                        setFormField("herd", e.target.value);
-                      }}
-                    />
-                    <Autocomplete
-                      options={
-                        genebanks
-                          ? genebanks.map((g: Genebank) => {
-                              return { value: "" + g.id, label: g.name };
-                            })
-                          : []
-                      }
-                      value={genebankOption(herd.genebank)}
-                      getOptionLabel={(option: OptionType) => option.label}
-                      getOptionSelected={(
-                        option: OptionType,
-                        value: OptionType
-                      ) => option.value == value.value}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Genbank"
-                          variant={inputVariant}
-                          className="permissionField"
-                          margin="normal"
-                        />
-                      )}
-                      onChange={(event: any, newValue: OptionType | null) => {
-                        newValue && setFormField("genebank", +newValue?.value);
-                      }}
-                    />
+                      ))}
+                      <TextField
+                        label="Postnummer"
+                        value={postalcode}
+                        variant={inputVariant}
+                        onChange={(e: any) => {
+                          setPostalcode(e.target.value);
+                        }}
+                      />
+                      <TextField
+                        label="Postort"
+                        value={postalcity}
+                        variant={inputVariant}
+                        onChange={(e: any) => {
+                          setPostalcity(e.target.value);
+                        }}
+                      />
+                    </div>
 
-                    <Typography className="subheading" color="textSecondary">
-                      Besättningen har{" "}
-                      {herd?.individuals ? herd.individuals.length : 0}{" "}
-                      individer
-                    </Typography>
-                  </div>
-                </MuiPickersUtilsProvider>
-              </form>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => submitForm()}
-              >
-                {isNew ? "Skapa" : "Spara"}
-              </Button>
-            </>
-          )) || (
+                    <div className="formCard">
+                      <Typography
+                        className="titleHerd"
+                        color="primary"
+                        gutterBottom
+                      >
+                        Besättningsinformation
+                      </Typography>
+
+                      <TextField
+                        label="Besättningsnamn"
+                        className="simpleField"
+                        value={herd.herd_name}
+                        variant={inputVariant}
+                        onChange={(e: any) => {
+                          setFormField("herd_name", e.target.value);
+                        }}
+                      />
+                      <FormControlLabel
+                        label="Aktiv"
+                        labelPlacement="end"
+                        control={
+                          <Checkbox
+                            color="primary"
+                            checked={
+                              herd.is_active == null ? false : !!herd.is_active
+                            }
+                          />
+                        }
+                        value={herd.is_active}
+                        onChange={(e: any) => {
+                          setFormField("is_active", e.target.checked);
+                        }}
+                      />
+                      <KeyboardDatePicker
+                        autoOk
+                        variant="inline"
+                        inputVariant={inputVariant}
+                        className="simpleField"
+                        label="Startdatum"
+                        format={dateFormat}
+                        value={herd.start_date ?? ""}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        onChange={(date, value) => {
+                          value && setFormField("start_date", value);
+                        }}
+                      />
+                      <TextField
+                        label="Besättnings-ID"
+                        className="simpleField"
+                        disabled={!isNew}
+                        value={herd.herd}
+                        variant={inputVariant}
+                        onChange={(e: any) => {
+                          setFormField("herd", e.target.value);
+                        }}
+                      />
+                      <Autocomplete
+                        options={
+                          genebanks
+                            ? genebanks.map((g: Genebank) => {
+                                return { value: "" + g.id, label: g.name };
+                              })
+                            : []
+                        }
+                        value={genebankOption(herd.genebank)}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        getOptionSelected={(
+                          option: OptionType,
+                          value: OptionType
+                        ) => option.value == value.value}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Genbank"
+                            variant={inputVariant}
+                            className="permissionField"
+                            margin="normal"
+                          />
+                        )}
+                        onChange={(event: any, newValue: OptionType | null) => {
+                          newValue &&
+                            setFormField("genebank", +newValue?.value);
+                        }}
+                      />
+
+                      <Typography className="subheading" color="textSecondary">
+                        Besättningen har{" "}
+                        {herd?.individuals ? herd.individuals.length : 0}{" "}
+                        individer
+                      </Typography>
+                    </div>
+                  </MuiPickersUtilsProvider>
+                </form>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => submitForm()}
+                >
+                  {isNew ? "Skapa" : "Spara"}
+                </Button>
+              </>
+            )) || (
             <div className="contactInfo">
               {herd.name && (
                 <>
