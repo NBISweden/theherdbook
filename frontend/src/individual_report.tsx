@@ -75,10 +75,10 @@ const useStyles = makeStyles({
   },
 });
 
-interface LimitedIndividualForSale {
+interface LimitedIndividual {
   number: string;
   herd: string;
-  selling_date: string;
+  yearly_report_date: Date;
 }
 
 export function IndividualReport({ individual }: { individual: Individual }) {
@@ -132,16 +132,6 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     setInvalidSale(false);
   };
 
-  /*
-  delete the herd field from individualForSale to get the dropdown input for 
-  herd empty when component is rendered
-  */
-  React.useEffect(() => {
-    let currentIndividual = individualToReport;
-    delete currentIndividual.herd;
-    setIndividualToReport(currentIndividual);
-  }, []);
-
   /**
    * make sure "butchered", "death notes" and "death_date" always follow isDead
    * (an alive rabbit can't be butchered=true and can't have death notes or death_date)
@@ -166,23 +156,32 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     }
   }, [isDead, individualToReport.death_note, individualToReport.butchered]);
 
-  const sellIndividual = () => {
-    if (!checked) {
-      setInvalidSale(true);
+  const reportAsDead = () => {
+    patch("/api/individual", individualToReport).then((json) => {
+      if (json.status == "success") {
+        setSuccess(true);
+        return;
+      }
+      if (json.status == "error") {
+        userMessage("Något gick fel.", "error");
+      }
+    });
+  };
+
+  const onSave = () => {
+    if (isDead) {
+      reportAsDead();
       return;
     }
-    if (!individualToReport.herd) {
-      userMessage("Fyll i en besättning först", "warning");
+    if (!reportDate) {
+      userMessage("Ange ett datum för årsrapporten.", "warning");
       return;
     }
-    if (!individualToReport.selling_date) {
-      userMessage("Fyll i ett köpdatum först.", "warning");
-      return;
-    }
-    const limitedIndividual: LimitedIndividualForSale = {
+
+    const limitedIndividual: LimitedIndividual = {
       number: individualToReport.number,
       herd: individualToReport.herd,
-      selling_date: individualToReport.selling_date,
+      yearly_report_date: reportDate,
     };
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
@@ -190,6 +189,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
         return;
       }
       if (json.status == "error") {
+        userMessage("Något gick fel.", "error");
       }
     });
   };
@@ -207,8 +207,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
               om kaninens status.
             </Typography>
             <Typography variant="body1" className={style.infoText}>
-              OBS! Har du sålt kaninen ber vi dig rapportera detta genom att
-              klicka på "Sälj individ".
+              OBS! Har du sålt kaninen ber vi dig rapportera detta genom att gå
+              via "Sälj individ".
             </Typography>
           </div>
           <div className={style.formContainer}>
@@ -220,6 +220,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
               <KeyboardDatePicker
                 autoOk
                 disableFuture
+                /*                 minDate={new Date(individual.herd_tracking[0].date)}
+                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
                 fullWidth={true}
                 variant="inline"
                 inputVariant="outlined"
@@ -289,6 +291,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                   autoOk
                   disabled={!isDead}
                   disableFuture
+                  /*                 minDate={new Date(individual.herd_tracking[0].date)}
+                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatumet." */
                   fullWidth={true}
                   variant="inline"
                   inputVariant="outlined"
@@ -298,12 +302,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                   InputLabelProps={{
                     shrink: true,
                   }}
-                  onChange={(newValue) => {
-                    newValue &&
-                      handleUpdateIndividual(
-                        "death_date",
-                        newValue?.toString()
-                      );
+                  onChange={(event, newValue) => {
+                    newValue && handleUpdateIndividual("death_date", newValue);
                   }}
                 />
               </MuiPickersUtilsProvider>
@@ -354,12 +354,8 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             <></>
           )}
           <div className={style.buttonContainer}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={sellIndividual}
-            >
-              Sälj
+            <Button variant="contained" color="primary" onClick={onSave}>
+              Rapportera
             </Button>
           </div>{" "}
         </>
@@ -374,9 +370,16 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             <h2>Klart!</h2>
             <CheckCircle className={style.successIcon} />
           </div>
-          <p>
-            Individen har flyttats till besättning {individualToReport.herd}.
-          </p>
+          {isDead ? (
+            <p>
+              {individual.name} {individual.number} har rapporterats som död.
+            </p>
+          ) : (
+            <p>
+              Årsrapporten för {individual.name} {individual.number} har lämnats
+              in.
+            </p>
+          )}
         </Box>
       )}
     </div>
