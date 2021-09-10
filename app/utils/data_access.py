@@ -9,7 +9,7 @@ import logging
 import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, Value, fn
+from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, fn
 
 # pylint: disable=import-error
 
