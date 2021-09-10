@@ -117,8 +117,10 @@ export function WithUserContext(props: { children: React.ReactNode }) {
       }
     }
     // id is a genebank
-    else if (genebanks.find((genebank) => genebank.name == id)) {
-      const genebank = genebanks.find((genebank) => genebank.name == id);
+    else if (genebanks.find((genebank) => genebank.id.toString() == id)) {
+      const genebank = genebanks.find(
+        (genebank) => genebank.id.toString() == id
+      );
       // you can edit if you are manager of the genebank
       if (genebank && user.is_manager?.includes(+genebank.id)) {
         return true;

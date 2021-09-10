@@ -35,7 +35,7 @@ import { FieldWithPermission, LimitedInputType } from "@app/field_with_permissio
 
 const defaultValues: Herd = {
   id: -1,
-  genebank: -1,
+  genebank: 1,
   herd: "",
   herd_name: "",
   has_details: false,
@@ -252,7 +252,7 @@ export function HerdForm({
     <>
       {(loading && <h2>Loading...</h2>) || (
         <>
-          {change && user?.canEdit(herd.herd) && (
+          {change && (user.canEdit(herd.herd) || user.canEdit(herd.genebank)) && (
             <div className="editButton">
               [{" "}
               <a
@@ -267,9 +267,9 @@ export function HerdForm({
             </div>
           )}
           <h1 className="titleHerd">
-            {herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}
+            {herd.herd ? `Besättning ${herdLabel(herd)}` : `Ny Besättning`}
           </h1>
-          {(currentView == "form" && user && user.canEdit(herd.herd) && (
+          {(currentView == "form" && user && (user.canEdit(herd.herd) || user.canEdit(herd.genebank)) && (
             <>
               <form className="herdForm">
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
