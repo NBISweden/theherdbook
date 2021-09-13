@@ -33,6 +33,15 @@ export function IndividualSellingForm({
   onUpdateIndividual: any;
 }) {
   const style = useStyles();
+  const getMinSellingDate = () => {
+    const minDate = new Date(
+      individual.herd_tracking
+        ? individual.herd_tracking[0].date.toString()
+        : individual.birth_date
+    );
+    minDate.setDate(minDate.getDate() + 1);
+    return minDate;
+  };
   return (
     <>
       <Autocomplete
@@ -60,6 +69,7 @@ export function IndividualSellingForm({
           fullWidth={true}
           className={style.inputField}
           variant="inline"
+          minDate={getMinSellingDate()}
           inputVariant="outlined"
           label="Köpdatum"
           format="yyyy-MM-dd"
