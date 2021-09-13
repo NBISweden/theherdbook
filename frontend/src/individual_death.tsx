@@ -112,7 +112,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
   const onSave = () => {
     if (!isDead) {
       userMessage(
-        "Fyll i formen först. Har kaninen inte dött, tryck 'STÄNG'",
+        "Fyll i alla obligatoriska fält. Har kaninen inte dött, tryck 'STÄNG'",
         "warning"
       );
       return;
@@ -142,11 +142,12 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
           <>
             <div className={style.formContainer}>
               <FormControl component="fieldset">
-                <FormLabel component="legend">
+                <FormLabel component="legend" required>
                   Har kaninen dött under året?
                 </FormLabel>
                 <RadioGroup
                   row
+                  aria-required
                   aria-label="death"
                   value={isDead}
                   onChange={() => setIsDead(!isDead)}
@@ -166,6 +167,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker
                   autoOk
+                  required
                   disabled={!isDead}
                   disableFuture
                   minDate={minDate}
@@ -185,11 +187,12 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                 />
               </MuiPickersUtilsProvider>
               <FormControl component="fieldset">
-                <FormLabel component="legend">
+                <FormLabel component="legend" required>
                   Har kaninen slaktats (t.ex. för kött, pga platsbrist e.d.)
                 </FormLabel>
                 <RadioGroup
                   row
+                  aria-required
                   aria-label="butchered"
                   value={deadIndividual.butchered ?? false}
                   onChange={() =>
