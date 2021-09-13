@@ -515,6 +515,23 @@ class Individual(BaseModel):
             .where((Breeding.mother == self) | (Breeding.father == self))
         ]
 
+    @property
+    def active(self):
+        """
+        Returns if an individual fullfils the requirements to be active.
+        """
+        is_active = (
+            self.is_active
+            and not self.death_date
+            and not self.death_note
+            and self.latest_herdtracking_entry
+            and (
+                self.latest_herdtracking_entry.herd_tracking_date
+                > (datetime.now() - timedelta(days=366)).date()
+            )
+        )
+        return is_active
+
     def as_dict(self):
         """
         Returns the objects key/value pair as a dictionary, including data from
@@ -522,6 +539,7 @@ class Individual(BaseModel):
         """
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
+        data["is_active"] = self.active
         data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {
             "id": self.origin_herd.id,
@@ -587,23 +605,6 @@ class Individual(BaseModel):
             data["herd_tracking"] = []
 
         return data
-
-    @property
-    def active(self):
-        """
-        Returns if an individual fullfils the requirements to be active.
-        """
-        is_active = (
-            self.is_active
-            and not self.death_date
-            and not self.death_note
-            and self.latest_herdtracking_entry
-            and (
-                self.latest_herdtracking_entry.herd_tracking_date
-                > (datetime.now() - timedelta(days=366)).date()
-            )
-        )
-        return is_active
 
     def list_info(self):
         """
