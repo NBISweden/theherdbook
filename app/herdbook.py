@@ -690,12 +690,21 @@ def get_mean_kinship(g_id):
 def testbreed():
     payload = request.json
     APP.logger.info(f"Testbreed calculation input {payload}")
-    if ("male" in payload) and ("female" in payload):
-        kinship_matrix = get_kinship(request.json["genebankId"])
-        offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
-    # One/both parents not registrered, thus not present in the kinship matrix
-    else:
-        try:
+    try:
+        # Make sure mother and father are in the active population
+        user_id = session.get("user_id", None)
+        father = da.get_individual(payload.get("male", ""), user_id)
+        mother = da.get_individual(payload.get("female", ""), user_id)
+        if (
+            mother
+            and father
+            and father.get("is_active", False) is True
+            and mother.get("is_active", False) is True
+        ):
+            kinship_matrix = get_kinship(request.json["genebankId"])
+            offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
+        # One/both parents not registrered, thus not present in the kinship matrix
+        else:
             response = requests.post(
                 "http://{}:{}/testbreed/".format(
                     settings.rapi.host, settings.rapi.port
@@ -703,9 +712,9 @@ def testbreed():
                 data=payload,
             )
             offspring_coi = response.json()["calculated_coi"][0]
-        except Exception as ex:  # pylint: disable=broad-except
-            APP.logger.error(ex)
-            return jsonify({"error": "Error processing your request"}), 500
+    except Exception as ex:  # pylint: disable=broad-except
+        APP.logger.error(ex)
+        return jsonify({"error": "Error processing your request"}), 500
 
     formatted_offspring_coi = round(offspring_coi * 100, 2)
     APP.logger.info(f"Testbreed calculation result {formatted_offspring_coi}")
