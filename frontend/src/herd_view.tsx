@@ -94,19 +94,10 @@ export function HerdView({ id }: { id: string | undefined }) {
   }, [id]);
 
   React.useEffect(() => {
-    if (herd && genebanks && herd.individuals) {
-      const genebank = genebanks.find((g) =>
-        g.herds.some((h) => h.herd == herd.herd)
-      );
-      const individualIds = herd.individuals.map((i) => i.number);
-      if (genebank && genebank.individuals != null) {
-        const individualsList = genebank.individuals.filter((i) =>
-          individualIds.includes(i.number)
-        );
-        setHerdIndividuals(individualsList);
-      }
+    if (herd && herd.individuals) {
+      setHerdIndividuals(herd.individuals);
     }
-  }, [herd, genebanks]);
+  }, [herd]);
 
   return (
     <>
