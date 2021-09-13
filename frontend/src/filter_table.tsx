@@ -310,7 +310,15 @@ export function FilterTable({
       field: "color",
       label: "Färg",
       sortBy: "name",
-      render: (rowData: any) => rowData.color["name"],
+      render: (rowData: any) => {
+        if (typeof rowData.color == "string") {
+          return rowData.color;
+        } else if (rowData.color && !!rowData.color["name"]) {
+          return rowData.color["name"];
+        } else {
+          return undefined;
+        }
+      },
     },
     { field: "color_note", label: "Färganteckning", hidden: true },
   ];
