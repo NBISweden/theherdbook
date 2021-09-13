@@ -77,7 +77,7 @@ export function HerdView({ id }: { id: string | undefined }) {
     [genebanks, id, algo, pedigreeView]
   );
 
-  React.useEffect(() => {
+  const getHerd = () => {
     if (id) {
       get(`/api/herd/${id}`).then(
         (data: Herd) => data && setHerd(data),
@@ -87,6 +87,10 @@ export function HerdView({ id }: { id: string | undefined }) {
         }
       );
     }
+  };
+
+  React.useEffect(() => {
+    getHerd();
   }, [id]);
 
   React.useEffect(() => {
@@ -119,7 +123,13 @@ export function HerdView({ id }: { id: string | undefined }) {
             textColor="primary"
             variant="fullWidth"
           >
-            <Tab label="Lista över individer" value="list" />
+            <Tab
+              label="Lista över individer"
+              value="list"
+              onClick={() => {
+                getHerd();
+              }}
+            />
             <Tab label="Parningstillfällen" value="breeding" />
             <Tab
               label="Släktträd för besättningen"
