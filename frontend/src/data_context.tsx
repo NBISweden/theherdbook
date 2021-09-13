@@ -30,6 +30,8 @@ export function useDataContext(): DataContext {
 
 export function WithDataContext(props: { children: React.ReactNode }) {
   const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>);
+  const [herdListener, setHerdListener] = React.useState("");
+  const [herdChangeListener, setHerdChangeListener] = React.useState(0);
   const [users, setUsers] = React.useState([] as Array<NameID>);
   const [colors, setColors] = React.useState(
     {} as { [genebank: string]: Color[] }
@@ -195,6 +197,10 @@ export function WithDataContext(props: { children: React.ReactNode }) {
         genebanks,
         users,
         colors,
+        herdChangeListener,
+        herdListener,
+        setHerdChangeListener,
+        setHerdListener,
         setGenebanks,
         setUsers,
         loadData,

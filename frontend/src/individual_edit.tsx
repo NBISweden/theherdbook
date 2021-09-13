@@ -177,8 +177,14 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [weightDate, setWeightDate] = React.useState(null as string | null);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
   const { user } = useUserContext();
-  const { genebanks, colors } = useDataContext();
   const { userMessage, handleCloseDialog } = useMessageContext();
+  const {
+    genebanks,
+    colors,
+    herdListener,
+    herdChangeListener,
+    setHerdChangeListener,
+  } = useDataContext();
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
@@ -454,6 +460,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       (retval: ServerMessage) => {
         switch (retval.status) {
           case "success":
+            if (postData.herd.herd == herdListener) {
+              setHerdChangeListener(herdChangeListener + 1);
+            }
             userMessage(retval.message ?? "Individual updated", "success");
             handleCloseDialog();
             break;

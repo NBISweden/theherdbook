@@ -65,7 +65,13 @@ export function HerdView({ id }: { id: string | undefined }) {
   const [activeTab, setActiveTab] = React.useState("list" as TabValue);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const { genebanks } = useDataContext();
+  const {
+    genebanks,
+    herdChangeListener,
+    herdListener,
+    setHerdChangeListener,
+    setHerdListener,
+  } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
   const [pedigreeView, setPedigreeView] = React.useState(false as boolean);
 
@@ -79,6 +85,7 @@ export function HerdView({ id }: { id: string | undefined }) {
 
   const getHerd = () => {
     if (id) {
+      setHerdListener(id);
       get(`/api/herd/${id}`).then(
         (data: Herd) => data && setHerd(data),
         (error) => {
@@ -91,7 +98,7 @@ export function HerdView({ id }: { id: string | undefined }) {
 
   React.useEffect(() => {
     getHerd();
-  }, [id]);
+  }, [id, herdChangeListener]);
 
   React.useEffect(() => {
     if (herd && herd.individuals) {
