@@ -36,11 +36,11 @@ export function IndividualSellingForm({
   const getMinSellingDate = () => {
     const minDate = new Date(
       individual.herd_tracking
-        ? individual.herd_tracking[0].date
+        ? individual.herd_tracking[0].date.toString()
         : individual.birth_date
     );
-    const earliest = new Date(minDate.getTime() + 1000 * 60 * 60 * 24);
-    return earliest;
+    minDate.setDate(minDate.getDate() + 1);
+    return minDate;
   };
   return (
     <>
