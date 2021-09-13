@@ -284,8 +284,15 @@ psql --echo-errors --quiet <<-'END_SQL'
 	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE NUMERIC USING "Genbanknr."::numeric;
 	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE INTEGER USING "Genbanknr."::integer;
 	ALTER TABLE m_data2 ALTER "Genbanknr." TYPE VARCHAR(9);
+
 	UPDATE m_data2 SET "Genbanknr." = CONCAT('M', "Genbanknr.")
 	       WHERE "Genbanknr." IS NOT NULL AND "Genbanknr." NOT LIKE 'M%';
+
+	UPDATE	m_data2
+	SET	"Start" = CONCAT("Start", '-01-01')
+	WHERE	"Start" LIKE ('____');
+
+	ALTER TABLE m_data2 ALTER "Start" TYPE DATE USING "Start"::date;
 
 	UPDATE herd h
 	SET herd_name = (
@@ -322,4 +329,16 @@ psql --echo-errors --quiet <<-'END_SQL'
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Mellerudskanin'
 	AND	h.is_active IS NULL;
+
+	UPDATE	herd h
+	SET	start_date = (
+		SELECT "Start"
+		FROM	m_data2
+		WHERE	"Genbanknr." = h.herd
+		LIMIT	1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.start_date IS NULL;
 END_SQL
