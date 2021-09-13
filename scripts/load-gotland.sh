@@ -417,8 +417,14 @@ psql --quiet <<-'END_SQL'
 	ALTER TABLE g_data2 ALTER "Nr" TYPE NUMERIC USING "Nr"::numeric;
 	ALTER TABLE g_data2 ALTER "Nr" TYPE INTEGER USING "Nr"::integer;
 	ALTER TABLE g_data2 ALTER "Nr" TYPE VARCHAR(10);
+
 	UPDATE g_data2 SET "Nr" = CONCAT('G', "Nr")
 	WHERE "Nr" IS NOT NULL AND "Nr" NOT LIKE 'G%';
+
+	UPDATE	g_data2 SET "Start" = NULL
+	WHERE	"Start" NOT LIKE '____-__-__';
+
+	ALTER TABLE g_data2 ALTER "Start" TYPE DATE USING "Start"::date;
 
 	-- Add herd names
 	UPDATE herd h
@@ -448,6 +454,18 @@ psql --quiet <<-'END_SQL'
 	UPDATE herd h
 	SET name = (
 		SELECT "Namn"
+		FROM	g_data2
+		WHERE	"Nr" = h.herd
+		LIMIT	1
+	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin';
+
+	-- Add start date
+	UPDATE herd h
+	SET start_date = (
+		SELECT	"Start"
 		FROM	g_data2
 		WHERE	"Nr" = h.herd
 		LIMIT	1
