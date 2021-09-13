@@ -174,8 +174,8 @@ psql --echo-errors --quiet <<-'END_SQL'
           FROM g_data d
           GROUP BY (d."Far nr", d."Mor nr", d."Född")
       ) d
-      JOIN individual father ON d."Far nr" = father.number
-      JOIN individual mother ON d."Mor nr" = mother.number;
+      LEFT JOIN individual father ON d."Far nr" = father.number
+      LEFT JOIN individual mother ON d."Mor nr" = mother.number;
 
   -- Associate individuals and breeding values
   WITH breeding_nums AS (
@@ -187,10 +187,18 @@ psql --echo-errors --quiet <<-'END_SQL'
     SELECT b.breeding_id
       FROM breeding_nums b
       JOIN g_data d
-        ON d."Nummer" = i.number
-       AND d."Far nr" = b.father
-       AND d."Mor nr" = b.mother
-       AND d."Född" = b.birth_date
+        ON	d."Nummer" = i.number
+	AND	d."Mor nr" = b.mother
+	AND	d."Född" = b.birth_date
+	AND	(
+		d."Far nr" = b.father
+		OR	(
+			b.father IS NULL
+			AND
+			( SELECT individual_id FROM individual WHERE number = d."Far nr" )
+				IS NULL
+			)
+		)
   ) WHERE i.breeding_id IS NULL;
 
 
