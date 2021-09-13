@@ -640,7 +640,7 @@ def get_herd(herd_id, user_uuid=None):
             if data["genebank"] not in user.accessible_genebanks:
                 return None
 
-            data["individuals"] = [i.short_info() for i in herd.individuals]
+            data["individuals"] = [i.as_dict() for i in herd.individuals]
             return data
     except DoesNotExist:
         return data
