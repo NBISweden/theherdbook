@@ -142,7 +142,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
     };
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
-        if (limitedIndividual.herd == herdListener) {
+        if (individual.herd_tracking[0].herd == herdListener) {
           setHerdChangeListener(herdChangeListener + 1);
         }
         setSuccess(true);
