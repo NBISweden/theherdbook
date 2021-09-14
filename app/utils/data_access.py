@@ -477,7 +477,7 @@ def update_user(form, user_uuid=None):
     return {"status": "unchanged"}
 
 
-def update_role(operation, user_uuid=None):
+def update_role(operation, user_uuid=None, skip_role_check=False):
     """
     Takes a role change description `operation`, and returns a status message.
 
@@ -494,9 +494,11 @@ def update_role(operation, user_uuid=None):
             message?: string,
             data?: any
         }
+
+    Optionally takes a flag to skip role verification for system use.
     """
     user = fetch_user_info(user_uuid)
-    if user is None:
+    if user is None and not skip_role_check:
         return {"status": "error", "message": "not logged in"}
 
     # Check data
@@ -523,7 +525,7 @@ def update_role(operation, user_uuid=None):
 
     # Check permissions
     permitted = True
-    if user.is_manager:
+    if skip_role_check or user.is_manager:
         genebank = operation.get("genebank", None)
         if genebank is None:
             try:
@@ -533,7 +535,7 @@ def update_role(operation, user_uuid=None):
             except DoesNotExist:
                 permitted = False  # unknown herd
                 message = "unknown herd"
-        if not (user.is_admin or genebank in user.is_manager):
+        if not (skip_role_check or user.is_admin or genebank in user.is_manager):
             permitted = False
             message = "forbidden"
     elif not user.is_admin:
@@ -617,6 +619,18 @@ def get_genebanks(user_uuid=None):
 
 
 # Herd functions
+
+
+def herd_to_herdid(lookup_herd):
+    """
+    Returns the id of the herd with the given name.
+    """
+    with DATABASE.atomic():
+        try:
+            herd = Herd.get(Herd.herd == lookup_herd)
+        except DoesNotExist:
+            return None
+        return herd.id
 
 
 def get_herd(herd_id, user_uuid=None):

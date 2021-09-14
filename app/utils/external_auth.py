@@ -123,6 +123,7 @@ def setup_google(app, config):
     ]
 
     if config["google"].get("autocreate", None):
+        scopes.append("https://www.googleapis.com/auth/userinfo.profile")
         scopes.append("https://www.googleapis.com/auth/userinfo.email")
 
     if config["google"].get("domain", None):
@@ -182,7 +183,7 @@ def google_authorized():
         return False
 
     if "googledomain" in _config:
-        if idtoken["hd"] != _config["googledomain"]:
+        if "hd" not in idtoken or idtoken["hd"] != _config["googledomain"]:
             return None
 
     return flask_dance.contrib.google.google.authorized
@@ -291,7 +292,14 @@ def google_details():
             uia_js = userinfo_admin.json()
 
             if uia_js and _config["googleherd"] in uia_js:
-                out_token["herd"] = uia_js[_config["googleherd"]]
+                out_token["herd"] = uia_js[_config["googleherd"]][0]["value"]
+
+            if (
+                "fullname" not in out_token
+                and "name" in uia_js
+                and "fullName" in uia_js["name"]
+            ):
+                out_token["fullname"] = uia_js["name"]["fullName"]
 
     if out_token:
         return out_token
