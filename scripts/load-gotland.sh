@@ -394,6 +394,36 @@ psql --quiet<<-'END_SQL'
 	WHERE	bodyfat NOT IN ('low', 'normal', 'high');
 END_SQL
 
+# Fix herd-tracking dates.  This moves the latest herd tracking event
+# to the birth date, plus 8 weeks, for each individual whose latest
+# herd tracking event happened on the year of birth.
+# See issue #423:
+#	https://github.com/NBISweden/theherdbook/issues/423
+psql --quiet <<-'END_SQL'
+	WITH	ht_tmp AS (
+		-- Temporary table containing the latest herd tracking
+		-- event for each individual in the current genebank.
+		SELECT	individual_id, herd_tracking_id
+		FROM	herd_tracking ht_inner
+		JOIN	herd h ON (ht_inner.herd_id = h.herd_id)
+		JOIN	genebank gb ON (h.genebank_id = gb.genebank_id)
+		WHERE	gb.name = 'Gotlandskanin'
+		AND	ht_inner.herd_tracking_date = (
+			SELECT	MAX(herd_tracking_date)
+			FROM	herd_tracking
+			WHERE	individual_id = ht_inner.individual_id
+			)
+		)
+	UPDATE	herd_tracking ht
+	SET	herd_tracking_date = b.birth_date + interval '8 weeks'
+	FROM	individual i
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	JOIN	ht_tmp ON (i.individual_id = ht_tmp.individual_id)
+	WHERE	ht.herd_tracking_id = ht_tmp.herd_tracking_id
+	AND	EXTRACT(YEAR FROM b.birth_date) =
+		EXTRACT(YEAR FROM ht.herd_tracking_date)
+END_SQL
+
 if [ ! -f "$3" ]; then
 	# No herd info
 	exit 0
