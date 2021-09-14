@@ -128,8 +128,8 @@ psql --echo-errors --quiet <<-'END_SQL'
 			FROM genebank g, color_data c;
 
 	-- Dummy herd for individuals sold outside of the genebank
-	INSERT INTO herd (genebank_id, herd, herd_name)
-	SELECT	DISTINCT gb.genebank_id, 'GX1', 'Externa djur (Gotland)'
+	INSERT INTO herd (genebank_id, herd, herd_name, is_active)
+	SELECT	DISTINCT gb.genebank_id, 'GX1', 'Externa djur (Gotland)', false
 	FROM	genebank gb
 	WHERE	gb.name = 'Gotlandskanin';
 
