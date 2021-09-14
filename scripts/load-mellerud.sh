@@ -273,6 +273,8 @@ if [ ! -f "$3" ]; then
     exit 0
 fi
 
+echo "Loading herds"
+
 # read the csv into a temprary table called 'm_data2'
 csvsql  --db "$1" -I \
 	--tables m_data2 \
