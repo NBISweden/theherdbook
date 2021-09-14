@@ -235,6 +235,11 @@ export function FilterTable({
     { field: "name", label: "Namn" },
     { field: "certificate", label: "Certifikat", hidden: true },
     {
+      field: "digital_certificate",
+      label: "Digitalt certifikat",
+      hidden: true,
+    },
+    {
       field: "number",
       label: "Nummer",
       sortAs: "numbers",
