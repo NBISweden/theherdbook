@@ -265,7 +265,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Mellerudskanin';
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.herd_name IS NULL;
 END_SQL
 
 if [ ! -f "$3" ]; then 

@@ -436,7 +436,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.herd_name IS NULL;
 
 	-- Add herd active status
 	UPDATE herd h
@@ -448,7 +449,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND 	h.is_active IS NULL;
 
 	-- Add names of people responsible for the herd
 	UPDATE herd h
@@ -460,7 +462,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.name IS NULL;
 
 	-- Add start date
 	UPDATE herd h
@@ -472,5 +475,6 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.start_date IS NULL;
 END_SQL
