@@ -273,7 +273,7 @@ END_SQL
 # herd tracking event happened on the year of birth.
 # See issue #423:
 #       https://github.com/NBISweden/theherdbook/issues/423
-psql --quiet <<-'END_SQL
+psql --quiet <<-'END_SQL'
 	WITH	ht_tmp AS (
 		-- Temporary table containing the latest herd tracking
 		-- event for each individual in the current genebank.
