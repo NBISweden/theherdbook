@@ -57,7 +57,8 @@ export function BreedingForm({
   handleBreedingsChanged: () => void;
   handleActive: (breeding: Breeding) => void;
 }) {
-  const { genebanks } = useDataContext();
+  const { genebanks, herdListener, herdChangeListener, setHerdChangeListener } =
+    useDataContext();
   const {
     createBreeding,
     createBirth,
@@ -201,6 +202,9 @@ export function BreedingForm({
       (json) => {
         switch (json.status) {
           case "success": {
+            if (herdListener == individual.herd) {
+              setHerdChangeListener(herdChangeListener + 1);
+            }
             userMessage("Kaninen har lagts till i din besättning.", "success");
             break;
           }
