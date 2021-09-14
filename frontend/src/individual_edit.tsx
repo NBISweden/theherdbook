@@ -455,6 +455,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         switch (retval.status) {
           case "success":
             userMessage(retval.message ?? "Individual updated", "success");
+            handleCloseDialog();
             break;
           default:
             userMessage(retval.message ?? "something went wrong", "error");
@@ -855,7 +856,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               </Button>
               <Button
                 variant="contained"
-                color="primary"
+                color="secondary"
                 onClick={() => handleCloseDialog()}
               >
                 {"Avbryt"}
