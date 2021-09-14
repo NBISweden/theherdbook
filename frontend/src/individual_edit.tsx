@@ -126,6 +126,9 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
   },
+  button: {
+    marginRight: "1em",
+  },
 });
 
 // interface and function that make the react-number-format library work
@@ -175,7 +178,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [isSaveActive, setIsSaveActive] = React.useState(false);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
-  const { userMessage } = useMessageContext();
+  const { userMessage, handleCloseDialog } = useMessageContext();
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
@@ -842,12 +845,20 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             </div>
             <div className={style.paneControls}>
               <Button
+                className={style.button}
                 variant="contained"
                 color="primary"
                 disabled={!isSaveActive}
                 onClick={() => save(individual)}
               >
                 {"Spara"}
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleCloseDialog()}
+              >
+                {"Avbryt"}
               </Button>
             </div>
           </MuiPickersUtilsProvider>

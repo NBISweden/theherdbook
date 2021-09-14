@@ -21,10 +21,12 @@ export type MessageLevel = "error" | "warning" | "info" | "success";
 export interface MessageContext {
   userMessage(msg: string, level: MessageLevel): void;
   popup(content: JSX.Element, link: string | undefined, full?: boolean): void;
+  handleCloseDialog(): void;
 }
 const emptyContext: MessageContext = {
   userMessage() {},
   popup() {},
+  handleCloseDialog() {},
 };
 
 export const MessageContext = React.createContext(emptyContext);
@@ -92,7 +94,7 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
   };
 
   return (
-    <MessageContext.Provider value={{ userMessage, popup }}>
+    <MessageContext.Provider value={{ userMessage, popup, handleCloseDialog }}>
       {props.children}
       <Dialog
         open={showDialog}
