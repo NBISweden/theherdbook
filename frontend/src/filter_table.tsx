@@ -517,7 +517,7 @@ export function FilterTable({
                 variant="contained"
                 color="primary"
                 onClick={() =>
-                  popup(<IndividualAdd herdId={id} />, "/register", true)
+                  popup(<IndividualAdd herdId={id} />, undefined, true)
                 }
               >
                 Lägg till
