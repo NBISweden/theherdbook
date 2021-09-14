@@ -223,14 +223,14 @@ psql --echo-errors --quiet <<-'END_SQL'
 	AND	birth_date IS NULL;
 
 	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	INSERT	INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Gotlandskanin'
-   ORDER BY i.individual_id;
+	FROM	genebank gb
+	JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+	JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	WHERE	gb.name = 'Gotlandskanin'
+	ORDER BY	i.individual_id;
 
 END_SQL
 
