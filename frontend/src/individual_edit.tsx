@@ -126,6 +126,9 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
   },
+  button: {
+    marginRight: "1em",
+  },
 });
 
 // interface and function that make the react-number-format library work
@@ -164,14 +167,18 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [oldIndividual, setOldIndividual] = React.useState(
+    undefined as Individual | undefined
+  );
   const [certType, setCertType] = React.useState("unknown" as string);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
   const [weightDate, setWeightDate] = React.useState(null as string | null);
+  const [isSaveActive, setIsSaveActive] = React.useState(false);
   const { user } = useUserContext();
   const { genebanks, colors } = useDataContext();
-  const { userMessage } = useMessageContext();
+  const { userMessage, handleCloseDialog } = useMessageContext();
   const canManage: boolean = React.useMemo(() => {
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
@@ -263,6 +270,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       ? get(`/api/individual/${id}`).then(
           (data: Individual) => {
             setIndividual(data);
+            setOldIndividual(data);
             if (!!data?.certificate) {
               setCertType("paper");
             } else if (!!data?.digital_certificate) {
@@ -312,7 +320,26 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     field: T,
     value: Individual[T]
   ) => {
-    individual && setIndividual({ ...individual, [field]: value });
+    individual &&
+      (setIndividual({ ...individual, [field]: value }), setIsSaveActive(true));
+  };
+
+  /**
+   * Compares the individual object that is supposed to be saved with the version of it
+   * that's currently in the database.
+   * @param newInd individual data with user input
+   * @param oldInd individual in the database
+   * @returns true if they are equal
+   */
+  const isEqual = (newInd: Individual, oldInd: Individual) => {
+    let areEqual = true;
+    const keys = Object.keys(newInd);
+    keys.forEach((key: string) => {
+      if (newInd[key] !== oldInd[key]) {
+        areEqual = false;
+      }
+    });
+    return areEqual;
   };
 
   const isDateOkay = (date: string) => {
@@ -420,12 +447,15 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * @param data The Individual data to save.
    */
   const save = (data: Individual) => {
-    const postData = { ...data };
-    patch("/api/individual", postData).then(
+    if (isEqual(data, oldIndividual)) {
+      return;
+    }
+    patch("/api/individual", data).then(
       (retval: ServerMessage) => {
         switch (retval.status) {
           case "success":
             userMessage(retval.message ?? "Individual updated", "success");
+            handleCloseDialog();
             break;
           default:
             userMessage(retval.message ?? "something went wrong", "error");
@@ -816,11 +846,20 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             </div>
             <div className={style.paneControls}>
               <Button
+                className={style.button}
                 variant="contained"
                 color="primary"
+                disabled={!isSaveActive}
                 onClick={() => save(individual)}
               >
                 {"Spara"}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => handleCloseDialog()}
+              >
+                {"Avbryt"}
               </Button>
             </div>
           </MuiPickersUtilsProvider>
