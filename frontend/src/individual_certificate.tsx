@@ -51,6 +51,17 @@ const useStyles = makeStyles({
   formWrapper: {
     padding: "3em 3em 0 3em",
   },
+  confirmBox: {
+    border: "1px solid black",
+    borderRadius: "5px",
+    padding: "1em",
+  },
+  confirmField: {
+    marginRight: "1.5em",
+  },
+  flexbox: {
+    display: "flex",
+  },
 });
 
 export function IndividualCertificate({
@@ -68,8 +79,7 @@ export function IndividualCertificate({
   const [showSummary, setShowSummary] = React.useState(false as boolean);
   const [showComplete, setShowComplete] = React.useState(false as boolean);
   //States for authentication
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [confirmId, setConfirmId] = React.useState("");
   const [isUserGood, setIsUserGood] = React.useState(false);
   //States for API-requests
   const [previewUrl, setPreviewUrl] = React.useState(undefined as unknown);
@@ -237,17 +247,10 @@ export function IndividualCertificate({
   };
 
   // Used to activate the button for ordering the certificate
-  async function authenticate(username: string, password: string) {
-    return await post("/api/login", { username, password }).then(
-      (data) => {
-        data ? setIsUserGood(true) : setIsUserGood(false);
-        return data;
-      },
-      (error) => {
-        userMessage("Något gick fel.", "error");
-        return "error";
-      }
-    );
+  async function authenticate(userInput: string) {
+    if (userInput == individual.herd.herd) {
+      setIsUserGood(true);
+    }
   }
 
   // Returns the signed, new certificate.
@@ -382,48 +385,36 @@ export function IndividualCertificate({
           >
             <Page pageNumber={pageNumber} />
           </Document>
-          <p>
-            Page {pageNumber} of {numPages}
-          </p>
-          <div>
+          <div className={style.confirmBox}>
             <h2>Bekräftelse</h2>
             <p>
-              För att intyga att allt är korrekt, ange ditt användernamn eller
-              e-postadress och ditt lösenord igen. Vill du göra ändringar, kan
-              du gå tillbaka.
+              För att intyga att allt är korrekt, ange ditt besättningsnummer i
+              format {individual.number ? individual.number[0] : "X"}XXX.{" "}
+              <br></br>Vill du göra ändringar, kan du gå tillbaka.
             </p>
-            <TextField
-              id="username"
-              variant={inputVariant}
-              autoFocus
-              margin="dense"
-              label="Användarnamn eller E-postadress"
-              type="email"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              id="password"
-              variant={inputVariant}
-              margin="dense"
-              label="Lösenord"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-            />
-            <div
-              className={style.paneControls}
-              style={{ justifyContent: "flex-end" }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => authenticate(username, password)}
+            <div className={style.flexbox}>
+              <TextField
+                id="confirm"
+                className={style.confirmField}
+                variant={inputVariant}
+                autoFocus
+                margin="dense"
+                label="Besättningsnummer"
+                value={confirmId}
+                onChange={(e) => setConfirmId(e.target.value)}
+              />
+              <div
+                className={style.paneControls}
+                style={{ justifyContent: "flex-end" }}
               >
-                {"Bekräfta"}
-              </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => authenticate(confirmId)}
+                >
+                  {"Bekräfta"}
+                </Button>
+              </div>
             </div>
           </div>
           <div className={style.paneControls}>
@@ -434,8 +425,7 @@ export function IndividualCertificate({
                 setShowForm(true);
                 setShowSummary(false);
                 setIsUserGood(false);
-                setUsername("");
-                setPassword("");
+                setConfirmId("");
               }}
             >
               {"Tillbaka"}
