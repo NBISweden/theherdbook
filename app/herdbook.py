@@ -422,9 +422,9 @@ def external_login_handler(service):
 
     # If we got a herd from external, setup ownership
     if "herd" in accountdetails:
-        for h in accountdetails["herd"].split(","):
+        for h in ["G", "M"]:
+            h = h + accountdetails["herd"]
             herd = da.herd_to_herdid(h.strip())
-
             if herd:
                 form = {
                     "action": "add",
