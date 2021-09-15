@@ -242,7 +242,9 @@ while [ "$year" -le 2020 ]; do
 
 		-- Load $year data
 		INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-		SELECT	h.herd_id, i.individual_id, '$year-12-31'
+		SELECT	h.herd_id,
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = gb.genebank_id)
 		JOIN	m_data d ON (d."$year" = h.herd)

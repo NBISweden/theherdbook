@@ -288,7 +288,9 @@ while [ "$year" -le 2021 ]; do
 
 		-- Load $column data
 		INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-		SELECT	h.herd_id, i.individual_id, '$year-12-31'
+		SELECT	h.herd_id,
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = gb.genebank_id)
 		JOIN	g_data d ON (d."$column" = h.herd)
@@ -309,7 +311,13 @@ psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
 		i.individual_id,
-		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer + 1, 12, 31)
+		LEAST(
+			CURRENT_DATE - interval '1 day',
+			MAKE_DATE(
+				EXTRACT(YEAR FROM ht.herd_tracking_date)::integer + 1,
+				12, 31
+			)
+		)
 	FROM	herd h
 	JOIN	individual i ON (true)
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
@@ -342,7 +350,9 @@ while [ "$year" -le 2019 ]; do
 
 		-- Load $column data
 		INSERT INTO weight (weight, individual_id, weight_date)
-		SELECT	d."$column", i.individual_id, '$year-12-31'
+		SELECT	d."$column",
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = h.genebank_id)
 		JOIN	individual i ON (i.origin_herd_id = h.herd_id)
@@ -363,7 +373,9 @@ while [ "$year" -le 2019 ]; do
 	cat <<-END_SQL
 		-- Load $column data
 		INSERT INTO bodyfat (bodyfat, individual_id, bodyfat_date)
-		SELECT	d."$column", i.individual_id, '$year-12-31'
+		SELECT	d."$column",
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = h.genebank_id)
 		JOIN	individual i ON (i.origin_herd_id = h.herd_id)
