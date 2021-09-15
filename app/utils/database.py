@@ -521,9 +521,10 @@ class Individual(BaseModel):
         Returns if an individual fullfils the requirements to be active.
         """
         is_active = (
-            self.is_active
-            and not self.death_date
+            not self.death_date
             and not self.death_note
+            and not self.castration_date
+            and not self.current_herd.herd in ["GX1", "MX1"]
             and self.latest_herdtracking_entry
             and (
                 self.latest_herdtracking_entry.herd_tracking_date
@@ -531,6 +532,14 @@ class Individual(BaseModel):
             )
         )
         return is_active
+
+    @property
+    def alive(self):
+        """
+        Returns if an indivdual is alive
+        """
+        is_alive = not self.death_date and not self.death_note
+        return is_alive
 
     def as_dict(self):
         """
@@ -551,7 +560,7 @@ class Individual(BaseModel):
             "herd": self.current_herd.herd,
             "herd_name": self.current_herd.herd_name,
         }
-
+        data["alive"] = self.alive
         data["birth_date"] = self.breeding.birth_date if self.breeding else None
         data["litter"] = self.breeding.litter_size if self.breeding else None
 
