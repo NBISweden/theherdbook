@@ -263,7 +263,7 @@ END \$\$;
 END_SQL
 
 done | psql  --quiet
-	    
+
 # Load tracking data for years 2000 through to 2021
 year=2000
 while [ "$year" -le 2021 ]; do
@@ -308,6 +308,11 @@ done | psql --quiet
 # "0", figure out the most recent tracking date.  Add tracking info to
 # the "GX1" herd at the last of December of the year *after* the year of
 # that date.
+#
+# Note that we don't touch animals that have no data in any of the
+# yearly columns (this is the "> 1" condition below).  These are handled
+# separately just afterwards.
+
 psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
@@ -324,11 +329,39 @@ psql --quiet <<-'END_SQL'
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
 	JOIN	g_data d ON (d."Nummer" = i.number)
 	WHERE	h.herd = 'GX1'
+	AND	(
+		SELECT	COUNT(*)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+		) > 1
 	AND	ht.herd_tracking_date = (
 		SELECT	MAX(herd_tracking_date)
 		FROM	herd_tracking
 		WHERE	individual_id = i.individual_id
-	)
+		)
+	AND	d."ny G" = '0'
+	ORDER BY	i.individual_id;
+END_SQL
+
+# Handle the animals we skipped in the previous step.  These gets a
+# tracking date of their birth date plus 8 weeks.
+
+psql --quiet <<-'END_SQL'
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	h.herd_id,
+		i.individual_id,
+		b.birth_date + interval '8 weeks'
+	FROM	herd h
+	JOIN	individual i ON (true)
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
+	JOIN	g_data d ON (d."Nummer" = i.number)
+	WHERE	h.herd = 'GX1'
+	AND	(
+		SELECT	COUNT(*)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+		) = 1
 	AND	d."ny G" = '0'
 	ORDER BY	i.individual_id;
 END_SQL
