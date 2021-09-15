@@ -12,12 +12,14 @@ import {
   DateBodyfat,
   dateFormat,
   DateWeight,
+  Breeding,
   Individual,
   individualLabel,
   inputVariant,
   LimitedIndividual,
   OptionType,
   ServerMessage,
+  breedingLabel,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import {
@@ -176,6 +178,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
   const [weightDate, setWeightDate] = React.useState(null as string | null);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
+  const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
   const { user } = useUserContext();
   const { userMessage, handleCloseDialog } = useMessageContext();
   const {
@@ -291,6 +294,21 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         )
       : userMessage("Något gick fel.", "error");
   }, [id]);
+
+  React.useEffect(() => {
+    //console.log(individual.herd)
+    if (individual && individual.herd.herd) {
+      get(`/api/breeding/${individual.herd.herd}`).then(
+        (data: { breedings: Breeding[] }) => {
+          data && setBreedingEvents(data.breedings);
+        },
+        (error) => {
+          console.error(error);
+          userMessage(error, "error");
+        }
+      );
+    }
+  }, [individual]);
 
   /**
    * This is to make sure there never is a value in the local state for
@@ -613,50 +631,36 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     }}
                   />
                 </div>
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    options={motherOptions ?? []}
-                    value={
-                      motherOptions.find(
-                        (option) => option.value == individual?.mother?.number
-                      ) ?? motherOptions[0]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Mor"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateField("mother", asIndividual(newValue?.value));
-                    }}
-                  />
-                  <Autocomplete
-                    options={fatherOptions ?? []}
-                    value={
-                      fatherOptions.find(
-                        (option) => option.value == individual?.father?.number
-                      ) ?? fatherOptions[0]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Far"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateField("father", asIndividual(newValue?.value));
-                    }}
-                  />
-                </div>
+                <Autocomplete
+                  options={breedingEvents ?? []}
+                  onChange={(event: any, newValue: Breeding | null) => {
+                    newValue && updateField("breeding", newValue?.id ?? null);
+                  }}
+                  defaultValue={individual.breeding}
+                  value={breedingEvents.find(
+                    (option: Breeding) =>
+                      option.id?.toString() == individual.breeding.toString()
+                  )}
+                  getOptionLabel={(option: Breeding) =>
+                    option.father && option.mother
+                      ? "[" +
+                        option.breed_date +
+                        "] " +
+                        option.father +
+                        " - " +
+                        option.mother
+                      : breedingLabel(individual)
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Parningstillfälle"
+                      variant={inputVariant}
+                      className={style.wideControl}
+                      margin="normal"
+                    />
+                  )}
+                />
                 <div className={style.flexRow}>
                   <Autocomplete
                     options={colorOptions ?? []}
