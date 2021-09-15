@@ -825,7 +825,7 @@ def form_to_individual(form, user=None):
     # object.
     for key in vars(Individual).keys():
         if form.get(key, None) is not None:
-            if key.startswith("_") or key is "alive":
+            if key.startswith("_") or key == "alive":
                 continue
             if key and key.endswith("date"):
                 try:
