@@ -271,7 +271,7 @@ export function BreedingForm({
         userMessage("Parningstillfället har uppdaterats.", "success");
       } else {
         userMessage(
-          "Klart. Parningen redan finns i systemet så föreldrarna har inte uppdaterats!",
+          "Klart. Parningen finns redan i systemet så föreldrarna har inte uppdaterats!",
           "success"
         );
       }

@@ -644,7 +644,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                   getOptionLabel={(option: Breeding) =>
                     option.father && option.mother
                       ? "[" +
-                        option.breed_date +
+                        (option.breed_date
+                          ? "Parning " + option.breed_date
+                          : "Födsel " + option.birth_date) +
                         "] " +
                         option.father +
                         " - " +
