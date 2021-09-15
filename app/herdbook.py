@@ -392,6 +392,7 @@ def external_login_handler(service):
     user = da.register_user(
         accountdetails["email"],
         None,
+        username=accountdetails["username"],
         validated=True,
         fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
     )
