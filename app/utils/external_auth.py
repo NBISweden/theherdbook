@@ -293,7 +293,10 @@ def google_details():
 
             if uia_js and _config["googleherd"] in uia_js:
                 out_token["herd"] = uia_js[_config["googleherd"]][0]["value"]
-                out_token["username"] = uia_js["name"]["givenName"] + uia_js[_config["googleherd"]][0]["value"]
+                out_token["username"] = (
+                    uia_js["name"]["givenName"]
+                    + uia_js[_config["googleherd"]][0]["value"]
+                )
 
             if (
                 "fullname" not in out_token
