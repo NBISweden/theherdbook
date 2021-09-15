@@ -45,7 +45,7 @@ psql --quiet <<-'END_SQL'
 		GROUP BY        mother_id, birth_date
 		HAVING  count(*) > 1
 		)
-	SELECT  b.birth_date, mother.number, father.number
+	SELECT  b.birth_date, mother.number AS "Mother", father.number AS "Father"
 	FROM    breeding b
 	JOIN    b_tmp ON (
 			b.mother_id = b_tmp.mother_id
