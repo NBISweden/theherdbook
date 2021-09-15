@@ -28,6 +28,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0' or "Intyg" = '?';
 
 	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = 'u';
+	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = '0' AND "2021" IS NOT NULL;
 
 	ALTER TABLE g_data ALTER "ny G" TYPE NUMERIC USING "ny G"::numeric;
 	ALTER TABLE g_data ALTER "ny G" TYPE INTEGER USING "ny G"::integer;
