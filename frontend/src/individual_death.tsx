@@ -127,7 +127,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
     patch("/api/individual", deadIndividual).then((json) => {
       if (json.status == "success") {
         setSuccess(true);
-        if (deadIndividual.herd == herdListener) {
+        if (deadIndividual.herd.herd == herdListener) {
           setHerdChangeListener(herdChangeListener + 1);
         }
         return;

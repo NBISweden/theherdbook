@@ -456,6 +456,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     if (isEqual(data, oldIndividual)) {
       return;
     }
+    const postData = { ...data };
     patch("/api/individual", data).then(
       (retval: ServerMessage) => {
         switch (retval.status) {
