@@ -46,3 +46,8 @@ config/*
 
 # s3 data storage
 s3data/*
+
+# Files related to loading data
+*.csv
+*.dump
+*.xlsx

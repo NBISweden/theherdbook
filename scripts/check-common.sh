@@ -11,7 +11,6 @@ psql --quiet <<-'END_SQL'
 	WHERE	herd NOT SIMILAR TO '[GM]X?[0-9]+';
 END_SQL
 
-
 echo 'Bad individual numbers (all genebanks):'
 echo '(numbers not corresponding to year of birth)'
 # Numbers need to be on the form "XXXX-YYZZ" where "YY"
@@ -34,4 +33,25 @@ psql --quiet <<-'END_SQL'
 				cast(date_part('year', b.birth_date) as text),
 				4, 1),
 		'%');
+END_SQL
+
+echo 'Impossible births (all genebanks):'
+echo '(females giving birth to children from more than a single male on the same date)'
+psql --quiet <<-'END_SQL'
+	WITH    b_tmp AS (
+		SELECT  mother_id, birth_date
+		FROM    breeding
+		WHERE   mother_id IS NOT NULL
+		GROUP BY        mother_id, birth_date
+		HAVING  count(*) > 1
+		)
+	SELECT  b.birth_date, mother.number AS "Mother", father.number AS "Father"
+	FROM    breeding b
+	JOIN    b_tmp ON (
+			b.mother_id = b_tmp.mother_id
+		AND     b.birth_date = b_tmp.birth_date
+		)
+	JOIN    individual mother ON (b.mother_id = mother.individual_id)
+	JOIN    individual father ON (b.father_id = father.individual_id)
+	ORDER BY        b.birth_date, mother.number;
 END_SQL

@@ -28,6 +28,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0' or "Intyg" = '?';
 
 	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = 'u';
+	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = '0' AND "2021" IS NOT NULL;
 
 	ALTER TABLE g_data ALTER "ny G" TYPE NUMERIC USING "ny G"::numeric;
 	ALTER TABLE g_data ALTER "ny G" TYPE INTEGER USING "ny G"::integer;
@@ -223,14 +224,14 @@ psql --echo-errors --quiet <<-'END_SQL'
 	AND	birth_date IS NULL;
 
 	-- Initial herd tracking
-	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	INSERT	INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	i.origin_herd_id, i.individual_id, b.birth_date
-    FROM	genebank gb
-    JOIN	herd h ON (h.genebank_id = gb.genebank_id)
-    JOIN	individual i ON (i.origin_herd_id = h.herd_id)
-    JOIN  breeding b ON (i.breeding_id = b.breeding_id)
-   WHERE	gb.name = 'Gotlandskanin'
-   ORDER BY i.individual_id;
+	FROM	genebank gb
+	JOIN	herd h ON (h.genebank_id = gb.genebank_id)
+	JOIN	individual i ON (i.origin_herd_id = h.herd_id)
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	WHERE	gb.name = 'Gotlandskanin'
+	ORDER BY	i.individual_id;
 
 END_SQL
 
@@ -262,7 +263,7 @@ END \$\$;
 END_SQL
 
 done | psql  --quiet
-	    
+
 # Load tracking data for years 2000 through to 2021
 year=2000
 while [ "$year" -le 2021 ]; do
@@ -288,7 +289,9 @@ while [ "$year" -le 2021 ]; do
 
 		-- Load $column data
 		INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
-		SELECT	h.herd_id, i.individual_id, '$year-12-31'
+		SELECT	h.herd_id,
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = gb.genebank_id)
 		JOIN	g_data d ON (d."$column" = h.herd)
@@ -305,23 +308,92 @@ done | psql --quiet
 # "0", figure out the most recent tracking date.  Add tracking info to
 # the "GX1" herd at the last of December of the year *after* the year of
 # that date.
+#
+# Note that we don't touch animals that have no data in any of the
+# yearly columns (this is the "> 1" condition below).  These are handled
+# separately just afterwards.
+
 psql --quiet <<-'END_SQL'
 	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
 	SELECT	h.herd_id,
 		i.individual_id,
-		MAKE_DATE(DATE_PART('year', ht.herd_tracking_date)::integer + 1, 12, 31)
+		LEAST(
+			CURRENT_DATE - interval '1 day',
+			MAKE_DATE(
+				EXTRACT(YEAR FROM ht.herd_tracking_date)::integer + 1,
+				12, 31
+			)
+		)
 	FROM	herd h
 	JOIN	individual i ON (true)
 	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
 	JOIN	g_data d ON (d."Nummer" = i.number)
 	WHERE	h.herd = 'GX1'
+	AND	(
+		SELECT	COUNT(*)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+		) > 1
 	AND	ht.herd_tracking_date = (
 		SELECT	MAX(herd_tracking_date)
 		FROM	herd_tracking
 		WHERE	individual_id = i.individual_id
-	)
+		)
 	AND	d."ny G" = '0'
 	ORDER BY	i.individual_id;
+END_SQL
+
+# Handle the animals we skipped in the previous step.  These gets a
+# tracking date of their birth date plus 8 weeks.
+
+psql --quiet <<-'END_SQL'
+	INSERT INTO herd_tracking (herd_id, individual_id, herd_tracking_date)
+	SELECT	h.herd_id,
+		i.individual_id,
+		b.birth_date + interval '8 weeks'
+	FROM	herd h
+	JOIN	individual i ON (true)
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	JOIN	herd_tracking ht ON (ht.individual_id = i.individual_id)
+	JOIN	g_data d ON (d."Nummer" = i.number)
+	WHERE	h.herd = 'GX1'
+	AND	(
+		SELECT	COUNT(*)
+		FROM	herd_tracking
+		WHERE	individual_id = i.individual_id
+		) = 1
+	AND	d."ny G" = '0'
+	ORDER BY	i.individual_id;
+END_SQL
+
+# Fix herd-tracking dates.  This moves the latest herd tracking event
+# to the birth date, plus 8 weeks, for each individual whose latest
+# herd tracking event happened on the year of birth.
+# See issue #423:
+#	https://github.com/NBISweden/theherdbook/issues/423
+psql --quiet <<-'END_SQL'
+	WITH	ht_tmp AS (
+		-- Temporary table containing the latest herd tracking
+		-- event for each individual in the current genebank.
+		SELECT	individual_id, herd_tracking_id
+		FROM	herd_tracking ht_inner
+		JOIN	herd h ON (ht_inner.herd_id = h.herd_id)
+		JOIN	genebank gb ON (h.genebank_id = gb.genebank_id)
+		WHERE	gb.name = 'Gotlandskanin'
+		AND	ht_inner.herd_tracking_date = (
+			SELECT	MAX(herd_tracking_date)
+			FROM	herd_tracking
+			WHERE	individual_id = ht_inner.individual_id
+			)
+		)
+	UPDATE	herd_tracking ht
+	SET	herd_tracking_date = b.birth_date + interval '8 weeks'
+	FROM	individual i
+	JOIN	breeding b ON (i.breeding_id = b.breeding_id)
+	JOIN	ht_tmp ON (i.individual_id = ht_tmp.individual_id)
+	WHERE	ht.herd_tracking_id = ht_tmp.herd_tracking_id
+	AND	EXTRACT(YEAR FROM b.birth_date) =
+		EXTRACT(YEAR FROM ht.herd_tracking_date)
 END_SQL
 
 # jscpd:ignore-start
@@ -342,7 +414,9 @@ while [ "$year" -le 2019 ]; do
 
 		-- Load $column data
 		INSERT INTO weight (weight, individual_id, weight_date)
-		SELECT	d."$column", i.individual_id, '$year-12-31'
+		SELECT	d."$column",
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = h.genebank_id)
 		JOIN	individual i ON (i.origin_herd_id = h.herd_id)
@@ -363,7 +437,9 @@ while [ "$year" -le 2019 ]; do
 	cat <<-END_SQL
 		-- Load $column data
 		INSERT INTO bodyfat (bodyfat, individual_id, bodyfat_date)
-		SELECT	d."$column", i.individual_id, '$year-12-31'
+		SELECT	d."$column",
+			i.individual_id,
+			LEAST('$year-12-31', CURRENT_DATE - interval '1 day')
 		FROM	genebank gb
 		JOIN	herd h ON (h.genebank_id = h.genebank_id)
 		JOIN	individual i ON (i.origin_herd_id = h.herd_id)
@@ -393,6 +469,7 @@ psql --quiet<<-'END_SQL'
 	DELETE FROM 	bodyfat
 	WHERE	bodyfat NOT IN ('low', 'normal', 'high');
 END_SQL
+
 
 if [ ! -f "$3" ]; then
 	# No herd info
@@ -436,7 +513,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.herd_name IS NULL;
 
 	-- Add herd active status
 	UPDATE herd h
@@ -448,7 +526,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.is_active IS NULL;
 
 	-- Add names of people responsible for the herd
 	UPDATE herd h
@@ -460,7 +539,8 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.name IS NULL;
 
 	-- Add start date
 	UPDATE herd h
@@ -472,5 +552,6 @@ psql --quiet <<-'END_SQL'
 	)
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
-	AND	gb.name = 'Gotlandskanin';
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.start_date IS NULL;
 END_SQL
