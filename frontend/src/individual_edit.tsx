@@ -172,6 +172,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [oldIndividual, setOldIndividual] = React.useState(
     undefined as Individual | undefined
   );
+  const [individualLoaded, setIndividualLoaded] = React.useState(
+    false as boolean
+  );
   const [certType, setCertType] = React.useState("unknown" as string);
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
@@ -245,7 +248,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         return { value: i.number, label: individualLabel(i) };
       });
   }, [genebankIndividuals]);
-
   const translateBodyfat: Map<string, string> = new Map([
     ["low", "låg"],
     ["normal", "normal"],
@@ -280,6 +282,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
           (data: Individual) => {
             setIndividual(data);
             setOldIndividual(data);
+            setIndividualLoaded(true);
             if (!!data?.certificate) {
               setCertType("paper");
             } else if (!!data?.digital_certificate) {
@@ -298,9 +301,15 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   React.useEffect(() => {
     //console.log(individual.herd)
     if (individual && individual.herd.herd) {
-      get(`/api/breeding/${individual.herd.herd}`).then(
+      const date = new Date(individual.birth_date).toISOString().split("T")[0]
+      get(`/api/breeding/${date}`).then(
         (data: { breedings: Breeding[] }) => {
-          data && setBreedingEvents(data.breedings);
+          data &&
+            setBreedingEvents(
+              data.breedings.filter(
+                (b) => b.birth_date === new Date(individual.birth_date).toISOString().split("T")[0]
+              )
+            );
         },
         (error) => {
           console.error(error);
@@ -308,7 +317,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         }
       );
     }
-  }, [individual]);
+  }, [individualLoaded]);
 
   /**
    * This is to make sure there never is a value in the local state for
