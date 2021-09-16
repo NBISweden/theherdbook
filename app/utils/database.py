@@ -521,10 +521,10 @@ class Individual(BaseModel):
         Returns if an individual fullfils the requirements to be active.
         """
         is_active = (
-            not self.death_date
+            self.current_herd.is_active
+            and not self.death_date
             and not self.death_note
             and not self.castration_date
-            and not self.current_herd.herd in ["GX1", "MX1"]
             and self.latest_herdtracking_entry
             and (
                 self.latest_herdtracking_entry.herd_tracking_date
