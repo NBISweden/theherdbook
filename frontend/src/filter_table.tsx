@@ -217,16 +217,26 @@ export function FilterTable({
           `/herd/${rowData.herd["herd"]}`,
           true
         ),
+      /**
+       * render makes two exceptions for GX1 and MX1 due to inefficient herd fetching when opening HerdView.
+       * Because GX1 and MX1 are unusually large, trying to open HerdView for them will crash the page.
+       * As it's not needed from a user perspective, these exceptions disable the link for opening HerdView.
+       * Consider it a workaround until herd fetching is more efficient.
+       */
       render: (rowData: any) => (
         <a
-          className="functionLink"
-          onClick={() =>
-            popup(
-              <HerdView id={rowData.herd["herd"]} />,
-              `/herd/${rowData.herd["herd"]}`,
-              true
-            )
+          className={
+            rowData.herd.herd !== ("GX1" || "MX1") ? "functionLink" : ""
           }
+          onClick={() => {
+            if (rowData.herd.herd !== ("GX1" || "MX1")) {
+              popup(
+                <HerdView id={rowData.herd["herd"]} />,
+                `/herd/${rowData.herd["herd"]}`,
+                true
+              );
+            }
+          }}
         >
           {rowData.herd["herd"]}
         </a>
