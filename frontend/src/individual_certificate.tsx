@@ -97,6 +97,8 @@ export function IndividualCertificate({
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
+  const { herdListener, herdChangeListener, setHerdChangeListener } =
+    useDataContext();
   const style = useStyles();
 
   // Limited version of the individual to be used for the preview
@@ -282,6 +284,9 @@ export function IndividualCertificate({
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
+          if (herdListener == individual?.herd.herd) {
+            setHerdChangeListener(herdChangeListener + 1);
+          }
         } else {
           throw new Error("Något gick fel (det här borde inte hända).");
         }
@@ -321,6 +326,9 @@ export function IndividualCertificate({
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
+          if (herdListener == individual?.herd.herd) {
+            setHerdChangeListener(herdChangeListener + 1);
+          }
         } else {
           throw new Error("Något gick fel.");
         }

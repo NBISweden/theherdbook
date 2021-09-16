@@ -104,7 +104,7 @@ class TestPermissions(DatabaseTest):
                 if expected["genebank"] not in user.accessible_genebanks:
                     self.assertIsNone(value)
                 else:
-                    expected["individuals"] = [i.short_info() for i in herd.individuals]
+                    expected["individuals"] = [i.as_dict() for i in herd.individuals]
                     self.assertDictEqual(expected, value)
 
     def test_add_herd(self):

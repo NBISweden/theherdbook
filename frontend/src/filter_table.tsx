@@ -217,16 +217,26 @@ export function FilterTable({
           `/herd/${rowData.herd["herd"]}`,
           true
         ),
+      /**
+       * render makes two exceptions for GX1 and MX1 due to inefficient herd fetching when opening HerdView.
+       * Because GX1 and MX1 are unusually large, trying to open HerdView for them will crash the page.
+       * As it's not needed from a user perspective, these exceptions disable the link for opening HerdView.
+       * Consider it a workaround until herd fetching is more efficient.
+       */
       render: (rowData: any) => (
         <a
-          className="functionLink"
-          onClick={() =>
-            popup(
-              <HerdView id={rowData.herd["herd"]} />,
-              `/herd/${rowData.herd["herd"]}`,
-              true
-            )
+          className={
+            rowData.herd.herd !== ("GX1" || "MX1") ? "functionLink" : ""
           }
+          onClick={() => {
+            if (rowData.herd.herd !== ("GX1" || "MX1")) {
+              popup(
+                <HerdView id={rowData.herd["herd"]} />,
+                `/herd/${rowData.herd["herd"]}`,
+                true
+              );
+            }
+          }}
         >
           {rowData.herd["herd"]}
         </a>
@@ -234,6 +244,11 @@ export function FilterTable({
     },
     { field: "name", label: "Namn" },
     { field: "certificate", label: "Certifikat", hidden: true },
+    {
+      field: "digital_certificate",
+      label: "Digitalt certifikat",
+      hidden: true,
+    },
     {
       field: "number",
       label: "Nummer",
@@ -310,7 +325,15 @@ export function FilterTable({
       field: "color",
       label: "Färg",
       sortBy: "name",
-      render: (rowData: any) => rowData.color["name"],
+      render: (rowData: any) => {
+        if (typeof rowData.color == "string") {
+          return rowData.color;
+        } else if (rowData.color && !!rowData.color["name"]) {
+          return rowData.color["name"];
+        } else {
+          return undefined;
+        }
+      },
     },
     { field: "color_note", label: "Färganteckning", hidden: true },
   ];

@@ -176,7 +176,7 @@ class TestDataAccess(DatabaseTest):
                 if target["genebank"] not in user.accessible_genebanks:
                     target = None
                 else:
-                    target["individuals"] = [i.short_info() for i in herd.individuals]
+                    target["individuals"] = [i.as_dict() for i in herd.individuals]
 
                 if value is None or target is None:
                     self.assertEqual(value, target)

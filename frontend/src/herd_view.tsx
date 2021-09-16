@@ -65,7 +65,13 @@ export function HerdView({ id }: { id: string | undefined }) {
   const [activeTab, setActiveTab] = React.useState("list" as TabValue);
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
-  const { genebanks } = useDataContext();
+  const {
+    genebanks,
+    herdChangeListener,
+    herdListener,
+    setHerdChangeListener,
+    setHerdListener,
+  } = useDataContext();
   const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
   const [pedigreeView, setPedigreeView] = React.useState(false as boolean);
 
@@ -77,8 +83,9 @@ export function HerdView({ id }: { id: string | undefined }) {
     [genebanks, id, algo, pedigreeView]
   );
 
-  React.useEffect(() => {
+  const getHerd = () => {
     if (id) {
+      setHerdListener(id);
       get(`/api/herd/${id}`).then(
         (data: Herd) => data && setHerd(data),
         (error) => {
@@ -87,22 +94,17 @@ export function HerdView({ id }: { id: string | undefined }) {
         }
       );
     }
-  }, [id]);
+  };
 
   React.useEffect(() => {
-    if (herd && genebanks && herd.individuals) {
-      const genebank = genebanks.find((g) =>
-        g.herds.some((h) => h.herd == herd.herd)
-      );
-      const individualIds = herd.individuals.map((i) => i.number);
-      if (genebank && genebank.individuals != null) {
-        const individualsList = genebank.individuals.filter((i) =>
-          individualIds.includes(i.number)
-        );
-        setHerdIndividuals(individualsList);
-      }
+    getHerd();
+  }, [id, herdChangeListener]);
+
+  React.useEffect(() => {
+    if (herd && herd.individuals) {
+      setHerdIndividuals(herd.individuals);
     }
-  }, [herd, genebanks]);
+  }, [herd]);
 
   return (
     <>
@@ -119,7 +121,13 @@ export function HerdView({ id }: { id: string | undefined }) {
             textColor="primary"
             variant="fullWidth"
           >
-            <Tab label="Lista över individer" value="list" />
+            <Tab
+              label="Lista över individer"
+              value="list"
+              onClick={() => {
+                getHerd();
+              }}
+            />
             <Tab label="Parningstillfällen" value="breeding" />
             <Tab
               label="Släktträd för besättningen"

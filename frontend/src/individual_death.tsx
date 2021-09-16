@@ -20,6 +20,7 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import { useDataContext } from "./data_context";
 
 const useStyles = makeStyles({
   wideControl: {
@@ -68,6 +69,8 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
   const [success, setSuccess] = React.useState(false as boolean);
   const style = useStyles();
   const { userMessage } = useMessageContext();
+  const { herdListener, herdChangeListener, setHerdChangeListener } =
+    useDataContext();
 
   const getMinDate = () => {
     const lastTracking = new Date(individual.herd_tracking[0].date);
@@ -124,6 +127,9 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
     patch("/api/individual", deadIndividual).then((json) => {
       if (json.status == "success") {
         setSuccess(true);
+        if (deadIndividual.herd.herd == herdListener) {
+          setHerdChangeListener(herdChangeListener + 1);
+        }
         return;
       }
       if (json.status == "error") {

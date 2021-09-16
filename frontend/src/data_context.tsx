@@ -30,6 +30,14 @@ export function useDataContext(): DataContext {
 
 export function WithDataContext(props: { children: React.ReactNode }) {
   const [genebanks, setGenebanks] = React.useState([] as Array<Genebank>);
+  /**
+   * The herd listener will save a herd id as soon as the user opens a herd view.
+   * The herd change listener will increase every time an individual of that herd is updated, sold or added.
+   * Herd view will fetch the herd's data every time the listener changes.
+   * This way, changes will be visible in herd view immediately, no page reload needed.
+   */
+  const [herdListener, setHerdListener] = React.useState("");
+  const [herdChangeListener, setHerdChangeListener] = React.useState(0);
   const [users, setUsers] = React.useState([] as Array<NameID>);
   const [colors, setColors] = React.useState(
     {} as { [genebank: string]: Color[] }
@@ -195,6 +203,10 @@ export function WithDataContext(props: { children: React.ReactNode }) {
         genebanks,
         users,
         colors,
+        herdChangeListener,
+        herdListener,
+        setHerdChangeListener,
+        setHerdListener,
         setGenebanks,
         setUsers,
         loadData,

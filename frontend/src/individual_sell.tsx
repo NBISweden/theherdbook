@@ -77,7 +77,8 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   const [checked, setChecked] = React.useState(false as boolean);
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
   const [success, setSuccess] = React.useState(false as boolean);
-  const { genebanks } = useDataContext();
+  const { genebanks, herdListener, herdChangeListener, setHerdChangeListener } =
+    useDataContext();
   const { userMessage } = useMessageContext();
   const style = useStyles();
   const disabled: boolean =
@@ -86,7 +87,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
 
   React.useEffect(() => {
     const currentGenebank = genebanks.find((genebank) =>
-      genebank.individuals.some((i) => i.number == individual.number)
+      genebank.individuals.some((i) => i.number[0] == individual.number[0])
     );
 
     setGenebank(currentGenebank);
@@ -141,6 +142,9 @@ export function IndividualSell({ individual }: { individual: Individual }) {
     };
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
+        if (individual.herd_tracking[0].herd == herdListener) {
+          setHerdChangeListener(herdChangeListener + 1);
+        }
         setSuccess(true);
         return;
       }

@@ -308,6 +308,10 @@ class TestDatabase(DatabaseTest):
         data["mother"] = mother
         data["father"] = father
         data["color"] = self.colors[0].name
+        data["alive"] = (
+            not self.individuals[0].death_date and not self.individuals[0].death_note
+        )
+        data["is_active"] = None
         data["weights"] = [
             {
                 "weight": self.weights[0].weight,
@@ -350,7 +354,8 @@ class TestDatabase(DatabaseTest):
             }
 
             is_active = (
-                individual.is_active
+                individual.current_herd.is_active
+                and not individual.castration_date
                 and not individual.death_date
                 and not individual.death_note
                 and (

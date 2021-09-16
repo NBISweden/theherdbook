@@ -176,6 +176,10 @@ export interface DataContext {
   genebanks: Array<Genebank>;
   users: Array<NameID>;
   colors: { [genebank: string]: Color[] };
+  herdChangeListener: number;
+  herdListener: string;
+  setHerdChangeListener(data: number): void;
+  setHerdListener(data: string): void;
   setGenebanks(data: Genebank[]): void;
   setUsers(data: NameID[]): void;
   loadData(data: string | Array<string>): Promise<boolean>;

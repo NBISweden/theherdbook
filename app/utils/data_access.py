@@ -640,7 +640,7 @@ def get_herd(herd_id, user_uuid=None):
             if data["genebank"] not in user.accessible_genebanks:
                 return None
 
-            data["individuals"] = [i.short_info() for i in herd.individuals]
+            data["individuals"] = [i.as_dict() for i in herd.individuals]
             return data
     except DoesNotExist:
         return data
@@ -825,7 +825,7 @@ def form_to_individual(form, user=None):
     # object.
     for key in vars(Individual).keys():
         if form.get(key, None) is not None:
-            if key.startswith("_"):
+            if key.startswith("_") or key == "alive":
                 continue
             if key and key.endswith("date"):
                 try:
