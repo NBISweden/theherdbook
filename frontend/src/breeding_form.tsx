@@ -205,7 +205,7 @@ export function BreedingForm({
   };
 
   const postEmptyIndividual = (individual: Individual): any => {
-    post("/api/individual", individual).then(
+    let status = post("/api/individual", individual).then(
       (json) => {
         switch (json.status) {
           case "success": {
@@ -213,7 +213,7 @@ export function BreedingForm({
               setHerdChangeListener(herdChangeListener + 1);
             }
             userMessage("Kaninen har lagts till i din besättning.", "success");
-            break;
+            return "success";
           }
           case "error": {
             switch (json.message) {
@@ -221,35 +221,36 @@ export function BreedingForm({
                 {
                   userMessage("Du är inte inloggad.", "error");
                 }
-                break;
+                return "error";
               case "Individual must have a valid herd":
                 {
                   userMessage("Besättningen kunde inte hittas.", "error");
                 }
-                break;
+                return "error";
               case "Forbidden": {
                 userMessage(
                   "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
                   "error"
                 );
-                break;
+                return "error";
               }
               default: {
                 userMessage(
                   "Något gick fel. Det här borde inte hända.",
                   "error"
                 );
-                break;
+                return "error";
               }
             }
           }
         }
-        return json.status;
       },
       (error) => {
         userMessage("Något gick fel.", "error");
+        return "error";
       }
     );
+    return status;
   };
 
   const handleEditableBreedingUpdates = async (
