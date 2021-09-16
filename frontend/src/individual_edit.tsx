@@ -301,15 +301,10 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   React.useEffect(() => {
     //console.log(individual.herd)
     if (individual && individual.herd.herd) {
-      const date = new Date(individual.birth_date).toISOString().split("T")[0]
+      const date = new Date(individual.birth_date).toISOString().split("T")[0];
       get(`/api/breeding/${date}`).then(
         (data: { breedings: Breeding[] }) => {
-          data &&
-            setBreedingEvents(
-              data.breedings.filter(
-                (b) => b.birth_date === new Date(individual.birth_date).toISOString().split("T")[0]
-              )
-            );
+          data && setBreedingEvents(data.breedings);
         },
         (error) => {
           console.error(error);
@@ -650,18 +645,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     (option: Breeding) =>
                       option.id?.toString() == individual.breeding.toString()
                   )}
-                  getOptionLabel={(option: Breeding) =>
-                    option.father && option.mother
-                      ? "[" +
-                        (option.breed_date
-                          ? "Parning " + option.breed_date
-                          : "Födsel " + option.birth_date) +
-                        "] " +
-                        option.father +
-                        " - " +
-                        option.mother
-                      : breedingLabel(individual)
-                  }
+                  getOptionLabel={() => breedingLabel(individual)}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -672,6 +656,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     />
                   )}
                 />
+                <div className={style.flexRow}>
+                  <a href={"/herd/" + individual.herd.herd}>
+                    {" "}
+                    Lägg till nytt parningstillfälle
+                  </a>
+                </div>
+
                 <div className={style.flexRow}>
                   <Autocomplete
                     options={colorOptions ?? []}

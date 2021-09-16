@@ -153,7 +153,7 @@ export function breedingLabel(individual: Individual): string {
   let father = `${individual.father.number}`;
   let mother = `${individual.mother.number}`;
   let date = new Date(individual.birth_date)?.toISOString().split("T")[0];
-   return "[" + "Födsel " + date + "] " + father + " - " + mother;
+   return "[" + "Födsel " + date + "] " + father + "(" + individual.father.name +  ") - " + mother + "(" + individual.mother.name + ")";
 }
 
 export function herdLabel(herd: LimitedHerd): string {
