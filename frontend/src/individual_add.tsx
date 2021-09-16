@@ -347,9 +347,10 @@ export function IndividualAdd({
     };
 
     // Check if there already is a breeding
+    const herdBreedings = await get(`/api/breeding/${herdId}`);
     const breedingMatch = await findBreedingMatch(
-      individual.origin_herd.herd,
-      breedingInput
+      breedingInput,
+      herdBreedings
     );
 
     // If there is a breeding, update it

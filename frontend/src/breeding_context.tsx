@@ -9,6 +9,11 @@ export interface BreedingContext {
   createBirth(birthData: Birth): Promise<any>;
   updateBreeding(breedingData: Breeding): Promise<any>;
   findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
+  findEditableBreedingMatch(
+    herdId: string,
+    breedingData: Breeding
+  ): Promise<any>;
+
   modifyBreedingUpdates(updates: Breeding, breedingMatch: Breeding): Breeding;
   checkBirthUpdate(breeding: Breeding, breedingUpdates: Breeding): number;
 }
@@ -18,8 +23,10 @@ const emptyBreedingContext: BreedingContext = {
   async createBirth() {},
   async updateBreeding() {},
   async findBreedingMatch() {},
+  async findEditableBreedingMatch() {},
   modifyBreedingUpdates() {
     return {
+      id: -1,
       breed_date: null,
       breed_notes: "",
       father: "",
@@ -159,8 +166,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
    * @returns the matching breeding if there is any. Otherwise an error message.
    */
 
-  const findBreedingMatch = async (herdId: string, breedingData: Breeding) => {
-    const herdBreedings = await get(`/api/breeding/${herdId}`);
+  const findBreedingMatch = async (breedingData: Breeding, herdBreedings: Breeding[] ) => {
 
     const breedingMatch: Breeding = herdBreedings.breedings.find(
       (item) =>
@@ -171,19 +177,44 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     );
 
     if (!breedingMatch) {
+      console.log("not found")
       /* userMessage("Parningstillfället kunde inte hittas.", "error"); */
       return false;
     }
     return breedingMatch;
   };
 
+  const findEditableBreedingMatch = async (
+    breedingData: Breeding,
+    herdBreedings: Breeding[],
+  ) => {
+    const matchOnDate = await findBreedingMatch(breedingData, herdBreedings);
+
+    if (matchOnDate) {
+      return [matchOnDate, 1];
+    }
+    const currentBreeding: Breeding = herdBreedings.breedings.find(
+      (item: Breeding) => item.id == breedingData.id
+    );
+
+    if (!currentBreeding) {
+      /* userMessage("Parningstillfället kunde inte hittas.", "error"); */
+      /* Case when there is no breeding event yet */
+      return [false, -1];
+    }
+    /* Case when we can change the parents and birth date of an existing event */
+    return [currentBreeding, 0];
+  };
   /**
    * Used before updating an existing breeding with user input.
    * It removes empty fields and adds the breeding id.
    * This way, the right breeding is updated and no empty fields are sent to the API.
    * Empty fields would cause error messages from the API.
    * */
-  const modifyBreedingUpdates = (updates: Breeding, breedingMatch) => {
+  const modifyBreedingUpdates = (
+    updates: Breeding,
+    breedingMatch: Breeding
+  ) => {
     let newUpdates: Breeding = { ...updates, ...{ id: breedingMatch.id } };
     for (let key in newUpdates) {
       if (newUpdates[key] === null || newUpdates[key] === undefined) {
@@ -220,6 +251,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
         createBirth,
         updateBreeding,
         findBreedingMatch,
+        findEditableBreedingMatch,
         modifyBreedingUpdates,
         checkBirthUpdate,
       }}

@@ -9,7 +9,14 @@ import logging
 import uuid
 from datetime import date, datetime, timedelta
 
-from peewee import JOIN, DoesNotExist, IntegrityError, PeeweeException, fn
+from peewee import (
+    JOIN,
+    DatabaseError,
+    DoesNotExist,
+    IntegrityError,
+    PeeweeException,
+    fn,
+)
 
 # pylint: disable=import-error
 
@@ -1287,6 +1294,24 @@ def get_breeding_events(herd_id, user_uuid):
             return [b.as_dict() for b in query]
     except DoesNotExist:
         logging.warning("Unknown herd %s", herd_id)
+
+    return []
+
+
+def get_breeding_events_by_date(birth_date, user_uuid):
+    """
+    Returns a list of all breeding events in the system.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return []
+
+    try:
+        with DATABASE.atomic():
+            query = Breeding.select().where(Breeding.birth_date == birth_date)
+            return [b.as_dict() for b in query.iterator()]
+    except DatabaseError as exception:
+        logging.error("Database error: %s", exception)
 
     return []
 

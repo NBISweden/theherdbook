@@ -389,8 +389,8 @@ class Breeding(BaseModel):
         """
         data = super().as_dict()
         # pylint: disable=no-member
-        data["mother"] = self.mother.number
-        data["father"] = self.father.number
+        data["mother"] = self.mother.number if self.mother else None
+        data["father"] = self.father.number if self.father else None
         return data
 
     class Meta:  # pylint: disable=too-few-public-methods
