@@ -53,7 +53,8 @@ APP.config.update(
     # SESSION_COOKIE_SECURE=True, # Disabled for now to simplify development
     # workflow
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Strict",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE="None",
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="filesystem",
@@ -393,9 +394,12 @@ def external_login_handler(service):
         return None
 
     accountdetails = utils.external_auth.get_account_details(service)
+    APP.logger.debug("Got accountdetails %s" % repr(accountdetails))
+
     user = da.register_user(
         accountdetails["email"],
         None,
+        username=accountdetails["username"],
         validated=True,
         fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
         privileges=[
@@ -427,6 +431,22 @@ def external_login_handler(service):
 
     # FIXME: this is how we "really" log in the user
     session["user_id"] = user.uuid
+
+    # If we got a herd from external, setup ownership
+    if "herd" in accountdetails:
+        for h in ["G", "M"]:
+            h = h + accountdetails["herd"]
+            herd = da.herd_to_herdid(h.strip())
+            if herd:
+                form = {
+                    "action": "add",
+                    "role": "owner",
+                    "user": user.id,
+                    "herd": herd,
+                }
+                da.update_role(form, user.uuid, skip_role_check=True)
+            else:
+                APP.logger.warning("Could not find herd id for herd %s" % h.strip())
 
     login_user(user)
 
