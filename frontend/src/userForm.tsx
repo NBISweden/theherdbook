@@ -315,7 +315,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                   }
                 />
               }
-              label="Validated"
+              label="Validerad"
               labelPlacement="end"
             />
           </form>

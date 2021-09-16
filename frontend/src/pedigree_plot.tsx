@@ -19,8 +19,8 @@ export function PedigreeNetwork({
   const network = useRef(null);
 
   const options = {
-    width: Math.round(window.innerWidth * 0.85) + "px", //width is calculated considering the parent component width
-    height: Math.round(window.innerHeight * 0.75) + "px", //height uses the window height as reference, the domNode did not worked
+    width: Math.round(window.innerWidth * 0.6) + "px", //width is calculated considering the parent component width
+    height: Math.round(window.innerHeight * 0.6) + "px", //height uses the window height as reference, the domNode did not worked
 
     layout: {
       hierarchical: {
