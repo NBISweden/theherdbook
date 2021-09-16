@@ -302,7 +302,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     //console.log(individual.herd)
     if (individual && individual.herd.herd) {
       const date = new Date(individual.birth_date).toISOString().split("T")[0];
-      get(`/api/breeding/${date}`).then(
+      get(`/api/breeding/date/${date}`).then(
         (data: { breedings: Breeding[] }) => {
           data && setBreedingEvents(data.breedings);
         },

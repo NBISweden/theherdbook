@@ -263,7 +263,7 @@ def manage_herd():
     return jsonify(status)
 
 
-@APP.route("/api/breeding/<birth_date>")
+@APP.route("/api/breeding/date/<birth_date>")
 @login_required
 def breedings_from_date(birth_date):
     breedings = da.get_breeding_events_by_date(birth_date, session.get("user_id", None))
