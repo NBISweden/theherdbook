@@ -75,8 +75,12 @@ export function BreedingForm({
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
-  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
-  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
   const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
 
   const genebank: Genebank | undefined = React.useMemo(() => {
@@ -89,17 +93,21 @@ export function BreedingForm({
   );
 
   React.useEffect(() => {
-    setActiveFemalesLimited(
-      toLimitedIndividuals(
-        individualsFromDate(genebank, "female", fromDate, herdId)
-      )
-    );
-    setActiveMalesLimited(
-      toLimitedIndividuals(
-        individualsFromDate(genebank, "male", fromDate, undefined)
-      )
-    );
-  }, [fromDate, genebank]);
+    let females = individualsFromDate(genebank, "female", fromDate, herdId);
+    let males = individualsFromDate(genebank, "male", fromDate, undefined);
+    if (!!data && data !== "new") {
+      const mother = genebank?.individuals.find((i) => i.number == data.mother);
+      const father = genebank?.individuals.find((i) => i.number == data.father);
+      if (!!mother && !!father) {
+        females.push(mother);
+        males.push(father);
+      }
+    }
+    const limitedFemales = toLimitedIndividuals(females);
+    const limitedMales = toLimitedIndividuals(males);
+    setActiveFemalesLimited(limitedFemales);
+    setActiveMalesLimited(limitedMales);
+  }, [fromDate, genebank, data]);
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
