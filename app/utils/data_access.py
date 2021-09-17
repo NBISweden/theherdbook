@@ -789,7 +789,6 @@ def form_to_individual(form, user=None):
     # (owners can still set these values in new individuals)
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            fields = form.get(admin_field, None)
             
             if admin_field == "color":
                 changed = form[admin_field] != individual.color.name
