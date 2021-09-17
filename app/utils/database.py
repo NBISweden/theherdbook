@@ -412,8 +412,18 @@ def next_individual_number(herd, birth_date, breeding_event):
         events = (
             Breeding.select(Breeding.id)
             .join(Individual, on=(Breeding.id == Individual.breeding))
-            .join(Herd, on=(Herd.id == Individual.origin_herd))
+            .join(HerdTracking, on=(HerdTracking.individual == Individual.id))
+            .join(Herd, on=(Herd.id == HerdTracking.herd))
             .where((Herd.herd == herd))
+            .where(
+                (
+                    DATABASE.extract_date("year", HerdTracking.herd_tracking_date)
+                    == birth_date.year
+                )
+            )
+            .where(
+                (DATABASE.extract_date("year", Breeding.birth_date) == birth_date.year)
+            )
             .distinct()
         ).execute()
 
