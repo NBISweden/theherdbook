@@ -152,8 +152,25 @@ export function individualLabel(individual: LimitedIndividual): string {
 export function breedingLabel(individual: Individual): string {
   let father = `${individual.father.number}`;
   let mother = `${individual.mother.number}`;
+  let testDate = new Date(individual.birth_date).toString();
+  if (testDate == "Invalid Date") {
+    return "Väntar på giltig födelsedatum......";
+  }
   let date = new Date(individual.birth_date)?.toISOString().split("T")[0];
-   return "[" + "Födsel " + date + "] " + father + "(" + individual.father.name +  ") - " + mother + "(" + individual.mother.name + ")";
+  return (
+    "[" +
+    "Födsel " +
+    date +
+    "] " +
+    father +
+    "(" +
+    individual.father.name +
+    ") - " +
+    mother +
+    "(" +
+    individual.mother.name +
+    ")"
+  );
 }
 
 export function herdLabel(herd: LimitedHerd): string {
