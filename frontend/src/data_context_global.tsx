@@ -154,7 +154,7 @@ export function breedingLabel(individual: Individual): string {
   let mother = `${individual.mother.number}`;
   let testDate = new Date(individual.birth_date).toString();
   if (testDate == "Invalid Date") {
-    return "Väntar på giltig födelsedatum......";
+    return "Väntar på giltigt födelsedatum......";
   }
   let date = new Date(individual.birth_date)?.toISOString().split("T")[0];
   return (
