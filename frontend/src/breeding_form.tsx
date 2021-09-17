@@ -178,12 +178,15 @@ export function BreedingForm({
       return false;
     }
 
-    const vals = [userInput.litter_size, userInput.birth_date];
-    let areDefault = vals.every(function (e) {
-      e !== (null || undefined) || e !== "";
-    });
+    if (!!userInput.birth_date && !userInput.litter_size) {
+      userMessage(
+        "Om du vill spara information om födseln måste du ange ett födelsedatum och en kullstorlek.",
+        "warning"
+      );
+      return false;
+    }
 
-    if (!areDefault) {
+    if (!!userInput.litter_size && !userInput.birth_date) {
       userMessage(
         "Om du vill spara information om födseln måste du ange ett födelsedatum och en kullstorlek.",
         "warning"
