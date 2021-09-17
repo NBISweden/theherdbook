@@ -31,6 +31,7 @@ import { Autocomplete } from "@material-ui/lab";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import { get, patch, post } from "./communication";
 import { useBreedingContext } from "./breeding_context";
+import { useUserContext } from "./user_context";
 
 const emptyBreeding: Breeding = {
   id: -1,
@@ -70,13 +71,18 @@ export function BreedingForm({
     checkBirthUpdate,
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
+  const { user } = useUserContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
-  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
-  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
   const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
 
   const genebank: Genebank | undefined = React.useMemo(() => {
@@ -89,17 +95,40 @@ export function BreedingForm({
   );
 
   React.useEffect(() => {
-    setActiveFemalesLimited(
-      toLimitedIndividuals(
-        individualsFromDate(genebank, "female", fromDate, herdId)
-      )
-    );
-    setActiveMalesLimited(
-      toLimitedIndividuals(
-        individualsFromDate(genebank, "male", fromDate, undefined)
-      )
-    );
-  }, [fromDate, genebank]);
+    let females: Individual[] = [];
+    let males: Individual[] = [];
+    if (
+      genebank &&
+      data !== "new" &&
+      (user?.is_admin || user?.is_manager?.includes(genebank.id))
+    ) {
+      females = genebank?.individuals.filter((i) => i.sex === "female");
+      males = genebank?.individuals.filter((i) => i.sex === "male");
+    } else {
+      females = individualsFromDate(genebank, "female", fromDate, herdId);
+      males = individualsFromDate(genebank, "male", fromDate, undefined);
+    }
+    if (!!data && data !== "new") {
+      const activeMother = females.find((i) => i.number === data.mother);
+      let mother;
+      if (!activeMother) {
+        mother = genebank?.individuals.find((i) => i.number === data.mother);
+      }
+      const activeFather = males.find((i) => i.number === data.father);
+      let father;
+      if (!activeFather) {
+        father = genebank?.individuals.find((i) => i.number === data.father);
+      }
+      if (!!mother && !!father) {
+        females.push(mother);
+        males.push(father);
+      }
+    }
+    const limitedFemales = toLimitedIndividuals(females);
+    const limitedMales = toLimitedIndividuals(males);
+    setActiveFemalesLimited(limitedFemales);
+    setActiveMalesLimited(limitedMales);
+  }, [fromDate, genebank, data]);
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -458,13 +487,18 @@ export function BreedingForm({
                 newValue && setFormField("mother", newValue.number);
               }}
             />
-            <Button
-              color="primary"
-              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
-            >
-              {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
-              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
-            </Button>
+            {genebank &&
+            (user?.is_admin || user?.is_manager?.includes(genebank.id)) ? (
+              <></>
+            ) : (
+              <Button
+                color="primary"
+                onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+              >
+                {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
+                {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+              </Button>
+            )}
             {showFromDateFilter ? (
               <>
                 <KeyboardDatePicker
