@@ -31,6 +31,7 @@ import { Autocomplete } from "@material-ui/lab";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
 import { get, patch, post } from "./communication";
 import { useBreedingContext } from "./breeding_context";
+import { useUserContext } from "./user_context";
 
 const emptyBreeding: Breeding = {
   id: -1,
@@ -70,6 +71,7 @@ export function BreedingForm({
     checkBirthUpdate,
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
+  const { user } = useUserContext();
   const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
   const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
@@ -93,8 +95,19 @@ export function BreedingForm({
   );
 
   React.useEffect(() => {
-    let females = individualsFromDate(genebank, "female", fromDate, herdId);
-    let males = individualsFromDate(genebank, "male", fromDate, undefined);
+    let females: Individual[] = [];
+    let males: Individual[] = [];
+    if (
+      genebank &&
+      data !== "new" &&
+      (user?.is_admin || user?.is_manager?.includes(genebank.id))
+    ) {
+      females = genebank?.individuals.filter((i) => i.sex === "female");
+      males = genebank?.individuals.filter((i) => i.sex === "male");
+    } else {
+      females = individualsFromDate(genebank, "female", fromDate, herdId);
+      males = individualsFromDate(genebank, "male", fromDate, undefined);
+    }
     if (!!data && data !== "new") {
       const mother = genebank?.individuals.find((i) => i.number == data.mother);
       const father = genebank?.individuals.find((i) => i.number == data.father);
