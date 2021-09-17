@@ -8,10 +8,13 @@ export interface BreedingContext {
   createBreeding(breedingData: LimitedBreeding): Promise<any>;
   createBirth(birthData: Birth): Promise<any>;
   updateBreeding(breedingData: Breeding): Promise<any>;
-  findBreedingMatch(herdId: string, breedingData: Breeding): Promise<any>;
+  findBreedingMatch(
+    breedingData: Breeding,
+    herdBreedings: Breeding[]
+  ): Promise<any>;
   findEditableBreedingMatch(
-    herdId: string,
-    breedingData: Breeding
+    breedingData: Breeding,
+    herdBreedings: Breeding[]
   ): Promise<any>;
 
   modifyBreedingUpdates(updates: Breeding, breedingMatch: Breeding): Breeding;
@@ -166,8 +169,10 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
    * @returns the matching breeding if there is any. Otherwise an error message.
    */
 
-  const findBreedingMatch = async (breedingData: Breeding, herdBreedings: Breeding[] ) => {
-
+  const findBreedingMatch = async (
+    breedingData: Breeding,
+    herdBreedings: Breeding[]
+  ) => {
     const breedingMatch: Breeding = herdBreedings.breedings.find(
       (item) =>
         item.mother == breedingData.mother &&
@@ -177,7 +182,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     );
 
     if (!breedingMatch) {
-      console.log("not found")
+      console.log("not found");
       /* userMessage("Parningstillfället kunde inte hittas.", "error"); */
       return false;
     }
@@ -186,7 +191,7 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
 
   const findEditableBreedingMatch = async (
     breedingData: Breeding,
-    herdBreedings: Breeding[],
+    herdBreedings: Breeding[]
   ) => {
     const matchOnDate = await findBreedingMatch(breedingData, herdBreedings);
 
