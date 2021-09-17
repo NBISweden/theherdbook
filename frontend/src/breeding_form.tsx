@@ -180,8 +180,7 @@ export function BreedingForm({
 
     const vals = [userInput.litter_size, userInput.birth_date];
     let areDefault = vals.every(function (e) {
-      const d = e != (null || undefined) || e !== "";
-      return d;
+      e !== (null || undefined) || e !== "";
     });
 
     if (!areDefault) {
