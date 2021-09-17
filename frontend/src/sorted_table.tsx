@@ -141,7 +141,9 @@ export function SortedTable({
   const [rowsPerPage, setRowsPerPage] = React.useState(props.rowsPerPage ?? 25);
   const [selected, setSelected] = React.useState(null as number | null);
   const [order, setOrder] = React.useState("desc" as Order);
-  const [orderBy, setOrderBy] = React.useState(undefined as any);
+  const [orderBy, setOrderBy] = React.useState(
+    props.orderBy ?? (undefined as any)
+  );
 
   const tableData = React.useMemo(() => {
     return data.map((row, i) => {
