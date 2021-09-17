@@ -109,8 +109,16 @@ export function BreedingForm({
       males = individualsFromDate(genebank, "male", fromDate, undefined);
     }
     if (!!data && data !== "new") {
-      const mother = genebank?.individuals.find((i) => i.number == data.mother);
-      const father = genebank?.individuals.find((i) => i.number == data.father);
+      const activeMother = females.find((i) => i.number === data.mother);
+      let mother;
+      if (!activeMother) {
+        mother = genebank?.individuals.find((i) => i.number === data.mother);
+      }
+      const activeFather = males.find((i) => i.number === data.father);
+      let father;
+      if (!activeFather) {
+        father = genebank?.individuals.find((i) => i.number === data.father);
+      }
       if (!!mother && !!father) {
         females.push(mother);
         males.push(father);
