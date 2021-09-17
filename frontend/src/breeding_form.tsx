@@ -178,13 +178,15 @@ export function BreedingForm({
       return false;
     }
 
-    const vals = [userInput.litter_size, userInput.birth_date];
-    let areDefault = vals.every(function (e) {
-      const d = e != (null || undefined) || e !== "";
-      return d;
-    });
+    if (!!userInput.birth_date && !userInput.litter_size) {
+      userMessage(
+        "Om du vill spara information om födseln måste du ange ett födelsedatum och en kullstorlek.",
+        "warning"
+      );
+      return false;
+    }
 
-    if (!areDefault) {
+    if (!!userInput.litter_size && !userInput.birth_date) {
       userMessage(
         "Om du vill spara information om födseln måste du ange ett födelsedatum och en kullstorlek.",
         "warning"
@@ -255,8 +257,7 @@ export function BreedingForm({
 
   const handleEditableBreedingUpdates = async (
     breeding: Breeding,
-    breedingMatch: Breeding,
-    parentsUpdate: boolean
+    breedingMatch: Breeding
   ) => {
     const modifiedBreedingUpdates = modifyBreedingUpdates(
       breeding,
@@ -268,20 +269,16 @@ export function BreedingForm({
     );
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
-      if (parentsUpdate) {
-        userMessage("Parningstillfället har uppdaterats.", "success");
-      } else {
-        userMessage(
-          "Klart. Parningen finns redan i systemet så föreldrarna har inte uppdaterats!",
-          "success"
-        );
-      }
+      userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
 
       if (newIndsNumber == 0) {
         return;
       }
       createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
+    } else {
+      userMessage("Något gick fel. Parningen kunde inte uppdateras.", "error");
+      return;
     }
   };
 
@@ -397,11 +394,11 @@ export function BreedingForm({
         // This breeding event already exists. No parents to update
         breeding.father = breedingMatch.father;
         breeding.mother = breedingMatch.mother;
-        handleEditableBreedingUpdates(breeding, breedingMatch, false);
+        handleEditableBreedingUpdates(breeding, breedingMatch);
         break;
       default:
         // update breeding event
-        handleEditableBreedingUpdates(breeding, breedingMatch, true);
+        handleEditableBreedingUpdates(breeding, breedingMatch);
         break;
     }
     return;
