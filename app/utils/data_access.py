@@ -814,7 +814,7 @@ def form_to_individual(form, user=None):
             raise ValueError(f"Unknown breeding event: '{form['breeding']}''")
 
     # Color is stored as name in the form, but needs to be converted to id
-    if "color" in form:
+    if "color" in form and form["color"] is not None:
         try:
             with DATABASE.atomic():
                 form["color"] = Color.get(Color.name == form["color"])
