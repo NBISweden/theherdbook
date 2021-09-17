@@ -13,6 +13,7 @@ import {
   dateFormat,
   DateWeight,
   Breeding,
+  Genebank,
   Individual,
   individualLabel,
   inputVariant,
@@ -191,9 +192,14 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     herdChangeListener,
     setHerdChangeListener,
   } = useDataContext();
+  const genebank: Genebank | undefined = React.useMemo(() => {
+    return genebanks.find((g) =>
+      g.herds.find((h) => h.herd == individual?.herd.herd)
+    );
+  }, [genebanks, individual]);
   const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank);
-  }, [user, individual]);
+    return user?.canEdit(genebank?.id);
+  }, [user, individual, genebank]);
   const style = useStyles();
 
   const certTypeOptions: OptionType[] = [
