@@ -789,8 +789,9 @@ def form_to_individual(form, user=None):
     # (owners can still set these values in new individuals)
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            fields = form.get(admin_field, None)
-            if fields and "number" in fields:  # parents
+            form_field = form.get(admin_field, None)
+            print (form_field)
+            if form_field and "number" in form_field:  # parents
                 changed = (
                     form[admin_field]["number"]
                     != getattr(individual, admin_field).number
