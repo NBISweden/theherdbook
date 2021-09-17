@@ -7,7 +7,6 @@ database.
 
 import logging
 import uuid
-import traceback
 from datetime import date, datetime, timedelta
 
 from peewee import (
