@@ -7,6 +7,7 @@ database.
 
 import logging
 import uuid
+import traceback
 from datetime import date, datetime, timedelta
 
 from peewee import (
@@ -32,8 +33,6 @@ from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
 from utils.database import next_individual_number  # isort: skip
-import traceback
-
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
 
@@ -794,6 +793,7 @@ def form_to_individual(form, user=None):
         if individual.id and not can_manage:
             for admin_field in [field for field in admin_fields if field in form]:
                 form_field = form.get(admin_field, None)
+                print (admin_field)
                 if form_field and "number" == admin_field:  # parents
                     changed = (
                         form[admin_field]["number"]
