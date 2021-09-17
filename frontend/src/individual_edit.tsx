@@ -13,6 +13,7 @@ import {
   dateFormat,
   DateWeight,
   Breeding,
+  Genebank,
   Individual,
   individualLabel,
   inputVariant,
@@ -115,6 +116,14 @@ const useStyles = makeStyles({
     background:
       "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
   },
+  whitePane: {
+    width: "100%",
+    padding: "15px 0 5px 10px",
+    border: "1px solid lightgrey",
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+  },
   titleText: {
     width: "100%",
     borderBottom: "1px solid lightgrey",
@@ -191,9 +200,14 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     herdChangeListener,
     setHerdChangeListener,
   } = useDataContext();
+  const genebank: Genebank | undefined = React.useMemo(() => {
+    return genebanks.find((g) =>
+      g.herds.find((h) => h.herd == individual?.herd.herd)
+    );
+  }, [genebanks, individual]);
   const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.genebank);
-  }, [user, individual]);
+    return user?.canEdit(genebank?.id);
+  }, [user, individual, genebank]);
   const style = useStyles();
 
   const certTypeOptions: OptionType[] = [
@@ -510,11 +524,15 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             <div className={style.flexRowOrColumn}>
               <div className={style.formPane}>
                 <div className={style.titleText}>Redigera Individ</div>
-                <div className={style.adminPane}>
+                <div className={!canManage ? style.adminPane : style.whitePane}>
                   <div className={style.flexColumn}>
-                    <p className={style.paneTitle}>
-                      Kan endast ändras av genbanksansvarig
-                    </p>
+                    {!canManage ? (
+                      <p className={style.paneTitle}>
+                        Kan endast ändras av genbanksansvarig
+                      </p>
+                    ) : (
+                      <></>
+                    )}
                     <TextField
                       disabled={!canManage}
                       label="Nummer"
