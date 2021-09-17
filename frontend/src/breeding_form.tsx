@@ -490,13 +490,18 @@ export function BreedingForm({
                 newValue && setFormField("mother", newValue.number);
               }}
             />
-            <Button
-              color="primary"
-              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
-            >
-              {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
-              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
-            </Button>
+            {genebank &&
+            (user?.is_admin || user?.is_manager?.includes(genebank.id)) ? (
+              <></>
+            ) : (
+              <Button
+                color="primary"
+                onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+              >
+                {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
+                {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+              </Button>
+            )}
             {showFromDateFilter ? (
               <>
                 <KeyboardDatePicker
