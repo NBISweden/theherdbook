@@ -257,8 +257,7 @@ export function BreedingForm({
 
   const handleEditableBreedingUpdates = async (
     breeding: Breeding,
-    breedingMatch: Breeding,
-    parentsUpdate: boolean
+    breedingMatch: Breeding
   ) => {
     const modifiedBreedingUpdates = modifyBreedingUpdates(
       breeding,
@@ -270,20 +269,16 @@ export function BreedingForm({
     );
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
-      if (parentsUpdate) {
-        userMessage("Parningstillfället har uppdaterats.", "success");
-      } else {
-        userMessage(
-          "Klart. Parningen finns redan i systemet så föreldrarna har inte uppdaterats!",
-          "success"
-        );
-      }
+      userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
 
       if (newIndsNumber == 0) {
         return;
       }
       createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
+    } else {
+      userMessage("Något gick fel. Parningen kunde inte uppdateras.", "error");
+      return;
     }
   };
 
@@ -399,11 +394,11 @@ export function BreedingForm({
         // This breeding event already exists. No parents to update
         breeding.father = breedingMatch.father;
         breeding.mother = breedingMatch.mother;
-        handleEditableBreedingUpdates(breeding, breedingMatch, false);
+        handleEditableBreedingUpdates(breeding, breedingMatch);
         break;
       default:
         // update breeding event
-        handleEditableBreedingUpdates(breeding, breedingMatch, true);
+        handleEditableBreedingUpdates(breeding, breedingMatch);
         break;
     }
     return;
