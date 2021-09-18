@@ -784,23 +784,19 @@ def form_to_individual(form, user=None):
     )
 
     admin_fields = ["digital_certificate", "certificate", "number"]
-    
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            
             if admin_field == "color":
                 changed = form[admin_field] != individual.color.name
             else:
                 changed = (
                     f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
                 )
-
             if changed:
                 raise ValueError(f"Only managers can update {admin_field}")
 
-  
     # Make sure a valid breeding id is passed
     if "breeding" in form:
         try:
