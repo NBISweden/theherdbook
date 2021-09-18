@@ -1301,8 +1301,20 @@ def get_breeding_events(herd_id, user_uuid):
 
         parents = [i.id for i in herd.individuals]
         with DATABASE.atomic():
-            query = Breeding.select().where(
-                (Breeding.father_id << parents) | (Breeding.mother_id << parents)
+            query = (
+                Breeding.select()
+                .join(Individual, on=(Breeding.mother == Individual.id))
+                .join(HerdTracking, on=(HerdTracking.individual == Individual.id))
+                .join(Herd, on=(Herd.id == HerdTracking.herd))
+                .where((Herd.herd == herd_id))
+                .where(
+                    (
+                        DATABASE.extract_date("year", HerdTracking.herd_tracking_date)
+                        == (DATABASE.extract_date("year", Breeding.birth_date))
+                    )
+                    | ((Individual.id << parents))
+                )
+                .distinct()
             )
 
             return [b.as_dict() for b in query]
