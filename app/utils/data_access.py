@@ -983,7 +983,7 @@ def update_individual(form, user_uuid):
     if user is None:
         return {"status": "error", "message": "Not logged in"}
 
-    if not user.can_edit(form["number"]):
+    if not user.can_edit(form["id"]):
         return {"status": "error", "message": "Forbidden"}
 
     if form["herd"] and isinstance(form["herd"], dict):
