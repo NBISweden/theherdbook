@@ -208,8 +208,10 @@ psql --echo-errors --quiet <<-'END_SQL'
      FOR iid IN SELECT individual_id FROM individual WHERE breeding_id is NULL
      LOOP
         WITH b AS (
-           INSERT INTO breeding(breed_date)
-           VALUES(NULL)
+           INSERT INTO breeding(breed_date, breeding_herd_id)
+	   SELECT NULL, i.origin_herd_id
+	   FROM individual i
+           WHERE i.individual_id = iid
            RETURNING breeding_id)
         UPDATE individual
           SET breeding_id = b.breeding_id
