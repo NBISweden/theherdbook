@@ -160,23 +160,27 @@ psql --echo-errors --quiet <<-'END_SQL'
     father_id,
     mother_id,
     birth_date,
-    litter_size
+    litter_size,
+    breeding_herd_id
   ) SELECT
         father.individual_id,
         mother.individual_id,
         d.birth_date,
-        d.litter_size
+        d.litter_size,
+        h.herd_id
       FROM (
         SELECT
           d."Far nr",
           d."Mor nr",
           d."Född" birth_date,
-          MAX(d."Kull") litter_size
-          FROM g_data d
-          GROUP BY (d."Far nr", d."Mor nr", d."Född")
+          MAX(d."Kull") litter_size,
+          d."Genb"
+		  FROM g_data d
+          GROUP BY (d."Far nr", d."Mor nr", d."Född", d."Genb")
       ) d
       JOIN individual father ON d."Far nr" = father.number
-      JOIN individual mother ON d."Mor nr" = mother.number;
+      JOIN individual mother ON d."Mor nr" = mother.number
+      JOIN herd h ON d."Genb" = h.herd;
 
   -- Associate individuals and breeding values
   WITH breeding_nums AS (
