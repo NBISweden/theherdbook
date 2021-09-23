@@ -314,6 +314,7 @@ class TestDataAccess(DatabaseTest):
                 "herd": self.herds[0].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": "H1-4",
+                "breeding": 1,
                 "birth_date": (datetime.now() - timedelta(days=30)).strftime(
                     "%Y-%m-%d"
                 ),
@@ -323,18 +324,23 @@ class TestDataAccess(DatabaseTest):
             },
             "empty": {
                 "herd": self.herds[1].herd,
-                "origin_herd": {"herd": self.herds[0].herd},
-                "number": None,
-                "breeding": 2,
-                "birth_date": datetime.today().strftime("%Y-%m-%d"),
-                "selling_date": None,
-            },
-            "secondempty": {
-                "herd": self.herds[1].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
                 "number": None,
                 "breeding": 2,
-                "birth_date": datetime.today().strftime("%Y-%m-%d"),
+                "birth_date": (datetime(2021, 1, 1) + timedelta(days=30)).strftime(
+                    "%Y-%m-%d"
+                ),
+                "selling_date": None,
+            },
+            # Hack since sqlite do not have the extract date function
+            "secondempty": {
+                "herd": self.herds[1].herd,
+                "origin_herd": {"herd": self.herds[1].herd},
+                "number": "H2-2112",
+                "breeding": 2,
+                "birth_date": (datetime(2021, 1, 1) + timedelta(days=30)).strftime(
+                    "%Y-%m-%d"
+                ),
                 "selling_date": None,
             },
         }
@@ -381,6 +387,9 @@ class TestDataAccess(DatabaseTest):
         forms = {
             "unknown_herd": {"herd": "does-not-exist"},
             "valid": {
+                "origin_herd": {
+                    "herd": self.herds[0].herd,
+                },
                 "herd": self.herds[0].herd,
                 "id": self.individuals[0].id,
                 "number": self.individuals[0].number,
@@ -420,6 +429,9 @@ class TestDataAccess(DatabaseTest):
 
         # Check herd update, we need update to be on a separate date
         forms["valid"]["herd"] = self.herds[1].herd
+        forms["valid"]["origin_herd"] = {
+            "herd": self.herds[0].herd,
+        }
         forms["valid"]["selling_date"] = (datetime.now() + timedelta(days=2)).strftime(
             "%Y-%m-%d"
         )
@@ -489,9 +501,11 @@ class TestDataAccess(DatabaseTest):
                 "id": ind.id,
                 "name": ind.name,
                 "certificate": ind.certificate,
+                "digital_certificate": ind.certificate,
                 "number": ind.number,
                 "sex": ind.sex,
                 "birth_date": dateformat(ind.breeding.birth_date),
+                "castration_date": None,
                 "death_date": dateformat(ind.death_date),
                 "death_note": ind.death_note,
                 "litter": ind.breeding.litter_size,
@@ -518,7 +532,6 @@ class TestDataAccess(DatabaseTest):
             gb0_expected += [ind_info]
 
         gb0_value = da.get_individuals(self.genebanks[0].id, self.admin.uuid)
-
         self.assertListEqual(gb0_expected, gb0_value)
 
     def test_get_all_individuals(self):
@@ -568,9 +581,10 @@ class TestDataAccess(DatabaseTest):
 
         breeding = db.Breeding.get(self.breeding[-1].id)
         expected = [breeding.as_dict()]
+
         # success
         self.assertEqual(
-            da.get_breeding_events(self.herds[0].herd, self.admin.uuid), expected
+            da.get_breeding_events(self.herds[0].herd, self.admin.uuid)[1], expected[0]
         )
 
     def test_register_breeding(self):
@@ -580,25 +594,31 @@ class TestDataAccess(DatabaseTest):
         valid_form = {
             "father": self.individuals[0].number,
             "mother": self.individuals[1].number,
+            "breeding_herd": self.herds[0].herd,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         invalid_mother = {
             "father": self.individuals[0].number,
             "mother": "invalid-mother",
+            "breeding_herd": self.herds[0].herd,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         invalid_father = {
             "father": "invalid-father",
+            "breeding_herd": self.herds[0].herd,
             "mother": self.individuals[1].number,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         missing_date = {
             "father": self.individuals[0].number,
             "mother": self.individuals[1].number,
+            "breeding_herd": self.herds[0].herd,
+            "herd": self.herds[0].herd,
         }
         invalid_date = {
             "father": self.individuals[0].number,
             "mother": self.individuals[1].number,
+            "breeding_herd": self.herds[0].herd,
             "date": "20-31-11",
         }
         self.assertEqual(
