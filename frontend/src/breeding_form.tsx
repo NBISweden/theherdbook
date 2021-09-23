@@ -391,6 +391,7 @@ export function BreedingForm({
           date: breeding.breed_date,
           mother: breeding.mother,
           father: breeding.father,
+          herd: herdId,
           notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
         };
 

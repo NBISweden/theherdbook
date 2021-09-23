@@ -1286,8 +1286,7 @@ def get_all_individuals():
 
 def get_breeding_events(herd_id, user_uuid):
     """
-    Returns a list of all breeding events where at least one of the parents is
-    in the herd given by `herd_id`.
+    Returns a list of all breeding events given by `herd_id`.
     """
     user = fetch_user_info(user_uuid)
     if user is None:
@@ -1299,13 +1298,9 @@ def get_breeding_events(herd_id, user_uuid):
         if herd.genebank.id not in user.accessible_genebanks:
             return []
 
-        parents = [i.id for i in herd.individuals]
         with DATABASE.atomic():
-            query = Breeding.select().where(
-                (Breeding.father_id << parents) | (Breeding.mother_id << parents)
-            )
-
-            return [b.as_dict() for b in query]
+            query = Breeding.select().where(Breeding.breeding_herd == herd)
+            return [b.as_dict() for b in query.iterator()]
     except DoesNotExist:
         logging.warning("Unknown herd %s", herd_id)
 
@@ -1339,6 +1334,7 @@ def register_breeding(form, user_uuid):
     {
         mother: <individual-number>,
         father: <individual-number>,
+        herd: <herd-number>,
         date: <breeding-date, as %Y-%m-%d>,
         notes: <text>,
     }
@@ -1354,6 +1350,11 @@ def register_breeding(form, user_uuid):
         return {"status": "error", "message": "Not logged in"}
 
     errors = []
+    try:
+        with DATABASE.atomic():
+            herd = Herd.get(Herd.herd == form.get("herd", None))
+    except DoesNotExist:
+        errors += ["Unknown herd"]
     # Check if the parents are valid
     try:
         mother = Individual.get(Individual.number == form.get("mother", None))
@@ -1367,9 +1368,9 @@ def register_breeding(form, user_uuid):
     if errors:
         return {"status": "error", "message": ", ".join(errors)}
 
-    # A user can insert a breeding event if they have permission to edit at
-    # least one of the parents.
-    if not (user.can_edit(mother.number) or user.can_edit(father.number)):
+    # A user can insert a breeding event if they have permission to edit the
+    # current herd.
+    if not (user.can_edit(herd.herd)):
         return {"status": "error", "message": "Forbidden"}
 
     # check if the breeding date is valid
@@ -1393,6 +1394,7 @@ def register_breeding(form, user_uuid):
             father=father,
             mother=mother,
             breed_date=breed_date,
+            breeding_herd=herd,
             breed_notes=form.get("notes", None),
         )
         breeding.save()

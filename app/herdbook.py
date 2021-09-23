@@ -276,8 +276,6 @@ def breedings_from_date(birth_date):
 def herd_breeding_list(h_id):
     """
     Returns a list of all breeding events connected to a given herd.
-    A breeding event is considered linked to a herd if any of the parents are
-    currently in the herd.
     """
     breedings = da.get_breeding_events(h_id, session.get("user_id", None))
     return jsonify(breedings=breedings)
