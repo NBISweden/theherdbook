@@ -369,9 +369,11 @@ class Color(BaseModel):
 class Breeding(BaseModel):
     """
     Table for breeding and birth.
+    breeding_herd is the herd the mother existed in when she gave birth
     """
 
     id = AutoField(primary_key=True, column_name="breeding_id")
+    breeding_herd = ForeignKeyField(Herd)
     breed_date = DateField(null=True)
     breed_notes = TextField(null=True)
     father = DeferredForeignKey("Individual", null=True)
