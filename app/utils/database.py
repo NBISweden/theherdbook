@@ -34,7 +34,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 7
+CURRENT_SCHEMA_VERSION = 8
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -1397,6 +1397,37 @@ def migrate_6_to_7():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=7,
             comment="Add fullname to hbuser",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_7_to_8():
+    """
+    Migrate between schema version 7 and 8.
+    """
+
+    with DATABASE.atomic():
+        if "breeding" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=8,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("breeding")]
+
+        if "breeding_herd_id" not in cols:
+            # Go through.
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "breeding", "breeding_herd_id", IntegerField(default=1)
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=8,
+            comment="Add breerding_herd_id to breeding",
             applied=datetime.now(),
         ).execute()
 
