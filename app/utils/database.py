@@ -27,6 +27,7 @@ from peewee import (
     OperationalError,
     PostgresqlDatabase,
     Proxy,
+    Select,
     SqliteDatabase,
     TextField,
     UUIDField,
@@ -411,27 +412,42 @@ def next_individual_number(herd, birth_date, breeding_event):
         birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
         assert isinstance(birth_date, datetime)
     try:
+        herd_id = Herd.get(Herd.herd == herd)
+        rank_expr = fn.ROW_NUMBER().over(order_by=[Breeding.birth_date])
         events = (
-            Breeding.select(Breeding.id)
-            .join(Individual, on=(Breeding.id == Individual.breeding))
-            .join(Herd, on=(Herd.id == Individual.origin_herd))
-            .where((Herd.herd == herd))
-            .distinct()
-        ).execute()
-
-        next_litter = len(events)
-
-        individuals = (
-            Individual.select(Individual).where(
-                Individual.breeding == str(breeding_event)
+            Breeding.select(rank_expr.alias("litter_number"), Breeding.id)
+            .where(Breeding.breeding_herd == herd_id)
+            .where(
+                (DATABASE.extract_date("year", Breeding.birth_date) == birth_date.year)
             )
-        ).execute()
+        )
+        ev = events.execute()
+        if len(ev) == 0:
+            litter_number = 1
+            litter_size = 0
+        else:
+            query = (
+                Select(columns=[events.c.litter_number])
+                .from_(events)
+                .where(events.c.breeding_id == breeding_event)
+                .bind(DATABASE)
+            ).execute()
+            if len(query) == 0:
+                litter_number = len(ev) + 1
+                litter_size = 0
+            else:
+                litter_number = query[0].get("litter_number")
+                individuals = (
+                    Individual.select(Individual).where(
+                        Individual.breeding == breeding_event
+                    )
+                ).execute()
 
-        litter_size = len(individuals)
-        if litter_size == 0:
-            next_litter += 1
+                litter_size = len(individuals)
 
-        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+        ind_number = (
+            f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{litter_size + 1}"
+        )
 
         return ind_number
 
