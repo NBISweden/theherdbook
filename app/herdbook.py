@@ -271,13 +271,32 @@ def breedings_from_date(birth_date):
     return jsonify(breedings=breedings)
 
 
-@APP.route("/api/breeding/<h_id>", methods=["GET"])
+@APP.route("/api/breeding/<h_id>", methods=["GET", "POST"])
 @login_required
 def herd_breeding_list(h_id):
     """
     Returns a list of all breeding events connected to a given herd.
     """
     breedings = da.get_breeding_events(h_id, session.get("user_id", None))
+    if request.method == "POST":
+        form = request.json
+        birth_date = da.validate_date(form.get("birth_date", None))
+        end = birth_date - datetime.timedelta(days=26)
+        start = birth_date - datetime.timedelta(days=38)
+        breedings = next(
+            (
+                item
+                for item in breedings
+                if item["father"] == form["father"]
+                and item["mother"] == form["mother"]
+                and (
+                    start <= da.validate_date(item["breed_date"]) <= end
+                    or da.validate_date(item["birth_date"]) == birth_date
+                )
+            ),
+            None,
+        )
+
     return jsonify(breedings=breedings)
 
 
