@@ -394,6 +394,7 @@ class Breeding(BaseModel):
         # pylint: disable=no-member
         data["mother"] = self.mother.number if self.mother else None
         data["father"] = self.father.number if self.father else None
+        data["breeding_herd"] = self.breeding_herd.herd if self.breeding_herd else None
         return data
 
     class Meta:  # pylint: disable=too-few-public-methods
