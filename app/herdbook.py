@@ -300,6 +300,28 @@ def herd_breeding_list(h_id):
     return jsonify(breedings=breedings)
 
 
+@APP.route("/api/breeding/nextind/", methods=["POST"])
+@login_required
+def breeding_next_indidivual_number():
+    """
+    Returns the next correct individual number for a breeding ID event
+    """
+
+    if request.method == "POST":
+        form = request.json
+        breeding_id = form.get("id", None)
+
+        return jsonify(
+            (
+                da.next_individual_number(
+                    herd=form["breeding_herd"],
+                    birth_date=form["birth_date"],
+                    breeding_event=breeding_id,
+                )
+            )
+        )
+
+
 @APP.route("/api/breeding", methods=["POST", "PATCH"])
 @login_required
 def register_breeding():
