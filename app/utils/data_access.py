@@ -1334,7 +1334,7 @@ def register_breeding(form, user_uuid):
     {
         mother: <individual-number>,
         father: <individual-number>,
-        herd: <herd-number>,
+        breeding_herd: <herd-number>,
         date: <breeding-date, as %Y-%m-%d>,
         notes: <text>,
     }
@@ -1352,7 +1352,7 @@ def register_breeding(form, user_uuid):
     errors = []
     try:
         with DATABASE.atomic():
-            herd = Herd.get(Herd.herd == form.get("herd", None))
+            herd = Herd.get(Herd.herd == form.get("breeding_herd", None))
     except DoesNotExist:
         errors += ["Unknown herd"]
     # Check if the parents are valid

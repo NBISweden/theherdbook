@@ -107,6 +107,7 @@ export interface Herd extends LimitedHerd {
 
 export interface LimitedBreeding {
   date: string | null;
+  breeding_herd: string;
   mother: string;
   father: string;
   notes?: string;
@@ -115,6 +116,7 @@ export interface LimitedBreeding {
 export interface Breeding {
   [key: string]: any;
   id?: number;
+  breeding_herd: string;
   breed_date: string | null;
   breed_notes?: string;
   father: string;
