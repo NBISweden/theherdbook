@@ -142,6 +142,9 @@ export function IndividualAdd({
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
   const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
+  const [breedingMatch, setBreedingMatch] = React.useState(
+    undefined as Breeding | undefined
+  );
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const is_admin = !!(user?.is_manager || user?.is_admin);
@@ -233,6 +236,62 @@ export function IndividualAdd({
     individual?.birth_date,
     individual?.litter,
   ]);
+  //Searches for existing breedings and update form with data from that found breeding
+  //Suggest the next individual number
+  React.useEffect(() => {
+    const getBreeding = async () => {
+      if (individual?.birth_date && individual?.father && individual?.mother && individual?.origin_herd) {
+        let limitedBreedingInput: LimitedBreeding = {
+          birth_date: individual.birth_date,
+          herd: individual.origin_herd.herd,
+          breeding_herd: individual.origin_herd.herd,
+          mother: individual.mother.number,
+          father: individual.father.number,
+        };
+        const Breedingmatch = await post(
+          `/api/breeding/${individual.origin_herd.herd}`,
+          limitedBreedingInput
+        );
+        setBreedingMatch(Breedingmatch.breedings);
+        if (Breedingmatch.breedings != null) {
+          userMessage(
+            `Hittade ett befintligt parningstillfälle med parningsdatum : ${Breedingmatch.breedings.breed_date}. Kontrollera att uppgifterna stämmer`,
+            "success"
+          );
+          if (individual.birth_date != Breedingmatch.breedings.birth_date) {
+            userMessage(
+              `Födelsedatumet du har angett: ${individual.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Lägger du till en ny kanin med kommer födelsedatumet att uppdateras.`,
+              "warning"
+            );
+          }
+          let BreedHerd: LimitedHerd = await get(
+            `/api/herd/${Breedingmatch.breedings.breeding_herd}`
+          );
+          const IndNumber = await post(
+            `/api/breeding/nextind/`,
+            Breedingmatch.breedings
+          );
+          setIndividual({
+            ...individual,
+            origin_herd: BreedHerd,
+            number: IndNumber,
+            litter: Breedingmatch.breedings.litter_size,
+          });
+        } else {
+          userMessage(
+            `Hittade inget befintligt parningstillfälle kommer skapa ett nytt!`,
+            "info"
+          );
+          const IndNumber1 = await post(
+            `/api/breeding/nextind/`,
+            limitedBreedingInput
+          );
+          setIndividual({ ...individual, number: IndNumber1, litter: 0 });
+        }
+      }
+    };
+    getBreeding();
+  }, [individual?.birth_date, individual?.father, individual?.mother]);
 
   const validateUserInput = (individual: Individual) => {
     setSuccess(false);
@@ -265,8 +324,8 @@ export function IndividualAdd({
       userMessage("Individens nummer har fel format.", "warning");
       return false;
     }
-    if (individual.litter <= 0 || individual.litter > 9) {
-      userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
+    if (individual.litter <= 0) {
+      userMessage("Kullstorleken måste vara störren än 0.", "warning");
       return false;
     }
     return true;
@@ -331,8 +390,8 @@ export function IndividualAdd({
     const breedingDate = getBreedingDate(individual.birth_date);
 
     let breedingInput: Breeding = {
-      breed_date: breedingDate,
       breed_notes: "",
+      breeding_herd: individual.origin_herd?.herd,
       father: individual.father.number,
       mother: individual.mother.number,
       birth_date: individual.birth_date,
@@ -342,16 +401,17 @@ export function IndividualAdd({
 
     let limitedBreedingInput: LimitedBreeding = {
       date: breedingDate,
+      breeding_herd: individual.origin_herd.herd,
       mother: individual.mother.number,
       father: individual.father.number,
     };
 
     // Check if there already is a breeding
-    const herdBreedings = await get(`/api/breeding/${herdId}`);
-    const breedingMatch = await findBreedingMatch(
-      breedingInput,
-      herdBreedings
-    );
+    //const herdBreedings = await get(`/api/breeding/${herdId}`);
+    //'const breedingMatch = await findBreedingMatch(
+    //  breedingInput,
+    //  herdBreedings
+    //);
 
     // If there is a breeding, update it
     if (breedingMatch) {
@@ -526,7 +586,7 @@ export function IndividualAdd({
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <KeyboardDatePicker
                     autoOk
-                    variant="inline"
+                    variant={inputVariant}
                     inputVariant={inputVariant}
                     disableFuture
                     className="simpleField"
@@ -557,7 +617,7 @@ export function IndividualAdd({
               handleUpdateIndividual("mother", newValue)
             }
             renderInput={(params) => (
-              <TextField {...params} label="Välj mor" variant="outlined" />
+              <TextField {...params} label="Välj mor" variant={inputVariant} />
             )}
           />
           <div className={style.lineBreak}></div>
@@ -572,7 +632,7 @@ export function IndividualAdd({
               handleUpdateIndividual("father", newValue)
             }
             renderInput={(params) => (
-              <TextField {...params} label="Välj far" variant="outlined" />
+              <TextField {...params} label="Välj far" variant={inputVariant} />
             )}
           />
         </div>

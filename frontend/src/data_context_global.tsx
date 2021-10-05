@@ -221,7 +221,7 @@ export type OptionType = { value: string; label: string };
 
 export const dateFormat = "yyyy-MM-dd";
 export const locale = "sv";
-export const inputVariant = "standard" as "filled" | "outlined" | "standard";
+export const inputVariant = "filled" as "filled" | "outlined" | "standard" ;
 
 /**
  * Formats the given `dateString` according to the currently defined `locale`.
