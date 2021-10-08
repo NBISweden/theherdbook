@@ -535,6 +535,14 @@ psql --quiet <<-'END_SQL'
 	AND	gb.name = 'Gotlandskanin'
 	AND	h.is_active IS NULL;
 
+	-- All active is null should be false 
+	UPDATE herd h
+	SET is_active = FALSE
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.is_active IS NULL;
+
 	-- Add names of people responsible for the herd
 	UPDATE herd h
 	SET name = (

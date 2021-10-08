@@ -369,6 +369,13 @@ psql --echo-errors --quiet <<-'END_SQL'
 	AND	gb.name = 'Mellerudskanin'
 	AND	h.is_active IS NULL;
 
+	UPDATE herd h
+	SET is_active = FALSE
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Mellerudskanin'
+	AND	h.is_active IS NULL;
+
 	UPDATE	herd h
 	SET	start_date = (
 		SELECT "Start"
