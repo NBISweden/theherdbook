@@ -580,7 +580,11 @@ class Individual(BaseModel):
             "herd_name": self.current_herd.herd_name,
         }
         data["alive"] = self.alive
-        data["birth_date"] = self.breeding.birth_date.strftime("%Y-%m-%d") if self.breeding.birth_date else None
+        data["birth_date"] = (
+            self.breeding.birth_date.strftime("%Y-%m-%d")
+            if self.breeding.birth_date
+            else None
+        )
         data["litter"] = self.breeding.litter_size if self.breeding else None
 
         data["mother"] = (

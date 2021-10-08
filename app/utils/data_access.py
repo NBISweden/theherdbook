@@ -1200,7 +1200,10 @@ def get_individuals(genebank_id, user_uuid=None):
                 {
                     "id": i["id"],
                     "name": i["name"],
-                    "certificate": i["certificate"],
+                    "certificate": i["digital_certificate"]
+                    if i["certificate"] is None
+                    else i["certificate"],
+                    "digital_certificate": i["digital_certificate"],
                     "number": i["number"],
                     "sex": i["sex"],
                     "birth_date": i["birth_date"].strftime("%Y-%m-%d")
@@ -1210,6 +1213,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     if i["death_date"]
                     else None,
                     "death_note": i["death_note"],
+                    "castration_date": i["castration_date"],
                     "litter": i["litter_size"],
                     "notes": i["notes"],
                     "color_note": i["color_note"],
@@ -1230,11 +1234,13 @@ def get_individuals(genebank_id, user_uuid=None):
                         "herd_name": i["herd_name"],
                     },
                     "genebank": i["genebank_name"],
-                    "herd_active": i["herd_active"] or i["herd_active"] is None,
-                    "is_active": as_date(i["ht_date"]) > max_report_time
-                    and (i["herd_active"] or i["herd_active"] is None)
-                    and i["death_date"] is None
-                    and not i["death_note"],
+                    "herd_active": i["herd_active"],
+                    "is_active": i["herd_active"]
+                    and (i["certificate"] or i["digital_certificate"])
+                    and not i["death_date"]
+                    and not i["death_note"]
+                    and not i["castration_date"]
+                    and as_date(i["ht_date"]) > max_report_time,
                     "alive": i["death_date"] is None and not i["death_note"],
                     "children": i["children"],
                 }
