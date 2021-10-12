@@ -1,6 +1,6 @@
 import React from "react";
 
-import { InputAdornment, TextField } from "@material-ui/core";
+import { InputAdornment, TextField, Tooltip } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -78,19 +78,21 @@ export function IndividualForm({
       let father;
       let mother;
 
-      if (individual.father?.number) {
+      /* if (individual.father?.number) {
         father = await get(`/api/individual/${individual.father?.number}`);
         console.log(father);
         if (!father) {
           return;
         }
-      }
-      if (individual.mother?.number) {
+      } */
+      if (individual.mother?.number && formAction == FormAction.AddIndividual) {
         mother = await get(`/api/individual/${individual.mother?.number}`);
         if (!mother) {
           return;
         }
         herds.push(mother.herd);
+        individual.origin_herd = mother.herd;
+        individual.number = mother.herd.herd + "-";
       }
       if (herds.length > 0) {
         const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
@@ -106,7 +108,7 @@ export function IndividualForm({
       }
     };
     getParents();
-  }, [individual.father?.number, individual.mother?.number]);
+  }, [individual.mother?.number]);
 
   const certTypeOptions: OptionType[] = [
     { value: "digital", label: "Digital" },
@@ -133,12 +135,12 @@ export function IndividualForm({
     }
   }, [genebank]);
 
-  React.useEffect(() => {
+  /* React.useEffect(() => {
     if (formAction == FormAction.AddIndividual && !!individual.birth_date) {
       const year = individual.birth_date[2] + individual.birth_date[3];
       onUpdateIndividual("number", year);
     }
-  }, [individual.birth_date]);
+  }, [individual.birth_date]); */
 
   /**
    * This is to make sure there never is a value in the local state for
@@ -202,30 +204,34 @@ export function IndividualForm({
                 {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                   <>
                     <div className="flexRow">
-                      <Autocomplete
-                        options={herdOptions}
-                        noOptionsText={"Välj härstamningen först"}
-                        getOptionLabel={(option: OptionType) => option.label}
-                        className="wideControlInd"
-                        value={
-                          herdOptions.find(
-                            (option) =>
-                              option.value.herd == individual.origin_herd?.herd
-                          ) ?? null
-                        }
-                        onChange={(event, value) =>
-                          onUpdateIndividual("origin_herd", value?.value)
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Välj ursprungsbesättning"
-                            className="control"
-                            variant={inputVariant}
-                            margin="normal"
-                          />
-                        )}
-                      />
+                      <Tooltip title="Ursprungsbesättning är alltid den besättning som modern befinner sig i. Är detta fel måste modern först säljas till rätt besättning">
+                        <Autocomplete
+                          options={herdOptions}
+                          disabled
+                          noOptionsText={"Välj härstamningen först"}
+                          getOptionLabel={(option: OptionType) => option.label}
+                          className="wideControlInd"
+                          value={
+                            herdOptions.find(
+                              (option) =>
+                                option.value.herd ==
+                                individual.origin_herd?.herd
+                            ) ?? null
+                          }
+                          onChange={(event, value) =>
+                            onUpdateIndividual("origin_herd", value?.value)
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Ursprungsbesättning "
+                              className="control"
+                              variant={inputVariant}
+                              margin="normal"
+                            />
+                          )}
+                        />
+                      </Tooltip>
                     </div>
                     <div className="flexRow">
                       <KeyboardDatePicker
@@ -252,25 +258,33 @@ export function IndividualForm({
                         className="control controlWidth"
                         variant={inputVariant}
                         value={
-                          individual.number?.split("-")[1] ?? individual.number
+                          (individual.number?.split(/-\d{0,2}/)[1] ??
+                            individual.number) ||
+                          ""
                         }
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              {individual.origin_herd?.herd
-                                ? `${individual.origin_herd?.herd} -`
+                              {individual?.number
+                                ? `${
+                                    individual.number?.match(
+                                      /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                                    )[0]
+                                  }`
                                 : `${
                                     individual.genebank
                                       ? individual.genebank[0]
                                       : "X"
-                                  }XXX-`}
+                                  }XXX-XX`}
                             </InputAdornment>
                           ),
                         }}
                         onChange={(event) => {
                           onUpdateIndividual(
                             "number",
-                            `${individual.origin_herd?.herd}-${event.currentTarget.value}`
+                            `${
+                              individual.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]
+                            }${event.currentTarget.value}`
                           );
                         }}
                       />
@@ -304,7 +318,7 @@ export function IndividualForm({
                           label="Certifikatnummer papper"
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={individual.certificate ?? null}
+                          value={individual.certificate ?? ''}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "certificate",
@@ -317,7 +331,7 @@ export function IndividualForm({
                           label="Certifikatnummer digital"
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={individual.digital_certificate ?? null}
+                          value={individual.digital_certificate ?? ''}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "digital_certificate",
@@ -331,7 +345,7 @@ export function IndividualForm({
                           disabled
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={null}
+                          value={''}
                           onChange={() => {}}
                         />
                       )}
@@ -365,6 +379,7 @@ export function IndividualForm({
                 <TextField
                   label="Namn"
                   className="control controlWidth"
+                  variant={inputVariant}
                   value={individual.name ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("name", event.currentTarget.value);
@@ -427,7 +442,7 @@ export function IndividualForm({
                   label="Antal födda i kullen"
                   className="control controlWidth"
                   variant={inputVariant}
-                  value={individual.litter ?? 0}
+                  value={individual.litter ?? ''}
                   type="number"
                   onChange={(event) => {
                     onUpdateIndividual("litter", +event.currentTarget.value);

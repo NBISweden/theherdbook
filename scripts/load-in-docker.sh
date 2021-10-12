@@ -74,12 +74,7 @@ for name in "$gfile" "$Gfile" "$mfile" "$Mfile"; do
 			then
 				printf 'Converting "%s" to "%s"\n' "$name" "$csvname" >&2
 				in2csv "$name" |
-				grep -v -x '[[:blank:]]\{1,\}' >"$csvname"
-				if [ ! -s "$csvname" ]; then
-					echo "in2csv failed, doing xlsx2csv instead"
-					xlsx2csv --skipemptycolumns --ignoreempty "$name" |
-					grep -v -x '[[:blank:]]\{1,\}' >"$csvname"
-				fi
+				grep -v -x '[[:blank:],]\{1,\}' >"$csvname"
 			fi
 			;;
 		*.csv)	# all good

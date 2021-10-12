@@ -27,6 +27,7 @@ from peewee import (
     OperationalError,
     PostgresqlDatabase,
     Proxy,
+    Select,
     SqliteDatabase,
     TextField,
     UUIDField,
@@ -34,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 7
+CURRENT_SCHEMA_VERSION = 8
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -197,7 +198,7 @@ class Herd(BaseModel):
     genebank = ForeignKeyField(Genebank)
     herd = CharField(10)
     herd_name = TextField(null=True)
-    is_active = BooleanField(null=True)
+    is_active = BooleanField(null=True, default=False)
     start_date = DateField(null=True)
     name = TextField(null=True)
     name_privacy = CharField(15, null=True)
@@ -369,9 +370,11 @@ class Color(BaseModel):
 class Breeding(BaseModel):
     """
     Table for breeding and birth.
+    breeding_herd is the herd the mother existed in when she gave birth
     """
 
     id = AutoField(primary_key=True, column_name="breeding_id")
+    breeding_herd = ForeignKeyField(Herd)
     breed_date = DateField(null=True)
     breed_notes = TextField(null=True)
     father = DeferredForeignKey("Individual", null=True)
@@ -391,6 +394,7 @@ class Breeding(BaseModel):
         # pylint: disable=no-member
         data["mother"] = self.mother.number if self.mother else None
         data["father"] = self.father.number if self.father else None
+        data["breeding_herd"] = self.breeding_herd.herd if self.breeding_herd else None
         return data
 
     class Meta:  # pylint: disable=too-few-public-methods
@@ -409,27 +413,42 @@ def next_individual_number(herd, birth_date, breeding_event):
         birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
         assert isinstance(birth_date, datetime)
     try:
+        herd_id = Herd.get(Herd.herd == herd)
+        rank_expr = fn.ROW_NUMBER().over(order_by=[Breeding.birth_date])
         events = (
-            Breeding.select(Breeding.id)
-            .join(Individual, on=(Breeding.id == Individual.breeding))
-            .join(Herd, on=(Herd.id == Individual.origin_herd))
-            .where((Herd.herd == herd))
-            .distinct()
-        ).execute()
-
-        next_litter = len(events)
-
-        individuals = (
-            Individual.select(Individual).where(
-                Individual.breeding == str(breeding_event)
+            Breeding.select(rank_expr.alias("litter_number"), Breeding.id)
+            .where(Breeding.breeding_herd == herd_id)
+            .where(
+                (DATABASE.extract_date("year", Breeding.birth_date) == birth_date.year)
             )
-        ).execute()
+        )
+        ev = events.execute()
+        if len(ev) == 0:
+            litter_number = 1
+            litter_size = 0
+        else:
+            query = (
+                Select(columns=[events.c.litter_number])
+                .from_(events)
+                .where(events.c.breeding_id == breeding_event)
+                .bind(DATABASE)
+            ).execute()
+            if len(query) == 0:
+                litter_number = len(ev) + 1
+                litter_size = 0
+            else:
+                litter_number = query[0].get("litter_number")
+                individuals = (
+                    Individual.select(Individual).where(
+                        Individual.breeding == breeding_event
+                    )
+                ).execute()
 
-        litter_size = len(individuals)
-        if litter_size == 0:
-            next_litter += 1
+                litter_size = len(individuals)
 
-        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{next_litter}{litter_size + 1}"
+        ind_number = (
+            f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{litter_size + 1}"
+        )
 
         return ind_number
 
@@ -561,7 +580,11 @@ class Individual(BaseModel):
             "herd_name": self.current_herd.herd_name,
         }
         data["alive"] = self.alive
-        data["birth_date"] = self.breeding.birth_date if self.breeding else None
+        data["birth_date"] = (
+            self.breeding.birth_date.strftime("%Y-%m-%d")
+            if self.breeding.birth_date
+            else None
+        )
         data["litter"] = self.breeding.litter_size if self.breeding else None
 
         data["mother"] = (
@@ -1395,6 +1418,37 @@ def migrate_6_to_7():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=7,
             comment="Add fullname to hbuser",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_7_to_8():
+    """
+    Migrate between schema version 7 and 8.
+    """
+
+    with DATABASE.atomic():
+        if "breeding" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=8,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("breeding")]
+
+        if "breeding_herd_id" not in cols:
+            # Go through.
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "breeding", "breeding_herd_id", IntegerField(default=1)
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=8,
+            comment="Add breerding_herd_id to breeding",
             applied=datetime.now(),
         ).execute()
 

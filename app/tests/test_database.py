@@ -311,7 +311,7 @@ class TestDatabase(DatabaseTest):
         data["alive"] = (
             not self.individuals[0].death_date and not self.individuals[0].death_note
         )
-        data["is_active"] = None
+        data["is_active"] = False
         data["weights"] = [
             {
                 "weight": self.weights[0].weight,

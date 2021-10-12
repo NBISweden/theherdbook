@@ -160,23 +160,27 @@ psql --echo-errors --quiet <<-'END_SQL'
     father_id,
     mother_id,
     birth_date,
-    litter_size
+    litter_size,
+    breeding_herd_id
   ) SELECT
         father.individual_id,
         mother.individual_id,
         d.birth_date,
-        d.litter_size
+        d.litter_size,
+        h.herd_id
       FROM (
         SELECT
           d."Far nr",
           d."Mor nr",
           d."Född" birth_date,
-          MAX(d."Kull") litter_size
-          FROM g_data d
-          GROUP BY (d."Far nr", d."Mor nr", d."Född")
+          MAX(d."Kull") litter_size,
+          d."Genb"
+		  FROM g_data d
+          GROUP BY (d."Far nr", d."Mor nr", d."Född", d."Genb")
       ) d
       JOIN individual father ON d."Far nr" = father.number
-      JOIN individual mother ON d."Mor nr" = mother.number;
+      JOIN individual mother ON d."Mor nr" = mother.number
+      JOIN herd h ON d."Genb" = h.herd;
 
   -- Associate individuals and breeding values
   WITH breeding_nums AS (
@@ -204,8 +208,10 @@ psql --echo-errors --quiet <<-'END_SQL'
      FOR iid IN SELECT individual_id FROM individual WHERE breeding_id is NULL
      LOOP
         WITH b AS (
-           INSERT INTO breeding(breed_date)
-           VALUES(NULL)
+           INSERT INTO breeding(breed_date, breeding_herd_id)
+	   SELECT NULL, i.origin_herd_id
+	   FROM individual i
+           WHERE i.individual_id = iid
            RETURNING breeding_id)
         UPDATE individual
           SET breeding_id = b.breeding_id
@@ -524,6 +530,14 @@ psql --quiet <<-'END_SQL'
 		WHERE	"Nr" = h.herd
 		LIMIT 1
 	)
+	FROM	genebank gb
+	WHERE	gb.genebank_id = h.genebank_id
+	AND	gb.name = 'Gotlandskanin'
+	AND	h.is_active IS NULL;
+
+	-- All active is null should be false 
+	UPDATE herd h
+	SET is_active = FALSE
 	FROM	genebank gb
 	WHERE	gb.genebank_id = h.genebank_id
 	AND	gb.name = 'Gotlandskanin'

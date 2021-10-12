@@ -271,16 +271,55 @@ def breedings_from_date(birth_date):
     return jsonify(breedings=breedings)
 
 
-@APP.route("/api/breeding/<h_id>", methods=["GET"])
+@APP.route("/api/breeding/<h_id>", methods=["GET", "POST"])
 @login_required
 def herd_breeding_list(h_id):
     """
     Returns a list of all breeding events connected to a given herd.
-    A breeding event is considered linked to a herd if any of the parents are
-    currently in the herd.
     """
     breedings = da.get_breeding_events(h_id, session.get("user_id", None))
+    if request.method == "POST":
+        form = request.json
+        birth_date = da.validate_date(form.get("birth_date", None))
+        end = birth_date - datetime.timedelta(days=26)
+        start = birth_date - datetime.timedelta(days=38)
+        breedings = next(
+            (
+                item
+                for item in breedings
+                if item["father"] == form["father"]
+                and item["mother"] == form["mother"]
+                and (
+                    start <= da.validate_date(item["breed_date"]) <= end
+                    or da.validate_date(item["birth_date"]) == birth_date
+                )
+            ),
+            None,
+        )
+
     return jsonify(breedings=breedings)
+
+
+@APP.route("/api/breeding/nextind/", methods=["POST"])
+@login_required
+def breeding_next_indidivual_number():
+    """
+    Returns the next correct individual number for a breeding ID event
+    """
+
+    if request.method == "POST":
+        form = request.json
+        breeding_id = form.get("id", None)
+
+        return jsonify(
+            (
+                da.next_individual_number(
+                    herd=form["breeding_herd"],
+                    birth_date=form["birth_date"],
+                    breeding_event=breeding_id,
+                )
+            )
+        )
 
 
 @APP.route("/api/breeding", methods=["POST", "PATCH"])

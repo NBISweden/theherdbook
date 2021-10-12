@@ -152,8 +152,9 @@ class TestEndpoints(FlaskTest):
             # register a valid breeding event
             response = context.get("/api/breeding/%s" % self.herds[0].herd)
 
-            breeding = db.Breeding.get(self.breeding[-1].id)
-            expected = {"breedings": [breeding.as_dict()]}
+            breeding2 = db.Breeding.get(self.breeding[-1].id)
+            breeding = db.Breeding.get(2)
+            expected = {"breedings": [breeding.as_dict(), breeding2.as_dict()]}
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), expected)
         # jscpd:ignore-end
@@ -181,14 +182,16 @@ class TestEndpoints(FlaskTest):
         ).strip()
 
         expected_breedings = {
-            "breedings": [db.Breeding.get(self.breeding[-1].id).as_dict()]
+            "breedings": [
+                db.Breeding.get(2).as_dict(),
+                db.Breeding.get(self.breeding[-1].id).as_dict(),
+            ]
         }
 
         response = self.app.get(
             "/api/breeding/%s" % herd,
             headers=[("Authorization", b"Basic " + auth_head)],
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), expected_breedings)
 
@@ -203,6 +206,7 @@ class TestEndpoints(FlaskTest):
         valid_form = {
             "father": self.individuals[0].number,
             "mother": self.individuals[1].number,
+            "breeding_herd": self.herds[0].herd,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
 
