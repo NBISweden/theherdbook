@@ -66,21 +66,6 @@ psql --echo-errors --quiet <<-'END_SQL'
 	-- Insert
 	------------------------------------------------------------
 
-	-- Genebank
-	INSERT INTO genebank (name) VALUES ('Mellerudskanin');
-
-  WITH genebank AS (
-    SELECT    genebank_id
-      FROM    genebank
-     WHERE    name = 'Mellerudskanin'
-  ), color_data (c_id, name, comment) AS (
-      VALUES (100, 'Svart/vit', 'Svart/vit Melleruds-kanin'),
-             (101, 'Albino', 'Albino Melleruds-kanin')
-  )
-  INSERT INTO color (color_id, name, comment, genebank_id)
-    SELECT c.c_id, c.name, c.comment, g.genebank_id
-      FROM genebank g, color_data c;
-
 	-- Dummy herd for individuals sold outside of the genebank
 	INSERT INTO herd (genebank_id, herd, herd_name)
 	SELECT	DISTINCT gb.genebank_id, 'MX1', 'Externa djur (Mellerud)'
