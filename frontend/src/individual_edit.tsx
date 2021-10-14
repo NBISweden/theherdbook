@@ -687,7 +687,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                     value={
                       colorOptions.find(
                         (option) => option.value == individual.color
-                      ) ?? colorOptions[0]
+                      ) ?? null
                     }
                     getOptionLabel={(option: OptionType) => option.label}
                     renderInput={(params) => (

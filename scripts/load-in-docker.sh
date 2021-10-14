@@ -118,6 +118,16 @@ cd /code || exit 1
 python3 -c 'import utils.database as db; db.init()'
 cd /scripts || exit 1
 
+
+echo '## Loading colors'
+#Load colors, first add Genebanks
+psql --quiet <<-'END_SQL'
+	-- Genebanks
+	INSERT INTO genebank (genebank_id,name) VALUES (1,'Gotlandskanin'),(2,'Mellerudskanin');
+END_SQL
+csvsql  --db "$connstr" -I --tables color --insert --no-create herdbookcolors.csv
+
+
 if "$load_gotland"; then
 	echo '## Loading Gotlandskanin'
 	./load-gotland.sh "$connstr" "$gfile" "$Gfile"

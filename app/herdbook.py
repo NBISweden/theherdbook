@@ -276,6 +276,9 @@ def breedings_from_date(birth_date):
 def herd_breeding_list(h_id):
     """
     Returns a list of all breeding events connected to a given herd.
+    If post search for a matching breeding given the birth date
+    calculate breed date from birth date to find a match or take the exact birth date
+    if it exists.
     """
     breedings = da.get_breeding_events(h_id, session.get("user_id", None))
     if request.method == "POST":
