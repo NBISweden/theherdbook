@@ -1,0 +1,40 @@
+color_id,name,comment,genebank_id
+11,Svart,Kaninen ska vara helsvart,1
+12,Vit albino,Ska ha röda ögon,1
+13,Brun,Kan ha svarta inslag,1
+14,Blå,Även buken ska vara blå,1
+15,Gulbrun med blågrå mask (Isabella),,1
+16,Brun med mörk mask (Madagaskar),,1
+17,Ljusbeige med mörk mask (Sallander),,1
+18,Vit med blå eller bruna ögon,Kan ha mörkare öron,1
+21,Järngrå,Även grafitgrå räknas hit,1
+28,Järnblå,,1
+22,Hargrå / viltfärgad,"Varierar, kan vara ljus till mörk",1
+23,Snöhare,Vit med svart slöja,1
+24,Rödgul eller orange,Inte klart åtskild från 25,1
+25,Gul (äv. gul mage) och viltgul (ljus mage),Inte klart åtskild från 24,1
+26,Viltblå (blå med ljus mage),Gråbrun med blått skimmer. Äv. kallad pearl egern,1
+27,Gråmelerad (Chinchilla),Även grå och blå chinchilla räknas hit,1
+31,Svartbrokig (vit med svarta tecken),Även med järngrå tecken räknas hit,1
+32,Blåbrokig (vit med blå tecken),,1
+33,Viltbrokig (vit med hargrå tecken),,1
+34,Gulbrokig (vit med gula tecken),Även orange eller röda tecken,1
+35,Madagaskarbrokig,Alltså madagaskartecknad bottenfärg,1
+36,Trefärgad (Tricolor),Oftast vit med svarta och gula tecken,1
+37,Chinchillabrokig (vit med chinchillatecken),Även blå chinchilla eller grå färg,1
+38,Brunbrokig (vit med (mörk)bruna tecken),,1
+39,Brokad på annat sätt (vit med färgade tecken),,1
+41,Gul-blå tigrerad (Japan),,1
+42,Gul-svart tigrerad (Japan),,1
+43,Vit-svart tigrerad (Japan),,1
+46,Vit-blå tigrerad (Japan),,1
+49,Japanteckning av annat slag,Även Japanteckning av okänt slag,1
+44,Svart med vita stickelhår (Svensk päls),Även med grå eller ljusbruna stickelhår,1
+45,Blå med vit buk på särskilt sätt,"Blue & White, även otter",1
+52,Svart med brun buk på särskilt sätt,"Black & Tan, även otter",1
+53,Svart med vit buk på särskilt sätt,"Black & White, även otter",1
+71,Färgad med enstaka vita tecken (Wiener),Ofta vit bläs eller vit tass,1
+51,Rexpälsade med alla färger och teckningar,"Pälsen plyschaktig, saknar täckhår",1
+99,Allt annat,,1
+100,Holländarteckning,Svartbrokig med stora sammanhängande fält,2
+101,Albino,Vit med röda ögon,2
