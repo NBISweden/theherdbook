@@ -55,7 +55,7 @@ FORM_KEYS = {
     "MormorNamn": "MM_name",
     "FarmorFärg": "FM_color",
     "MormorFärg": "MM_color",
-    "Nummer": "certificate",
+    "Nummer": "digital_certificate",
     "IntygasAv": "fullname",
     "IntygasNummer": "herd",
     "IntygasDatum": "issue_date",

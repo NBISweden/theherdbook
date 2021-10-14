@@ -46,7 +46,6 @@ import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
 
 
-
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
 # cookie options at https://flask.palletsprojects.com/en/1.1.x/security/
@@ -871,7 +870,6 @@ def issue_certificate(i_number):
         cert_number = res.get("digital_certificate", None)
 
         cert_data = get_certificate_data(ind_data_copy, user_id)
-        cert_data.update(**form, certificate=cert_number)
         pdf_bytes = get_certificate(cert_data)
         ind_number = ind_data["number"]
         uploaded = False
@@ -947,6 +945,7 @@ def verify_certificate(i_number):
         jsonify({"response": "The uploaded certificate is not valid"}),
         404,
     )
+
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
