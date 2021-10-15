@@ -92,8 +92,20 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         Delete the S3 object.
         """
         try:
-            obj_res = self.s3_client.delete_object(
-                Bucket=self.bucket, Key=bucket_object_name
+            self.s3_client.delete_object(Bucket=self.bucket, Key=bucket_object_name)
+        except Exception as ex:
+            raise ex
+
+        return True
+
+    def copy_object(self, old_object_name, object_name):
+        """
+        Copy the S3 object.
+        """
+        copy_source = {"Bucket": self.bucket, "Key": old_object_name}
+        try:
+            self.s3_client.copy_object(
+                CopySource=copy_source, Bucket=self.bucket, Key=object_name
             )
         except Exception as ex:
             raise ex
