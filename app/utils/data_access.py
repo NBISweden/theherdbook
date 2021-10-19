@@ -788,17 +788,11 @@ def form_to_individual(form, user=None):
     admin_fields = ["digital_certificate", "certificate", "number"]
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
+    changed = False
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            fields = form.get(admin_field, None)
-            if fields and "number" in fields:  # parents
-                changed = (
-                    form[admin_field]["number"]
-                    != getattr(individual, admin_field).number
-                )
-            elif admin_field == "color":
-                changed = form[admin_field] != individual.color.name
-            else:
+
+            if not form.get("issue_digital", False):
                 changed = (
                     f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
                 )
