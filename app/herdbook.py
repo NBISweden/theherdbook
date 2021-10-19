@@ -811,15 +811,16 @@ def update_certificate(i_number):
     try:
         present = check_certificate_s3(ind_number=ind_data["number"])
         if certificate_exists and present:
+
+            ind_data.update(**form)
+            ind_data_copy = copy.copy(ind_data)
             cert_data = get_certificate_data(ind_data, user_id)
-            cert_data.update(**form)
             pdf_bytes = get_certificate(cert_data)
             signed_data = sign_data(pdf_bytes)
             uploaded = upload_certificate(
                 pdf_bytes=signed_data.getvalue(), ind_number=ind_data["number"]
             )
-            ind_data.update(**form)
-            da.update_individual(ind_data, session.get("user_id", None))
+            da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
@@ -868,10 +869,10 @@ def issue_certificate(i_number):
         ind_data.update(**form, issue_digital=True)
         # keep the ind_data object intact
         ind_data_copy = copy.copy(ind_data)
-        res = da.update_individual(ind_data, session.get("user_id", None))
+        res = da.update_individual(ind_data, user_id)
         cert_number = res.get("digital_certificate", None)
-
         cert_data = get_certificate_data(ind_data_copy, user_id)
+        cert_data.update(digital_certificate=cert_number)
         pdf_bytes = get_certificate(cert_data)
         ind_number = ind_data["number"]
         uploaded = False
@@ -904,13 +905,13 @@ def preview_certificate(i_number):
     if ind is None:
         return jsonify({"response": "Individual not found"}), 404
 
-    data = get_certificate_data(ind, user_id)
-
     if request.method == "POST":
         form = request.json
-        data.update(**form, certificate=ind["digital_certificate"])
+        ind.update(**form, certificate=ind["digital_certificate"])
+        data = get_certificate_data(ind, user_id)
         pdf_bytes = get_certificate(data)
     elif request.method == "GET":
+        data = get_certificate_data(ind, user_id)
         pdf_bytes = get_certificate(data)
 
     return create_pdf_response(pdf_bytes=pdf_bytes.getvalue(), obj_name="preview.pdf")

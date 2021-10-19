@@ -1,10 +1,11 @@
+import datetime
+import hashlib
+
 from flask import make_response
 
 import utils.data_access as da  # isort:skip
 import utils.certificates as certs  # isort:skip
 import utils.s3 as s3  # isort:skip
-import hashlib
-import datetime
 import utils.settings as settings  # isort:skip
 
 
@@ -99,7 +100,7 @@ def get_certificate_data(ind, user_id):
     ]
 
     date = datetime.datetime.utcnow()
-    date = date.strftime("%Y-%m-%d")
+    date = date.strftime("%Y%m%d")
     herd = ind["herd"]
     if type(herd) == dict:
         herd = herd["herd"]
@@ -114,13 +115,14 @@ def get_certificate_data(ind, user_id):
         "issue_date": date,
         "photos": False,
     }
-    ind["notes"] = "\n".join(
+    ind["notes"] = " ".join(
         [
             str(ind.get("notes", "")),
-            "Färg upplysningar: " + str(ind.get("color_note", "")),
-            "Hår upplysningar: " + str(ind.get("hair_notes", "")),
+            "Färg upplysningar: " + str(ind.get("color_note", " ")),
         ]
     )
+    sex_to_kon = {"female": "Hona", "male": "Hane"}
+    ind["sex"] = sex_to_kon.get(ind["sex"], None)
     cert_data_lst = []
     cert_data_lst.append(ind)
     cert_data_lst.append(extra_data)
