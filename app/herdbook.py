@@ -17,6 +17,7 @@ import time
 import uuid
 
 import apscheduler.schedulers.background
+import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
@@ -27,8 +28,6 @@ from flask_login import (
     login_user,
     logout_user,
 )
-
-import flask_session
 from utils.cert_acess import (
     check_certificate_s3,
     create_pdf_response,
