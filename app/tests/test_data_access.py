@@ -469,6 +469,7 @@ class TestDataAccess(DatabaseTest):
         form = {
             "herd": self.individuals[0].current_herd,
             "number": self.individuals[0].number,
+            "id": self.individuals[0].id,
         }
 
         for n in range(0, 7):
