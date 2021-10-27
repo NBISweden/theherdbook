@@ -408,7 +408,7 @@ def external_login_handler(service):
         return "null"  # bad method
 
     if not session.get("link_account") and current_user.is_authenticated:
-        return get_user()
+        return redirect(request.referrer or "/")
 
     if not utils.external_auth.authorized(APP, service):
         APP.logger.debug("Need to do external auth for service %s" % service)
@@ -430,7 +430,7 @@ def external_login_handler(service):
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
-        return get_user()
+        return redirect(request.referrer or "/")
 
     if not utils.external_auth.get_autocreate(service):
         # No user - give up
@@ -493,7 +493,7 @@ def external_login_handler(service):
 
     login_user(user)
 
-    return get_user()
+    return redirect("/start")
 
 
 @APP.route("/api/link/<string:service>", methods=["GET", "POST"])
