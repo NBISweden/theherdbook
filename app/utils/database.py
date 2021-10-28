@@ -959,7 +959,7 @@ class User(BaseModel, UserMixin):
     def can_edit(self, identifier):
         """
         Returns `true` if the user is allowed to edit the database item
-        identified by `identifier`. `identifier` can be an `Individual.number`,
+        identified by `identifier`. `identifier` can be an `Individual.id` as int, `Individual.number`,
         a `Herd.herd` or a `Genebank.name`.
 
         `identifier` will be parsed as:
@@ -972,7 +972,21 @@ class User(BaseModel, UserMixin):
         if self.is_admin:
             return True
 
-        if re.match("^([a-zA-Z][0-9]+-[0-9]+)$", identifier):
+        if isinstance(identifier, int):
+            try:
+                with DATABASE.atomic():
+                    individual = Individual.get(Individual.id == identifier)
+                    if (
+                        self.is_owner
+                        and individual.current_herd.herd in self.is_owner
+                        or self.is_manager
+                        and individual.current_herd.genebank_id in self.is_manager
+                    ):
+                        return True
+            except DoesNotExist:
+                pass
+
+        elif re.match("^([a-zA-Z][0-9]+-[0-9]+)$", identifier):
             try:
                 with DATABASE.atomic():
                     individual = Individual.get(Individual.number == identifier)

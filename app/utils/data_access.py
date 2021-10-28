@@ -32,6 +32,7 @@ from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
 from utils.database import next_individual_number  # isort: skip
+import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
@@ -787,17 +788,11 @@ def form_to_individual(form, user=None):
     admin_fields = ["digital_certificate", "certificate", "number"]
     # check if a non-manager-user tries to update restricted fields
     # (owners can still set these values in new individuals)
+    changed = False
     if individual.id and not can_manage:
         for admin_field in [field for field in admin_fields if field in form]:
-            fields = form.get(admin_field, None)
-            if fields and "number" in fields:  # parents
-                changed = (
-                    form[admin_field]["number"]
-                    != getattr(individual, admin_field).number
-                )
-            elif admin_field == "color":
-                changed = form[admin_field] != individual.color.name
-            else:
+
+            if not form.get("issue_digital", False):
                 changed = (
                     f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
                 )
@@ -983,8 +978,15 @@ def update_individual(form, user_uuid):
     if user is None:
         return {"status": "error", "message": "Not logged in"}
 
-    if not user.can_edit(form["number"]):
+    if not user.can_edit(form["id"]):
         return {"status": "error", "message": "Forbidden"}
+
+    new_number = None
+    # Get the old individual if we are updating number
+    old_individual = Individual.get(Individual.id == form["id"])
+    if old_individual.number != form["number"]:
+        new_number = form["number"]
+        form["number"] = old_individual.number
 
     if form["herd"] and isinstance(form["herd"], dict):
         form["herd"] = form["herd"].get("herd", None)
@@ -1004,6 +1006,8 @@ def update_individual(form, user_uuid):
                 individual = form_to_individual(form, user)
             except ValueError as exception:
                 return {"status": "error", "message": f"{exception}"}
+            if new_number:
+                setattr(individual, "number", new_number)
 
             if "weights" in form:
                 update_weights(individual, form["weights"])
@@ -1027,6 +1031,16 @@ def update_individual(form, user_uuid):
                     raise exception
 
             individual.save()
+            # Move the certificate to the new number.
+            if new_number and individual.digital_certificate:
+                s3.get_s3_client().copy_object(
+                    old_object_name=f"{old_individual.number}/certificate.pdf",
+                    object_name=f"{individual.number}/certificate.pdf",
+                )
+                s3.get_s3_client().delete_object(
+                    f"{old_individual.number}/certificate.pdf"
+                )
+
         return {
             "status": "success",
             "message": "Individual Updated",

@@ -291,7 +291,6 @@ export function IndividualForm({
                     </div>{" "}
                     <div className="flexRow">
                       <Autocomplete
-                        disabled={!canManage}
                         className="controlWidth"
                         options={certTypeOptions ?? []}
                         value={certTypeOptions.find(

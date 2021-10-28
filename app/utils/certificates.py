@@ -25,7 +25,7 @@ FORM_KEYS = {
     "IdKloFärg": "claw_color",
     "IdAntalFödda": "litter",
     "IdAntalLevande": "litter",
-    "IdHårlag": "name",  # Fix Nose hair color
+    "IdHårlag": "hair_notes",  # Fix Nose hair color
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",
     "IdFödelseDatum": "birth_date",
@@ -55,11 +55,11 @@ FORM_KEYS = {
     "MormorNamn": "MM_name",
     "FarmorFärg": "FM_color",
     "MormorFärg": "MM_color",
-    "Nummer": "certificate",
+    "Nummer": "digital_certificate",
     "IntygasAv": "fullname",
     "IntygasNummer": "herd",
     "IntygasDatum": "issue_date",
-    "IntygasPlats": "name",  # Physical id (Only in cert?)
+    "IntygasPlats": "",  # Physical id (Only in cert?)
 }
 
 

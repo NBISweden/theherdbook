@@ -204,7 +204,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dt>Nummer:</dt>
                   <dd>{individual?.number}</dd>
                   <dt>Certifikat:</dt>
-                  <dd>{individual?.certificate}</dd>
+                  <dd>{individual?.certificate | individual?.digital_certificate}</dd>
                   <dt>Kön:</dt>
                   <dd>{individual?.sex}</dd>
                   <dt>
