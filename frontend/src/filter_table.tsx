@@ -267,7 +267,12 @@ export function FilterTable({
         </a>
       ),
     },
-    { field: "sex", label: "Kön" },
+    { field: "sex",
+      label: "Kön",
+      render: (rowData: any) => (
+        rowData["sex"] == "male" ? "Hane" : rowData["sex"] == "female" ? "Hona" : ""
+        ),
+    },
     {
       field: "birth_date",
       label: "Födelsedatum",
