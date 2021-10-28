@@ -206,7 +206,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dt>Certifikat:</dt>
                   <dd>{individual?.certificate | individual?.digital_certificate}</dd>
                   <dt>Kön:</dt>
-                  <dd>{individual?.sex}</dd>
+                  <dd>{individual?.sex == "male" ? "Hane" : individual?.sex == "female" ? "Hona" : ""}</dd>
                   <dt>
                     <Tooltip title="Inavelskoefficient">
                       <span>F:</span>
