@@ -303,7 +303,7 @@ class TestDatabase(DatabaseTest):
         }
 
         data["birth_date"] = self.breeding[0].birth_date
-        data["litter"] = self.breeding[0].litter_size
+        data["litter_size"] = self.breeding[0].litter_size
 
         data["mother"] = mother
         data["father"] = father

@@ -239,7 +239,7 @@ class TestEndpoints(FlaskTest):
         valid_form = {
             "id": self.breeding[0].id,
             "date": datetime.today().strftime("%Y-%m-%d"),
-            "litter": 4,
+            "litter_size": 4,
         }
 
         # not logged in

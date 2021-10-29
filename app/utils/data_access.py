@@ -1228,7 +1228,7 @@ def get_individuals(genebank_id, user_uuid=None):
                     else None,
                     "death_note": i["death_note"],
                     "castration_date": i["castration_date"],
-                    "litter": i["litter_size"],
+                    "litter_size": i["litter_size"],
                     "notes": i["notes"],
                     "color_note": i["color_note"],
                     "father": {
@@ -1430,7 +1430,7 @@ def register_birth(form, user_uuid):
     {
         id: <breeding database id>
         date: <birth-date, as %Y-%m-%d>,
-        litter: <total litter size (including stillborn)>
+        litter_size: <total litter size (including stillborn)>
         notes: <text>,
     }
 
@@ -1463,10 +1463,10 @@ def register_birth(form, user_uuid):
     except ValueError as error:
         errors += [str(error)]
 
-    # check if the litter size is valid
+    # check if the litter_size size is valid
     try:
-        litter = int(form.get("litter", None))
-        if litter <= 0:
+        litter_size = int(form.get("litter_size", None))
+        if litter_size <= 0:
             errors += ["Litter size must be larger than zero."]
     except ValueError:
         errors += ["Unknown litter size."]
@@ -1481,7 +1481,7 @@ def register_birth(form, user_uuid):
 
     with DATABASE.atomic():
         breeding.birth_date = birth_date
-        breeding.litter_size = litter
+        breeding.litter_size = litter_size
         breeding.birth_notes = form.get("notes", None)
         breeding.save()
         return {"status": "success"}
@@ -1546,7 +1546,7 @@ def update_breeding(form, user_uuid):
             except ValueError as error:
                 errors += [str(error)]
 
-    # check if the litter size is valid
+    # check if the litter_size is valid
     if "litter_size" in form:
         try:
             breeding.litter_size = int(form["litter_size"])

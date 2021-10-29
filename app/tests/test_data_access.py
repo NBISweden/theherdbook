@@ -509,7 +509,7 @@ class TestDataAccess(DatabaseTest):
                 "castration_date": None,
                 "death_date": dateformat(ind.death_date),
                 "death_note": ind.death_note,
-                "litter": ind.breeding.litter_size,
+                "litter_size": ind.breeding.litter_size,
                 "notes": ind.notes,
                 "color_note": ind.color_note,
                 "father": parent(ind.breeding.father),
@@ -658,23 +658,23 @@ class TestDataAccess(DatabaseTest):
         valid_form = {
             "id": self.breeding[0].id,
             "date": datetime.today().strftime("%Y-%m-%d"),
-            "litter": 4,
+            "litter_size": 4,
         }
         invalid_id = {"id": "knasboll"}
-        missing_date = {"id": self.breeding[0].id, "litter": 4}
-        invalid_date = {"id": self.breeding[0].id, "litter": 4, "date": "20-31-11"}
+        missing_date = {"id": self.breeding[0].id, "litter_size": 4}
+        invalid_date = {"id": self.breeding[0].id, "litter_size": 4, "date": "20-31-11"}
         missing_litter = {
             "id": self.breeding[0].id,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         unknown_litter = {
             "id": self.breeding[0].id,
-            "litter": "jamaica",
+            "litter_size": "jamaica",
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         invalid_litter = {
             "id": self.breeding[0].id,
-            "litter": 0,
+            "litter_size": 0,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         self.assertEqual(
