@@ -24,7 +24,7 @@ FORM_KEYS = {
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
     "IdAntalFödda": "litter_size",
-    "IdAntalLevande": "litter_size",
+    "IdAntalLevande": "litter_size6w",
     "IdHårlag": "hair_notes",  # Fix Nose hair color
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",
