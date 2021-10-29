@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 8
+CURRENT_SCHEMA_VERSION = 9
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -371,6 +371,9 @@ class Breeding(BaseModel):
     """
     Table for breeding and birth.
     breeding_herd is the herd the mother existed in when she gave birth
+    litter_size6w is a field to store how many litter was alive 6 week after birth
+    if all litter of a breed exists as individuals in the herd book we can calculate this
+    but probably we need to store this for users that are only adding registrerd animals.
     """
 
     id = AutoField(primary_key=True, column_name="breeding_id")
@@ -382,6 +385,7 @@ class Breeding(BaseModel):
     birth_date = DateField(null=True)
     birth_notes = TextField(null=True)
     litter_size = IntegerField(null=True)
+    litter_size6w = IntegerField(null=True)
 
     def as_dict(self):
         """
@@ -586,6 +590,7 @@ class Individual(BaseModel):
             else None
         )
         data["litter_size"] = self.breeding.litter_size if self.breeding else None
+        data["litter_size6w"] = self.breeding.litter_size6w if self.breeding else None
 
         data["mother"] = (
             {
@@ -1463,6 +1468,38 @@ def migrate_7_to_8():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=8,
             comment="Add breerding_herd_id to breeding",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_8_to_9():
+    """
+    Migrate between schema version 8 and 9 .
+    added litter6w
+    """
+
+    with DATABASE.atomic():
+        if "breeding" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=9,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("breeding")]
+
+        if "litter_size6w" not in cols:
+            # Go through.
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "breeding", "litter_size6w", IntegerField(null=True)
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=9,
+            comment="Add breerding_litter_size6w to breeding",
             applied=datetime.now(),
         ).execute()
 
