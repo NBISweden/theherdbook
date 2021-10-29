@@ -33,6 +33,12 @@ export function Owner() {
   );
   const style = useStyles();
 
+  React.useEffect(() => {
+    if (user && user.is_owner) {
+      setActiveHerd(user.is_owner[0])
+    }
+  }, [user])
+
   return (
     <>
       <Paper className={style.container}>
