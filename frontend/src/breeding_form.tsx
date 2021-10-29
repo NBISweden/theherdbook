@@ -343,7 +343,7 @@ export function BreedingForm({
       color_note: null,
       death_date: null,
       death_note: null,
-      litter: null,
+      litter_size: null,
       notes: "",
       herd_tracking: null,
       herd_active: true,
@@ -408,7 +408,7 @@ export function BreedingForm({
 
         const newBirthData: Birth = {
           date: breeding.birth_date,
-          litter: breeding.litter_size,
+          litter_size: breeding.litter_size,
           notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
           id: newBreeding.breeding_id,
         };
