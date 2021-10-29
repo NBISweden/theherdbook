@@ -1431,6 +1431,7 @@ def register_birth(form, user_uuid):
         id: <breeding database id>
         date: <birth-date, as %Y-%m-%d>,
         litter_size: <total litter size (including stillborn)>
+        litter_size6w: <number of live litter 6 weeks after birth can be null>
         notes: <text>,
     }
 
@@ -1482,6 +1483,7 @@ def register_birth(form, user_uuid):
     with DATABASE.atomic():
         breeding.birth_date = birth_date
         breeding.litter_size = litter_size
+        breeding.litter_size6w = form.get("litter_size6w", None)
         breeding.birth_notes = form.get("notes", None)
         breeding.save()
         return {"status": "success"}
@@ -1502,6 +1504,7 @@ def update_breeding(form, user_uuid):
         birth_date?: <date, as %Y-%m-%d>,
         birth_notes?: string,
         litter_size?: <total litter size (including stillborn)>,
+        litter_size6w: <number of live litter 6 weeks after birth can be null>
     }
 
     The response will be on the format:
@@ -1561,5 +1564,6 @@ def update_breeding(form, user_uuid):
     with DATABASE.atomic():
         breeding.birth_notes = form.get("birth_notes", None)
         breeding.breed_notes = form.get("breed_notes", None)
+        breeding.litter_size6w = form.get("litter_size6w", None)
         breeding.save()
         return {"status": "success"}
