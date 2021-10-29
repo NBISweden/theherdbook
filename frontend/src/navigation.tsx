@@ -24,6 +24,7 @@ import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
 import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
 import EcoIcon from "@material-ui/icons/Eco";
 
+import { get } from "@app/communication";
 import { Login } from "@app/login";
 import { Genebanks } from "@app/genebanks";
 import { HerdView } from "@app/herd_view";
@@ -91,13 +92,24 @@ const StyledMenuItem = withStyles((theme) => ({
 }))(MenuItem);
 
 function Restricted(props: { children: React.ReactElement }) {
+  /*
+  If user reloads page we do not have any usercontext yet.
+  User will always be null even if user is logged in in backend
+  This will check with backen if api/user returns data then the user is logged in
+  and we can proceed the user to the restricted component. If not then redirect to Google login.
+  If user is clicking the link the usercontext is already loaded and we can assume the user is
+  logged in.
+  */
   const { user } = useUserContext();
-  const location = useLocation();
-  return user ? (
-    props.children
-  ) : (
-    <Redirect to={{ pathname: "/login", state: { from: location } }} />
-  );
+
+  if (user == null) {
+    get("/api/user").then((data) => {
+      return data
+        ? props.children
+        : (window.location.href = "/api/login/google");
+    });
+  }
+  return props.children;
 }
 
 export function Navigation() {
@@ -225,8 +237,10 @@ export function Navigation() {
 
     {
       label: "Logga in",
-      path: "/login",
-      component: <Login />,
+      path: "",
+      on_click: () => {
+        window.location.href = "/api/login/google";
+      },
       visible: !is_logged_in,
       icon: <MeetingRoom />,
     },
@@ -351,7 +365,12 @@ export function Navigation() {
                   </Restricted>
                 )}
               </ui.Routed>
-              <Route path="/">Welcome!</Route>
+              <Route path="/admin"><Login /></Route>
+              <Route path="/login">
+                Du måste logga in med ditt Gotlandskaninkonto{" "}
+                <a href="/api/login/google">Logga in</a>{" "}
+              </Route>
+              <Route path="/">Välkommen till Herdbook!</Route>
             </Switch>
           </Paper>
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDataContext } from "@app/data_context";
 
 import { Genebank } from "@app/data_context_global";
-import { Button, Paper, makeStyles } from "@material-ui/core";
+import { Button, Paper, makeStyles, CircularProgress } from "@material-ui/core";
 
 import { Link, useRouteMatch, useHistory } from "react-router-dom";
 import { GenebankView } from "@app/genebank_view";
@@ -45,7 +45,7 @@ export function Register() {
 
   return (
     <>
-      {!!(user?.is_manager || user?.is_admin) ? (
+      {!!((user?.is_manager && genebank) || (user?.is_admin && genebank)) ? (
         <Paper>
           <div className={styles.buttonBar}>
             {genebanks.length > 1 &&
@@ -65,13 +65,15 @@ export function Register() {
                 );
               })}
           </div>
-          {React.useMemo(
-            () => genebank && <IndividualAdd genebank={genebank} />,
-            [genebank]
-          )}
+          <IndividualAdd genebank={genebank} />
         </Paper>
-      ) : (
+      ) : user && !user.is_admin && !user.is_manager ? (
         <p>Du har inte rättigheterna att registrera nya kaniner.</p>
+      ) : (
+        <div className="loading">
+          <h2>Laddar...</h2>
+          <CircularProgress />
+        </div>
       )}
     </>
   );
