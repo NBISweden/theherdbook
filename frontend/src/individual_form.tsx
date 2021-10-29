@@ -441,10 +441,10 @@ export function IndividualForm({
                   label="Antal födda i kullen"
                   className="control controlWidth"
                   variant={inputVariant}
-                  value={individual.litter ?? ''}
+                  value={individual.litter_size ?? ''}
                   type="number"
                   onChange={(event) => {
-                    onUpdateIndividual("litter", +event.currentTarget.value);
+                    onUpdateIndividual("litter_size", +event.currentTarget.value);
                   }}
                 />
               </div>

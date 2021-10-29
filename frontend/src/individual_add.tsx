@@ -226,7 +226,7 @@ export function IndividualAdd({
     if (individual?.birth_date) {
       setBirthDateError(false);
     }
-    if (individual?.litter) {
+    if (individual?.litter_size) {
       setLitterError(false);
     }
   }, [
@@ -234,7 +234,7 @@ export function IndividualAdd({
     individual?.number,
     individual?.sex,
     individual?.birth_date,
-    individual?.litter,
+    individual?.litter_size,
   ]);
   //Searches for existing breedings and update form with data from that found breeding
   //Suggest the next individual number
@@ -275,7 +275,7 @@ export function IndividualAdd({
             ...individual,
             origin_herd: BreedHerd,
             number: IndNumber,
-            litter: Breedingmatch.breedings.litter_size,
+            litter_size: Breedingmatch.breedings.litter_size,
           });
         } else {
           userMessage(
@@ -286,7 +286,7 @@ export function IndividualAdd({
             `/api/breeding/nextind/`,
             limitedBreedingInput
           );
-          setIndividual({ ...individual, number: IndNumber1, litter: 0 });
+          setIndividual({ ...individual, number: IndNumber1, litter_size: 0 });
         }
       }
     };
@@ -312,7 +312,7 @@ export function IndividualAdd({
       setBirthDateError(true);
       error = true;
     }
-    if (!individual?.litter) {
+    if (!individual?.litter_size) {
       setLitterError(true);
       error = true;
     }
@@ -324,7 +324,7 @@ export function IndividualAdd({
       userMessage("Individens nummer har fel format.", "warning");
       return false;
     }
-    if (individual.litter <= 0) {
+    if (individual.litter_size <= 0) {
       userMessage("Kullstorleken måste vara störren än 0.", "warning");
       return false;
     }
@@ -396,7 +396,7 @@ export function IndividualAdd({
       mother: individual.mother.number,
       birth_date: individual.birth_date,
       birth_notes: "",
-      litter_size: individual.litter,
+      litter_size: individual.litter_size,
     };
 
     let limitedBreedingInput: LimitedBreeding = {
@@ -433,7 +433,7 @@ export function IndividualAdd({
       }
       const birthData: Birth = {
         date: individual.birth_date,
-        litter: individual.litter,
+        litter_size: individual.litter_size,
         id: newBreeding.breeding_id,
       };
       const newBirth = await createBirth(birthData);
@@ -557,7 +557,7 @@ export function IndividualAdd({
       birth_date: individual.birth_date,
       mother: individual.mother,
       father: individual.father,
-      litter: individual.litter,
+      litter_size: individual.litter_size,
     };
     setIndividual(sibling);
     setSuccess(false);

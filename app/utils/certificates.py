@@ -23,8 +23,8 @@ FORM_KEYS = {
     "IdÅrKullIndivid": "genebank_aki",
     "IdOgonFärg": "eye_color",
     "IdKloFärg": "claw_color",
-    "IdAntalFödda": "litter",
-    "IdAntalLevande": "litter",
+    "IdAntalFödda": "litter_size",
+    "IdAntalLevande": "litter_size",
     "IdHårlag": "hair_notes",  # Fix Nose hair color
     "IdFärgBuken": "belly_color",
     "IdKön": "sex",

@@ -235,7 +235,7 @@ export function IndividualView({ id }: { id: string }) {
                       : ""}
                   </dd>
                   <dt>Kullstorlek:</dt>
-                  <dd>{individual?.litter}</dd>
+                  <dd>{individual?.litter_size}</dd>
                   <dt>Vikt:</dt>
                   <dd>
                     {individual &&

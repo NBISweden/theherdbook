@@ -110,7 +110,7 @@ export function IndividualCertificate({
     birth_date: individual?.birth_date,
     hair_notes: individual?.hair_notes,
     name: individual?.name,
-    litter: individual?.litter,
+    litter_size: individual?.litter_size,
     notes: individual?.notes,
     sex: individual?.sex,
     genebank: individual?.genebank,
@@ -189,7 +189,7 @@ export function IndividualCertificate({
       setBirthDateError(true);
       error = true;
     }
-    if (!individual?.litter) {
+    if (!individual?.litter_size) {
       setLitterError(true);
       error = true;
     }
@@ -216,7 +216,7 @@ export function IndividualCertificate({
     if (individual?.birth_date) {
       setBirthDateError(false);
     }
-    if (individual?.litter) {
+    if (individual?.litter_size) {
       setLitterError(false);
     }
   }, [
@@ -224,7 +224,7 @@ export function IndividualCertificate({
     individual?.number,
     individual?.sex,
     individual?.birth_date,
-    individual?.litter,
+    individual?.litter_size,
   ]);
 
   // Returns a preview of the certificate that will be shown as an image

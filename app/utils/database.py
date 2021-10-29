@@ -585,7 +585,7 @@ class Individual(BaseModel):
             if self.breeding.birth_date
             else None
         )
-        data["litter"] = self.breeding.litter_size if self.breeding else None
+        data["litter_size"] = self.breeding.litter_size if self.breeding else None
 
         data["mother"] = (
             {
