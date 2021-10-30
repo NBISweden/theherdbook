@@ -1,0 +1,9 @@
+[google]
+key=
+secret=
+domain=gotlandskaninen.se
+second_domain=mellerudskaninen.se
+autocreate = yes
+credentialsfile=
+lookupuser=
+herdattribute=externalIds

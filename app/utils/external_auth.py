@@ -129,6 +129,7 @@ def setup_google(app, config):
     if config["google"].get("domain", None):
         hdparam["hosted_domain"] = config["google"]["domain"]
         _config["googledomain"] = config["google"]["domain"]
+        _config["second_googledomain"] = config["google"]["second_domain"]
 
     if config["google"].get("herdattribute", None):
         _config["googleherd"] = config["google"]["herdattribute"]
@@ -183,7 +184,10 @@ def google_authorized():
         return False
 
     if "googledomain" in _config:
-        if "hd" not in idtoken or idtoken["hd"] != _config["googledomain"]:
+        if "hd" not in idtoken or (
+            idtoken["hd"] != _config["googledomain"]
+            and idtoken["hd"] != _config["second_googledomain"]
+        ):
             return None
 
     return flask_dance.contrib.google.google.authorized
