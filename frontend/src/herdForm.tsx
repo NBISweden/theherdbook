@@ -78,11 +78,13 @@ type ContactField = {
  */
 export function HerdForm({
   id,
+  genebank,
   view = "form",
   change = true,
   fromHerd,
 }: {
   id: string | undefined;
+  genebank: string |undefined;
   view: "form" | "info";
   change: boolean;
   fromHerd: Herd | undefined;
@@ -115,6 +117,7 @@ export function HerdForm({
    */
   React.useEffect(() => {
     setLoading(true);
+    defaultValues.genebank = genebank;
     setHerd({ ...defaultValues });
     setPostalcode("");
     setPostalcity("");
@@ -154,7 +157,7 @@ export function HerdForm({
       }
     }
     setLoading(false);
-  }, [id]);
+  }, [id,genebank]);
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -178,7 +181,6 @@ export function HerdForm({
     }
     return null;
   };
-
   /**
    * sends a POST request to create a new herd in the database if the `isNew` is
    * `true`, otherwise sends am UPDATE request to update a current database
@@ -277,7 +279,8 @@ export function HerdForm({
           </h1>
           {(currentView == "form" &&
             user &&
-            (user.canEdit(herd.herd) ||
+            (user.canEdit(genebank) ||
+              user.canEdit(herd.herd) ||
               user.canEdit(herd.genebank) ||
               herd.genebank.id < 0) && (
               <>
