@@ -1020,15 +1020,19 @@ def update_individual(form, user_uuid):
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
                 try:
-                    selling_date = validate_date(form.get("selling_date", None))
+                    update_date = form.get("selling_date", False)
+                    if update_date:
+                        update_date = validate_date(update_date)
+                    else:
+                        update_date = validate_date(form.get("yearly_report_date"))
 
                     update_herdtracking_values(
                         individual=individual,
                         new_herd=form["herd"],
                         user_signature=user,
                         tracking_date=datetime.utcnow()
-                        if not selling_date
-                        else selling_date,
+                        if not update_date
+                        else update_date,
                     )
                 except ValueError as exception:
                     raise exception
