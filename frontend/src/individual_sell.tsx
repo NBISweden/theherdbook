@@ -62,6 +62,7 @@ const useStyles = makeStyles({
 });
 
 interface LimitedIndividualForSale {
+  id: number;
   number: string;
   herd: string;
   selling_date: string;
@@ -136,6 +137,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
       return;
     }
     const limitedIndividual: LimitedIndividualForSale = {
+      id: individualForSale.id,
       number: individualForSale.number,
       herd: individualForSale.herd,
       selling_date: individualForSale.selling_date,
