@@ -820,11 +820,11 @@ def update_certificate(i_number):
                 pdf_bytes=signed_data.getvalue(), ind_number=ind_data["number"]
             )
             # Update breeding if litter size has changed
-            if breed_data.get("litter_size") != form.get("litter") or breed_data.get(
-                "litter_size6w"
-            ) != form.get("litter6w"):
-                breed_data.update(litter6w=form.get("litter6w"))
-                breed_data.update(litter=form.get("litter"))
+            if breed_data.get("litter_size") != form.get(
+                "litter_size"
+            ) or breed_data.get("litter_size6w") != form.get("litter_size6w"):
+                breed_data.update(litter_size6w=form.get("litter_size6w"))
+                breed_data.update(litter_size=form.get("litter_size"))
                 da.update_breeding(breed_data, user_id)
             da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
@@ -876,11 +876,11 @@ def issue_certificate(i_number):
         # keep the ind_data object intact
         ind_data_copy = copy.copy(ind_data)
         # Update breeding if litter size has changed
-        if breed_data.get("litter_size") != form.get("litter") or breed_data.get(
+        if breed_data.get("litter_size") != form.get("litter_size") or breed_data.get(
             "litter_size6w"
-        ) != form.get("litter6w"):
-            breed_data.update(litter6w=form.get("litter6w"))
-            breed_data.update(litter=form.get("litter"))
+        ) != form.get("litter_size6w"):
+            breed_data.update(litter_size6w=form.get("litter_size6w"))
+            breed_data.update(litter_size=form.get("litter_size"))
             da.update_breeding(breed_data, user_id)
         res = da.update_individual(ind_data, user_id)
         cert_number = res.get("digital_certificate", None)
