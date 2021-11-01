@@ -1504,7 +1504,7 @@ def update_breeding(form, user_uuid):
         birth_date?: <date, as %Y-%m-%d>,
         birth_notes?: string,
         litter_size?: <total litter size (including stillborn)>,
-        litter_size6w: <number of live litter 6 weeks after birth can be null>
+        litter_size6w: <number of litter alive 6 weeks after birth, can be null>
     }
 
     The response will be on the format:
