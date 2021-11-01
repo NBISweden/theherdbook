@@ -371,9 +371,9 @@ class Breeding(BaseModel):
     """
     Table for breeding and birth.
     breeding_herd is the herd the mother existed in when she gave birth
-    litter_size6w is a field to store how many litter was alive 6 week after birth
-    if all litter of a breed exists as individuals in the herd book we can calculate this
-    but probably we need to store this for users that are only adding registrerd animals.
+    litter_size6w is a field to store how many litter was alive 6 weeks after birth.
+    If all litter of a breed exists as individuals in the herdbook we can calculate this
+    but probably we need to store this for users that are only adding registered animals.
     """
 
     id = AutoField(primary_key=True, column_name="breeding_id")
