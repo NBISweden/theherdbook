@@ -342,6 +342,11 @@ export function IndividualAdd({
       userMessage("Det borde vara minst en levande kvar efter 6 veckor", "warning");
       return false;
     }
+    if (individual.litter_size6w > individual.litter_size) {
+      userMessage("Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.", "warning");
+            return false;
+          }
+      
     return true;
   };
 

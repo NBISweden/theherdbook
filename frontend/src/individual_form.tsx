@@ -421,7 +421,7 @@ export function IndividualForm({
                 <TextField
                   required
                   error={litterError6w}
-                  label="Antal levande i kullen (efter 6 veckor)"
+                  label="Levande i kullen efter 6v"
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.litter_size6w ?? ''}

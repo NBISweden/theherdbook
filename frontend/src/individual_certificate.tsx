@@ -195,7 +195,7 @@ export function IndividualCertificate({
       setLitterError(true);
       error = true;
     }
-    if (!individual?.litter6w) {
+    if (!individual?.litter_size6w) {
       setLitterError6w(true);
       error = true;
     }
