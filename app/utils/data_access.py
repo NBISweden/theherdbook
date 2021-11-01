@@ -779,26 +779,28 @@ def form_to_individual(form, user=None):
     if "id" in form and form["id"] != individual.id:
         raise ValueError("Number can not be updated")
 
-    can_manage = user and (
-        user.is_admin
-        or user.is_manager
-        and individual.current_herd.genebank_id in user.is_manager
-    )
+    # Skip if we are adding a new individual
+    if not form.get("new_individual", False):
+        can_manage = user and (
+            user.is_admin
+            or user.is_manager
+            and individual.current_herd.genebank_id in user.is_manager
+        )
 
-    admin_fields = ["digital_certificate", "certificate", "number"]
-    # check if a non-manager-user tries to update restricted fields
-    # (owners can still set these values in new individuals)
-    changed = False
-    if individual.id and not can_manage:
-        for admin_field in [field for field in admin_fields if field in form]:
+        admin_fields = ["digital_certificate", "certificate", "number"]
+        # check if a non-manager-user tries to update restricted fields
+        # (owners can still set these values in new individuals)
+        changed = False
+        if individual.id and not can_manage:
+            for admin_field in [field for field in admin_fields if field in form]:
 
-            if not form.get("issue_digital", False):
-                changed = (
-                    f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
-                )
+                if not form.get("issue_digital", False):
+                    changed = (
+                        f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
+                    )
 
-            if changed:
-                raise ValueError(f"Only managers can update {admin_field}")
+                if changed:
+                    raise ValueError(f"Only managers can update {admin_field}")
 
     # Make sure a valid breeding id is passed
     if "breeding" in form:
@@ -880,6 +882,7 @@ def add_individual(form, user_uuid):
         return {"status": "error", "message": "Forbidden"}
 
     if form.get("number", None) is None and "breeding" in form:
+        form["new_individual"] = True
         form["number"] = next_individual_number(
             herd=form["herd"],
             birth_date=form["birth_date"],
