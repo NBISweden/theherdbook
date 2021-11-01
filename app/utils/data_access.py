@@ -1431,7 +1431,7 @@ def register_birth(form, user_uuid):
         id: <breeding database id>
         date: <birth-date, as %Y-%m-%d>,
         litter_size: <total litter size (including stillborn)>
-        litter_size6w: <number of live litter 6 weeks after birth can be null>
+        litter_size6w: <number of litter alive 6 weeks after birth, can be null>
         notes: <text>,
     }
 
