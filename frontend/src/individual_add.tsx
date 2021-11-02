@@ -196,7 +196,7 @@ export function IndividualAdd({
       setCurrentGenebank(genebank);
     } else {
       const originGenebank = genebanks.find((g) =>
-        g.herds.filter((herd) => herd.herd == herdId)
+        g.herds.some((herd) => herd.herd == herdId)
       );
       setCurrentGenebank(originGenebank);
     }
