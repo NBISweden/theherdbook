@@ -429,7 +429,7 @@ list-item {
 
 /* Used in individual_form.tsx */
 .control {
-  margin: 0.3em;
+  margin: 0.3em 0;
   padding-right: 1em;
 }
 
@@ -442,14 +442,8 @@ list-item {
 .flexRow {
   display: flex;
   flex-direction: row;
-  align-items: end;
-  justify-content: start;
-}
-
-.toolTip {
-  width: 100%;
-  display: flex;
   align-items: center;
+  justify-content: start;
 }
 
 /* Used in individual_form.tsx */
@@ -493,7 +487,7 @@ list-item {
   margin: 5px 0;
   min-width: 195px;
   width: 100%;
-  padding-right: 5px;
+  padding-right: 1em;
 }
 
 /* desktop */

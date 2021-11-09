@@ -366,9 +366,7 @@ export function IndividualForm({
                       value={individual.birth_date ?? null}
                     />
                     <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right" arrow>
-                    <div className="toolTip">
                     <InfoOutlinedIcon />
-                   </div>
                   </Tooltip>  
                   </div>
                 ) : (
