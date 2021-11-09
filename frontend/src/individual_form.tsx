@@ -9,6 +9,7 @@ import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
 
 import { useDataContext } from "@app/data_context";
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import {
   dateFormat,
   Genebank,
@@ -37,6 +38,7 @@ export function IndividualForm({
   sexError,
   birthDateError,
   litterError,
+  litterError6w,
 }: {
   genebank: Genebank;
   individual: Individual;
@@ -48,6 +50,7 @@ export function IndividualForm({
   sexError: boolean;
   birthDateError: boolean;
   litterError: boolean;
+  litterError6w: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [certType, setCertType] = React.useState("unknown" as string);
@@ -351,24 +354,20 @@ export function IndividualForm({
                     </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ? (
+                  
                   <div className="flexRow">
-                    <KeyboardDatePicker
-                      required
-                      error={birthDateError}
-                      autoOk
-                      variant="inline"
+                     
+                   
+                    <TextField
+                      disabled={formAction == FormAction.handleCertificate}
+                      variant={inputVariant}
                       className="control controlWidth"
-                      inputVariant={inputVariant}
                       label="Födelsedatum"
-                      format={dateFormat}
                       value={individual.birth_date ?? null}
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                      onChange={(date, value) => {
-                        value && onUpdateIndividual("birth_date", value);
-                      }}
                     />
+                    <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right" arrow>
+                    <InfoOutlinedIcon />
+                  </Tooltip>  
                   </div>
                 ) : (
                   <></>
@@ -408,6 +407,32 @@ export function IndividualForm({
                     onUpdateIndividual("sex", newValue?.value ?? "");
                   }}
                 />
+                </div>
+              <div className="flexRow">
+              <TextField
+                  required
+                  error={litterError}
+                  label="Antal födda i kullen"
+                  className="control controlWidth"
+                  variant={inputVariant}
+                  value={individual.litter_size ?? ''}
+                  type="number"
+                  onChange={(event) => {
+                    onUpdateIndividual("litter_size", +event.currentTarget.value);
+                  }}
+                />
+                <TextField
+                  required
+                  error={litterError6w}
+                  label="Levande i kullen efter 6v"
+                  className="control controlWidth"
+                  variant={inputVariant}
+                  value={individual.litter_size6w ?? ''}
+                  type="number"
+                  onChange={(event) => {
+                    onUpdateIndividual("litter_size6w", +event.currentTarget.value);
+                  }}
+                />
               </div>
               <div className="flexRow">
                 <Autocomplete
@@ -436,20 +461,6 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
-                  required
-                  error={litterError}
-                  label="Antal födda i kullen"
-                  className="control controlWidth"
-                  variant={inputVariant}
-                  value={individual.litter_size ?? ''}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual("litter_size", +event.currentTarget.value);
-                  }}
-                />
-              </div>
-              <div className="flexRow">
-                <TextField
                   label="Färg på buken"
                   className="control controlWidth"
                   variant={inputVariant}
@@ -461,6 +472,8 @@ export function IndividualForm({
                     );
                   }}
                 />
+              </div>
+              <div className="flexRow">
                 <TextField
                   label="Ögonfärg"
                   className="control controlWidth"
@@ -470,8 +483,6 @@ export function IndividualForm({
                     onUpdateIndividual("eye_color", event.currentTarget.value);
                   }}
                 />
-              </div>
-              <div className="flexRow">
                 <TextField
                   label="Klofärg(er)"
                   className="control controlWidth"

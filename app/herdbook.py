@@ -810,7 +810,7 @@ def update_certificate(i_number):
     try:
         present = check_certificate_s3(ind_number=ind_data["number"])
         if certificate_exists and present:
-
+            breed_data = db.Breeding.get(ind_data.get("breeding")).as_dict()
             ind_data.update(**form)
             ind_data_copy = copy.copy(ind_data)
             cert_data = get_certificate_data(ind_data, user_id)
@@ -819,6 +819,13 @@ def update_certificate(i_number):
             uploaded = upload_certificate(
                 pdf_bytes=signed_data.getvalue(), ind_number=ind_data["number"]
             )
+            # Update breeding if litter size has changed
+            if breed_data.get("litter_size") != form.get(
+                "litter_size"
+            ) or breed_data.get("litter_size6w") != form.get("litter_size6w"):
+                breed_data.update(litter_size6w=form.get("litter_size6w"))
+                breed_data.update(litter_size=form.get("litter_size"))
+                da.update_breeding(breed_data, user_id)
             da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while updating certificate: " + str(ex))
@@ -864,10 +871,17 @@ def issue_certificate(i_number):
             return jsonify({"response": "Certificate already exists"}), 400
 
         form = request.json
-
+        breed_data = db.Breeding.get(ind_data.get("breeding")).as_dict()
         ind_data.update(**form, issue_digital=True)
         # keep the ind_data object intact
         ind_data_copy = copy.copy(ind_data)
+        # Update breeding if litter size has changed
+        if breed_data.get("litter_size") != form.get("litter_size") or breed_data.get(
+            "litter_size6w"
+        ) != form.get("litter_size6w"):
+            breed_data.update(litter_size6w=form.get("litter_size6w"))
+            breed_data.update(litter_size=form.get("litter_size"))
+            da.update_breeding(breed_data, user_id)
         res = da.update_individual(ind_data, user_id)
         cert_number = res.get("digital_certificate", None)
         cert_data = get_certificate_data(ind_data_copy, user_id)

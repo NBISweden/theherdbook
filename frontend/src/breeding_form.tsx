@@ -42,6 +42,7 @@ const emptyBreeding: Breeding = {
   birth_date: null,
   birth_notes: "",
   litter_size: null,
+  litter_size6w: null,
 };
 
 /**
@@ -201,9 +202,9 @@ export function BreedingForm({
 
     if (
       (userInput.birth_date, userInput.litter_size) !== null &&
-      !(userInput.litter_size > 0 && userInput.litter_size < 10)
+      !(userInput.litter_size > 0)
     ) {
-      userMessage("Ange en kullstorlek mellan 1 och 9.", "warning");
+      userMessage("Ange en kullstorlek större än 0", "warning");
       return false;
     }
 
@@ -344,6 +345,7 @@ export function BreedingForm({
       death_date: null,
       death_note: null,
       litter_size: null,
+      litter_size6w: null,
       notes: "",
       herd_tracking: null,
       herd_active: true,
@@ -409,6 +411,7 @@ export function BreedingForm({
         const newBirthData: Birth = {
           date: breeding.birth_date,
           litter_size: breeding.litter_size,
+          litter_size6w: breeding.litter_size,
           notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
           id: newBreeding.breeding_id,
         };

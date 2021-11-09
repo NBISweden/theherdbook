@@ -137,6 +137,7 @@ export function IndividualAdd({
   const [sexError, setSexError] = React.useState(false as boolean);
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
+  const [litterError6w, setLitterError6w] = React.useState(false as boolean);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -229,12 +230,16 @@ export function IndividualAdd({
     if (individual?.litter_size) {
       setLitterError(false);
     }
+    if (individual?.litter_size6w) {
+      setLitterError6w(false);
+    }
   }, [
     individual?.color,
     individual?.number,
     individual?.sex,
     individual?.birth_date,
     individual?.litter_size,
+    individual?.litter_size6w,
   ]);
   //Searches for existing breedings and update form with data from that found breeding
   //Suggest the next individual number
@@ -276,6 +281,7 @@ export function IndividualAdd({
             origin_herd: BreedHerd,
             number: IndNumber,
             litter_size: Breedingmatch.breedings.litter_size,
+            litter_size6w: Breedingmatch.breedings.litter_size6w,
           });
         } else {
           userMessage(
@@ -316,6 +322,10 @@ export function IndividualAdd({
       setLitterError(true);
       error = true;
     }
+    if (!individual?.litter_size6w) {
+      setLitterError6w(true);
+      error = true;
+    }
     if (error) {
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
@@ -328,6 +338,15 @@ export function IndividualAdd({
       userMessage("Kullstorleken måste vara störren än 0.", "warning");
       return false;
     }
+    if (individual.litter_size6w < 1) {
+      userMessage("Det borde vara minst en levande kvar efter 6 veckor", "warning");
+      return false;
+    }
+    if (individual.litter_size6w > individual.litter_size) {
+      userMessage("Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.", "warning");
+            return false;
+          }
+      
     return true;
   };
 
@@ -397,6 +416,7 @@ export function IndividualAdd({
       birth_date: individual.birth_date,
       birth_notes: "",
       litter_size: individual.litter_size,
+      litter_size6w: individual.litter_size6w,
     };
 
     let limitedBreedingInput: LimitedBreeding = {
@@ -434,6 +454,7 @@ export function IndividualAdd({
       const birthData: Birth = {
         date: individual.birth_date,
         litter_size: individual.litter_size,
+        litter_size6w: individual.litter_size6w,
         id: newBreeding.breeding_id,
       };
       const newBirth = await createBirth(birthData);
@@ -558,6 +579,7 @@ export function IndividualAdd({
       mother: individual.mother,
       father: individual.father,
       litter_size: individual.litter_size,
+      litter_size6w: individual.litter_size6w,
     };
     setIndividual(sibling);
     setSuccess(false);
@@ -649,6 +671,7 @@ export function IndividualAdd({
             sexError={sexError}
             birthDateError={birthDateError}
             litterError={litterError}
+            litterError6w={litterError6w}
           />
         </div>
         {!herdId && (

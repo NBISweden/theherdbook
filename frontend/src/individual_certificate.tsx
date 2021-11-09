@@ -93,6 +93,7 @@ export function IndividualCertificate({
   const [sexError, setSexError] = React.useState(false as boolean);
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
+  const [litterError6w, setLitterError6w] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
@@ -111,6 +112,7 @@ export function IndividualCertificate({
     hair_notes: individual?.hair_notes,
     name: individual?.name,
     litter_size: individual?.litter_size,
+    litter_size6w: individual?.litter_size6w,
     notes: individual?.notes,
     sex: individual?.sex,
     genebank: individual?.genebank,
@@ -193,6 +195,10 @@ export function IndividualCertificate({
       setLitterError(true);
       error = true;
     }
+    if (!individual?.litter_size6w) {
+      setLitterError6w(true);
+      error = true;
+    }
     if (error) {
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return;
@@ -219,12 +225,16 @@ export function IndividualCertificate({
     if (individual?.litter_size) {
       setLitterError(false);
     }
+    if (individual?.litter_size6w) {
+      setLitterError6w(false);
+    }
   }, [
     individual?.color,
     individual?.number,
     individual?.sex,
     individual?.birth_date,
     individual?.litter_size,
+    individual?.litter_size6w,
   ]);
 
   // Returns a preview of the certificate that will be shown as an image
@@ -365,6 +375,7 @@ export function IndividualCertificate({
             sexError={sexError}
             birthDateError={birthDateError}
             litterError={litterError}
+            litterError6w={litterError6w}
           />
           <div className={style.paneControls}>
             <Button

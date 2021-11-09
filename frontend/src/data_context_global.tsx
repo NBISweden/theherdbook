@@ -51,6 +51,7 @@ export interface Individual extends LimitedIndividual {
   death_date: string | null;
   death_note: string | null;
   litter_size: number | null;
+  litter_size6w: number | null;
   notes: string | null;
   weights?: Array<DateWeight> | null;
   bodyfat?: Array<DateBodyfat> | null;
@@ -124,6 +125,7 @@ export interface Breeding {
   birth_date: string | null;
   birth_notes?: string;
   litter_size: number | null;
+  litter_size6w: number | null;
 }
 
 export interface ExtendedBreeding extends Breeding {
@@ -135,6 +137,7 @@ export interface Birth {
   id: number;
   date: string;
   litter_size: number | null;
+  litter_size6w: number | null;
   notes?: string;
 }
 

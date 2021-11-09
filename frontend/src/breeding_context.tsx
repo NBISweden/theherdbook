@@ -37,6 +37,7 @@ const emptyBreedingContext: BreedingContext = {
       birth_date: null,
       birth_notes: "",
       litter_size: null,
+      litter_size6w: null,
     };
   },
   checkBirthUpdate() {

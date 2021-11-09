@@ -377,10 +377,14 @@ class TestEndpoints(FlaskTest):
         valid_issue_form = {
             "color_id": 3,
             "birth_date": datetime.now() - timedelta(days=30),
+            "litter_size": 5,
+            "litter_size6w": 4,
         }
         valid_update_form = {
             "color_id": 2,
             "birth_date": datetime.now() - timedelta(days=30),
+            "litter_size": 5,
+            "litter_size6w": 4,
         }
 
         mock = mock_s3()
