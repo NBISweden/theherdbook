@@ -9,6 +9,7 @@ import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
 
 import { useDataContext } from "@app/data_context";
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import {
   dateFormat,
   Genebank,
@@ -355,7 +356,8 @@ export function IndividualForm({
                 ) : formAction == FormAction.handleCertificate ? (
                   
                   <div className="flexRow">
-                  <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right">  
+                     
+                   
                     <TextField
                       disabled={formAction == FormAction.handleCertificate}
                       variant={inputVariant}
@@ -363,9 +365,12 @@ export function IndividualForm({
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
                     />
+                    <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right" arrow>
+                    <div className="toolTip">
+                    <InfoOutlinedIcon />
+                   </div>
                   </Tooltip>  
                   </div>
-                  
                 ) : (
                   <></>
                 )}
