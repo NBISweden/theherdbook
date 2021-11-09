@@ -78,6 +78,7 @@ const useStyles = makeStyles({
 });
 
 interface LimitedIndividual {
+  id: number;
   number: string;
   herd: string;
   yearly_report_date: Date;
@@ -113,6 +114,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     }
 
     const limitedIndividual: LimitedIndividual = {
+      id: individual.id,
       number: individual.number,
       herd: individual.herd,
       yearly_report_date: reportDate,
@@ -158,7 +160,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                   shrink: true,
                 }}
                 onChange={(event, newValue) => {
-                  newValue && setReportDate(new Date(newValue));
+                  newValue && setReportDate(newValue);
                 }}
               />
             </MuiPickersUtilsProvider>

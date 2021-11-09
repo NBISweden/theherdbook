@@ -415,6 +415,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     ]);
 
     const newWeightRecord = {
+      id: individual?.id,
       number: individual?.number,
       herd: individual?.herd,
       weights: [...individual?.weights, { date: weightDate, weight: weight }],
@@ -455,6 +456,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     ]);
 
     const newBodyfatRecord = {
+      id: individual?.id,
       number: individual?.number,
       herd: individual?.herd,
       bodyfat: [
