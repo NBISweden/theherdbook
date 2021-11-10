@@ -194,9 +194,10 @@ export function IndividualAdd({
   React.useEffect(() => {
     if (!!genebank) {
       setCurrentGenebank(genebank);
+      setIndividual({ ...individual, mother: null, father: null, origin_herd: null, number: null});
     } else {
       const originGenebank = genebanks.find((g) =>
-        g.herds.filter((herd) => herd.herd == herdId)
+        g.herds.some((herd) => herd.herd == herdId)
       );
       setCurrentGenebank(originGenebank);
     }
