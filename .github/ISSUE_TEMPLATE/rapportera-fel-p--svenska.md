@@ -24,15 +24,15 @@ En tydlig och kortfattad beskrivning av vad du förväntade dig att hända.
 Om tillämpligt, lägg till skärmdumpar för att förklara ditt problem.
 
 **Skrivbord (vänligen fyll i följande information):**
-  - OS: [t.ex. iOS, Windows]
-  - Webbläsare [t.ex. Chrome safari]
-  - Version [t.ex. 22]
+- OS: [t.ex. iOS, Windows]
+- Webbläsare [t.ex. Chrome safari]
+- Version [t.ex. 22]
 
 **Smartphone (fyll i följande information):**
-  - Enhet: [t.ex. iPhone 6]
-  - OS: [t.ex. iOS8.1]
-  - Webbläsare [t.ex. aktiewebbläsare, safari]
-  - Version [t.ex. 22]
+- Enhet: [t.ex. iPhone 6]
+- OS: [t.ex. iOS8.1]
+- Webbläsare [t.ex. aktiewebbläsare, safari]
+- Version [t.ex. 22]
 
 **Ytterligare sammanhang**
 Lägg till något annat sammanhang om problemet här.
