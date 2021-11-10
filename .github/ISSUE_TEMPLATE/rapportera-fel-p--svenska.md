@@ -26,7 +26,7 @@ Om tillämpligt, lägg till skärmdumpar för att förklara ditt problem.
 **Skrivbord (vänligen fyll i följande information):**
 - OS: [t.ex. iOS, Windows]
 - Webbläsare [t.ex. Chrome safari]
-- Version [t.ex. 22]
+- Version [t.ex. 22]  [Tryck här för instruktioner](https://www.computerhope.com/issues/ch001329.htm)
 
 **Smartphone (fyll i följande information):**
 - Enhet: [t.ex. iPhone 6]
@@ -34,5 +34,5 @@ Om tillämpligt, lägg till skärmdumpar för att förklara ditt problem.
 - Webbläsare [t.ex. aktiewebbläsare, safari]
 - Version [t.ex. 22]
 
-**Ytterligare sammanhang**
-Lägg till något annat sammanhang om problemet här.
+**Ytterligare information**
+Lägg till någon annan inoformation om problemet här.
