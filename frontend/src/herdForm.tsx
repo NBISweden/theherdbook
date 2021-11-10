@@ -6,6 +6,7 @@ import React from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import { useHistory } from "react-router-dom";
 import {
+  InputAdornment,
   FormControlLabel,
   TextField,
   Button,
@@ -103,7 +104,7 @@ export function HerdForm({
   const contactFields: ContactField[] = [
     { field: "name", label: "Namn" },
     { field: "email", label: "E-mail" },
-    { field: "mobile_phone", label: "Mobiltelefon", type: "email" },
+    { field: "mobile_phone", label: "Mobiltelefon", type: "tel" },
     { field: "wire_phone", label: "Fast telefon", type: "tel" },
     { field: "www", label: "Hemsida", type: "tel" },
     { field: "physical_address", label: "Gatuadress" },
@@ -379,10 +380,35 @@ export function HerdForm({
                         label="Besättnings-ID"
                         className="simpleField"
                         disabled={!isNew}
-                        value={herd.herd}
+                        value={
+                          (herd.herd?.split(/[G-M]/)[1] ??
+                           herd.herd) || ""}
                         variant={inputVariant}
-                        onChange={(e: any) => {
-                          setFormField("herd", e.target.value);
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                             {herd?.herd ?
+                             `${
+                              herd?.herd?.match(
+                                /([G-M]|[G-M]X1)/
+                              )[0]
+                            }`
+                            :`${
+                              herd.genebank
+                                ? genebankOption(herd.genebank).label[0]
+                                : "X"
+                            }`}
+                            </InputAdornment>
+                          ),
+                        }}
+                        onChange={(event) => {
+                          setFormField("herd",
+                          `${
+                            herd.genebank
+                              ? genebankOption(herd.genebank).label[0]
+                              : "X"
+                          }${event.currentTarget.value}`
+                          );
                         }}
                       />
                       <Autocomplete
@@ -393,6 +419,7 @@ export function HerdForm({
                               })
                             : []
                         }
+                        disabled={true}
                         value={genebankOption(herd.genebank)}
                         getOptionLabel={(option: OptionType) => option.label}
                         getOptionSelected={(
