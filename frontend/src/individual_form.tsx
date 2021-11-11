@@ -56,6 +56,7 @@ export function IndividualForm({
   const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
+  const [isIndNull, setIndNull] = React.useState(true);
 
   // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
@@ -96,6 +97,7 @@ export function IndividualForm({
         herds.push(mother.herd);
         individual.origin_herd = mother.herd;
         individual.number = mother.herd.herd + "-";
+        setIndNull(false)
       }
       if (herds.length > 0) {
         const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
@@ -257,6 +259,7 @@ export function IndividualForm({
                       <TextField
                         required
                         error={numberError}
+                        disabled={isIndNull}
                         label="Individnummer"
                         className="control controlWidth"
                         variant={inputVariant}
