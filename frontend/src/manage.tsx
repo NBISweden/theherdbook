@@ -78,7 +78,7 @@ export function Manage() {
     }
     const genebank = genebanks.find((g) => g.name == topic);
     if (genebank) {
-      return { value: genebank.name, label: genebank.name };
+      return { value: genebank.id, label: genebank.name };
     }
     return null;
   }, [genebanks, topic]);
@@ -218,7 +218,7 @@ export function Manage() {
                   options={
                     genebanks
                       ? genebanks.map((g: Genebank) => {
-                          return { value: g.name, label: g.name };
+                          return { value: g.id, label: g.name };
                         })
                       : []
                   }
@@ -238,7 +238,7 @@ export function Manage() {
                   onChange={(event: any, newValue: OptionType | null) => {
                     newValue &&
                       history.push(
-                        `/manage/${newValue.value}/${target ? target : ""}`
+                        `/manage/${newValue.label}/${target ? target : ""}`
                       );
                   }}
                 />
@@ -309,7 +309,7 @@ export function Manage() {
           </Route>
           <Route path="/manage/">
             <Paper className={styles.inputForm}>
-              <HerdForm id={selected?.value} view={"form"} change={false} />
+              <HerdForm id={selected?.value} genebank={genebankValue?.value} view={"form"} change={false} />
             </Paper>
           </Route>
         </Switch>
