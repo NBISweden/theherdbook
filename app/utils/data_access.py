@@ -869,6 +869,7 @@ def add_individual(form, user_uuid):
                 data: any
             }
     """
+    form["new_individual"] = True
     user = fetch_user_info(user_uuid)
     if user is None:
         return {"status": "error", "message": "Not logged in"}
@@ -882,7 +883,6 @@ def add_individual(form, user_uuid):
         return {"status": "error", "message": "Forbidden"}
 
     if form.get("number", None) is None and "breeding" in form:
-        form["new_individual"] = True
         form["number"] = next_individual_number(
             herd=form["herd"],
             birth_date=form["birth_date"],
