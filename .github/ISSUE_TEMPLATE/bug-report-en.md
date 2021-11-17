@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 **Desktop (please complete the following information):**
 - OS: [e.g. iOS]
 - Browser: [e.g. Chrome, Firefox Safari]
-- Version: [e.g. 22] [Link to instuctions](https://www.computerhope.com/issues/ch001329.htm)
+- Version: [e.g. 22] [Link to instructions](https://www.computerhope.com/issues/ch001329.htm)
 
 **Mobile device (please complete the following information):**
 - Device: [e.g. iPhone6]
