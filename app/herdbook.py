@@ -294,7 +294,14 @@ def herd_breeding_list(h_id):
                 if item["father"] == form["father"]
                 and item["mother"] == form["mother"]
                 and (
-                    start <= da.validate_date(item["breed_date"]) <= end
+                    start
+                    <= (
+                        da.validate_date(item["birth_date"])
+                        - datetime.timedelta(days=30)
+                        if item.get("breed_date") is None
+                        else da.validate_date(item.get("breed_date"))
+                    )
+                    <= end
                     or da.validate_date(item["birth_date"]) == birth_date
                 )
             ),
