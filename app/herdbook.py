@@ -424,12 +424,21 @@ def external_login_handler(service):
 
     if user:
         APP.logger.info(
-            "Logging in user %s (%s - #%d) by persistent id %s for service %s"
-            % (user.username, user.email, user.id, persistent_id, service)
+            "Logging in user %s (%s - #%d) by persistent id %s for service %s, refferrer is %s"
+            % (
+                user.username,
+                user.email,
+                user.id,
+                persistent_id,
+                service,
+                request.referrer,
+            )
         )
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
+        if "accounts.google" in request.referrer:
+            return redirect("/")
         return redirect(request.referrer or "/")
 
     if not utils.external_auth.get_autocreate(service):
