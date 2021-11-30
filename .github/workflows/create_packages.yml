@@ -3,12 +3,19 @@ on:
   push:
     branches:
 
-
+env:
+  LANG: "sv_SE.UTF-8"
 jobs:
   main:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Swedish
+        run: |
+          sudo apt-get install language-pack-sv
+          sudo locale-gen sv_SE.UTF-8
+          sudo update-locale LANG=sv_SE.UTF-8
+          
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -18,6 +25,7 @@ jobs:
           GHCR_USER: ${{ secrets.GHCR_USER }}
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
+          
         run: |
              echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
 
