@@ -44,7 +44,7 @@ export function PedigreeNetwork({
 
     interaction: {
       navigationButtons: true,
-      keyboard: true,
+      keyboard: false,
     },
 
     physics: false, //it makes the rendering faster, recommended in hierarchical layout
