@@ -781,6 +781,9 @@ def form_to_individual(form, user=None):
 
     # Skip if we are adding a new individual
     if not form.get("new_individual", False):
+        #Get logger
+        update_logger = logging.getLogger(individual.current_herd.genebank.name)
+        print(update_logger)
         can_manage = user and (
             user.is_admin
             or user.is_manager
@@ -852,6 +855,9 @@ def form_to_individual(form, user=None):
                 except TypeError:
                     setattr(individual, key, form[key])
             else:
+                if not form.get("new_individual", False):
+                        if getattr(individual,key) != form[key]:
+                            update_logger.info(f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]}")
                 setattr(individual, key, form[key])
 
     return individual
