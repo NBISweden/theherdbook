@@ -63,7 +63,7 @@ APP.config.update(
     CACHE_DIR="/tmp",
     CACHE_DEFAULT_TIMEOUT=300,
 )
-#gblogging.create_timed_rotating_log("/logs/test.log")
+
 root = logging.getLogger()
 root.setLevel(logging.INFO)
 root.addHandler(default_handler)
@@ -1016,6 +1016,10 @@ def initialize_app():
     scheduler.start()
     APP.logger.info("Added background job to refresh kinship cache")
     reload_kinship()
+    #Create loggers depending on Genbanks entry in database
+    with db.DATABASE.atomic():
+            for genebank in db.Genebank.select() :     
+                gblogging.create_timed_rotating_log(f"/logs/{genebank.name}",genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
