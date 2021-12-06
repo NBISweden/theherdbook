@@ -970,7 +970,7 @@ class User(BaseModel, UserMixin):
         `identifier` will be parsed as:
 
         `^([a-zA-Z][0-9]+-[0-9]+)$`: individual
-        `^(([G|M]X1)|[a-zA-Z][0-9]+)$`: herd
+        `^(([GM]X1)|[a-zA-Z][0-9]+)$`: herd
         and genebank otherwise.
         """
         # admins can edit anything
@@ -1005,7 +1005,7 @@ class User(BaseModel, UserMixin):
             except DoesNotExist:
                 pass
 
-        elif re.match("^(([G|M]X1)|[a-zA-Z][0-9]+)$", identifier):
+        elif re.match("^(([GM]X1)|[a-zA-Z][0-9]+)$", identifier):
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(Herd.herd == identifier)
