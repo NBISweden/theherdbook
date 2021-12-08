@@ -150,6 +150,8 @@ def _get_parent(ind, user_id, ancestry_level, ancestry_type):
             ancestor = ind.get(ancestries[(1, ancestry_type[0])], None)
             parent = da.get_individual(ancestor["number"], user_id)
             grand_ancestor = parent.get(ancestries[(2, ancestry_type)], None)
+            if grand_ancestor["number"] is None:
+                return None
             idv = da.get_individual(grand_ancestor["number"], user_id)
 
     except TypeError as ex:
