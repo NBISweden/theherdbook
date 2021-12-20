@@ -347,7 +347,10 @@ export function IndividualAdd({
       userMessage("Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.", "warning");
             return false;
           }
-      
+    if (individual?.selling_date < individual?.birth_date) {
+      userMessage("Säljdatum får inte vara tidigare än födelsedatum", "warning");
+      return false;
+    }
     return true;
   };
 
