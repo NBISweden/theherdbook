@@ -599,7 +599,11 @@ class Individual(BaseModel):
                 "number": self.breeding.mother.number,
             }
             if self.breeding and self.breeding.mother
-            else None
+            else {
+                "id": None,
+                "name": None,
+                "number": None,
+            }
         )
         data["father"] = (
             {
@@ -608,7 +612,11 @@ class Individual(BaseModel):
                 "number": self.breeding.father.number,
             }
             if self.breeding and self.breeding.father
-            else None
+            else {
+                "id": None,
+                "name": None,
+                "number": None,
+            }
         )
         data["color"] = self.color.name if self.color else None
         data["weights"] = [
