@@ -782,8 +782,7 @@ def form_to_individual(form, user=None):
     # Skip if we are adding a new individual
     if not form.get("new_individual", False):
         #Get logger
-        update_logger = logging.getLogger(individual.current_herd.genebank.name)
-        print(update_logger)
+        update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
         can_manage = user and (
             user.is_admin
             or user.is_manager
@@ -857,7 +856,7 @@ def form_to_individual(form, user=None):
             else:
                 if not form.get("new_individual", False):
                         if getattr(individual,key) != form[key]:
-                            update_logger.info(f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]}")
+                            update_logger.info(f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},")
                 setattr(individual, key, form[key])
 
     return individual
@@ -1026,11 +1025,14 @@ def update_individual(form, user_uuid):
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
                 try:
+                    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
                     update_date = form.get("selling_date", False)
                     if update_date:
                         update_date = validate_date(update_date)
+                        update_logger.info(f"{user.username},{individual.number},selling_date,{old_individual.current_herd.herd},{form['herd']},{update_date}")
                     else:
                         update_date = validate_date(form.get("yearly_report_date"))
+                        update_logger.info(f"{user.username},{individual.number},yearly_report_date,{old_individual.current_herd.herd},{form['herd']},{update_date}")
 
                     update_herdtracking_values(
                         individual=individual,
