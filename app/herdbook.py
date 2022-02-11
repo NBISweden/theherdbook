@@ -1019,7 +1019,7 @@ def initialize_app():
     #Create loggers depending on Genbanks entry in database
     with db.DATABASE.atomic():
             for genebank in db.Genebank.select() :     
-                gblogging.create_timed_rotating_log(f"/logs/{genebank.name}",genebank.name)
+                gblogging.create_genebank_logs(f"/logs/",genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
