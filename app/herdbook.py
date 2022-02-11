@@ -20,8 +20,8 @@ import apscheduler.schedulers.background
 import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
-from flask_caching import Cache
 from flask.logging import default_handler
+from flask_caching import Cache
 from flask_login import (
     LoginManager,
     current_user,
@@ -46,7 +46,7 @@ import utils.external_auth  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
-import utils.genebank_logging as gblogging #isort:skip
+import utils.genebank_logging as gblogging  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -1016,10 +1016,10 @@ def initialize_app():
     scheduler.start()
     APP.logger.info("Added background job to refresh kinship cache")
     reload_kinship()
-    #Create loggers depending on Genbanks entry in database
+    # Create loggers depending on Genbanks entry in database
     with db.DATABASE.atomic():
-            for genebank in db.Genebank.select() :     
-                gblogging.create_genebank_logs(f"/logs/",genebank.name)
+        for genebank in db.Genebank.select():
+            gblogging.create_genebank_logs("/logs/", genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
