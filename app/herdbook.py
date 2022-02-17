@@ -21,7 +21,6 @@ import apscheduler.schedulers.background
 import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
-from flask.logging import default_handler
 from flask_caching import Cache
 from flask_login import (
     LoginManager,

@@ -12,7 +12,7 @@ services:
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
     main:
-        image:  ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
+        image: ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
         container_name: herdbook-main
         env_file:
             - ./.docker/database-variables.env
