@@ -36,6 +36,7 @@ import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
+logger = logging.getLogger("herdbook.da")
 
 # Helper functions
 
@@ -174,13 +175,13 @@ def authenticate_user(name, password):
                     .get()
                 )
         if check_password_hash(authenticator.auth_data, password):
-            logging.info("Login from %s", name)
+            logger.info("Login from %s", name)
             return user_info
     except DoesNotExist:
         # Perform password check regardless of username to prevent timing
         # attacks
         check_password_hash("This-always-fails", password)
-    logging.info("Failed login attempt for %s", name)
+    logger.info("Failed login attempt for %s", name)
     return None
 
 
@@ -190,7 +191,7 @@ def change_password(active_user, changed_user, form):
     something that evaluates as True on success.
     """
     if not active_user or not changed_user or not form:
-        logging.info("Bad call to change_password, somethings is missing)")
+        logger.info("Bad call to change_password, somethings is missing)")
         return None
 
     if not active_user.is_admin:
@@ -256,12 +257,12 @@ def authenticate_with_credentials(method, ident):
             user_info = User.select().where((User.id == authenticator.user)).get()
 
             if user_info:
-                logging.info("Login %s authenticated by %s", user_info.username, method)
+                logger.info("Login %s authenticated by %s", user_info.username, method)
                 return user_info
     except DoesNotExist:
         pass
 
-    logging.info("Failed login attempt for service %s persistent id %s", method, ident)
+    logger.info("Failed login attempt for service %s persistent id %s", method, ident)
     return None
 
 
@@ -297,10 +298,10 @@ def link_account(user, method, ident):
         authenticator = Authenticators(user=user.id, auth=method, auth_data=ident)
         with DATABASE.atomic():
             authenticator.save()
-        logging.info("Linked %s to %s persistent id %s", user.username, method, ident)
+        logger.info("Linked %s to %s persistent id %s", user.username, method, ident)
         return user
     except PeeweeException as auth_except:
-        logging.info(
+        logger.info(
             "Error (%s) while linking %s to %s persistent id %s",
             auth_except,
             user.username,
@@ -308,7 +309,7 @@ def link_account(user, method, ident):
             ident,
         )
 
-    logging.info(
+    logger.info(
         "Failed link attempt for user %s service %s persistent id %s",
         user.username,
         method,
@@ -334,7 +335,7 @@ def unlink_account(user, method):
     except DoesNotExist:
         return None
 
-    logging.info("Failed to unlink idenities for service %s user %d", method, user.id)
+    logger.info("Failed to unlink idenities for service %s user %d", method, user.id)
     return None
 
 
@@ -354,7 +355,7 @@ def linked_accounts(user):
     except DoesNotExist:
         return None
 
-    logging.info("Failed to list linked idenities for user %d", user.id)
+    logger.info("Failed to list linked idenities for user %d", user.id)
     return None
 
 
@@ -966,7 +967,7 @@ def update_herdtracking_values(individual, new_herd, user_signature, tracking_da
         if len(ht_history):
             current_herd = ht_history[0].herd
             if ht_history[0].herd_tracking_date > tracking_date.date():
-                logging.error("New herd tracking date is before the latest entry")
+                logger.error("New herd tracking date is before the latest entry")
                 raise ValueError("New herd tracking date is before the latest entry")
 
         if isinstance(new_herd, str):
@@ -1114,7 +1115,7 @@ def update_bodyfat(individual, bodyfat):
     [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
     """
     with DATABASE.atomic():
-        logging.warning("bodyfat: %s", bodyfat)
+        logger.warning("bodyfat: %s", bodyfat)
         current_bodyfat = Bodyfat.select().where(Bodyfat.individual == individual.id)
         current_list = [
             (b.bodyfat_date.strftime("%Y-%m-%d"), b.bodyfat) for b in current_bodyfat
@@ -1134,7 +1135,7 @@ def update_bodyfat(individual, bodyfat):
         for measure in new_list:
             if measure not in current_list:
                 if measure[1] not in ["low", "normal", "high"]:
-                    logging.error("Unknown bodyfat level: %s", measure[1])
+                    logger.error("Unknown bodyfat level: %s", measure[1])
                 else:
                     Bodyfat(
                         individual=individual,
@@ -1371,7 +1372,7 @@ def get_breeding_events(herd_id, user_uuid):
             query = Breeding.select().where(Breeding.breeding_herd == herd)
             return [b.as_dict() for b in query.iterator()]
     except DoesNotExist:
-        logging.warning("Unknown herd %s", herd_id)
+        logger.warning("Unknown herd %s", herd_id)
 
     return []
 
@@ -1389,7 +1390,7 @@ def get_breeding_events_by_date(birth_date, user_uuid):
             query = Breeding.select().where(Breeding.birth_date == birth_date)
             return [b.as_dict() for b in query.iterator()]
     except DatabaseError as exception:
-        logging.error("Database error: %s", exception)
+        logger.error("Database error: %s", exception)
 
     return []
 
