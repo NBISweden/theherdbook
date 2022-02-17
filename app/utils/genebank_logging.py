@@ -6,6 +6,7 @@ Things for logging updates to rabbit per year and genebank
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
+
 from flask import has_request_context, request
 
 
