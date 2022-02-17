@@ -950,6 +950,9 @@ def add_individual(form, user_uuid):
         except ValueError as exception:
             raise exception
 
+    logging.getLogger(f"{individual.current_herd.genebank.name}_create").info(
+        f"{user.username},{individual.number},{individual.name},{new_herd.herd},{selling_date}"
+    )
     return {"status": "success", "message": "Individual Created"}
 
 
