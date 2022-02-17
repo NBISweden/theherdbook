@@ -15,6 +15,7 @@ import logging
 import sys
 import time
 import uuid
+from logging.handlers import TimedRotatingFileHandler
 
 import apscheduler.schedulers.background
 import flask_session
@@ -64,12 +65,18 @@ APP.config.update(
     CACHE_DEFAULT_TIMEOUT=300,
 )
 
-root = logging.getLogger()
-root.setLevel(logging.INFO)
-root.addHandler(default_handler)
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
-
+file_handler = TimedRotatingFileHandler("/logs/APP.log", when="W6")
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(
+    gblogging.RequestFormatter(
+        "[%(asctime)s] %(remote_addr)s requested %(url)s\n"
+        "%(levelname)s in %(module)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+)
+APP.logger.addHandler(file_handler)
 utils.external_auth.setup(APP)
 
 flask_session.Session().init_app(APP)
@@ -409,6 +416,13 @@ def login_handler():
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
+        APP.logger.info(
+            f"Logging in user: {user.username} via the admin password interface"
+        )
+    else:
+        APP.logger.warning(
+            f"User name {form.get('username')} is not able to login using admin interface "
+        )
     return get_user()
 
 
@@ -855,7 +869,7 @@ def update_certificate(i_number):
                 da.update_breeding(breed_data, user_id)
             da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info("Unexpected error while updating certificate: " + str(ex))
+        APP.logger.error("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
@@ -927,6 +941,9 @@ def issue_certificate(i_number):
             return jsonify({"response": "Error processing your request"}), 400
 
         if uploaded:
+            APP.logger.info(
+                f"Digital certificate for {ind_number} was created with number {cert_number}"
+            )
             return create_pdf_response(
                 pdf_bytes=signed_data.getvalue(), obj_name=f"{cert_number}.pdf"
             )
