@@ -6,11 +6,24 @@ Things for logging updates to rabbit per year and genebank
 import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
+from flask import has_request_context, request
+
+
+class RequestFormatter(logging.Formatter):
+    def format(self, record):
+        if has_request_context():
+            record.url = request.url
+            record.remote_addr = request.remote_addr
+        else:
+            record.url = None
+            record.remote_addr = None
+
+        return super().format(record)
 
 
 class MyTimedRotatingFileHandler(TimedRotatingFileHandler):
-    def __init__(self, logfile, when, interval):
-        super(MyTimedRotatingFileHandler, self).__init__(logfile, when, interval)
+    def __init__(self, logfile, when):
+        super(MyTimedRotatingFileHandler, self).__init__(logfile, when)
         self._header = ""
         self._log = None
 
@@ -41,7 +54,7 @@ def create_genebank_logs(first_path, first_log_name):
         if not os.path.isfile(path):
             fileExists = False
 
-        handler = MyTimedRotatingFileHandler(path, when="W0", interval=1)
+        handler = MyTimedRotatingFileHandler(path, when="W6")
         logger.addHandler(handler)
         # only add header if file did not exist before.
         if not fileExists:
