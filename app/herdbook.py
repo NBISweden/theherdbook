@@ -66,7 +66,9 @@ APP.config.update(
 
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
-file_handler = TimedRotatingFileHandler("/logs/APP.log", when="W6")
+file_handler = TimedRotatingFileHandler(
+    f"{settings.service.logfolder}/APP.log", when="W6"
+)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(
     gblogging.RequestFormatter(
@@ -1035,7 +1037,7 @@ def initialize_app():
     # Create loggers depending on Genbanks entry in database
     with db.DATABASE.atomic():
         for genebank in db.Genebank.select():
-            gblogging.create_genebank_logs("/logs/", genebank.name)
+            gblogging.create_genebank_logs(settings.service.logfolder, genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
