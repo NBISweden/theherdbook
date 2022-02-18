@@ -31,6 +31,7 @@ rapi.host = os.environ.get("RAPI_HOST", "r-api")
 rapi.port = os.environ.get("RAPI_PORT", "31113")
 
 service.host = os.environ.get("HERDBOOK_HOST", "https://127.0.0.1:8443")
+service.logfolder = os.environ.get("HERDBOOK_LOGFOLDER", "./")
 
 s3.bucket = os.environ.get("S3_BUCKET", "test")
 s3.endpoint = os.environ.get("S3_ENDPOINT", None)
