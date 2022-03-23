@@ -19,6 +19,8 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
+
 import { useDataContext } from "@app/data_context";
 import { useUserContext } from "@app/user_context";
 import { useMessageContext } from "@app/message_context";
@@ -286,7 +288,7 @@ export function HerdForm({
               herd.genebank.id < 0) && (
               <>
                 <form className="herdForm">
-                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
                     <div className="formCard">
                       <Typography
                         className="titleHerd"

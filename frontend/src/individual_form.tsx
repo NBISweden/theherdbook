@@ -7,6 +7,7 @@ import {
 } from "@material-ui/pickers";
 import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
 
 import { useDataContext } from "@app/data_context";
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
@@ -174,7 +175,7 @@ export function IndividualForm({
   return (
     <>
       <div className="individualForm">
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <div className="flexRowOrColumn">
             <div className="formPane">
               {formAction == FormAction.handleCertificate ? (

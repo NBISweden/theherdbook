@@ -8,6 +8,8 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
+
 import {
   individualsFromDate,
   toLimitedIndividuals,
@@ -440,7 +442,7 @@ export function BreedingForm({
   return (
     <>
       <form className="breedingForm">
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle
           </Typography>

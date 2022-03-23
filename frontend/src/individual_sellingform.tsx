@@ -7,6 +7,8 @@ import {
 } from "@material-ui/pickers";
 import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
+
 
 import {
   Genebank,
@@ -63,7 +65,7 @@ export function IndividualSellingForm({
           newValue && onUpdateIndividual("herd", newValue.herd);
         }}
       />
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
+      <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
         <KeyboardDatePicker
           autoOk
           fullWidth={true}
