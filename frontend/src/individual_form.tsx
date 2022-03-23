@@ -253,7 +253,7 @@ export function IndividualForm({
                           shrink: true,
                         }}
                         onChange={(date, value) => {
-                          value && onUpdateIndividual("birth_date", value);
+                        !isNaN(date) && onUpdateIndividual("birth_date", value);
                         }}
                       />
                       <TextField
