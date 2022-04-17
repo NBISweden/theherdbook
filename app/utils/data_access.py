@@ -585,14 +585,14 @@ def get_colors():
     """
     Returns all legal colors for all genebanks, like:
 
-    {<genebank>: [{id: <color-id>, name: <color-description>}, [...]],
+    {<genebank>: [{id: <color-id>, name: <color-name>, comment: <color-comment>}, [...]],
      [...]
     }
     """
     with DATABASE.atomic():
         return {
             genebank.name: [
-                {"id": color.id, "name": color.name}
+                {"id": color.id, "name": color.name, "comment": color.comment}
                 for color in Color.select().where(Color.genebank == genebank)
             ]
             for genebank in Genebank.select()

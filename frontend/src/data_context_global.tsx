@@ -144,6 +144,7 @@ export interface Birth {
 export interface Color {
   id: number;
   name: string;
+  comment: string;
 }
 
 export function individualLabel(individual: LimitedIndividual): string {
