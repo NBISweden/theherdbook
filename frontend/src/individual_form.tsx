@@ -71,7 +71,7 @@ export function IndividualForm({
       Object.keys(colors).includes(individual.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return { value: c.name, label: `${c.id} - ${c.name}` };
+        return { id: c.id, comment: c.comment, value: c.name, label: `${c.id} - ${c.name}` };
       });
     }
     return [];
@@ -448,6 +448,14 @@ export function IndividualForm({
                     ) ?? null
                   }
                   getOptionLabel={(option: OptionType) => option.label}
+                  renderOption={(option) => {
+                    return (
+                    <div>
+                      <strong>{`${option.id} - ${option.value}`}</strong>
+                      <li>{`${option.comment}`}</li>
+                    </div>
+                    );
+                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
