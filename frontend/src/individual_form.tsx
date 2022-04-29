@@ -485,6 +485,12 @@ export function IndividualForm({
                 />
               </div>
               <div className="flexRow">
+                  <a href={"https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"}>
+                    {" "}
+                    Utförligare färgbeskrivningar finns i Föreningen Gotlandskaninens Färgatlas, version 2022.
+                  </a>
+                </div>
+              <div className="flexRow">
                 <TextField
                   label="Ögonfärg"
                   className="control controlWidth"
