@@ -231,7 +231,6 @@ export function IndividualForm({
                             <TextField
                               {...params}
                               label="Ursprungsbesättning "
-                              className="control"
                               variant={inputVariant}
                               margin="normal"
                             />
