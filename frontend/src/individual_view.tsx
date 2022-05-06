@@ -32,6 +32,7 @@ import { CertificateDownload } from "./certificate_download";
 import { IndividualSell } from "./individual_sell";
 import { HerdView } from "@app/herd_view";
 import { IndividualReport } from "./individual_report";
+import { IndividualWeigthull } from "./individual_weighthull";
 import { IndividualDeath } from "./individual_death";
 
 const useStyles = makeStyles({
@@ -413,6 +414,16 @@ export function IndividualView({ id }: { id: string }) {
                           }
                         >
                           Årsrapportera
+                        </Button>
+                        <Button
+                          className={style.editButton}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() =>
+                            popup(<IndividualWeigthull individual={individual} />)
+                          }
+                        >
+                          Rapportera vikt och hull
                         </Button>
                         <Button
                           className={style.editButton}
