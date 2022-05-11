@@ -1,0 +1,6 @@
+#!/bin/sh -eu
+
+docker build -f update-package-lock.docker -t update-package-lock .
+docker create --name extract update-package-lock
+docker cp extract:/home/node/package-lock.json .
+docker rm extract

@@ -1,3 +1,14 @@
+FROM node:17.6-slim as bundler
+
+USER node
+RUN mkdir /home/node/app
+WORKDIR /home/node/app
+
+COPY --chown=node:node /frontend/ /home/node/app/
+COPY --from=herdbook_frontend:latest --chown=node:node /home/node/node_modules/ /home/node/app/node_modules/
+
+RUN npm run build
+
 FROM python:3.8-buster
 
 RUN mkdir -p /code
@@ -14,8 +25,8 @@ RUN pip3 install uwsgi
 # Mountpoint for backend
 RUN mkdir -p /api_src
 
-COPY --from=herdbook_frontend:latest --chown=www-data:www-data /home/node/app/dist/ /app/dist/
-COPY --from=herdbook_frontend:latest --chown=www-data:www-data /home/node/app/public/images/ /app/dist/images/
+COPY --from=bundler --chown=www-data:www-data /home/node/app/dist/ /app/dist/
+COPY --from=bundler --chown=www-data:www-data /home/node/app/public/images/ /app/dist/images/
 
 RUN cd /app/dist && ln -s . static
 

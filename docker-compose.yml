@@ -11,16 +11,18 @@ services:
             - POSTGRES_HOST_AUTH_METHOD=trust
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
-    herdbook-frontend-devel:
+    herdbook-frontend:
         image: herdbook_frontend
+        container_name: herdbook_frontend
         build:
             context: ./
             dockerfile: .docker/frontend
             cache_from:
               - ghcr.io/nbisweden/herdbook_frontend
+        command: bash -c "rm -rf /home/node/app/node_modules/* && npm run start"
         volumes:
             - ./frontend:/home/node/app/
-            - /home/node/app/node_modules
+            - exclude:/home/node/app/node_modules
         environment:
             - NODE_OPTIONS="--max-old-space-size=2048"
     main:
@@ -47,7 +49,7 @@ services:
               target: /config
         depends_on:
             - database
-            - herdbook-frontend-devel
+            - herdbook-frontend
     r-api:
         container_name: r-api
         build:
@@ -80,3 +82,6 @@ services:
             timeout: 20s
             retries: 3
         image: minio/minio:RELEASE.2021-04-18T19-26-29Z
+
+volumes:
+  exclude: null

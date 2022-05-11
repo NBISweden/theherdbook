@@ -21,7 +21,7 @@ fi
 
 chown www-data:www-data /code/*.pem
 
-if getent hosts herdbook-frontend-devel >/dev/null; then
+if getent hosts herdbook-frontend >/dev/null; then
     # Development mode
     cp /etc/nginx/herdbook.devel /etc/nginx/herdbook
 else
