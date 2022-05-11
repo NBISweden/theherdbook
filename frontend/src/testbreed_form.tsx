@@ -30,6 +30,7 @@ import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
 import { InbreedingRecommendation } from "@app/testbreed_recommendation";
+import sv from "date-fns/locale/sv";
 
 const useStyles = makeStyles({
   title: {
@@ -232,7 +233,7 @@ export function InbreedingForm() {
             </Button>
             {showFromDateFilter ? (
               <>
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
                   <KeyboardDatePicker
                     autoOk
                     variant="inline"

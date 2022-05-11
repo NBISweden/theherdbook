@@ -9,6 +9,7 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
 
 import { IndividualForm, FormAction } from "@app/individual_form";
 import { HerdView } from "@app/herd_view";
@@ -609,7 +610,7 @@ export function IndividualAdd({
             </Button>
             {showFromDateFilter ? (
               <>
-                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
                   <KeyboardDatePicker
                     autoOk
                     variant={inputVariant}

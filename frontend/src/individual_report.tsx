@@ -20,6 +20,7 @@ import { useMessageContext } from "@app/message_context";
 import { IndividualSell } from "./individual_sell";
 import { IndividualDeath } from "./individual_death";
 import { patch } from "./communication";
+import sv from "date-fns/locale/sv";
 
 const useStyles = makeStyles({
   infoText: {
@@ -144,7 +145,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             </Typography>
           </div>
           <div className={style.formContainer}>
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
               <KeyboardDatePicker
                 autoOk
                 className={style.datePicker}

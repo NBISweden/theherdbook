@@ -34,6 +34,8 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
+
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { Autocomplete } from "@material-ui/lab";
@@ -522,7 +524,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     <>
       {individual ? (
         <div className={style.form}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
             <div className={style.flexRowOrColumn}>
               <div className={style.formPane}>
                 <div className={style.titleText}>Redigera Individ</div>

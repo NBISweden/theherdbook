@@ -20,6 +20,8 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
+import sv from "date-fns/locale/sv";
+
 import { useDataContext } from "./data_context";
 
 const useStyles = makeStyles({
@@ -170,7 +172,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                   />
                 </RadioGroup>
               </FormControl>
-              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
                 <KeyboardDatePicker
                   autoOk
                   required
