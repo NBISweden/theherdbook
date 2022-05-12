@@ -1,40 +1,38 @@
 color_id,name,comment,genebank_id
 11,Svart,Kaninen ska vara helsvart,1
-12,Vit albino,Ska ha röda ögon,1
-13,Brun,Kan ha svarta inslag,1
+12,Albino,Vit med röda ögon,1
+13,Brun,Kan ha svarta inslag. Kallas ibland för havanna eller havana,1
 14,Blå,Även buken ska vara blå,1
-15,Gulbrun med blågrå mask (Isabella),,1
-16,Brun med mörk mask (Madagaskar),,1
-17,Ljusbeige med mörk mask (Sallander),,1
-18,Vit med blå eller bruna ögon,Kan ha mörkare öron,1
-21,Järngrå,Även grafitgrå räknas hit,1
-28,Järnblå,,1
-22,Hargrå / viltfärgad,"Varierar, kan vara ljus till mörk",1
-23,Snöhare,Vit med svart slöja,1
-24,Rödgul eller orange,Inte klart åtskild från 25,1
-25,Gul (äv. gul mage) och viltgul (ljus mage),Inte klart åtskild från 24,1
-26,Viltblå (blå med ljus mage),Gråbrun med blått skimmer. Äv. kallad pearl egern,1
-27,Gråmelerad (Chinchilla),Även grå och blå chinchilla räknas hit,1
-31,Svartbrokig (vit med svarta tecken),Även med järngrå tecken räknas hit,1
-32,Blåbrokig (vit med blå tecken),,1
-33,Viltbrokig (vit med hargrå tecken),,1
-34,Gulbrokig (vit med gula tecken),Även orange eller röda tecken,1
-35,Madagaskarbrokig,Alltså madagaskartecknad bottenfärg,1
-36,Trefärgad (Tricolor),Oftast vit med svarta och gula tecken,1
-37,Chinchillabrokig (vit med chinchillatecken),Även blå chinchilla eller grå färg,1
-38,Brunbrokig (vit med (mörk)bruna tecken),,1
-39,Brokad på annat sätt (vit med färgade tecken),,1
-41,Gul-blå tigrerad (Japan),,1
-42,Gul-svart tigrerad (Japan),,1
-43,Vit-svart tigrerad (Japan),,1
-46,Vit-blå tigrerad (Japan),,1
-49,Japanteckning av annat slag,Även Japanteckning av okänt slag,1
-44,Svart med vita stickelhår (Svensk päls),Även med grå eller ljusbruna stickelhår,1
-45,Blå med vit buk på särskilt sätt,"Blue & White, även otter",1
-52,Svart med brun buk på särskilt sätt,"Black & Tan, även otter",1
-53,Svart med vit buk på särskilt sätt,"Black & White, även otter",1
-71,Färgad med enstaka vita tecken (Wiener),Ofta vit bläs eller vit tass,1
-51,Rexpälsade med alla färger och teckningar,"Pälsen plyschaktig, saknar täckhår",1
-99,Allt annat,,1
+15,Isabella,Gulbrun med blågrå mask,1
+16,Madagaskar ,Brun med mörk mask,1
+17,Sallander ,Vit med mörk mask. Kan vara aningen ljusbeige,1
+18,Vit ej albino,Vit med blå eller bruna ögon. Öronen kan vara svagt färgade,1
+21,Järngrå,Även grafitgrå och järnbrun räknas hit,1
+28,Järnblå,Blå med inslag av beiga hårstrån,1
+22,Viltgrå,"Varierar, kan vara ljus till mörk, kallas även hargrå",1
+23,Snöhare,Vit/ljus päls med svarta toppar,1
+24,Rödgul,"Inte klart åtskild från 25, även orange",1
+25,Viltgul,"Inte klart åtskild från 24, även gul (med gul mage)",1
+26,Viltblå,Blå med ljus mage. Gråbrun med blått skimmer. Kallad ibland för pearl egern,1
+27,Chinchilla,"Gråmelerad, även grå och blå chinchilla räknas hit",1
+31,Svartbrokig,"Vit med svarta tecken, även med järngrå tecken räknas hit",1
+32,Blåbrokig,Vit med blå tecken,1
+33,Viltgråbrokig,Vit med viltgrå (hargrå) tecken,1
+34,Gulbrokig,"Vit med gula tecken, även orange eller röda tecken",1
+35,Madagaskarbrokig ,"Vit med madagaskarteckning, alltså madagaskartecknad bottenfärg",1
+36,Trefärgad,"Oftast vit med svarta och gula tecken, även kallad Tricolor och japanbrokig",1
+37,Chinchillabrokig ,"Vit med chinchillatecken, även blå chinchilla eller grå färg",1
+38,Brunbrokig ,Vit med (mörk)bruna tecken,1
+39,Brokad på annat sätt ,Vit med färgade tecken på annat sätt,1
+41,Gul-blå japantecknad,"Tigrerad, mer eller mindre tydligt randig",1
+42,Gul-svart japantecknad,"Tigrerad, mer eller mindre tydligt randig",1
+43,Vit-svart japantecknad,"Tigrerad, mer eller mindre tydligt randig",1
+46,Vit-blå japantecknad,"Tigrerad, mer eller mindre tydligt randig",1
+49,Annan japanteckning,Även Japanteckning av okänt slag,1
+51,White blå och Otter blå,Blå med ljus buk på särskilt sätt,1
+52,White svart och Otter svart,Svart med ljus buk på särskilt sätt,1
+54,Svart med vita stickelhår ,Även med grå eller ljusbruna stickelhår. Kallas svensk päls,1
+71,Wienertecknad ,Färgad (alla färger) med enstaka vita tecken. Ofta vit bläs eller vit tass,1
+99,Allt annat,Kaniner som inte passar in i någon av grupperna 11-54,1
 100,Holländarteckning,Svartbrokig med stora sammanhängande fält,2
 101,Albino,Vit med röda ögon,2

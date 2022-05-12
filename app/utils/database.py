@@ -363,7 +363,7 @@ class Color(BaseModel):
 
     id = AutoField(primary_key=True, column_name="color_id")
     name = CharField(50)
-    comment = CharField(50, null=True)
+    comment = CharField(100, null=True)
     genebank = ForeignKeyField(Genebank)
 
 

@@ -128,7 +128,9 @@ class TestDataAccess(DatabaseTest):
         """
         expected = {
             g.name: [
-                {"id": c.id, "name": c.name} for c in self.colors if c.genebank == g
+                {"id": c.id, "name": c.name, "comment": c.comment}
+                for c in self.colors
+                if c.genebank == g
             ]
             for g in self.genebanks
         }

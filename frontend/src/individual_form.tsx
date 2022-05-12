@@ -71,7 +71,7 @@ export function IndividualForm({
       Object.keys(colors).includes(individual.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return { value: c.name, label: `${c.id} - ${c.name}` };
+        return { id: c.id, comment: c.comment, value: c.name, label: `${c.id} - ${c.name}` };
       });
     }
     return [];
@@ -231,7 +231,6 @@ export function IndividualForm({
                             <TextField
                               {...params}
                               label="Ursprungsbesättning "
-                              className="control"
                               variant={inputVariant}
                               margin="normal"
                             />
@@ -449,6 +448,14 @@ export function IndividualForm({
                     ) ?? null
                   }
                   getOptionLabel={(option: OptionType) => option.label}
+                  renderOption={(option) => {
+                    return (
+                    <div>
+                      <strong>{`${option.id} - ${option.value}`}</strong>
+                      <li>{`${option.comment}`}</li>
+                    </div>
+                    );
+                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -477,6 +484,12 @@ export function IndividualForm({
                   }}
                 />
               </div>
+              <div className="flexRow">
+                  <a href={"https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"}>
+                    {" "}
+                    Utförligare färgbeskrivningar finns i Föreningen Gotlandskaninens Färgatlas, version 2022.
+                  </a>
+                </div>
               <div className="flexRow">
                 <TextField
                   label="Ögonfärg"
