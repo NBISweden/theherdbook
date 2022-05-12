@@ -340,7 +340,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
           <IndividualForm
             individual={individual}
             onUpdateIndividual={handleUpdateIndividual}
-            formAction={FormAction.handleCertificate}
+            formAction={FormAction.editIndividual}
             colorError={colorError}
             numberError={numberError}
             sexError={sexError}
