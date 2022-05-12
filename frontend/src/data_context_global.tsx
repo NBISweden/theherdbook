@@ -37,6 +37,13 @@ export interface LimitedIndividual {
   sex?: string;
 }
 
+export interface LimitedIndividualForReport {
+  id: number;
+  number: string;
+  herd: string;
+  yearly_report_date: Date;
+}
+
 export interface Individual extends LimitedIndividual {
   herd: HerdNameID | string;
   origin_herd?: HerdNameID;
@@ -225,7 +232,7 @@ export type OptionType = { value: string; label: string };
 
 export const dateFormat = "yyyy-MM-dd";
 export const locale = "sv";
-export const inputVariant = "filled" as "filled" | "outlined" | "standard" ;
+export const inputVariant = "filled" as "filled" | "outlined" | "standard";
 
 /**
  * Formats the given `dateString` according to the currently defined `locale`.

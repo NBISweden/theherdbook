@@ -15,7 +15,10 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
-import { Individual } from "@app/data_context_global";
+import {
+  Individual,
+  LimitedIndividualForReport,
+} from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { IndividualSell } from "./individual_sell";
 import { IndividualDeath } from "./individual_death";
@@ -78,13 +81,6 @@ const useStyles = makeStyles({
   },
 });
 
-interface LimitedIndividual {
-  id: number;
-  number: string;
-  herd: string;
-  yearly_report_date: Date;
-}
-
 export function IndividualReport({ individual }: { individual: Individual }) {
   const [reportDate, setReportDate] = React.useState(null as Date | null);
   const [isStillOwner, setIsStillOwner] = React.useState(false);
@@ -114,7 +110,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
       return;
     }
 
-    const limitedIndividual: LimitedIndividual = {
+    const limitedIndividual: LimitedIndividualForReport = {
       id: individual.id,
       number: individual.number,
       herd: individual.herd,
