@@ -13,14 +13,14 @@ import {
   KeyboardDatePicker,
 } from "@material-ui/pickers";
 import DateFnsUtils from "@date-io/date-fns";
-import { 
-    Individual,
-    asLocale,
-    inputVariant,
-    BodyFat,
-    DateBodyfat,
-    dateFormat,
-    DateWeight, 
+import {
+  Individual,
+  asLocale,
+  inputVariant,
+  BodyFat,
+  DateBodyfat,
+  dateFormat,
+  DateWeight,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
@@ -98,50 +98,45 @@ const useStyles = makeStyles({
 // interface and function that make the react-number-format library work
 // used to allow input of decimal commas for weight record
 interface NumberFormatCustomProps {
-    inputRef: (instance: NumberFormat | null) => void;
-    onChange: (event: { target: { name: string; value: string } }) => void;
-    name: string;
-  }
-  
-  const NumberFormatCustom = (props: NumberFormatCustomProps) => {
-    const { inputRef, onChange, ...other } = props;
-    return (
-      <NumberFormat
-        {...other}
-        getInputRef={inputRef}
-        onValueChange={(values) => {
-          onChange({
-            target: {
-              name: props.name,
-              value: values.value,
-            },
-          });
-        }}
-        isNumericString
-        decimalSeparator=","
-      />
-    );
-  };
-
-interface LimitedIndividual {
-  id: number;
-  number: string;
-  herd: string;
-  yearly_report_date: Date;
+  inputRef: (instance: NumberFormat | null) => void;
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
 }
 
-export const IndividualWeigthull = ({ individual }: { individual: Individual }) => {
+const NumberFormatCustom = (props: NumberFormatCustomProps) => {
+  const { inputRef, onChange, ...other } = props;
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.value,
+          },
+        });
+      }}
+      isNumericString
+      decimalSeparator=","
+    />
+  );
+};
+
+export const IndividualWeigthull = ({
+  individual,
+}: {
+  individual: Individual;
+}) => {
   const [WHindividual, setWHindividual] = React.useState(
     individual as Individual
   );
-  const { userMessage, popup } = useMessageContext();
+  const { userMessage } = useMessageContext();
   const style = useStyles();
   const [bodyfat, setBodyfat] = React.useState("normal");
   const [weight, setWeight] = React.useState(null as number | null);
   const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
   const [weightDate, setWeightDate] = React.useState(null as string | null);
-  
-
 
   const translateBodyfat: Map<string, string> = new Map([
     ["low", "låg"],
@@ -159,10 +154,9 @@ export const IndividualWeigthull = ({ individual }: { individual: Individual }) 
         number: WHindividual?.number,
         herd: WHindividual?.herd,
         weights: [...WHindividual?.weights],
-        bodyfat: [
-            ...WHindividual?.bodyfat],
+        bodyfat: [...WHindividual?.bodyfat],
       };
-  
+
       // send weight record to the backend
       patch("/api/individual", newWeightRecord)
         .then((json) => {
@@ -184,21 +178,20 @@ export const IndividualWeigthull = ({ individual }: { individual: Individual }) 
     { value: "high", label: "Hög" },
   ];
 
-   /**
+  /**
    * Updates a single field in `individual`.
    *
    * @param field field name to update
    * @param value the new value of the field
    */
-    const updateField = <T extends keyof Individual>(
-        field: T,
-        value: Individual[T]
-      ) => {
-        WHindividual &&
-          (setWHindividual({ ...WHindividual, [field]: value }));
-          console.debug("Update Field", field, "value", value);
-          console.debug("Individual", WHindividual);
-      };
+  const updateField = <T extends keyof Individual>(
+    field: T,
+    value: Individual[T]
+  ) => {
+    WHindividual && setWHindividual({ ...WHindividual, [field]: value });
+    console.debug("Update Field", field, "value", value);
+    console.debug("Individual", WHindividual);
+  };
 
   /**
    * Compares the individual object that is supposed to be saved with the version of it
@@ -207,7 +200,7 @@ export const IndividualWeigthull = ({ individual }: { individual: Individual }) 
    * @param oldInd individual in the database
    * @returns true if they are equal
    */
-   const isEqual = (newInd: Individual, oldInd: Individual) => {
+  const isEqual = (newInd: Individual, oldInd: Individual) => {
     let areEqual = true;
     const keys = Object.keys(newInd);
     keys.forEach((key: string) => {
@@ -324,179 +317,175 @@ export const IndividualWeigthull = ({ individual }: { individual: Individual }) 
   };
   const minDate: Date = getMinDate();
 
-
   return (
     <div className={style.popupContainer}>
       <h2>
         Rapportera vikt och hull för {WHindividual.name} {WHindividual.number}
       </h2>
-      
-        <>
-          <div className={style.textContainer}>
-            <Typography variant="body1" className={style.infoText}>
-              För årsrapporten vill vi gärna att du loggar vikt och hull bedömning 
-              du behöver göra det en gång per år men kan också logga för din egen del när du vill  <br></br> Utgår från datumet du väljer nedan.
-            </Typography>
-          </div>
-          <div classNamdfe={style.formContainer}>
+
+      <>
+        <div className={style.textContainer}>
+          <Typography variant="body1" className={style.infoText}>
+            För årsrapporten vill vi gärna att du loggar vikt och hull bedömning
+            du behöver göra det en gång per år men kan också logga för din egen
+            del när du vill <br></br> Utgår från datumet du väljer nedan.
+          </Typography>
+        </div>
+        <div classNamdfe={style.formContainer}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          
-          <div className={style.titleText}>Mått</div>
-                <h3>Vikter</h3>
-                <ul>
-                  {
-                    // jscpd:ignore-start
+            <div className={style.titleText}>Mått</div>
+            <h3>Vikter</h3>
+            <ul>
+              {
+                // jscpd:ignore-start
 
-                    WHindividual.weights &&
-                      WHindividual.weights.map((w: DateWeight, i: number) => (
-                        <li key={i} className={style.measureList}>
-                          {`${asLocale(w.date)} - ${w.weight} kg`}
-                          <span className={style.listButton}>
-                            [
-                            <a
-                              className={style.scriptLink}
-                              onClick={() => removeMeasure("weights", i)}
-                            >
-                              Radera
-                            </a>
-                            ]
-                          </span>
-                        </li>
-                      ))
+                WHindividual.weights &&
+                  WHindividual.weights.map((w: DateWeight, i: number) => (
+                    <li key={i} className={style.measureList}>
+                      {`${asLocale(w.date)} - ${w.weight} kg`}
+                      <span className={style.listButton}>
+                        [
+                        <a
+                          className={style.scriptLink}
+                          onClick={() => removeMeasure("weights", i)}
+                        >
+                          Radera
+                        </a>
+                        ]
+                      </span>
+                    </li>
+                  ))
+              }
+            </ul>
+            <div className="flexRow">
+              <KeyboardDatePicker
+                autoOk
+                variant="inline"
+                className="control"
+                inputVariant={inputVariant}
+                label="Mätningsdatum"
+                format={dateFormat}
+                value={weightDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={
+                  (date, value) => {
+                    value && setWeightDate(value);
                   }
-                </ul>
-                <div className="flexRow">
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="inline"
-                    className="control"
-                    inputVariant={inputVariant}
-                    label="Mätningsdatum"
-                    format={dateFormat}
-                    value={weightDate}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={
-                      (date, value) => {
-                        value && setWeightDate(value);
-                      }
 
-                      // jscpd:ignore-end
-                    }
-                  />
+                  // jscpd:ignore-end
+                }
+              />
+              <TextField
+                label="Vikt"
+                className="control"
+                value={weight}
+                variant={inputVariant}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">Kg</InputAdornment>
+                  ),
+                  inputProps: { min: 0 },
+                  inputComponent: NumberFormatCustom as any,
+                }}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e: any) => {
+                  setWeight(+e.target.value);
+                }}
+              />
+            </div>
+
+            <Button
+              variant="contained"
+              color="primary"
+              className="control controlWidth"
+              onClick={() => handleNewWeight()}
+            >
+              {"Lägg till viktmätning"}
+            </Button>
+            <h3>Hull</h3>
+            <ul>
+              {
+                // jscpd:ignore-start
+
+                WHindividual.bodyfat &&
+                  WHindividual.bodyfat.map((b: DateBodyfat, i: number) => (
+                    <li key={i} className={style.measureList}>
+                      {`${asLocale(b.date)} - ${translateBodyfat.get(
+                        b.bodyfat
+                      )}`}
+                      <span className={style.listButton}>
+                        [
+                        <a
+                          className={style.scriptLink}
+                          onClick={() => removeMeasure("bodyfat", i)}
+                        >
+                          Radera
+                        </a>
+                        ]
+                      </span>
+                    </li>
+                  ))
+              }
+            </ul>
+            <div className="flexRow">
+              <KeyboardDatePicker
+                autoOk
+                variant="inline"
+                className="control"
+                inputVariant={inputVariant}
+                label="Mätningsdatum"
+                format={dateFormat}
+                value={bodyfatDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={
+                  (date, value) => {
+                    value && setBodyfatDate(value);
+                  }
+
+                  // jscpd:ignore-end
+                }
+              />
+              <Autocomplete
+                options={bodyfatOptions ?? []}
+                value={
+                  bodyfatOptions.find((option) => option.value == bodyfat) ??
+                  bodyfatOptions[1]
+                }
+                className="control controlWidth"
+                getOptionLabel={(option: OptionType) => option.label}
+                renderInput={(params) => (
                   <TextField
-                    label="Vikt"
-                    className="control"
-                    value={weight}
-                    variant={inputVariant}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">Kg</InputAdornment>
-                      ),
-                      inputProps: { min: 0 },
-                      inputComponent: NumberFormatCustom as any,
-                    }}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e: any) => {
-                      setWeight(+e.target.value);
-                    }}
-                  />
-                </div>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className="control controlWidth"
-                  onClick={() => handleNewWeight()}
-                >
-                  {"Lägg till viktmätning"}
-                </Button>
-                <h3>Hull</h3>
-                <ul>
-                  {
-                    // jscpd:ignore-start
-
-                    WHindividual.bodyfat &&
-                      WHindividual.bodyfat.map((b: DateBodyfat, i: number) => (
-                        <li key={i} className={style.measureList}>
-                          {`${asLocale(b.date)} - ${translateBodyfat.get(
-                            b.bodyfat
-                          )}`}
-                          <span className={style.listButton}>
-                            [
-                            <a
-                              className={style.scriptLink}
-                              onClick={() => removeMeasure("bodyfat", i)}
-                            >
-                              Radera
-                            </a>
-                            ]
-                          </span>
-                        </li>
-                      ))
-                  }
-                </ul>
-                <div className="flexRow">
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="inline"
-                    className="control"
-                    inputVariant={inputVariant}
-                    label="Mätningsdatum"
-                    format={dateFormat}
-                    value={bodyfatDate}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={
-                      (date, value) => {
-                        value && setBodyfatDate(value);
-                      }
-
-                      // jscpd:ignore-end
-                    }
-                  />
-                  <Autocomplete
-                    options={bodyfatOptions ?? []}
-                    value={
-                      bodyfatOptions.find(
-                        (option) => option.value == bodyfat
-                      ) ?? bodyfatOptions[1]
-                    }
+                    {...params}
+                    label="Hull"
                     className="control controlWidth"
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Hull"
-                        className="control controlWidth"
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      setBodyfat(newValue?.value ?? "normal");
-                    }}
+                    variant={inputVariant}
+                    margin="normal"
                   />
-                </div>
-                <Button
-                  variant="contained"
-                  className="controlWidth"
-                  color="primary"
-                  onClick={() => {
-                    handleNewBodyfat();
-                  }}
-                >
-                  {"Lägg till hullmätning"}
-                </Button>   
+                )}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  setBodyfat(newValue?.value ?? "normal");
+                }}
+              />
+            </div>
+            <Button
+              variant="contained"
+              className="controlWidth"
+              color="primary"
+              onClick={() => {
+                handleNewBodyfat();
+              }}
+            >
+              {"Lägg till hullmätning"}
+            </Button>
           </MuiPickersUtilsProvider>
-          </div>
-         
-        </>
-    
+        </div>
+      </>
     </div>
   );
-}
+};
