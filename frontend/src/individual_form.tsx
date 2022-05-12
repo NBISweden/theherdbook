@@ -10,7 +10,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import sv from "date-fns/locale/sv";
 
 import { useDataContext } from "@app/data_context";
-import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
+import InfoOutlinedIcon from "@material-ui/icons/InfoOutlined";
 import {
   dateFormat,
   Genebank,
@@ -71,7 +71,12 @@ export function IndividualForm({
       Object.keys(colors).includes(individual.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return { id: c.id, comment: c.comment, value: c.name, label: `${c.id} - ${c.name}` };
+        return {
+          id: c.id,
+          comment: c.comment,
+          value: c.name,
+          label: `${c.id} - ${c.name}`,
+        };
       });
     }
     return [];
@@ -98,7 +103,7 @@ export function IndividualForm({
         herds.push(mother.herd);
         individual.origin_herd = mother.herd;
         individual.number = mother.herd.herd + "-";
-        setIndNull(false)
+        setIndNull(false);
       }
       if (herds.length > 0) {
         const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
@@ -179,6 +184,39 @@ export function IndividualForm({
           <div className="flexRowOrColumn">
             <div className="formPane">
               {formAction == FormAction.handleCertificate ? (
+                <div className={!canManage ? "adminPane" : "whitePane"}>
+                  {!canManage ? (
+                    <div className="paneTitle">
+                      Kan endast ändras av genbanksansvarig
+                    </div>
+                  ) : (
+                    <></>
+                  )}
+                  <TextField
+                    disabled={!canManage}
+                    required
+                    error={numberError}
+                    label="Individnummer"
+                    className="control"
+                    variant={inputVariant}
+                    value={individual.number ?? ""}
+                    onChange={(event) => {
+                      onUpdateIndividual("number", event.currentTarget.value);
+                    }}
+                  />
+                  {individual.digital_certificate ? (
+                    <p className="certNumber">
+                      Certifikatnummer: {individual.digital_certificate}
+                    </p>
+                  ) : (
+                    <></>
+                  )}
+                </div>
+              ) : (
+                <></>
+              )}
+
+              {formAction == FormAction.handleCertificate ? (
                 <div className="adminPane">
                   <div className="paneTitle">
                     Kan endast ändras av genbanksansvarig
@@ -253,7 +291,8 @@ export function IndividualForm({
                           shrink: true,
                         }}
                         onChange={(date, value) => {
-                        !isNaN(date) && onUpdateIndividual("birth_date", value);
+                          !isNaN(date) &&
+                            onUpdateIndividual("birth_date", value);
                         }}
                       />
                       <TextField
@@ -289,7 +328,9 @@ export function IndividualForm({
                           onUpdateIndividual(
                             "number",
                             `${
-                              individual.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]
+                              individual.number?.match(
+                                /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                              )[0]
                             }${event.currentTarget.value}`
                           );
                         }}
@@ -323,7 +364,7 @@ export function IndividualForm({
                           label="Certifikatnummer papper"
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={individual.certificate ?? ''}
+                          value={individual.certificate ?? ""}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "certificate",
@@ -336,7 +377,7 @@ export function IndividualForm({
                           label="Certifikatnummer digital"
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={individual.digital_certificate ?? ''}
+                          value={individual.digital_certificate ?? ""}
                           onChange={(event) => {
                             onUpdateIndividual(
                               "digital_certificate",
@@ -350,17 +391,14 @@ export function IndividualForm({
                           disabled
                           className="control controlWidth"
                           variant={inputVariant}
-                          value={''}
+                          value={""}
                           onChange={() => {}}
                         />
                       )}
                     </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ? (
-                  
                   <div className="flexRow">
-                     
-                   
                     <TextField
                       disabled={formAction == FormAction.handleCertificate}
                       variant={inputVariant}
@@ -368,9 +406,13 @@ export function IndividualForm({
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
                     />
-                    <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right" arrow>
-                    <InfoOutlinedIcon />
-                  </Tooltip>  
+                    <Tooltip
+                      title="Är datumet fel vänligen ändra i parningstillfället"
+                      placement="right"
+                      arrow
+                    >
+                      <InfoOutlinedIcon />
+                    </Tooltip>
                   </div>
                 ) : (
                   <></>
@@ -410,18 +452,21 @@ export function IndividualForm({
                     onUpdateIndividual("sex", newValue?.value ?? "");
                   }}
                 />
-                </div>
+              </div>
               <div className="flexRow">
-              <TextField
+                <TextField
                   required
                   error={litterError}
                   label="Antal födda i kullen"
                   className="control controlWidth"
                   variant={inputVariant}
-                  value={individual.litter_size ?? ''}
+                  value={individual.litter_size ?? ""}
                   type="number"
                   onChange={(event) => {
-                    onUpdateIndividual("litter_size", +event.currentTarget.value);
+                    onUpdateIndividual(
+                      "litter_size",
+                      +event.currentTarget.value
+                    );
                   }}
                 />
                 <TextField
@@ -430,10 +475,13 @@ export function IndividualForm({
                   label="Levande i kullen efter 6v"
                   className="control controlWidth"
                   variant={inputVariant}
-                  value={individual.litter_size6w ?? ''}
+                  value={individual.litter_size6w ?? ""}
                   type="number"
                   onChange={(event) => {
-                    onUpdateIndividual("litter_size6w", +event.currentTarget.value);
+                    onUpdateIndividual(
+                      "litter_size6w",
+                      +event.currentTarget.value
+                    );
                   }}
                 />
               </div>
@@ -450,10 +498,10 @@ export function IndividualForm({
                   getOptionLabel={(option: OptionType) => option.label}
                   renderOption={(option) => {
                     return (
-                    <div>
-                      <strong>{`${option.id} - ${option.value}`}</strong>
-                      <li>{`${option.comment}`}</li>
-                    </div>
+                      <div>
+                        <strong>{`${option.id} - ${option.value}`}</strong>
+                        <li>{`${option.comment}`}</li>
+                      </div>
                     );
                   }}
                   renderInput={(params) => (
@@ -485,11 +533,16 @@ export function IndividualForm({
                 />
               </div>
               <div className="flexRow">
-                  <a href={"https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"}>
-                    {" "}
-                    Utförligare färgbeskrivningar finns i Föreningen Gotlandskaninens Färgatlas, version 2022.
-                  </a>
-                </div>
+                <a
+                  href={
+                    "https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"
+                  }
+                >
+                  {" "}
+                  Utförligare färgbeskrivningar finns i Föreningen
+                  Gotlandskaninens Färgatlas, version 2022.
+                </a>
+              </div>
               <div className="flexRow">
                 <TextField
                   label="Ögonfärg"

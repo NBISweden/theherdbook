@@ -422,6 +422,18 @@ list-item {
   /* stylelint-enable */
 }
 
+.whitePane {
+  width: 100%;
+  padding: 15px 10px 5px 10px;
+  margin-bottom: 2em;
+  border: 1px solid lightgrey;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
 /* Used in individual_form.tsx */
 .certNumber {
   margin: 0.3em;
