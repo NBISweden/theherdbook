@@ -26,6 +26,7 @@ import { useUserContext } from "./user_context";
 export enum FormAction {
   AddIndividual = "addIndividual",
   handleCertificate = "handleCertificate",
+  editIndividual = "editIndividual",
 }
 
 export function IndividualForm({
@@ -176,46 +177,110 @@ export function IndividualForm({
       }
     }
   };
-
+  console.log(formAction);
   return (
     <>
       <div className="individualForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <div className="flexRowOrColumn">
             <div className="formPane">
-              {formAction == FormAction.handleCertificate ? (
-                <div className={!canManage ? "adminPane" : "whitePane"}>
-                  {!canManage ? (
-                    <div className="paneTitle">
-                      Kan endast ändras av genbanksansvarig
+              <div className="titleText">Redigera Individ</div>
+
+              {formAction == FormAction.editIndividual ? (
+                <>
+                  <div className={!canManage ? "adminPane" : "whitePane"}>
+                    <div className="flexRow">
+                      {!canManage ? (
+                        <div className="paneTitle">
+                          Kan endast ändras av genbanksansvarig
+                        </div>
+                      ) : (
+                        <></>
+                      )}
+                      <TextField
+                        disabled={!canManage}
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className="control controlWidth"
+                        variant={inputVariant}
+                        value={individual.number ?? ""}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
                     </div>
-                  ) : (
-                    <></>
-                  )}
-                  <TextField
-                    disabled={!canManage}
-                    required
-                    error={numberError}
-                    label="Individnummer"
-                    className="control"
-                    variant={inputVariant}
-                    value={individual.number ?? ""}
-                    onChange={(event) => {
-                      onUpdateIndividual("number", event.currentTarget.value);
-                    }}
-                  />
-                  {individual.digital_certificate ? (
-                    <p className="certNumber">
-                      Certifikatnummer: {individual.digital_certificate}
-                    </p>
-                  ) : (
-                    <></>
-                  )}
-                </div>
+                    <div className="flexRow">
+                      <Autocomplete
+                        disabled={!canManage}
+                        className="controlWidth"
+                        options={certTypeOptions ?? []}
+                        value={certTypeOptions.find(
+                          (option) =>
+                            option.value == certType ??
+                            certTypeOptions[certTypeOptions.length - 1]
+                        )}
+                        getOptionLabel={(option: OptionType) => option.label}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Certifikattyp"
+                            className="control"
+                            variant={inputVariant}
+                            margin="normal"
+                          />
+                        )}
+                        onChange={(event: any, newValue: OptionType) =>
+                          onCertTypeChange(newValue?.value ?? "unknown")
+                        }
+                      />
+                      {certType == "paper" ? (
+                        <TextField
+                          disabled={!canManage}
+                          label="Certifikatnummer papper"
+                          className="control controlWidth"
+                          variant={inputVariant}
+                          value={individual.certificate ?? ""}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "certificate",
+                              event.currentTarget.value
+                            );
+                          }}
+                        />
+                      ) : certType == "digital" ? (
+                        <TextField
+                          disabled={!canManage}
+                          label="Certifikatnummer digital"
+                          className="control controlWidth"
+                          variant={inputVariant}
+                          value={individual.digital_certificate ?? ""}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "digital_certificate",
+                              event.currentTarget.value
+                            );
+                          }}
+                        />
+                      ) : (
+                        <TextField
+                          label="Certifikatnummer - välj typ först"
+                          disabled
+                          className="control controlWidth"
+                          variant={inputVariant}
+                          value={""}
+                          onChange={() => {}}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
                 <></>
               )}
-
               {formAction == FormAction.handleCertificate ? (
                 <div className="adminPane">
                   <div className="paneTitle">
@@ -397,10 +462,14 @@ export function IndividualForm({
                       )}
                     </div>
                   </>
-                ) : formAction == FormAction.handleCertificate ? (
+                ) : formAction == FormAction.handleCertificate ||
+                  formAction == FormAction.editIndividual ? (
                   <div className="flexRow">
                     <TextField
-                      disabled={formAction == FormAction.handleCertificate}
+                      disabled={
+                        formAction == FormAction.handleCertificate ||
+                        formAction == FormAction.editIndividual
+                      }
                       variant={inputVariant}
                       className="control controlWidth"
                       label="Födelsedatum"
