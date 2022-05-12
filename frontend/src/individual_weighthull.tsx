@@ -1,13 +1,11 @@
 import React from "react";
 import {
-  Box,
   Button,
   makeStyles,
   Typography,
   TextField,
   InputAdornment,
 } from "@material-ui/core";
-import { CheckCircle, NavigateNext } from "@material-ui/icons";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -21,6 +19,7 @@ import {
   DateBodyfat,
   dateFormat,
   DateWeight,
+  OptionType,
 } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
