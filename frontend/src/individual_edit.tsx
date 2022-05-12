@@ -4,49 +4,31 @@
  * add a new individual if `herdId` is given.
  */
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import { get, patch } from "@app/communication";
-import {
-  asLocale,
-  BodyFat,
-  DateBodyfat,
-  dateFormat,
-  DateWeight,
-  Breeding,
-  Genebank,
-  Individual,
-  individualLabel,
-  inputVariant,
-  LimitedIndividual,
-  OptionType,
-  ServerMessage,
-  breedingLabel,
-} from "@app/data_context_global";
-import { useMessageContext } from "@app/message_context";
+
 import {
   Button,
   CircularProgress,
-  InputAdornment,
+  makeStyles,
   TextField,
 } from "@material-ui/core";
-import {
-  MuiPickersUtilsProvider,
-  KeyboardDatePicker,
-} from "@material-ui/pickers";
-import DateFnsUtils from "@date-io/date-fns";
-import sv from "date-fns/locale/sv";
 
+import { IndividualView } from "@app/individual_view";
+import { IndividualForm } from "@app/individual_form";
+import { get, patch } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
-import { Autocomplete } from "@material-ui/lab";
-import NumberFormat from "react-number-format";
+import { useMessageContext } from "@app/message_context";
+import { Individual, inputVariant, OptionType } from "@app/data_context_global";
+import { CertificateDownload } from "./certificate_download";
+import { FormAction } from "@app/individual_form";
 
+//Styles for the form. A lot similar to the ones in individual_edit.
+//Find a different solution to avoid repetetive code.
 const useStyles = makeStyles({
-  loading: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
+  control: {
+    margin: "5px",
+    minWidth: "195px",
+    paddingRight: "5px",
   },
   form: {
     display: "flex",
@@ -55,127 +37,34 @@ const useStyles = makeStyles({
     flexDirection: "column",
     width: "95%",
   },
-  flexRowOrColumn: {
+  loading: {
     display: "flex",
     flexDirection: "column",
-    overflowX: "hidden",
-    overflowY: "auto",
-    ["@media (min-width:600px)"]: {
-      flexDirection: "row",
-    },
-  },
-  flexColumn: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  flexRow: {
-    display: "flex",
-    flexDirection: "row",
-  },
-  control: {
-    margin: "5px",
-    minWidth: "195px",
-    paddingRight: "5px",
-  },
-  wideControl: {
-    margin: "5px",
-    minWidth: "195px",
-    width: "100%",
-    paddingRight: "5px",
-  },
-  measureList: {
-    position: "relative",
-  },
-  listButton: {
-    position: "absolute",
-    right: "50px",
-    top: 0,
-  },
-  scriptLink: {
-    color: "blue",
-    cursor: "pointer",
-  },
-  formPane: {
-    borderRight: "none",
-    minWidth: "410px",
-    ["@media (min-width:660px)"]: {
-      borderRight: "1px solid lightgrey",
-    },
-    paddingRight: "5px",
-    "&:last-child": {
-      paddingLeft: "5px",
-      paddingRight: "0",
-      borderRight: "none",
-    },
-  },
-  adminPane: {
-    width: "100%",
-    padding: "15px 0 5px 10px",
-    border: "1px solid lightgrey",
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    background:
-      "repeating-linear-gradient(135deg, white, white 25px, rgba(0,0,0,0.05) 25px, rgba(0,0,0,0.05) 50px )",
-  },
-  whitePane: {
-    width: "100%",
-    padding: "15px 0 5px 10px",
-    border: "1px solid lightgrey",
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-  },
-  titleText: {
-    width: "100%",
-    borderBottom: "1px solid lightgrey",
-    padding: "0 20px",
-    fontSize: "2.3em",
-  },
-  paneTitle: {
-    margin: "5px",
+    justifyContent: "center",
+    alignItems: "center",
   },
   paneControls: {
     display: "flex",
     flexDirection: "row",
+    justifyContent: "space-between",
+    padding: "20px 0",
   },
-  button: {
-    marginRight: "1em",
+  formWrapper: {
+    padding: "3em 3em 0 3em",
+  },
+  confirmBox: {
+    border: "1px solid black",
+    borderRadius: "5px",
+    padding: "1em",
+  },
+  confirmField: {
+    marginRight: "1.5em",
+  },
+  flexbox: {
+    display: "flex",
   },
 });
 
-// interface and function that make the react-number-format library work
-// used to allow input of decimal commas for weight record
-interface NumberFormatCustomProps {
-  inputRef: (instance: NumberFormat | null) => void;
-  onChange: (event: { target: { name: string; value: string } }) => void;
-  name: string;
-}
-
-const NumberFormatCustom = (props: NumberFormatCustomProps) => {
-  const { inputRef, onChange, ...other } = props;
-  return (
-    <NumberFormat
-      {...other}
-      getInputRef={inputRef}
-      onValueChange={(values) => {
-        onChange({
-          target: {
-            name: props.name,
-            value: values.value,
-          },
-        });
-      }}
-      isNumericString
-      decimalSeparator=","
-    />
-  );
-};
-
-/**
- * This function allows a user (with the required permissions) to edit an
- * individual given by `id`, or add a new individual if no `id` is given.
- */
 export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individual, setIndividual] = React.useState(
     undefined as Individual | undefined
@@ -187,29 +76,33 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     false as boolean
   );
   const [certType, setCertType] = React.useState("unknown" as string);
-  const [bodyfat, setBodyfat] = React.useState("normal");
-  const [weight, setWeight] = React.useState(null as number | null);
-  const [bodyfatDate, setBodyfatDate] = React.useState(null as string | null);
-  const [weightDate, setWeightDate] = React.useState(null as string | null);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
-  const [breedingEvents, setBreedingEvents] = React.useState([] as Breeding[]);
+  //States for conditional rendering
+  const [showForm, setShowForm] = React.useState(false as boolean);
+  const [showSummary, setShowSummary] = React.useState(false as boolean);
+  const [showComplete, setShowComplete] = React.useState(false as boolean);
+  //States for authentication
+  const [confirmId, setConfirmId] = React.useState("");
+  const [isUserGood, setIsUserGood] = React.useState(false);
+  //States for API-requests
+  const [previewUrl, setPreviewUrl] = React.useState(undefined as unknown);
+  const [certificateUrl, setCertificateUrl] = React.useState("");
+  //States to make pdf-preview-library work
+  const [numPages, setNumPages] = React.useState(null);
+  const [pageNumber, setPageNumber] = React.useState(1);
+  // Error states for mandatory form fields
+  const [numberError, setNumberError] = React.useState(false as boolean);
+  const [colorError, setColorError] = React.useState(false as boolean);
+  const [sexError, setSexError] = React.useState(false as boolean);
+  const [birthDateError, setBirthDateError] = React.useState(false as boolean);
+  const [litterError, setLitterError] = React.useState(false as boolean);
+  const [litterError6w, setLitterError6w] = React.useState(false as boolean);
+
   const { user } = useUserContext();
+  const { popup } = useMessageContext();
   const { userMessage, handleCloseDialog } = useMessageContext();
-  const {
-    genebanks,
-    colors,
-    herdListener,
-    herdChangeListener,
-    setHerdChangeListener,
-  } = useDataContext();
-  const genebank: Genebank | undefined = React.useMemo(() => {
-    return genebanks.find((g) =>
-      g.herds.find((h) => h.herd == individual?.herd.herd)
-    );
-  }, [genebanks, individual]);
-  const canManage: boolean = React.useMemo(() => {
-    return user?.canEdit(genebank?.id);
-  }, [user, individual, genebank]);
+  const { herdListener, herdChangeListener, setHerdChangeListener } =
+    useDataContext();
   const style = useStyles();
 
   const certTypeOptions: OptionType[] = [
@@ -219,73 +112,20 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     { value: "unknown", label: "Okänt" },
   ];
 
-  const sexOptions = [
-    { value: "female", label: "Hona" },
-    { value: "male", label: "Hane" },
-    { value: "unknown", label: "Okänd" },
-  ];
-  const bodyfatOptions: OptionType[] = [
-    { value: "low", label: "Låg" },
-    { value: "normal", label: "Normal" },
-    { value: "high", label: "Hög" },
-  ];
-  const colorOptions: OptionType[] = React.useMemo(() => {
-    if (
-      individual &&
-      colors &&
-      Object.keys(colors).includes(individual.genebank)
-    ) {
-      return colors[individual.genebank].map((c) => {
-        return { value: c.name, label: `${c.id} - ${c.name}` };
-      });
-    }
-    return [];
-  }, [colors, individual]);
-  const genebankIndividuals = React.useMemo(() => {
-    if (individual && colors) {
-      const genebank = genebanks.find((g) => g.name == individual.genebank);
-      if (genebank) {
-        return genebank.individuals;
-      }
-    }
-    return [];
-  }, [genebanks, individual]);
-  const motherOptions: OptionType[] = React.useMemo(() => {
-    return genebankIndividuals
-      .filter((i) => i.sex == "female")
-      .map((i) => {
-        return { value: i.number, label: individualLabel(i) };
-      });
-  }, [genebankIndividuals]);
-  const fatherOptions: OptionType[] = React.useMemo(() => {
-    return genebankIndividuals
-      .filter((i) => i.sex == "male")
-      .map((i) => {
-        return { value: i.number, label: individualLabel(i) };
-      });
-  }, [genebankIndividuals]);
-  const translateBodyfat: Map<string, string> = new Map([
-    ["low", "låg"],
-    ["normal", "normal"],
-    ["high", "hög"],
-  ]);
-
-  const asIndividual = (
-    number: string | undefined
-  ): LimitedIndividual | null => {
-    if (number === null) {
-      return null;
-    }
-    const individual = genebankIndividuals.find((i) => i.number == number);
-    return individual ? individual : null;
-  };
-
-  const removeMeasure = (field: "weights" | "bodyfat", index: number) => {
-    console.debug("Deleting ", field, "number", index);
-    if (individual && individual[field]) {
-      individual[field].splice(index, 1);
-      updateField(field, individual[field]);
-    }
+  // Limited version of the individual to be used for the preview
+  const certificateData = {
+    claw_color: individual?.claw_color,
+    belly_color: individual?.belly_color,
+    color: individual?.color,
+    eye_color: individual?.eye_color,
+    birth_date: individual?.birth_date,
+    hair_notes: individual?.hair_notes,
+    name: individual?.name,
+    litter_size: individual?.litter_size,
+    litter_size6w: individual?.litter_size6w,
+    notes: individual?.notes,
+    sex: individual?.sex,
+    genebank: individual?.genebank,
   };
 
   /**
@@ -314,21 +154,26 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       : userMessage("Något gick fel.", "error");
   }, [id]);
 
+  /**
+   * The API sends the birth date in a format like this:
+   * "Thu, 08 Jul 2021 00:00:00 GMT".
+   * This function turns it into a format like this: "YYYY-MM-DD"
+   */
   React.useEffect(() => {
-    //console.log(individual.herd)
-    if (individual && individual.herd.herd) {
-      const date = new Date(individual.birth_date).toISOString().split("T")[0];
-      get(`/api/breeding/date/${date}`).then(
-        (data: { breedings: Breeding[] }) => {
-          data && setBreedingEvents(data.breedings);
-        },
-        (error) => {
-          console.error(error);
-          userMessage(error, "error");
-        }
-      );
+    const formatDate = (fullDate: string) => {
+      const date = new Date(fullDate).toISOString();
+      const dateString = date.split("T")[0];
+      return dateString;
+    };
+    if (
+      // check if the birth date is still in the wrong format,
+      // i.e. has more than 10 characters
+      individual?.birth_date &&
+      individual.birth_date.length > 10
+    ) {
+      handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
     }
-  }, [individualLoaded]);
+  }, [individual?.birth_date]);
 
   /**
    * This is to make sure there never is a value in the local state for
@@ -360,7 +205,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * @param field field name to update
    * @param value the new value of the field
    */
-  const updateField = <T extends keyof Individual>(
+  const handleUpdateIndividual = <T extends keyof Individual>(
     field: T,
     value: Individual[T]
   ) => {
@@ -386,105 +231,70 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     return areEqual;
   };
 
-  const isDateOkay = (date: string) => {
-    const recordDate = new Date(date).getTime();
-    const today = new Date().getTime();
-    if (today - recordDate < 0) {
-      userMessage("Ange ett datum som inte ligger i framtiden.", "warning");
-      return false;
-    } else {
-      return true;
+  // check if all mandatory fields are filled before moving on to preview
+  const handlePreview = () => {
+    let error: boolean = false;
+    if (!individual?.number) {
+      setNumberError(true);
+      error = true;
     }
+    if (!individual?.color) {
+      setColorError(true);
+      error = true;
+    }
+    if (!individual?.sex) {
+      setSexError(true);
+      error = true;
+    }
+    if (!individual?.birth_date) {
+      setBirthDateError(true);
+      error = true;
+    }
+    if (!individual?.litter_size) {
+      setLitterError(true);
+      error = true;
+    }
+    if (!individual?.litter_size6w) {
+      setLitterError6w(true);
+      error = true;
+    }
+    if (error) {
+      userMessage("Fyll i alla obligatoriska fält.", "warning");
+      return;
+    }
+    setShowForm(false);
+    setShowSummary(true);
+    previewCertificate(id, certificateData);
   };
 
-  const handleNewWeight = () => {
-    if (!weightDate) {
-      userMessage("Ange ett datum för viktmätningen", "warning");
-      return;
+  // remove error layout from input fields when user has added an input
+  React.useEffect(() => {
+    if (individual?.color) {
+      setColorError(false);
     }
-    if (weight && weight <= 0) {
-      userMessage("Ange en vikt större än 0.", "warning");
-      return;
+    if (individual?.number) {
+      setNumberError(false);
     }
-    if (!isDateOkay(weightDate)) {
-      return;
+    if (individual?.sex) {
+      setSexError(false);
     }
-
-    // update the local individual state
-    updateField("weights", [
-      ...individual?.weights,
-      { date: weightDate, weight: weight },
-    ]);
-
-    const newWeightRecord = {
-      id: individual?.id,
-      number: individual?.number,
-      herd: individual?.herd,
-      weights: [...individual?.weights, { date: weightDate, weight: weight }],
-    };
-
-    // send weight record to the backend
-    patch("/api/individual", newWeightRecord)
-      .then((json) => {
-        if (json.status == "success") {
-          userMessage("Viktmätningen har lagts till.", "success");
-          return;
-        } else {
-          userMessage("Något gick fel.", "error");
-        }
-      })
-      .then(() => {
-        setWeight(null);
-        setWeightDate(null);
-      })
-      .catch((error) => {
-        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
-      });
-  };
-
-  const handleNewBodyfat = () => {
-    if (!bodyfatDate) {
-      userMessage("Ange ett datum för hullmätningen", "warning");
-      return;
+    if (individual?.birth_date) {
+      setBirthDateError(false);
     }
-    if (!isDateOkay(bodyfatDate)) {
-      return;
+    if (individual?.litter_size) {
+      setLitterError(false);
     }
-
-    // update the local individual state
-    updateField("bodyfat", [
-      ...individual?.bodyfat,
-      { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
-    ]);
-
-    const newBodyfatRecord = {
-      id: individual?.id,
-      number: individual?.number,
-      herd: individual?.herd,
-      bodyfat: [
-        ...individual?.bodyfat,
-        { date: bodyfatDate, bodyfat: bodyfat as BodyFat },
-      ],
-    };
-
-    // send bodyfat record to the backend
-    patch("/api/individual", newBodyfatRecord)
-      .then((json) => {
-        if (json.status == "success") {
-          userMessage("Hullmätningen har lagts till.", "success");
-          return;
-        } else {
-          userMessage("Något gick fel.", "error");
-        }
-      })
-      .then(() => {
-        setBodyfat("normal");
-        setBodyfatDate(null);
-      })
-      .catch((error) => {
-        userMessage("Vi har tekniska problem. Försök igen senare.", "error");
-      });
-  };
+    if (individual?.litter_size6w) {
+      setLitterError6w(false);
+    }
+  }, [
+    individual?.color,
+    individual?.number,
+    individual?.sex,
+    individual?.birth_date,
+    individual?.litter_size,
+    individual?.litter_size6w,
+  ]);
 
   /**
    * Sends a request to save the current data in the database. Returns a
@@ -518,247 +328,134 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     );
   };
 
-  // jscpd:ignore-start
-
   return (
     <>
-      {individual ? (
-        <div className={style.form}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
-            <div className={style.flexRowOrColumn}>
-              <div className={style.formPane}>
-                <div className={style.titleText}>Redigera Individ</div>
-                <div className={!canManage ? style.adminPane : style.whitePane}>
-                  <div className={style.flexColumn}>
-                    {!canManage ? (
-                      <p className={style.paneTitle}>
-                        Kan endast ändras av genbanksansvarig
-                      </p>
-                    ) : (
-                      <></>
-                    )}
-                    <TextField
-                      disabled={!canManage}
-                      label="Nummer"
-                      className={style.control}
-                      variant={inputVariant}
-                      value={individual.number ?? ""}
-                      onChange={(event) => {
-                        updateField("number", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                  <div className={style.flexRow}>
-                    <Autocomplete
-                      disabled={!canManage}
-                      options={certTypeOptions ?? []}
-                      value={certTypeOptions.find(
-                        (option) =>
-                          option.value == certType ??
-                          certTypeOptions[certTypeOptions.length - 1]
-                      )}
-                      getOptionLabel={(option: OptionType) => option.label}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Certifikattyp"
-                          className={style.control}
-                          variant={inputVariant}
-                          margin="normal"
-                        />
-                      )}
-                      onChange={(event: any, newValue: OptionType) =>
-                        onCertTypeChange(newValue?.value ?? "unknown")
-                      }
-                    />
-                    {certType == "paper" ? (
-                      <TextField
-                        disabled={!canManage}
-                        label="Certifikatnummer papper"
-                        className={style.control}
-                        variant={inputVariant}
-                        value={individual.certificate ?? ""}
-                        onChange={(event) => {
-                          updateField("certificate", event.currentTarget.value);
-                        }}
-                      />
-                    ) : certType == "digital" ? (
-                      <TextField
-                        disabled={!canManage}
-                        label="Certifikatnummer digital"
-                        className={style.control}
-                        variant={inputVariant}
-                        value={individual.digital_certificate ?? ""}
-                        onChange={(event) => {
-                          updateField(
-                            "digital_certificate",
-                            event.currentTarget.value
-                          );
-                        }}
-                      />
-                    ) : (
-                      <TextField
-                        label="Certifikatnummer"
-                        disabled
-                        placeholder="Välj typ först."
-                        className={style.control}
-                        variant={inputVariant}
-                        value={"Välj certifikattyp först."}
-                        onChange={() => {}}
-                      />
-                    )}
-                  </div>
-                </div>
-                <TextField
-                  label="Namn"
-                  className={style.control}
-                  variant={inputVariant}
-                  value={individual.name ?? ""}
-                  onChange={(event) => {
-                    updateField("name", event.currentTarget.value);
-                  }}
-                />
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    options={sexOptions ?? []}
-                    value={
-                      sexOptions.find(
-                        (option) => option.value == individual.sex
-                      ) ?? sexOptions[sexOptions.length - 1]
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Kön"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateField("sex", newValue?.value ?? "");
-                    }}
-                  />
-
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="inline"
-                    className={style.control}
-                    inputVariant={inputVariant}
-                    label="Födelsedatum"
-                    format={dateFormat}
-                    value={individual.birth_date ?? ""}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(date, value) => {
-                      value && updateField("birth_date", value);
-                    }}
-                  />
-                </div>
-                <Autocomplete
-                  options={breedingEvents ?? []}
-                  onChange={(event: any, newValue: Breeding | null) => {
-                    newValue && updateField("breeding", newValue?.id ?? null);
-                  }}
-                  defaultValue={individual.breeding}
-                  value={breedingEvents.find(
-                    (option: Breeding) =>
-                      option.id?.toString() == individual.breeding.toString()
-                  )}
-                  getOptionLabel={() => breedingLabel(individual)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Parningstillfälle"
-                      variant={inputVariant}
-                      className={style.wideControl}
-                      margin="normal"
-                    />
-                  )}
-                />
-                <div className={style.flexRow}>
-                  <a href={"/herd/" + individual.herd.herd}>
-                    {" "}
-                    Lägg till nytt parningstillfälle
-                  </a>
-                </div>
-
-                <div className={style.flexRow}>
-                  <Autocomplete
-                    options={colorOptions ?? []}
-                    value={
-                      colorOptions.find(
-                        (option) => option.value == individual.color
-                      ) ?? null
-                    }
-                    getOptionLabel={(option: OptionType) => option.label}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Färg"
-                        className={style.control}
-                        variant={inputVariant}
-                        margin="normal"
-                      />
-                    )}
-                    onChange={(event: any, newValue: OptionType | null) => {
-                      updateField("color", newValue?.value ?? "");
-                    }}
-                  />
-                  <TextField
-                    label="Färgantecking"
-                    variant={inputVariant}
-                    className={style.control}
-                    multiline
-                    rows={3}
-                    value={individual.color_note ?? ""}
-                    onChange={(event) => {
-                      updateField("color_note", event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <TextField
-                  label="Anteckningar"
-                  variant={inputVariant}
-                  className={style.wideControl}
-                  multiline
-                  rows={4}
-                  value={individual.notes ?? ""}
-                  onChange={(event) => {
-                    updateField("notes", event.currentTarget.value);
-                  }}
-                />
-              </div>
-            </div>
-            <div className={style.paneControls}>
-              <Button
-                className={style.button}
-                variant="contained"
-                color="primary"
-                disabled={!isSaveActive}
-                onClick={() => save(individual)}
-              >
-                {"Spara"}
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => handleCloseDialog()}
-              >
-                {"Avbryt"}
-              </Button>
-            </div>
-          </MuiPickersUtilsProvider>
-        </div>
-      ) : (
+      {!individual ? (
         <div className={style.loading}>
           <h2>Loading data</h2>
           <CircularProgress />
         </div>
+      ) : individual ? (
+        <>
+          <IndividualForm
+            individual={individual}
+            onUpdateIndividual={handleUpdateIndividual}
+            formAction={FormAction.handleCertificate}
+            colorError={colorError}
+            numberError={numberError}
+            sexError={sexError}
+            birthDateError={birthDateError}
+            litterError={litterError}
+            litterError6w={litterError6w}
+          />
+          <div className={style.paneControls}>
+            <Button
+              className={style.button}
+              variant="contained"
+              color="primary"
+              disabled={!isSaveActive}
+              onClick={() => save(individual)}
+            >
+              {"Spara"}
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => handleCloseDialog()}
+            >
+              {"Avbryt"}
+            </Button>
+          </div>
+        </>
+      ) : individual && showSummary ? (
+        <>
+          <h1>Är alla uppgifter korrekta?</h1>
+          <Document
+            file={previewUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            style={{ border: "2px solid black" }}
+            renderAnnotationLayer={true}
+            loading={<CircularProgress />}
+          >
+            <Page pageNumber={pageNumber} />
+          </Document>
+          <div className={style.confirmBox}>
+            <h2>Bekräftelse</h2>
+            <p>
+              För att intyga att allt är korrekt, ange ditt besättningsnummer i
+              format {individual.number ? individual.number[0] : "X"}XXX.{" "}
+              <br></br>Vill du göra ändringar, kan du gå tillbaka.
+            </p>
+            <div className={style.flexbox}>
+              <TextField
+                id="confirm"
+                className={style.confirmField}
+                variant={inputVariant}
+                autoFocus
+                margin="dense"
+                label="Besättningsnummer"
+                value={confirmId}
+                onChange={(e) => setConfirmId(e.target.value)}
+              />
+              <div
+                className={style.paneControls}
+                style={{ justifyContent: "flex-end" }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => authenticate(confirmId)}
+                >
+                  {"Bekräfta"}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className={style.paneControls}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                setShowForm(true);
+                setShowSummary(false);
+                setIsUserGood(false);
+                setConfirmId("");
+              }}
+            >
+              {"Tillbaka"}
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={isUserGood ? false : true}
+              onClick={() => {
+                switch (action) {
+                  case "issue":
+                    issueCertificate(id, certificateData);
+                    break;
+                  case "update":
+                    updateCertificate(id, certificateData);
+                }
+              }}
+            >
+              {action == "issue"
+                ? "Beställ certifikat"
+                : "update"
+                ? "Uppdatera certifikat"
+                : "Fortsätt"}
+            </Button>
+          </div>
+        </>
+      ) : individual && showComplete ? (
+        <>
+          <CertificateDownload
+            certUrl={certificateUrl}
+            individual={individual}
+          />
+        </>
+      ) : (
+        <></>
       )}
     </>
   );
-  // jscpd:ignore-end
 }
