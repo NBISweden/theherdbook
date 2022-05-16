@@ -469,7 +469,7 @@ export function IndividualForm({
                     </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ||
-                  formAction == FormAction.editIndividual ? (
+                  formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                   <div className="flexRow">
                     <TextField
                       disabled={
