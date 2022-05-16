@@ -9,7 +9,6 @@ import { Autocomplete } from "@material-ui/lab";
 import DateFnsUtils from "@date-io/date-fns";
 import sv from "date-fns/locale/sv";
 
-
 import {
   Genebank,
   herdLabel,
@@ -28,11 +27,15 @@ export function IndividualSellingForm({
   herdOptions,
   herdKey,
   onUpdateIndividual,
+  herdHelperText,
+  buyDateHelperText,
 }: {
   individual: Individual;
   herdOptions: LimitedHerd[];
   herdKey?: number;
   onUpdateIndividual: any;
+  herdHelperText: string;
+  buyDateHelperText: string;
 }) {
   const style = useStyles();
   const getMinSellingDate = () => {
@@ -57,7 +60,10 @@ export function IndividualSellingForm({
             label="Välj besättning"
             variant="outlined"
             margin="normal"
-            helperText="Tomt om kaninen är kvar i ursprungsbesättningen"
+            helperText={
+              herdHelperText ??
+              "Tomt om kaninen är kvar i ursprungsbesättningen"
+            }
           />
         )}
         className={style.inputField}
@@ -75,7 +81,10 @@ export function IndividualSellingForm({
           inputVariant="outlined"
           label="Köpdatum"
           format="yyyy-MM-dd"
-          helperText="Tomt om kaninen är kvar i ursprungsbesättningen"
+          helperText={
+            buyDateHelperText ??
+            "Tomt om kaninen är kvar i ursprungsbesättningen"
+          }
           value={individual.selling_date ?? null}
           InputLabelProps={{
             shrink: true,
