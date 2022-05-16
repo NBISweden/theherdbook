@@ -152,7 +152,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
           }
         )
       : userMessage("Något gick fel.", "error");
-  }, [id]);
+  }, [id, herdChangeListener]);
 
   /**
    * The API sends the birth date in a format like this:

@@ -304,6 +304,7 @@ export function BreedingForm({
     if (!!updatedBreeding) {
       userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
+      setHerdChangeListener(herdChangeListener + 1);
 
       if (newIndsNumber == 0) {
         return;
