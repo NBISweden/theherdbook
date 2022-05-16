@@ -67,6 +67,10 @@ export function IndividualForm({
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
 
+  const canEditBreeding: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.origin_herd?.herd);
+  }, [user, individual]);
+
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
@@ -477,28 +481,39 @@ export function IndividualForm({
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
                     />
-                    <Tooltip
-                      title="Är datumet fel vänligen ändra i parningstillfället"
-                      placement="right"
-                      arrow
-                    >
-                      <InfoOutlinedIcon />
-                    </Tooltip>
+
                     <BreedingDialog
                       breed_id={individual.breeding}
                       open={openBreedDialog}
                       close={() => setBreedDiOpen(false)}
                     />
-                    <Button
-                      className="control editButton"
-                      variant="outlined"
-                      color="primary"
-                      onClick={() => {
-                        setBreedDiOpen(true);
-                      }}
-                    >
-                      Redigera parningstillfälle
-                    </Button>
+                    {!canEditBreeding ? (
+                      <div className="controlWidth">
+                        Kan endast ändras av genbanksansvarig eller ägare av
+                        ursprungsbesättning
+                      </div>
+                    ) : (
+                      <div className="flexRow">
+                        <Tooltip
+                          title="Är datumet fel vänligen ändra i parningstillfället"
+                          placement="right"
+                          arrow
+                        >
+                          <InfoOutlinedIcon />
+                        </Tooltip>
+                        <Button
+                          className="control editButton"
+                          disabled={!canEditBreeding}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => {
+                            setBreedDiOpen(true);
+                          }}
+                        >
+                          Redigera parningstillfälle
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <></>
