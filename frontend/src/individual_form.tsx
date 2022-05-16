@@ -1,6 +1,6 @@
 import React from "react";
 
-import { InputAdornment, TextField, Tooltip } from "@material-ui/core";
+import { Button, InputAdornment, TextField, Tooltip } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -22,6 +22,7 @@ import {
 } from "@app/data_context_global";
 import { get } from "./communication";
 import { useUserContext } from "./user_context";
+import { BreedingDialog } from "./breeding_dialog";
 
 export enum FormAction {
   AddIndividual = "addIndividual",
@@ -55,6 +56,7 @@ export function IndividualForm({
   litterError6w: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
+  const [openBreedDialog, setBreedDiOpen] = React.useState(false);
   const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
@@ -186,7 +188,7 @@ export function IndividualForm({
             <div className="formPane">
               <div className="titleText">Redigera Individ</div>
 
-              {formAction == FormAction.editIndividual ? (
+              {formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                 <>
                   <div className={!canManage ? "adminPane" : "whitePane"}>
                     <div className="flexRow">
@@ -482,6 +484,21 @@ export function IndividualForm({
                     >
                       <InfoOutlinedIcon />
                     </Tooltip>
+                    <BreedingDialog
+                      breed_id={individual.breeding}
+                      open={openBreedDialog}
+                      close={() => setBreedDiOpen(false)}
+                    />
+                    <Button
+                      className="control editButton"
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                        setBreedDiOpen(true);
+                      }}
+                    >
+                      Redigera parningstillfälle
+                    </Button>
                   </div>
                 ) : (
                   <></>
@@ -522,38 +539,42 @@ export function IndividualForm({
                   }}
                 />
               </div>
-              <div className="flexRow">
-                <TextField
-                  required
-                  error={litterError}
-                  label="Antal födda i kullen"
-                  className="control controlWidth"
-                  variant={inputVariant}
-                  value={individual.litter_size ?? ""}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual(
-                      "litter_size",
-                      +event.currentTarget.value
-                    );
-                  }}
-                />
-                <TextField
-                  required
-                  error={litterError6w}
-                  label="Levande i kullen efter 6v"
-                  className="control controlWidth"
-                  variant={inputVariant}
-                  value={individual.litter_size6w ?? ""}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual(
-                      "litter_size6w",
-                      +event.currentTarget.value
-                    );
-                  }}
-                />
-              </div>
+              {formAction != FormAction.editIndividual ? ( // jscpd:ignore-start
+                <div className="flexRow">
+                  <TextField
+                    required
+                    error={litterError}
+                    label="Antal födda i kullen"
+                    className="control controlWidth"
+                    variant={inputVariant}
+                    value={individual.litter_size ?? ""}
+                    type="number"
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "litter_size",
+                        +event.currentTarget.value
+                      );
+                    }}
+                  />
+                  <TextField
+                    required
+                    error={litterError6w}
+                    label="Levande i kullen efter 6v"
+                    className="control controlWidth"
+                    variant={inputVariant}
+                    value={individual.litter_size6w ?? ""}
+                    type="number"
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "litter_size6w",
+                        +event.currentTarget.value
+                      );
+                    }}
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
               <div className="flexRow">
                 <Autocomplete
                   key={colorKey}
