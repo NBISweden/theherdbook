@@ -54,7 +54,8 @@ export const BreedingDialog = ({
   return (
     <Dialog
       open={open}
-      maxWidth={"xl"}
+      fullWidth={true}
+      maxWidth={"sm"}
       scroll="body"
       keepMounted
       onClose={close}
