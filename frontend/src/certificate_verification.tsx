@@ -147,10 +147,10 @@ export function CertificateVerification({
 
   return (
     <>
-      <h1>Verifiera certifikat</h1>
+      <h1>Verifiera intyg</h1>
       <p>
-        Ladda upp ett digitalt certifikat för att se att det är signerat och
-        finns i databasen.
+        Ladda upp ett digitalt intyg för att se att det är signerat och finns i
+        databasen.
       </p>
       <div className={style.fileInput}>
         <input
@@ -192,7 +192,7 @@ export function CertificateVerification({
           className={style.responseBox}
         >
           <div className={style.boxTitle}>
-            <h2>Certifikatet är giltig!</h2>
+            <h2>Intyget är giltig!</h2>
             <CheckCircle className={style.successIcon} />
           </div>
           <p>
@@ -208,22 +208,20 @@ export function CertificateVerification({
           className={style.responseBox}
         >
           <div className={style.boxTitle}>
-            <h2>Certifikatet matchar inte {individual?.name}!</h2>
+            <h2>Intyget matchar inte {individual?.name}!</h2>
             <Warning className={style.warnIcon} />
           </div>
           <p>
-            Dokumentet du laddat upp är ett giltigt certifikat men är hör
-            antingen till en annan kanin eller är en föråldrad version. I så
-            fall kan certifikatet ha uppdaterats av den (tidigare) ägaren eller
+            Dokumentet du laddat upp är ett giltigt intyg men är hör antingen
+            till en annan kanin eller är en föråldrad version. I så fall kan
+            intyget ha uppdaterats av den (tidigare) ägaren eller
             genbanksansvarig.
           </p>
           <p>
             Kontrollera att du laddat upp rätt fil eller kontakta
             genbanksansvarig för mer information.
           </p>
-          <p>
-            Du kan även se det aktuella certifikatet och jämföra uppgifterna.
-          </p>
+          <p>Du kan även se det aktuella intyget och jämföra uppgifterna.</p>
           <Button
             variant="outlined"
             color="primary"
@@ -232,7 +230,7 @@ export function CertificateVerification({
               getLatestCertificate(id);
             }}
           >
-            Se senaste certifikat
+            Se senaste intyg
           </Button>
         </Box>
       ) : certNotFound ? (
@@ -243,10 +241,10 @@ export function CertificateVerification({
           className={style.responseBox}
         >
           <div className={style.boxTitle}>
-            <h2>Inget giltigt certifikat!</h2>
+            <h2>Inget giltigt intyg!</h2>
             <Cancel className={style.failIcon} />
           </div>
-          <p>Dokumentet du laddade upp är inget giltigt certifikat.</p>
+          <p>Dokumentet du laddade upp är inget giltigt intyg.</p>
           <p>Kontrollera att du laddat upp rätt fil.</p>
         </Box>
       ) : (

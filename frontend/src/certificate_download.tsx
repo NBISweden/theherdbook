@@ -13,7 +13,7 @@ export function CertificateDownload({
 }) {
   return (
     <>
-      <h1>Du kan nu ladda ner eller öppna certifikatet.</h1>
+      <h1>Du kan nu ladda ner eller öppna intyget.</h1>
       <div className="paneControls">
         <a
           href={certUrl}
