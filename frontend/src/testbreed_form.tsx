@@ -7,7 +7,14 @@ import { Link, useRouteMatch, useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import { Autocomplete } from "@material-ui/lab";
 import { createFilterOptions } from "@material-ui/lab/Autocomplete";
-import { TextField, Button, Typography, Paper } from "@material-ui/core";
+import {
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  Checkbox,
+  FormControlLabel,
+} from "@material-ui/core";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
 
 import {
@@ -87,7 +94,7 @@ const useStyles = makeStyles({
   },
 });
 
-const inputVariant = "outlined";
+export const inputVariant = "filled" as "filled" | "outlined" | "standard";
 
 export interface testBreedIndividuals {
   male: Individual | null;
@@ -144,6 +151,7 @@ export function InbreedingForm() {
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [showDead, setshowDead] = React.useState(false as boolean);
   // Updates which genebank is targeted
   const subpath = location.pathname.replace(url, "").trim().replace(/\//, "");
   React.useLayoutEffect(() => {
@@ -182,20 +190,22 @@ export function InbreedingForm() {
 
   React.useEffect(() => {
     setActiveFemales(
-      individualsFromDate(genebank, "female", fromDate, undefined)
+      individualsFromDate(genebank, "female", fromDate, undefined, showDead)
     );
-    setActiveMales(individualsFromDate(genebank, "male", fromDate, undefined));
+    setActiveMales(
+      individualsFromDate(genebank, "male", fromDate, undefined, showDead)
+    );
     setActiveFemalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(genebank, "female", fromDate, undefined)
+        individualsFromDate(genebank, "female", fromDate, undefined, showDead)
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(genebank, "male", fromDate, undefined)
+        individualsFromDate(genebank, "male", fromDate, undefined, showDead)
       )
     );
-  }, [fromDate, genebank]);
+  }, [fromDate, genebank, showDead]);
 
   return (
     <>
@@ -248,6 +258,13 @@ export function InbreedingForm() {
                     }}
                     onChange={(value: Date) => {
                       fromDate && setFromDate(value);
+                    }}
+                  />
+                  <FormControlLabel
+                    control={<Checkbox showDead />}
+                    label="Visa avlidna kaniner"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setshowDead(e.target.checked);
                     }}
                   />
                 </MuiPickersUtilsProvider>

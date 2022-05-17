@@ -259,7 +259,8 @@ export function individualsFromDate(
   genebank: Genebank | undefined,
   sex: string,
   fromDate: Date,
-  herdId: string | undefined
+  herdId: string | undefined,
+  showDead: boolean | false
 ) {
   const originHerdNameID: HerdNameID = {
     herd: herdId,
@@ -270,7 +271,7 @@ export function individualsFromDate(
   return genebank?.individuals.filter(
     (i) =>
       i.sex == sex &&
-      i.alive &&
+      (showDead || i.alive) &&
       (herdId ? i.herd.herd == originHerdNameID.herd : true) &&
       new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
   );
