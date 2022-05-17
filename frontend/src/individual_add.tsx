@@ -1,6 +1,13 @@
 import React from "react";
 
-import { Box, Button, makeStyles, TextField } from "@material-ui/core";
+import {
+  Box,
+  Button,
+  makeStyles,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+} from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
 import { CheckCircle } from "@material-ui/icons";
 import { ExpandMore, ExpandLess } from "@material-ui/icons";
@@ -142,6 +149,7 @@ export function IndividualAdd({
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [showDead, setshowDead] = React.useState(false as boolean);
   const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
   const [breedingMatch, setBreedingMatch] = React.useState(
@@ -181,21 +189,34 @@ export function IndividualAdd({
           currentGenebank,
           "female",
           is_admin ? fromDate : new Date(1900, 1, 1),
-          herdId
+          herdId,
+          showDead
         )
       )
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(currentGenebank, "male", fromDate, undefined)
+        individualsFromDate(
+          currentGenebank,
+          "male",
+          fromDate,
+          undefined,
+          showDead
+        )
       )
     );
-  }, [fromDate, currentGenebank, herdId]);
+  }, [fromDate, currentGenebank, herdId, showDead]);
 
   React.useEffect(() => {
     if (!!genebank) {
       setCurrentGenebank(genebank);
-      setIndividual({ ...individual, mother: null, father: null, origin_herd: null, number: null});
+      setIndividual({
+        ...individual,
+        mother: null,
+        father: null,
+        origin_herd: null,
+        number: null,
+      });
     } else {
       const originGenebank = genebanks.find((g) =>
         g.herds.some((herd) => herd.herd == herdId)
@@ -247,7 +268,12 @@ export function IndividualAdd({
   //Suggest the next individual number
   React.useEffect(() => {
     const getBreeding = async () => {
-      if (individual?.birth_date && individual?.father && individual?.mother && individual?.origin_herd) {
+      if (
+        individual?.birth_date &&
+        individual?.father &&
+        individual?.mother &&
+        individual?.origin_herd
+      ) {
         let limitedBreedingInput: LimitedBreeding = {
           birth_date: individual.birth_date,
           herd: individual.origin_herd.herd,
@@ -341,15 +367,24 @@ export function IndividualAdd({
       return false;
     }
     if (individual.litter_size6w < 1) {
-      userMessage("Det borde vara minst en levande kvar efter 6 veckor", "warning");
+      userMessage(
+        "Det borde vara minst en levande kvar efter 6 veckor",
+        "warning"
+      );
       return false;
     }
     if (individual.litter_size6w > individual.litter_size) {
-      userMessage("Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.", "warning");
-            return false;
-          }
+      userMessage(
+        "Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.",
+        "warning"
+      );
+      return false;
+    }
     if (individual?.selling_date < individual?.birth_date) {
-      userMessage("Säljdatum får inte vara tidigare än födelsedatum", "warning");
+      userMessage(
+        "Säljdatum får inte vara tidigare än födelsedatum",
+        "warning"
+      );
       return false;
     }
     return true;
@@ -625,6 +660,13 @@ export function IndividualAdd({
                     }}
                     onChange={(value: Date) => {
                       fromDate && setFromDate(value);
+                    }}
+                  />
+                  <FormControlLabel
+                    control={<Checkbox showDead />}
+                    label="Visa avlidna kaniner"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setshowDead(e.target.checked);
                     }}
                   />
                 </MuiPickersUtilsProvider>
