@@ -183,6 +183,72 @@ export function IndividualForm({
       }
     }
   };
+
+  const CertAutocomplete = () => {
+    return (
+      <>
+        <Autocomplete
+          disabled={!canManage}
+          className="controlWidth"
+          options={certTypeOptions ?? []}
+          value={certTypeOptions.find(
+            (option) =>
+              option.value == certType ??
+              certTypeOptions[certTypeOptions.length - 1]
+          )}
+          getOptionLabel={(option: OptionType) => option.label}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Certifikattyp"
+              className="control"
+              variant={inputVariant}
+              margin="normal"
+            />
+          )}
+          onChange={(event: any, newValue: OptionType) =>
+            onCertTypeChange(newValue?.value ?? "unknown")
+          }
+        />
+        {certType == "paper" ? (
+          <TextField
+            disabled={!canManage}
+            label="Certifikatnummer papper"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.certificate ?? ""}
+            onChange={(event) => {
+              onUpdateIndividual("certificate", event.currentTarget.value);
+            }}
+          />
+        ) : certType == "digital" ? (
+          <TextField
+            disabled={!canManage}
+            label="Certifikatnummer digital"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.digital_certificate ?? ""}
+            onChange={(event) => {
+              onUpdateIndividual(
+                "digital_certificate",
+                event.currentTarget.value
+              );
+            }}
+          />
+        ) : (
+          <TextField
+            label="Certifikatnummer - välj typ först"
+            disabled
+            className="control controlWidth"
+            variant={inputVariant}
+            value={""}
+            onChange={() => {}}
+          />
+        )}
+      </>
+    );
+  };
+
   console.log(formAction);
   return (
     <>
@@ -220,67 +286,7 @@ export function IndividualForm({
                       />
                     </div>
                     <div className="flexRow">
-                      <Autocomplete
-                        disabled={!canManage}
-                        className="controlWidth"
-                        options={certTypeOptions ?? []}
-                        value={certTypeOptions.find(
-                          (option) =>
-                            option.value == certType ??
-                            certTypeOptions[certTypeOptions.length - 1]
-                        )}
-                        getOptionLabel={(option: OptionType) => option.label}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Certifikattyp"
-                            className="control"
-                            variant={inputVariant}
-                            margin="normal"
-                          />
-                        )}
-                        onChange={(event: any, newValue: OptionType) =>
-                          onCertTypeChange(newValue?.value ?? "unknown")
-                        }
-                      />
-                      {certType == "paper" ? (
-                        <TextField
-                          disabled={!canManage}
-                          label="Certifikatnummer papper"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.certificate ?? ""}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : certType == "digital" ? (
-                        <TextField
-                          disabled={!canManage}
-                          label="Certifikatnummer digital"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.digital_certificate ?? ""}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "digital_certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : (
-                        <TextField
-                          label="Certifikatnummer - välj typ först"
-                          disabled
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={""}
-                          onChange={() => {}}
-                        />
-                      )}
+                      <CertAutocomplete />
                     </div>
                   </div>
                 </>
@@ -408,64 +414,7 @@ export function IndividualForm({
                       />
                     </div>{" "}
                     <div className="flexRow">
-                      <Autocomplete
-                        className="controlWidth"
-                        options={certTypeOptions ?? []}
-                        value={certTypeOptions.find(
-                          (option) =>
-                            option.value == certType ??
-                            certTypeOptions[certTypeOptions.length - 1]
-                        )}
-                        getOptionLabel={(option: OptionType) => option.label}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Certifikattyp"
-                            className="control"
-                            variant={inputVariant}
-                            margin="normal"
-                          />
-                        )}
-                        onChange={(event: any, newValue: OptionType) =>
-                          onCertTypeChange(newValue?.value ?? "unknown")
-                        }
-                      />
-                      {certType == "paper" ? (
-                        <TextField
-                          label="Certifikatnummer papper"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.certificate ?? ""}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : certType == "digital" ? (
-                        <TextField
-                          label="Certifikatnummer digital"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.digital_certificate ?? ""}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "digital_certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : (
-                        <TextField
-                          label="Certifikatnummer - välj typ först"
-                          disabled
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={""}
-                          onChange={() => {}}
-                        />
-                      )}
+                      <CertAutocomplete />
                     </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ||
