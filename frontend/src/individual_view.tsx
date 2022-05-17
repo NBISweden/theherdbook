@@ -120,7 +120,7 @@ export function IndividualView({ id }: { id: string }) {
     })
       .then((res) => {
         if (!res.ok) {
-          throw new Error("Certifikatet kunde inte laddas ner.");
+          throw new Error("Intyget kunde inte laddas ner.");
         } else return res.blob();
       })
       .then((blob) => {
@@ -204,7 +204,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>{individual?.name}</dd>
                   <dt>Nummer:</dt>
                   <dd>{individual?.number}</dd>
-                  <dt>Certifikat:</dt>
+                  <dt>Intyg:</dt>
                   <dd>
                     {individual?.certificate | individual?.digital_certificate}
                   </dd>
@@ -294,7 +294,7 @@ export function IndividualView({ id }: { id: string }) {
                       popup(<IndividualCertificate id={id} action={"issue"} />)
                     }
                   >
-                    Skapa nytt certifikat
+                    Skapa nytt intyg
                   </Button>
                 )}
               {individual.origin_herd.herd !== individual.herd.herd &&
@@ -308,11 +308,11 @@ export function IndividualView({ id }: { id: string }) {
                       variant="contained"
                       color="primary"
                     >
-                      Skapa nytt certifikat
+                      Skapa nytt intyg
                     </Button>
                     <p>
                       Kontakta ägaren till kaninens ursprungsbesättning. Bara
-                      hon/han kan skapa ett nytt certifikat.
+                      hon/han kan skapa ett nytt intyg.
                     </p>
                   </>
                 )}
@@ -327,7 +327,7 @@ export function IndividualView({ id }: { id: string }) {
                       className={style.editButton}
                       onClick={handleClick}
                     >
-                      Certifikat{" "}
+                      Intygsnummer{" "}
                       <ArrowForward fontSize="small" className={style.icon} />
                     </Button>
                     <Menu
