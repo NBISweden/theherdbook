@@ -1330,7 +1330,7 @@ def get_breeding_event(breed_id, user_uuid):
 
             return breed
     except DoesNotExist:
-        logging.warning("Unknown herd %s", herd_id)
+        logging.warning("Unknown herd %s", breed_id)
 
     return []
 
