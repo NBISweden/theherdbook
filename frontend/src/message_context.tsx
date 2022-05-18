@@ -99,7 +99,7 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
       <Dialog
         open={showDialog}
         keepMounted
-        maxWidth={"xl"}
+        maxWidth={fullWidth ? "md" : "xl"}
         fullWidth={fullWidth}
         onClose={handleCloseDialog}
       >

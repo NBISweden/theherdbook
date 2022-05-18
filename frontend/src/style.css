@@ -1,3 +1,5 @@
+/* stylelint-disable */
+
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
 @import url("https://fonts.googleapis.com/css?family=Roboto");
 
@@ -27,7 +29,7 @@ body {
   top: 0;
   width: 100%;
   height: 51px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 95%);
   border-bottom: 1px solid #aaa;
 }
 
@@ -55,10 +57,7 @@ body {
 .main {
   opacity: 0.9;
   position: relative;
-  margin-top: calc(10vh);
-  margin-left: 0;
-  margin-right: 0;
-  margin-bottom: 50px;
+  margin: calc(10vh) 0 50px 0;
   padding: 10px;
   min-height: calc(60vh);
 }
@@ -124,7 +123,7 @@ list-item {
 
 /* Used in static_pages.tsx */
 .euText {
-  margin: 10px 10px;
+  margin: 10px;
   display: inline;
   font-size: 0.65em;
   text-align: center;
@@ -219,6 +218,14 @@ list-item {
   font-weight: bold;
 }
 
+.titleText {
+  width: "100%";
+  border-bottom: 1px solid lightgrey;
+  margin: 5px 0 20px;
+  padding: "0 20px";
+  font-size: 2.3em;
+}
+
 .animalList {
   cursor: pointer;
 }
@@ -269,7 +276,7 @@ list-item {
 /* Used in herdForm.tsx */
 .editButton {
   float: right;
-  margin: 20px 0 0 0;
+  margin: 20px 0 0;
 }
 
 /* Used in herdForm.tsx */
@@ -376,7 +383,7 @@ list-item {
   height: 500px;
   width: 250px;
   margin: 0;
-  border-right: 1px solid rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 20%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -403,15 +410,13 @@ list-item {
 /* Used in individual_form.tsx */
 .adminPane {
   width: 100%;
-  padding: 15px 10px 5px 10px;
+  padding: 15px 10px 5px;
   margin-bottom: 2em;
   border: 1px solid lightgrey;
   position: relative;
-  display: flex;
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
-  /* stylelint-disable */
   background: repeating-linear-gradient(
     135deg,
     white,
@@ -419,7 +424,15 @@ list-item {
     rgba(0, 0, 0, 0.05) 25px,
     rgba(0, 0, 0, 0.05) 50px
   );
-  /* stylelint-enable */
+}
+
+.whitePane {
+  width: 100%;
+  padding: 15px 10px 5px 10px;
+  margin-bottom: 2em;
+  border: 1px solid lightgrey;
+  position: relative;
+  justify-content: space-between;
 }
 
 /* Used in individual_form.tsx */
@@ -514,7 +527,6 @@ list-item {
     font-size: 4em;
     color: #222;
   }
-  /* stylelint-disable */
   body {
     background: #ddd center / cover no-repeat url("/images/background.jpg")
       fixed;
@@ -527,7 +539,6 @@ list-item {
   .flexRowOrColumn {
     flex-direction: row;
   }
-  /* stylelint-enable */
 }
 
 /* mobile */

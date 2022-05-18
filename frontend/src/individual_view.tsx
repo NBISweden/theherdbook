@@ -205,9 +205,17 @@ export function IndividualView({ id }: { id: string }) {
                   <dt>Nummer:</dt>
                   <dd>{individual?.number}</dd>
                   <dt>Certifikat:</dt>
-                  <dd>{individual?.certificate | individual?.digital_certificate}</dd>
+                  <dd>
+                    {individual?.certificate | individual?.digital_certificate}
+                  </dd>
                   <dt>Kön:</dt>
-                  <dd>{individual?.sex == "male" ? "Hane" : individual?.sex == "female" ? "Hona" : ""}</dd>
+                  <dd>
+                    {individual?.sex == "male"
+                      ? "Hane"
+                      : individual?.sex == "female"
+                      ? "Hona"
+                      : ""}
+                  </dd>
                   <dt>
                     <Tooltip title="Inavelskoefficient">
                       <span>F:</span>
@@ -268,7 +276,9 @@ export function IndividualView({ id }: { id: string }) {
                   className={style.editButton}
                   variant="contained"
                   color="primary"
-                  onClick={() => popup(<IndividualEdit id={id} />)}
+                  onClick={() =>
+                    popup(<IndividualEdit id={id} />, undefined, true)
+                  }
                 >
                   Redigera individ
                 </Button>
@@ -420,7 +430,9 @@ export function IndividualView({ id }: { id: string }) {
                           variant="outlined"
                           color="primary"
                           onClick={() =>
-                            popup(<IndividualWeigthull individual={individual} />)
+                            popup(
+                              <IndividualWeigthull individual={individual} />
+                            )
                           }
                         >
                           Rapportera vikt och hull

@@ -1311,6 +1311,30 @@ def get_all_individuals():
 # Breeding and birth functions
 
 
+def get_breeding_event(breed_id, user_uuid):
+    """
+    Returns a list of all breeding events given by `herd_id`.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return []
+
+    try:
+
+        with DATABASE.atomic():
+            breed = Breeding.select().where(Breeding.id == breed_id).get().as_dict()
+            herd = Herd.get(Herd.herd == breed["breeding_herd"])
+
+            if herd.genebank.id not in user.accessible_genebanks:
+                return []
+
+            return breed
+    except DoesNotExist:
+        logging.warning("Unknown herd %s", breed_id)
+
+    return []
+
+
 def get_breeding_events(herd_id, user_uuid):
     """
     Returns a list of all breeding events given by `herd_id`.

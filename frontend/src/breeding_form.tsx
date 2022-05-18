@@ -75,7 +75,9 @@ export function BreedingForm({
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
   const { user } = useUserContext();
-  const [formState, setFormState] = React.useState(emptyBreeding as Breeding);
+  const [formState, setFormState] = React.useState(
+    emptyBreeding as ExtendedBreeding
+  );
   const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
@@ -90,12 +92,11 @@ export function BreedingForm({
 
   const genebank: Genebank | undefined = React.useMemo(() => {
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
-  }, [genebanks]);
+  }, [genebanks, data]);
 
-  React.useEffect(
-    () => setFormState(!data || data == "new" ? emptyBreeding : data),
-    [data]
-  );
+  React.useEffect(() => {
+    setFormState(!data || data == "new" ? emptyBreeding : data);
+  }, [data]);
 
   React.useEffect(() => {
     let females: Individual[] = [];
@@ -303,6 +304,7 @@ export function BreedingForm({
     if (!!updatedBreeding) {
       userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
+      setHerdChangeListener(herdChangeListener + 1);
 
       if (newIndsNumber == 0) {
         return;

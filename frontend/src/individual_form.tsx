@@ -1,6 +1,6 @@
 import React from "react";
 
-import { InputAdornment, TextField, Tooltip } from "@material-ui/core";
+import { Button, InputAdornment, TextField, Tooltip } from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -10,7 +10,7 @@ import DateFnsUtils from "@date-io/date-fns";
 import sv from "date-fns/locale/sv";
 
 import { useDataContext } from "@app/data_context";
-import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
+import InfoOutlinedIcon from "@material-ui/icons/InfoOutlined";
 import {
   dateFormat,
   Genebank,
@@ -22,10 +22,12 @@ import {
 } from "@app/data_context_global";
 import { get } from "./communication";
 import { useUserContext } from "./user_context";
+import { BreedingDialog } from "./breeding_dialog";
 
 export enum FormAction {
   AddIndividual = "addIndividual",
   handleCertificate = "handleCertificate",
+  editIndividual = "editIndividual",
 }
 
 export function IndividualForm({
@@ -54,6 +56,7 @@ export function IndividualForm({
   litterError6w: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
+  const [openBreedDialog, setBreedDiOpen] = React.useState(false);
   const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
@@ -64,6 +67,10 @@ export function IndividualForm({
     return user?.canEdit(individual?.genebank);
   }, [user, individual]);
 
+  const canEditBreeding: boolean = React.useMemo(() => {
+    return user?.canEdit(individual?.origin_herd?.herd);
+  }, [user, individual]);
+
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (
       individual &&
@@ -71,7 +78,12 @@ export function IndividualForm({
       Object.keys(colors).includes(individual.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return { id: c.id, comment: c.comment, value: c.name, label: `${c.id} - ${c.name}` };
+        return {
+          id: c.id,
+          comment: c.comment,
+          value: c.name,
+          label: `${c.id} - ${c.name}`,
+        };
       });
     }
     return [];
@@ -98,7 +110,7 @@ export function IndividualForm({
         herds.push(mother.herd);
         individual.origin_herd = mother.herd;
         individual.number = mother.herd.herd + "-";
-        setIndNull(false)
+        setIndNull(false);
       }
       if (herds.length > 0) {
         const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
@@ -172,12 +184,115 @@ export function IndividualForm({
     }
   };
 
+  const CertAutocomplete = () => {
+    return (
+      <>
+        <Autocomplete
+          disabled={!canManage}
+          className="controlWidth"
+          options={certTypeOptions ?? []}
+          value={certTypeOptions.find(
+            (option) =>
+              option.value == certType ??
+              certTypeOptions[certTypeOptions.length - 1]
+          )}
+          getOptionLabel={(option: OptionType) => option.label}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Certifikattyp"
+              className="control"
+              variant={inputVariant}
+              margin="normal"
+            />
+          )}
+          onChange={(event: any, newValue: OptionType) =>
+            onCertTypeChange(newValue?.value ?? "unknown")
+          }
+        />
+        {certType == "paper" ? (
+          <TextField
+            disabled={!canManage}
+            label="Certifikatnummer papper"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.certificate ?? ""}
+            onChange={(event) => {
+              onUpdateIndividual("certificate", event.currentTarget.value);
+            }}
+          />
+        ) : certType == "digital" ? (
+          <TextField
+            disabled={!canManage}
+            label="Certifikatnummer digital"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.digital_certificate ?? ""}
+            onChange={(event) => {
+              onUpdateIndividual(
+                "digital_certificate",
+                event.currentTarget.value
+              );
+            }}
+          />
+        ) : (
+          <TextField
+            label="Certifikatnummer - välj typ först"
+            disabled
+            className="control controlWidth"
+            variant={inputVariant}
+            value={""}
+            onChange={() => {}}
+          />
+        )}
+      </>
+    );
+  };
+
+  console.log(formAction);
   return (
     <>
       <div className="individualForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <div className="flexRowOrColumn">
             <div className="formPane">
+              <div className="titleText">Redigera Individ</div>
+
+              {formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
+                <>
+                  <div className={!canManage ? "adminPane" : "whitePane"}>
+                    <div className="flexRow">
+                      {!canManage ? (
+                        <div className="paneTitle">
+                          Kan endast ändras av genbanksansvarig
+                        </div>
+                      ) : (
+                        <></>
+                      )}
+                      <TextField
+                        disabled={!canManage}
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className="control controlWidth"
+                        variant={inputVariant}
+                        value={individual.number ?? ""}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="flexRow">
+                      <CertAutocomplete />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <></>
+              )}
               {formAction == FormAction.handleCertificate ? (
                 <div className="adminPane">
                   <div className="paneTitle">
@@ -253,7 +368,8 @@ export function IndividualForm({
                           shrink: true,
                         }}
                         onChange={(date, value) => {
-                        !isNaN(date) && onUpdateIndividual("birth_date", value);
+                          !isNaN(date) &&
+                            onUpdateIndividual("birth_date", value);
                         }}
                       />
                       <TextField
@@ -289,88 +405,64 @@ export function IndividualForm({
                           onUpdateIndividual(
                             "number",
                             `${
-                              individual.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]
+                              individual.number?.match(
+                                /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                              )[0]
                             }${event.currentTarget.value}`
                           );
                         }}
                       />
                     </div>{" "}
                     <div className="flexRow">
-                      <Autocomplete
-                        className="controlWidth"
-                        options={certTypeOptions ?? []}
-                        value={certTypeOptions.find(
-                          (option) =>
-                            option.value == certType ??
-                            certTypeOptions[certTypeOptions.length - 1]
-                        )}
-                        getOptionLabel={(option: OptionType) => option.label}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Certifikattyp"
-                            className="control"
-                            variant={inputVariant}
-                            margin="normal"
-                          />
-                        )}
-                        onChange={(event: any, newValue: OptionType) =>
-                          onCertTypeChange(newValue?.value ?? "unknown")
-                        }
-                      />
-                      {certType == "paper" ? (
-                        <TextField
-                          label="Certifikatnummer papper"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.certificate ?? ''}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : certType == "digital" ? (
-                        <TextField
-                          label="Certifikatnummer digital"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={individual.digital_certificate ?? ''}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "digital_certificate",
-                              event.currentTarget.value
-                            );
-                          }}
-                        />
-                      ) : (
-                        <TextField
-                          label="Certifikatnummer - välj typ först"
-                          disabled
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={''}
-                          onChange={() => {}}
-                        />
-                      )}
+                      <CertAutocomplete />
                     </div>
                   </>
-                ) : formAction == FormAction.handleCertificate ? (
-                  
+                ) : formAction == FormAction.handleCertificate ||
+                  formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                   <div className="flexRow">
-                     
-                   
                     <TextField
-                      disabled={formAction == FormAction.handleCertificate}
+                      disabled={
+                        formAction == FormAction.handleCertificate ||
+                        formAction == FormAction.editIndividual
+                      }
                       variant={inputVariant}
                       className="control controlWidth"
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
                     />
-                    <Tooltip title="Är datumet fel vänligen ändra i parningstillfället" placement="right" arrow>
-                    <InfoOutlinedIcon />
-                  </Tooltip>  
+
+                    <BreedingDialog
+                      breed_id={individual.breeding}
+                      open={openBreedDialog}
+                      close={() => setBreedDiOpen(false)}
+                    />
+                    {!canEditBreeding ? (
+                      <div className="controlWidth">
+                        Kan endast ändras av genbanksansvarig eller ägare av
+                        ursprungsbesättning
+                      </div>
+                    ) : (
+                      <div className="flexRow">
+                        <Tooltip
+                          title="Är datumet fel vänligen ändra i parningstillfället"
+                          placement="right"
+                          arrow
+                        >
+                          <InfoOutlinedIcon />
+                        </Tooltip>
+                        <Button
+                          className="control editButton"
+                          disabled={!canEditBreeding}
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => {
+                            setBreedDiOpen(true);
+                          }}
+                        >
+                          Redigera parningstillfälle
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <></>
@@ -410,33 +502,43 @@ export function IndividualForm({
                     onUpdateIndividual("sex", newValue?.value ?? "");
                   }}
                 />
-                </div>
-              <div className="flexRow">
-              <TextField
-                  required
-                  error={litterError}
-                  label="Antal födda i kullen"
-                  className="control controlWidth"
-                  variant={inputVariant}
-                  value={individual.litter_size ?? ''}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual("litter_size", +event.currentTarget.value);
-                  }}
-                />
-                <TextField
-                  required
-                  error={litterError6w}
-                  label="Levande i kullen efter 6v"
-                  className="control controlWidth"
-                  variant={inputVariant}
-                  value={individual.litter_size6w ?? ''}
-                  type="number"
-                  onChange={(event) => {
-                    onUpdateIndividual("litter_size6w", +event.currentTarget.value);
-                  }}
-                />
               </div>
+              {formAction != FormAction.editIndividual ? ( // jscpd:ignore-start
+                <div className="flexRow">
+                  <TextField
+                    required
+                    error={litterError}
+                    label="Antal födda i kullen"
+                    className="control controlWidth"
+                    variant={inputVariant}
+                    value={individual.litter_size ?? ""}
+                    type="number"
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "litter_size",
+                        +event.currentTarget.value
+                      );
+                    }}
+                  />
+                  <TextField
+                    required
+                    error={litterError6w}
+                    label="Levande i kullen efter 6v"
+                    className="control controlWidth"
+                    variant={inputVariant}
+                    value={individual.litter_size6w ?? ""}
+                    type="number"
+                    onChange={(event) => {
+                      onUpdateIndividual(
+                        "litter_size6w",
+                        +event.currentTarget.value
+                      );
+                    }}
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
               <div className="flexRow">
                 <Autocomplete
                   key={colorKey}
@@ -450,10 +552,10 @@ export function IndividualForm({
                   getOptionLabel={(option: OptionType) => option.label}
                   renderOption={(option) => {
                     return (
-                    <div>
-                      <strong>{`${option.id} - ${option.value}`}</strong>
-                      <li>{`${option.comment}`}</li>
-                    </div>
+                      <div>
+                        <strong>{`${option.id} - ${option.value}`}</strong>
+                        <li>{`${option.comment}`}</li>
+                      </div>
                     );
                   }}
                   renderInput={(params) => (
@@ -485,11 +587,16 @@ export function IndividualForm({
                 />
               </div>
               <div className="flexRow">
-                  <a href={"https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"}>
-                    {" "}
-                    Utförligare färgbeskrivningar finns i Föreningen Gotlandskaninens Färgatlas, version 2022.
-                  </a>
-                </div>
+                <a
+                  href={
+                    "https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"
+                  }
+                >
+                  {" "}
+                  Utförligare färgbeskrivningar finns i Föreningen
+                  Gotlandskaninens Färgatlas, version 2022.
+                </a>
+              </div>
               <div className="flexRow">
                 <TextField
                   label="Ögonfärg"
