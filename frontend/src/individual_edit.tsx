@@ -108,7 +108,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const certTypeOptions: OptionType[] = [
     { value: "digital", label: "Digital" },
     { value: "paper", label: "Papper" },
-    { value: "none", label: "Inget certifikat" },
+    { value: "none", label: "Inget intyg" },
     { value: "unknown", label: "Okänt" },
   ];
 
@@ -439,9 +439,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               }}
             >
               {action == "issue"
-                ? "Beställ certifikat"
+                ? "Beställ intyg"
                 : "update"
-                ? "Uppdatera certifikat"
+                ? "Uppdatera intyg"
                 : "Fortsätt"}
             </Button>
           </div>

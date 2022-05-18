@@ -243,10 +243,10 @@ export function FilterTable({
       ),
     },
     { field: "name", label: "Namn" },
-    { field: "certificate", label: "Certifikat", hidden: true },
+    { field: "certificate", label: "Intyg", hidden: true },
     {
       field: "digital_certificate",
-      label: "Digitalt certifikat",
+      label: "Digitaltintyg",
       hidden: true,
     },
     {
@@ -267,11 +267,15 @@ export function FilterTable({
         </a>
       ),
     },
-    { field: "sex",
+    {
+      field: "sex",
       label: "Kön",
-      render: (rowData: any) => (
-        rowData["sex"] == "male" ? "Hane" : rowData["sex"] == "female" ? "Hona" : ""
-        ),
+      render: (rowData: any) =>
+        rowData["sex"] == "male"
+          ? "Hane"
+          : rowData["sex"] == "female"
+          ? "Hona"
+          : "",
     },
     {
       field: "birth_date",

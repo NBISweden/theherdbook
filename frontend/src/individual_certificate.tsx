@@ -279,7 +279,7 @@ export function IndividualCertificate({
       .then((res) => {
         if (res.status === 400) {
           throw new Error(
-            "Certifikatet kunde inte utfärdas. Anledningen kan vara att kaninen redan har ett certifikat."
+            "Intyget kunde inte utfärdas. Anledningen kan vara att kaninen redan har ett intyg."
           );
         } else if (res.status === 404) {
           throw new Error("Kaninen kunde inte hittas.");
@@ -323,7 +323,7 @@ export function IndividualCertificate({
       .then((res) => {
         if (res.status === 404) {
           throw new Error(
-            "Kaninen eller dess certifikat kunde inte hittas i databasen."
+            "Kaninen eller dess intyg kunde inte hittas i databasen."
           );
         } else if (res.status === 200) {
           return res.blob();
@@ -464,9 +464,9 @@ export function IndividualCertificate({
               }}
             >
               {action == "issue"
-                ? "Beställ certifikat"
+                ? "Beställ intyg"
                 : "update"
-                ? "Uppdatera certifikat"
+                ? "Uppdatera intyg"
                 : "Fortsätt"}
             </Button>
           </div>
