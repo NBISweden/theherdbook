@@ -417,7 +417,6 @@ list-item {
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
-  /* stylelint-disable */
   background: repeating-linear-gradient(
     135deg,
     white,
@@ -425,7 +424,6 @@ list-item {
     rgba(0, 0, 0, 0.05) 25px,
     rgba(0, 0, 0, 0.05) 50px
   );
-  /* stylelint-enable */
 }
 
 .whitePane {
@@ -529,7 +527,6 @@ list-item {
     font-size: 4em;
     color: #222;
   }
-  /* stylelint-disable */
   body {
     background: #ddd center / cover no-repeat url("/images/background.jpg")
       fixed;
@@ -542,7 +539,6 @@ list-item {
   .flexRowOrColumn {
     flex-direction: row;
   }
-  /* stylelint-enable */
 }
 
 /* mobile */
