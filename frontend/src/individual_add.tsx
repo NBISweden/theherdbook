@@ -662,19 +662,19 @@ export function IndividualAdd({
                       fromDate && setFromDate(value);
                     }}
                   />
-                  <FormControlLabel
-                    control={<Checkbox showDead />}
-                    label="Visa avlidna kaniner"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setshowDead(e.target.checked);
-                    }}
-                  />
                 </MuiPickersUtilsProvider>
               </>
             ) : (
               <></>
             )}
           </div>
+          <FormControlLabel
+            control={<Checkbox showDead />}
+            label="Visa avlidna kaniner"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setshowDead(e.target.checked);
+            }}
+          />
           <Autocomplete
             className={style.ancestorInput}
             options={activeFemalesLimited}
