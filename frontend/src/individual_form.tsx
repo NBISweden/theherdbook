@@ -131,7 +131,7 @@ export function IndividualForm({
   const certTypeOptions: OptionType[] = [
     { value: "digital", label: "Digital" },
     { value: "paper", label: "Papper" },
-    { value: "none", label: "Inget certifikat" },
+    { value: "none", label: "Inget intyg" },
     { value: "unknown", label: "Okänd" },
   ];
 
@@ -200,7 +200,7 @@ export function IndividualForm({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Certifikattyp"
+              label="Typ av intyg"
               className="control"
               variant={inputVariant}
               margin="normal"
@@ -213,7 +213,7 @@ export function IndividualForm({
         {certType == "paper" ? (
           <TextField
             disabled={!canManage}
-            label="Certifikatnummer papper"
+            label="Nummer på pappersintyg"
             className="control controlWidth"
             variant={inputVariant}
             value={individual.certificate ?? ""}
@@ -224,7 +224,7 @@ export function IndividualForm({
         ) : certType == "digital" ? (
           <TextField
             disabled={!canManage}
-            label="Certifikatnummer digital"
+            label="Nummer på digitaltintyg"
             className="control controlWidth"
             variant={inputVariant}
             value={individual.digital_certificate ?? ""}
@@ -237,7 +237,7 @@ export function IndividualForm({
           />
         ) : (
           <TextField
-            label="Certifikatnummer - välj typ först"
+            label="Intygsnummer - välj typ först"
             disabled
             className="control controlWidth"
             variant={inputVariant}
@@ -312,7 +312,7 @@ export function IndividualForm({
                   />
                   {individual.digital_certificate ? (
                     <p className="certNumber">
-                      Certifikatnummer: {individual.digital_certificate}
+                      Intygsnummer: {individual.digital_certificate}
                     </p>
                   ) : (
                     <></>
