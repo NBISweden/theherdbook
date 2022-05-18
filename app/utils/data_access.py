@@ -36,7 +36,7 @@ import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
-logger = logging.getLogger("herdbook.da")
+logger = logging.getLogger("herdbook.db")
 
 # Helper functions
 
