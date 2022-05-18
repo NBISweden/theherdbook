@@ -128,7 +128,11 @@ export function HerdView({ id }: { id: string | undefined }) {
                 getHerd();
               }}
             />
-            <Tab label="Parningstillfällen" value="breeding" />
+            <Tab
+              label="Parningstillfällen"
+              disabled={!user?.canEdit(id)}
+              value="breeding"
+            />
             <Tab
               label="Släktträd för besättningen"
               value="pedigree"
