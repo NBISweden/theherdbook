@@ -85,6 +85,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   const disabled: boolean =
     !individualForSale.herd || !individualForSale.selling_date;
   const error: boolean = invalidSale && !checked && !disabled;
+  const defaultHerd = individual.genebank?.charAt(0) + "X1";
 
   React.useEffect(() => {
     const currentGenebank = genebanks.find((genebank) =>
@@ -171,11 +172,13 @@ export function IndividualSell({ individual }: { individual: Individual }) {
             <Typography variant="body1" className={style.infoText}>
               Observera att du då inte längre kan ändra informationen om
               individen. Det går inte heller att utfärda eller uppdatera
-              digitala certifikat för individen när den har flyttats.
+              digitala intyg för individen när den har flyttats.
             </Typography>
           </div>
           <div className={style.formContainer}>
             <IndividualSellingForm
+              herdHelperText={`Väl ${defaultHerd} om du har sålt kaninen till en person utanför genbanksystemet`}
+              buyDateHelperText="Vänligen ange datum för försäljningen"
               individual={individualForSale}
               herdOptions={genebank ? genebank.herds : []}
               onUpdateIndividual={handleUpdateIndividual}
