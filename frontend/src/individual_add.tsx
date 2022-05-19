@@ -158,8 +158,13 @@ export function IndividualAdd({
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const is_admin = !!(user?.is_manager || user?.is_admin);
-  const { genebanks, herdListener, herdChangeListener, setHerdChangeListener } =
-    useDataContext();
+  const {
+    genebanks,
+    herdListener,
+    herdChangeListener,
+    setHerdChangeListener,
+    loadData,
+  } = useDataContext();
   const {
     createBreeding,
     createBirth,
@@ -517,7 +522,10 @@ export function IndividualAdd({
               if (herdListener == individual.herd) {
                 setHerdChangeListener(herdChangeListener + 1);
               }
-            } else setSuccess(true);
+            } else {
+              loadData(["genebanks"]);
+              setSuccess(true);
+            }
             break;
           }
           case "error": {
