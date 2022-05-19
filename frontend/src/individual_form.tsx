@@ -256,10 +256,9 @@ export function IndividualForm({
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <div className="flexRowOrColumn">
             <div className="formPane">
-              <div className="titleText">Redigera Individ</div>
-
               {formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                 <>
+                  <div className="titleText">Redigera Individ</div>
                   <div className={!canManage ? "adminPane" : "whitePane"}>
                     <div className="flexRow">
                       {!canManage ? (
