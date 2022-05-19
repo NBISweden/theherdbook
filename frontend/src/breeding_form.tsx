@@ -62,8 +62,13 @@ export function BreedingForm({
   handleBreedingsChanged: () => void;
   handleActive: (breeding: Breeding) => void;
 }) {
-  const { genebanks, herdListener, herdChangeListener, setHerdChangeListener } =
-    useDataContext();
+  const {
+    genebanks,
+    herdListener,
+    herdChangeListener,
+    setHerdChangeListener,
+    loadData,
+  } = useDataContext();
   const {
     createBreeding,
     createBirth,
@@ -305,7 +310,7 @@ export function BreedingForm({
       userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
       setHerdChangeListener(herdChangeListener + 1);
-
+      loadData(["genebanks"]);
       if (newIndsNumber == 0) {
         return;
       }
@@ -438,7 +443,6 @@ export function BreedingForm({
         handleEditableBreedingUpdates(breeding, breedingMatch);
         break;
     }
-    return;
   };
 
   return (
