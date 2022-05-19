@@ -40,6 +40,8 @@ DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
 
+logger = logging.getLogger("herdbook.db")
+
 
 def set_test_database(name):
     """
@@ -70,10 +72,10 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
 
 if "pytest" in sys.modules or "unittest" in sys.modules:
-    logging.info("No settings for databse, using test database")
+    logger.info("No settings for database, using test database")
     set_test_database("herdbook")
 else:
-    logging.info("Using database per settings")
+    logger.info("Using database per settings")
 
     set_database(
         settings.postgres.name,
@@ -93,7 +95,7 @@ def connect():
             DATABASE.connect()
             check_migrations()
         except OperationalError as exception:
-            logging.error(exception)
+            logger.error(exception)
 
 
 def disconnect():
@@ -788,7 +790,7 @@ class User(BaseModel, UserMixin):
         try:
             return json.loads(self._privileges)
         except json.JSONDecodeError:
-            logging.error("Couldn't load user privileges. Defaulting to None")
+            logger.error("Couldn't load user privileges. Defaulting to None")
             return []
 
     @privileges.setter
@@ -799,7 +801,7 @@ class User(BaseModel, UserMixin):
         try:
             self._privileges = json.dumps(value)
         except json.JSONDecodeError:
-            logging.error("Couldn't encode '%s' as json string", value)
+            logger.error("Couldn't encode '%s' as json string", value)
 
     @privileges.deleter
     def privileges(self):
@@ -820,7 +822,7 @@ class User(BaseModel, UserMixin):
 
         privs = self.privileges
         if level not in ["admin", "viewer", "manager", "owner"]:
-            logging.error("Unknown role level %s", level)
+            logger.error("Unknown role level %s", level)
             return
         role = {"level": level}
         if level in ["viewer", "manager"]:
@@ -1192,10 +1194,10 @@ def insert_data(filename="default_data.json"):
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
-            logging.error("Unknown data table '%s' in file '%s'", table, filename)
+            logger.error("Unknown data table '%s' in file '%s'", table, filename)
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
-        logging.info("Inserting %s data from %s", model.__name__, filename)
+        logger.info("Inserting %s data from %s", model.__name__, filename)
         # insert one-by-one so that we can upsert
         for value in values:
             model(DATABASE).get_or_create(**value)
@@ -1211,17 +1213,17 @@ def init():
     """
 
     # need to keep track of the breeding table
-    logging.info("Initializing database")
+    logger.info("Initializing database")
     created_breeding = False
     for model in MODELS:
         if not model.table_exists():
-            logging.info("Creating database table %s", model.__name__)
+            logger.info("Creating database table %s", model.__name__)
             if model.__name__ == "Breeding":
                 created_breeding = True
             model.create_table()
     # sqlite can't add constraints after creation
     if created_breeding and not isinstance(DATABASE, SqliteDatabase):
-        logging.info("Creating foreign keys for breeding table")
+        logger.info("Creating foreign keys for breeding table")
         # pylint: disable=protected-access
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
@@ -1248,7 +1250,7 @@ def verify(try_init=True):
             break
 
     if not all_ok and try_init:
-        logging.warning("Database has problems. Attempting re-initialization.")
+        logger.warning("Database has problems. Attempting re-initialization.")
         init()
         return verify(False)
 
@@ -1273,7 +1275,7 @@ def migrate_none_to_1():
     Migrate between no schema version and version 1.
     """
 
-    logging.info("Migrating to schema version 1")
+    logger.info("Migrating to schema version 1")
 
     with DATABASE.atomic():
         SchemaHistory.create_table()
@@ -1518,7 +1520,7 @@ def check_migrations():
     """
     Check if the database needs any migrations run and run those if that's the case.
     """
-    logging.debug("Checking for needed database migrations")
+    logger.debug("Checking for needed database migrations")
 
     current_version = None
     if SchemaHistory.table_exists():
@@ -1526,7 +1528,7 @@ def check_migrations():
             fn.MAX(SchemaHistory.version)
         ).scalar()
 
-    logging.debug(
+    logger.debug(
         "Doing (if any) needed migrations from %s to %s",
         current_version,
         CURRENT_SCHEMA_VERSION,
@@ -1535,7 +1537,7 @@ def check_migrations():
     while current_version is None or current_version < CURRENT_SCHEMA_VERSION:
         next_version = (current_version if current_version else 0) + 1
         call = ("migrate_%s_to_%s" % (current_version, next_version)).lower()
-        logging.info(
+        logger.info(
             "Calling %s to migrate from %s to %s", call, current_version, next_version
         )
 

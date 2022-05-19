@@ -36,6 +36,7 @@ import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
 
+logger = logging.getLogger("herdbook.da")
 
 # Helper functions
 
@@ -174,13 +175,12 @@ def authenticate_user(name, password):
                     .get()
                 )
         if check_password_hash(authenticator.auth_data, password):
-            logging.info("Login from %s", name)
             return user_info
     except DoesNotExist:
         # Perform password check regardless of username to prevent timing
         # attacks
         check_password_hash("This-always-fails", password)
-    logging.info("Failed login attempt for %s", name)
+    logger.info("Failed login attempt for %s", name)
     return None
 
 
@@ -190,7 +190,7 @@ def change_password(active_user, changed_user, form):
     something that evaluates as True on success.
     """
     if not active_user or not changed_user or not form:
-        logging.info("Bad call to change_password, somethings is missing)")
+        logger.info("Bad call to change_password, somethings is missing)")
         return None
 
     if not active_user.is_admin:
@@ -256,12 +256,11 @@ def authenticate_with_credentials(method, ident):
             user_info = User.select().where((User.id == authenticator.user)).get()
 
             if user_info:
-                logging.info("Login %s authenticated by %s", user_info.username, method)
                 return user_info
     except DoesNotExist:
         pass
 
-    logging.info("Failed login attempt for service %s persistent id %s", method, ident)
+    logger.info("Failed login attempt for service %s persistent id %s", method, ident)
     return None
 
 
@@ -297,10 +296,10 @@ def link_account(user, method, ident):
         authenticator = Authenticators(user=user.id, auth=method, auth_data=ident)
         with DATABASE.atomic():
             authenticator.save()
-        logging.info("Linked %s to %s persistent id %s", user.username, method, ident)
+        logger.info("Linked %s to %s persistent id %s", user.username, method, ident)
         return user
     except PeeweeException as auth_except:
-        logging.info(
+        logger.info(
             "Error (%s) while linking %s to %s persistent id %s",
             auth_except,
             user.username,
@@ -308,7 +307,7 @@ def link_account(user, method, ident):
             ident,
         )
 
-    logging.info(
+    logger.info(
         "Failed link attempt for user %s service %s persistent id %s",
         user.username,
         method,
@@ -334,7 +333,7 @@ def unlink_account(user, method):
     except DoesNotExist:
         return None
 
-    logging.info("Failed to unlink idenities for service %s user %d", method, user.id)
+    logger.info("Failed to unlink idenities for service %s user %d", method, user.id)
     return None
 
 
@@ -354,7 +353,7 @@ def linked_accounts(user):
     except DoesNotExist:
         return None
 
-    logging.info("Failed to list linked idenities for user %d", user.id)
+    logger.info("Failed to list linked idenities for user %d", user.id)
     return None
 
 
@@ -698,6 +697,7 @@ def add_herd(form, user_uuid):
             herd.save()
         except IntegrityError:
             return {"status": "error", "message": "missing data"}
+        logger.info(f"User:{user.username} Added herd: {herd.short_info()}")
         return {"status": "success"}
 
 
@@ -720,6 +720,7 @@ def update_herd(form, user_uuid):
                 if hasattr(herd, key):
                     setattr(herd, key, value)
             herd.save()
+        logger.info(f"User:{user.username} Updated herd: {herd.short_info()}")
         return {"status": "updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
@@ -781,6 +782,10 @@ def form_to_individual(form, user=None):
 
     # Skip if we are adding a new individual
     if not form.get("new_individual", False):
+        # Get logger
+        update_logger = logging.getLogger(
+            f"{individual.current_herd.genebank.name}_update"
+        )
         can_manage = user and (
             user.is_admin
             or user.is_manager
@@ -852,6 +857,11 @@ def form_to_individual(form, user=None):
                 except TypeError:
                     setattr(individual, key, form[key])
             else:
+                if not form.get("new_individual", False):
+                    if getattr(individual, key) != form[key]:
+                        update_logger.info(
+                            f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},"
+                        )
                 setattr(individual, key, form[key])
 
     return individual
@@ -940,6 +950,9 @@ def add_individual(form, user_uuid):
         except ValueError as exception:
             raise exception
 
+    logging.getLogger(f"{individual.current_herd.genebank.name}_create").info(
+        f"{user.username},{individual.number},{individual.name},{new_herd.herd},{selling_date}"
+    )
     return {"status": "success", "message": "Individual Created"}
 
 
@@ -957,7 +970,7 @@ def update_herdtracking_values(individual, new_herd, user_signature, tracking_da
         if len(ht_history):
             current_herd = ht_history[0].herd
             if ht_history[0].herd_tracking_date > tracking_date.date():
-                logging.error("New herd tracking date is before the latest entry")
+                logger.error("New herd tracking date is before the latest entry")
                 raise ValueError("New herd tracking date is before the latest entry")
 
         if isinstance(new_herd, str):
@@ -1020,11 +1033,20 @@ def update_individual(form, user_uuid):
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
                 try:
+                    update_logger = logging.getLogger(
+                        f"{individual.current_herd.genebank.name}_update"
+                    )
                     update_date = form.get("selling_date", False)
                     if update_date:
                         update_date = validate_date(update_date)
+                        update_logger.info(
+                            f"{user.username},{individual.number},selling_date,{old_individual.current_herd.herd},{form['herd']},{update_date}"  # noqa: E501
+                        )
                     else:
                         update_date = validate_date(form.get("yearly_report_date"))
+                        update_logger.info(
+                            f"{user.username},{individual.number},yearly_report_date,{old_individual.current_herd.herd},{form['herd']},{update_date}"  # noqa: E501
+                        )
 
                     update_herdtracking_values(
                         individual=individual,
@@ -1096,7 +1118,7 @@ def update_bodyfat(individual, bodyfat):
     [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
     """
     with DATABASE.atomic():
-        logging.warning("bodyfat: %s", bodyfat)
+        logger.warning("bodyfat: %s", bodyfat)
         current_bodyfat = Bodyfat.select().where(Bodyfat.individual == individual.id)
         current_list = [
             (b.bodyfat_date.strftime("%Y-%m-%d"), b.bodyfat) for b in current_bodyfat
@@ -1116,7 +1138,7 @@ def update_bodyfat(individual, bodyfat):
         for measure in new_list:
             if measure not in current_list:
                 if measure[1] not in ["low", "normal", "high"]:
-                    logging.error("Unknown bodyfat level: %s", measure[1])
+                    logger.error("Unknown bodyfat level: %s", measure[1])
                 else:
                     Bodyfat(
                         individual=individual,
@@ -1353,7 +1375,7 @@ def get_breeding_events(herd_id, user_uuid):
             query = Breeding.select().where(Breeding.breeding_herd == herd)
             return [b.as_dict() for b in query.iterator()]
     except DoesNotExist:
-        logging.warning("Unknown herd %s", herd_id)
+        logger.warning("Unknown herd %s", herd_id)
 
     return []
 
@@ -1371,7 +1393,7 @@ def get_breeding_events_by_date(birth_date, user_uuid):
             query = Breeding.select().where(Breeding.birth_date == birth_date)
             return [b.as_dict() for b in query.iterator()]
     except DatabaseError as exception:
-        logging.error("Database error: %s", exception)
+        logger.error("Database error: %s", exception)
 
     return []
 
@@ -1449,6 +1471,7 @@ def register_breeding(form, user_uuid):
             breed_notes=form.get("notes", None),
         )
         breeding.save()
+        logger.info(f"User:{user.username} added breeding: {breeding.as_dict()}")
         return {"status": "success", "breeding_id": breeding.id}
 
 
@@ -1517,6 +1540,7 @@ def register_birth(form, user_uuid):
         breeding.litter_size6w = form.get("litter_size6w", None)
         breeding.birth_notes = form.get("notes", None)
         breeding.save()
+        logger.info(f"User:{user.username} added birth: {breeding.as_dict()}")
         return {"status": "success"}
 
 
@@ -1564,12 +1588,28 @@ def update_breeding(form, user_uuid):
     # Check if the parents are valid
     if "mother" in form:
         try:
+            old_mother = breeding.mother.number
             breeding.mother = Individual.get(Individual.number == form["mother"])
+            if old_mother != breeding.mother.number:
+                update_logger = logging.getLogger(
+                    f"{breeding.mother.current_herd.genebank.name}_update"
+                )
+                update_logger.info(
+                    f"{user.username},breeding_id:{breeding.id},changed_mother,{old_mother},{breeding.mother.number}"  # noqa: E501
+                )
         except DoesNotExist:
             errors += ["Unknown mother"]
     if "father" in form:
         try:
+            old_father = breeding.father.number
             breeding.father = Individual.get(Individual.number == form["father"])
+            if old_father != breeding.father.number:
+                update_logger = logging.getLogger(
+                    f"{breeding.mother.current_herd.genebank.name}_update"
+                )
+                update_logger.info(
+                    f"{user.username},breeding_id:{breeding.id},changed_father,{old_father},{breeding.father.number}"  # noqa: E501
+                )
         except DoesNotExist:
             errors += ["Unknown father"]
 

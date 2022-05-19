@@ -47,6 +47,9 @@ services:
             - type: bind
               source: ./config
               target: /config
+            - type: bind
+              source: ./logs
+              target: /logs
         depends_on:
             - database
             - herdbook-frontend

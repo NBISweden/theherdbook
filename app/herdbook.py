@@ -15,6 +15,7 @@ import logging
 import sys
 import time
 import uuid
+from logging.handlers import TimedRotatingFileHandler
 
 import apscheduler.schedulers.background
 import flask_session
@@ -45,7 +46,7 @@ import utils.external_auth  # isort:skip
 import utils.data_access as da  # isort:skip
 import utils.database as db  # isort:skip
 import utils.settings as settings  # isort:skip
-
+import utils.genebank_logging as gblogging  # isort:skip
 
 APP = Flask(__name__, static_folder="/static")
 APP.secret_key = uuid.uuid4().hex
@@ -65,7 +66,18 @@ APP.config.update(
 
 # pylint: disable=no-member
 APP.logger.setLevel(logging.INFO)
-
+file_handler = TimedRotatingFileHandler(
+    f"{settings.service.logfolder}/APP.log", when="W6"
+)
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(
+    gblogging.RequestFormatter(
+        "[%(asctime)s] %(remote_addr)s requested %(url)s\n"
+        "%(levelname)s in %(module)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+)
+APP.logger.addHandler(file_handler)
 utils.external_auth.setup(APP)
 
 flask_session.Session().init_app(APP)
@@ -115,7 +127,8 @@ def load_user_from_request(request):
         user = da.authenticate_user(username, password)
 
         if user:
-            APP.logger.info("User %s logged in from request header", username)
+            if user.username != "rapiuser":
+                APP.logger.info("User %s logged in from request header", user.username)
 
             session["user_id"] = user.uuid
             session.modified = True
@@ -405,6 +418,13 @@ def login_handler():
         session["user_id"] = user.uuid
         session.modified = True
         login_user(user)
+        APP.logger.info(
+            f"Logging in user: {user.username} via the admin password interface"
+        )
+    else:
+        APP.logger.warning(
+            f"User name {form.get('username')} is not able to login using admin interface "
+        )
     return get_user()
 
 
@@ -851,7 +871,7 @@ def update_certificate(i_number):
                 da.update_breeding(breed_data, user_id)
             da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info("Unexpected error while updating certificate: " + str(ex))
+        APP.logger.error("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
@@ -923,6 +943,9 @@ def issue_certificate(i_number):
             return jsonify({"response": "Error processing your request"}), 400
 
         if uploaded:
+            APP.logger.info(
+                f"Digital certificate for {ind_number} was created with number {cert_number}"
+            )
             return create_pdf_response(
                 pdf_bytes=signed_data.getvalue(), obj_name=f"{cert_number}.pdf"
             )
@@ -1012,6 +1035,10 @@ def initialize_app():
     scheduler.start()
     APP.logger.info("Added background job to refresh kinship cache")
     reload_kinship()
+    # Create loggers depending on Genbanks entry in database
+    with db.DATABASE.atomic():
+        for genebank in db.Genebank.select():
+            gblogging.create_genebank_logs(settings.service.logfolder, genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
