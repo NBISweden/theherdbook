@@ -23,6 +23,7 @@ import {
 import { get } from "./communication";
 import { useUserContext } from "./user_context";
 import { BreedingDialog } from "./breeding_dialog";
+import { CertAutocomplete } from "./cert_autocomplete";
 
 export enum FormAction {
   AddIndividual = "addIndividual",
@@ -57,7 +58,6 @@ export function IndividualForm({
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [openBreedDialog, setBreedDiOpen] = React.useState(false);
-  const [certType, setCertType] = React.useState("unknown" as string);
   const { colors, genebanks } = useDataContext();
   const { user } = useUserContext();
   const [isIndNull, setIndNull] = React.useState(true);
@@ -128,13 +128,6 @@ export function IndividualForm({
     getParents();
   }, [individual.mother?.number]);
 
-  const certTypeOptions: OptionType[] = [
-    { value: "digital", label: "Digital" },
-    { value: "paper", label: "Papper" },
-    { value: "none", label: "Inget intyg" },
-    { value: "unknown", label: "Okänd" },
-  ];
-
   const sexOptions = [
     { value: "female", label: "Hona" },
     { value: "male", label: "Hane" },
@@ -159,95 +152,6 @@ export function IndividualForm({
       onUpdateIndividual("number", year);
     }
   }, [individual.birth_date]); */
-
-  /**
-   * This is to make sure there never is a value in the local state for
-   * both digital and paper certificate, only for one (or none) of them.
-   * Without this, redundant values could be remaining in the state if the user
-   * changes the cert type after putting in a number.
-   *
-   */
-  const onCertTypeChange = (type: string) => {
-    setCertType(type);
-    if (type == "digital") {
-      onUpdateIndividual("certificate", null);
-    }
-    if (type == "paper") {
-      onUpdateIndividual("digital_certificate", null);
-    } else {
-      if (individual.digital_certificate !== null) {
-        onUpdateIndividual("digital_certificate", null);
-      }
-      if (individual.certificate !== null) {
-        onUpdateIndividual("certificate", null);
-      }
-    }
-  };
-
-  const CertAutocomplete = () => {
-    return (
-      <>
-        <Autocomplete
-          disabled={!canManage}
-          className="controlWidth"
-          options={certTypeOptions ?? []}
-          value={certTypeOptions.find(
-            (option) =>
-              option.value == certType ??
-              certTypeOptions[certTypeOptions.length - 1]
-          )}
-          getOptionLabel={(option: OptionType) => option.label}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Typ av intyg"
-              className="control"
-              variant={inputVariant}
-              margin="normal"
-            />
-          )}
-          onChange={(event: any, newValue: OptionType) =>
-            onCertTypeChange(newValue?.value ?? "unknown")
-          }
-        />
-        {certType == "paper" ? (
-          <TextField
-            disabled={!canManage}
-            label="Nummer på pappersintyg"
-            className="control controlWidth"
-            variant={inputVariant}
-            value={individual.certificate ?? ""}
-            onChange={(event) => {
-              onUpdateIndividual("certificate", event.currentTarget.value);
-            }}
-          />
-        ) : certType == "digital" ? (
-          <TextField
-            disabled={!canManage}
-            label="Nummer på digitaltintyg"
-            className="control controlWidth"
-            variant={inputVariant}
-            value={individual.digital_certificate ?? ""}
-            onChange={(event) => {
-              onUpdateIndividual(
-                "digital_certificate",
-                event.currentTarget.value
-              );
-            }}
-          />
-        ) : (
-          <TextField
-            label="Intygsnummer - välj typ först"
-            disabled
-            className="control controlWidth"
-            variant={inputVariant}
-            value={""}
-            onChange={() => {}}
-          />
-        )}
-      </>
-    );
-  };
 
   console.log(formAction);
   return (
@@ -285,7 +189,11 @@ export function IndividualForm({
                       />
                     </div>
                     <div className="flexRow">
-                      <CertAutocomplete />
+                      <CertAutocomplete
+                        individual={individual}
+                        canManage={canManage}
+                        updateIndividual={onUpdateIndividual}
+                      />
                     </div>
                   </div>
                 </>
