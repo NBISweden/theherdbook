@@ -72,7 +72,7 @@ export function HerdView({ id }: { id: string | undefined }) {
     setHerdChangeListener,
     setHerdListener,
   } = useDataContext();
-  const [algo, set_algo] = React.useState("Martin" as "Martin" | "Dan");
+  const [algo, set_algo] = React.useState("Martin");
   const [pedigreeView, setPedigreeView] = React.useState(false as boolean);
 
   const triggerPedigreeViewState = () => {
