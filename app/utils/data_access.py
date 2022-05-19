@@ -699,7 +699,7 @@ def add_herd(form, user_uuid):
             herd.save()
         except IntegrityError:
             return {"status": "error", "message": "missing data"}
-        logger.info(f"Added herd: {herd.short_info()}")
+
         return {"status": "success"}
 
 
@@ -722,6 +722,7 @@ def update_herd(form, user_uuid):
                 if hasattr(herd, key):
                     setattr(herd, key, value)
             herd.save()
+        logger.info(f"Updated herd: {herd.short_info()}")
         return {"status": "updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
