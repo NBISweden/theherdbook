@@ -1586,12 +1586,28 @@ def update_breeding(form, user_uuid):
     # Check if the parents are valid
     if "mother" in form:
         try:
+            old_mother = breeding.mother.number
             breeding.mother = Individual.get(Individual.number == form["mother"])
+            if old_mother != breeding.mother.number:
+                update_logger = logging.getLogger(
+                    f"{breeding.mother.current_herd.genebank.name}_update"
+                )
+                update_logger.info(
+                    f"{user.username},breeding_id:{breeding.id},changed_mother,{old_mother},{breeding.mother.number}"  # noqa: E501
+                )
         except DoesNotExist:
             errors += ["Unknown mother"]
     if "father" in form:
         try:
+            old_father = breeding.father.number
             breeding.father = Individual.get(Individual.number == form["father"])
+            if old_father != breeding.father.number:
+                update_logger = logging.getLogger(
+                    f"{breeding.mother.current_herd.genebank.name}_update"
+                )
+                update_logger.info(
+                    f"{user.username},breeding_id:{breeding.id},changed_father,{old_father},{breeding.father.number}"  # noqa: E501
+                )
         except DoesNotExist:
             errors += ["Unknown father"]
 
