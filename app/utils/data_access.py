@@ -256,7 +256,6 @@ def authenticate_with_credentials(method, ident):
             user_info = User.select().where((User.id == authenticator.user)).get()
 
             if user_info:
-                logger.info("Login %s authenticated by %s", user_info.username, method)
                 return user_info
     except DoesNotExist:
         pass
