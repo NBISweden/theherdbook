@@ -699,6 +699,7 @@ def add_herd(form, user_uuid):
             herd.save()
         except IntegrityError:
             return {"status": "error", "message": "missing data"}
+        logger.info(f"Added herd: {herd.short_info()}")
         return {"status": "success"}
 
 
