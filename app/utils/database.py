@@ -72,7 +72,7 @@ def set_database(name, host=None, port=None, user=None, password=None):
 
 
 if "pytest" in sys.modules or "unittest" in sys.modules:
-    logger.info("No settings for databse, using test database")
+    logger.info("No settings for database, using test database")
     set_test_database("herdbook")
 else:
     logger.info("Using database per settings")
