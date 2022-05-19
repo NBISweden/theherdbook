@@ -175,7 +175,6 @@ def authenticate_user(name, password):
                     .get()
                 )
         if check_password_hash(authenticator.auth_data, password):
-            logger.info("Login from %s", name)
             return user_info
     except DoesNotExist:
         # Perform password check regardless of username to prevent timing
@@ -699,7 +698,7 @@ def add_herd(form, user_uuid):
             herd.save()
         except IntegrityError:
             return {"status": "error", "message": "missing data"}
-
+        logger.info(f"User:{user.username} Added herd: {herd.short_info()}")
         return {"status": "success"}
 
 
@@ -722,7 +721,7 @@ def update_herd(form, user_uuid):
                 if hasattr(herd, key):
                     setattr(herd, key, value)
             herd.save()
-        logger.info(f"Updated herd: {herd.short_info()}")
+        logger.info(f"User:{user.username} Updated herd: {herd.short_info()}")
         return {"status": "updated"}
     except DoesNotExist:
         return {"status": "error", "message": "Unknown herd"}
@@ -1473,6 +1472,7 @@ def register_breeding(form, user_uuid):
             breed_notes=form.get("notes", None),
         )
         breeding.save()
+        logger.info(f"User:{user.username} added breeding: {breeding.as_dict()}")
         return {"status": "success", "breeding_id": breeding.id}
 
 
@@ -1541,6 +1541,7 @@ def register_birth(form, user_uuid):
         breeding.litter_size6w = form.get("litter_size6w", None)
         breeding.birth_notes = form.get("notes", None)
         breeding.save()
+        logger.info(f"User:{user.username} added birth: {breeding.as_dict()}")
         return {"status": "success"}
 
 
