@@ -127,7 +127,8 @@ def load_user_from_request(request):
         user = da.authenticate_user(username, password)
 
         if user:
-            APP.logger.info("User %s logged in from request header", username)
+            if user.username != "rapiuser":
+                APP.logger.info("User %s logged in from request header", user.username)
 
             session["user_id"] = user.uuid
             session.modified = True
