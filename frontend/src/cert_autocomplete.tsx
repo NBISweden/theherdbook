@@ -16,14 +16,19 @@ export const CertAutocomplete = ({
   ) => void;
   canManage: boolean;
 }) => {
-  const [certType, setCertType] = React.useState("unknown" as string);
+  const defaultCert = !!individual.certificate
+    ? "paper"
+    : !!individual.digital_certificate
+    ? "digital"
+    : "none";
+  const [certType, setCertType] = React.useState(defaultCert);
 
   const certTypeOptions: OptionType[] = [
     { value: "digital", label: "Digital" },
     { value: "paper", label: "Papper" },
     { value: "none", label: "Inget intyg" },
-    { value: "unknown", label: "Okänd" },
   ];
+
   /**
    * This is to make sure there never is a value in the local state for
    * both digital and paper certificate, only for one (or none) of them.
@@ -47,6 +52,7 @@ export const CertAutocomplete = ({
       }
     }
   };
+
   return (
     <>
       <Autocomplete
@@ -100,7 +106,7 @@ export const CertAutocomplete = ({
           disabled
           className="control controlWidth"
           variant={inputVariant}
-          value={""}
+          value=""
           onChange={() => {}}
         />
       )}
