@@ -8,6 +8,7 @@ export const CertAutocomplete = ({
   individual,
   updateIndividual,
   canManage,
+  edit,
 }: {
   individual: Individual;
   updateIndividual: <T extends keyof Individual>(
@@ -15,6 +16,7 @@ export const CertAutocomplete = ({
     value: Individual[T]
   ) => void;
   canManage: boolean;
+  edit: boolean;
 }) => {
   const defaultCert = !!individual.certificate
     ? "paper"
@@ -36,26 +38,26 @@ export const CertAutocomplete = ({
    * changes the cert type after putting in a number.
    *
    */
-  const onCertTypeChange = (type: string) => {
-    setCertType(type);
-    if (type == "digital") {
+  const onCertTypeChange = (type: OptionType) => {
+    setCertType(type.value);
+    if (type.value == "digital") {
       updateIndividual("certificate", null);
-    }
-    if (type == "paper") {
+    } else if (type.value == "paper") {
       updateIndividual("digital_certificate", null);
     } else {
-      if (individual.digital_certificate !== null) {
-        updateIndividual("digital_certificate", null);
-      }
-      if (individual.certificate !== null) {
-        updateIndividual("certificate", null);
-      }
+      updateIndividual("digital_certificate", null);
+      updateIndividual("certificate", null);
     }
   };
   return (
     <>
       <Autocomplete
-        disabled={!canManage}
+        disabled={
+          !canManage ||
+          ((individual.certificate != null ||
+            individual.digital_certificate != null) &&
+            edit)
+        }
         className="controlWidth"
         options={certTypeOptions ?? []}
         value={certTypeOptions.find(
@@ -74,7 +76,7 @@ export const CertAutocomplete = ({
           />
         )}
         onChange={(event: any, newValue: OptionType) => {
-          onCertTypeChange(newValue.value);
+          onCertTypeChange(newValue);
         }}
       />
       {certType == "paper" ? (
