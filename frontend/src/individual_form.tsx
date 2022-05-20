@@ -193,6 +193,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
+                        edit={true}
                       />
                     </div>
                   </div>
@@ -325,6 +326,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
+                        edit={false}
                       />
                     </div>
                   </>

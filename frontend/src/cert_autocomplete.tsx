@@ -8,6 +8,7 @@ export const CertAutocomplete = ({
   individual,
   updateIndividual,
   canManage,
+  edit,
 }: {
   individual: Individual;
   updateIndividual: <T extends keyof Individual>(
@@ -15,6 +16,7 @@ export const CertAutocomplete = ({
     value: Individual[T]
   ) => void;
   canManage: boolean;
+  edit: boolean;
 }) => {
   const defaultCert = !!individual.certificate
     ? "paper"
@@ -51,7 +53,12 @@ export const CertAutocomplete = ({
   return (
     <>
       <Autocomplete
-        disabled={!canManage || defaultCert != "none"}
+        disabled={
+          !canManage ||
+          ((individual.certificate != null ||
+            individual.digital_certificate != null) &&
+            edit)
+        }
         className="controlWidth"
         options={certTypeOptions ?? []}
         value={certTypeOptions.find(
