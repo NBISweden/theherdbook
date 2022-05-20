@@ -74,9 +74,9 @@ export const CertAutocomplete = ({
             margin="normal"
           />
         )}
-        onChange={(event: any, newValue: OptionType) =>
-          onCertTypeChange(newValue?.value ?? "unknown")
-        }
+        onChange={(event: any, newValue: OptionType) => {
+          onCertTypeChange(newValue.value);
+        }}
       />
       {certType == "paper" ? (
         <TextField

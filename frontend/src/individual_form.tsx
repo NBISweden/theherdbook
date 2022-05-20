@@ -321,7 +321,11 @@ export function IndividualForm({
                       />
                     </div>{" "}
                     <div className="flexRow">
-                      <CertAutocomplete />
+                      <CertAutocomplete
+                        individual={individual}
+                        canManage={canManage}
+                        updateIndividual={onUpdateIndividual}
+                      />
                     </div>
                   </>
                 ) : formAction == FormAction.handleCertificate ||
