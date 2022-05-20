@@ -153,7 +153,6 @@ export function IndividualForm({
     }
   }, [individual.birth_date]); */
 
-  console.log(formAction);
   return (
     <>
       <div className="individualForm">
