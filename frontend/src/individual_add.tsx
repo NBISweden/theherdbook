@@ -213,7 +213,7 @@ export function IndividualAdd({
   }, [fromDate, currentGenebank, herdId, showDead]);
 
   React.useEffect(() => {
-    if (!!genebank) {
+    if (!!genebank && !success) {
       setCurrentGenebank(genebank);
       setIndividual({
         ...individual,

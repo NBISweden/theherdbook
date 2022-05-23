@@ -75,7 +75,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individualLoaded, setIndividualLoaded] = React.useState(
     false as boolean
   );
-  const [certType, setCertType] = React.useState("unknown" as string);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
   //States for conditional rendering
   const [showForm, setShowForm] = React.useState(false as boolean);
@@ -139,13 +138,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             setIndividual(data);
             setOldIndividual(data);
             setIndividualLoaded(true);
-            if (!!data?.certificate) {
-              setCertType("paper");
-            } else if (!!data?.digital_certificate) {
-              setCertType("digital");
-            } else {
-              setCertType("none");
-            }
           },
           (error) => {
             userMessage(error, "error");
@@ -174,30 +166,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
     }
   }, [individual?.birth_date]);
-
-  /**
-   * This is to make sure there never is a value in the local state for
-   * both digital and paper certificate, only for one (or none) of them.
-   * Without this, redundant values could be remaining in the state if the user
-   * changes the cert type after putting in a number.
-   *
-   */
-  const onCertTypeChange = (type: string) => {
-    setCertType(type);
-    if (type == "digital") {
-      updateField("certificate", null);
-    }
-    if (type == "paper") {
-      updateField("digital_certificate", null);
-    } else {
-      if (individual?.digital_certificate !== null) {
-        updateField("digital_certificate", null);
-      }
-      if (individual?.certificate !== null) {
-        updateField("certificate", null);
-      }
-    }
-  };
 
   /**
    * Updates a single field in `individual`.
