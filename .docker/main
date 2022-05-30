@@ -39,6 +39,6 @@ COPY system/entrypoint.sh /
 
 RUN usermod -u 1000 www-data
 RUN groupmod -g 1000 www-data
-RUN chown  www-data /code /api_src
+RUN chown www-data:www-data /code /api_src
 
 CMD /entrypoint.sh
