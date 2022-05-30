@@ -16,6 +16,9 @@ RUN mkdir -p /code
 RUN apt-get update && apt-get -y upgrade &&\
     apt-get install -y supervisor nginx inotify-tools rsync swig python3-pykcs11
 
+RUN usermod -u 1000 www-data
+RUN groupmod -g 1000 www-data
+
 COPY --chown=www-data:www-data app/ /code/
 WORKDIR /code
 
@@ -37,8 +40,6 @@ COPY system/herdbook.standalone.nginx /etc/nginx/herdbook.standalone
 
 COPY system/entrypoint.sh /
 
-RUN usermod -u 1000 www-data
-RUN groupmod -g 1000 www-data
-RUN chown www-data:www-data /code /api_src
+RUN chown -R www-data:www-data /code /api_src
 
 CMD /entrypoint.sh
