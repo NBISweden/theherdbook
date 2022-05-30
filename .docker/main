@@ -13,11 +13,11 @@ FROM python:3.8-buster
 
 RUN mkdir -p /code
 
-COPY app/ /code/
-WORKDIR /code
-
 RUN apt-get update && apt-get -y upgrade &&\
     apt-get install -y supervisor nginx inotify-tools rsync swig python3-pykcs11
+
+COPY --chown=www-data:www-data app/ /code/
+WORKDIR /code
 
 RUN pip3 install -r /code/requirements.txt && chown -R www-data:www-data /code/
 RUN pip3 install uwsgi
@@ -36,5 +36,7 @@ COPY system/herdbook.devel.nginx /etc/nginx/herdbook.devel
 COPY system/herdbook.standalone.nginx /etc/nginx/herdbook.standalone
 
 COPY system/entrypoint.sh /
+
+RUN usermod -u 1000 -g 1000 www-data
 
 CMD /entrypoint.sh
