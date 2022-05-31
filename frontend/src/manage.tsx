@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import { Switch, Route, useLocation, useHistory } from "react-router-dom";
-
+import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import {
   Genebank,
@@ -65,7 +65,7 @@ export function Manage() {
 
   const history = useHistory();
   const location = useLocation();
-
+  const { user } = useUserContext();
   const [topic, setTopic] = useState(undefined as string | undefined);
   const [genebank, setGenebank] = useState(undefined as string | undefined);
   const [target, setTarget] = useState(undefined as string | undefined);
@@ -196,7 +196,7 @@ export function Manage() {
         setHerdOptions(topicpath);
       }
     } else if (genebanks.length > 0) {
-      const defaultTopic = genebanks[0].name;
+      const defaultTopic = genebanks[user.is_manager[0] - 1].name;
       setTopic(defaultTopic);
       setGenebank(defaultTopic);
       setHerdOptions(defaultTopic);
@@ -309,7 +309,12 @@ export function Manage() {
           </Route>
           <Route path="/manage/">
             <Paper className={styles.inputForm}>
-              <HerdForm id={selected?.value} genebank={genebankValue?.value} view={"form"} change={false} />
+              <HerdForm
+                id={selected?.value}
+                genebank={genebankValue?.value}
+                view={"form"}
+                change={false}
+              />
             </Paper>
           </Route>
         </Switch>
