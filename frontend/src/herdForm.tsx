@@ -87,7 +87,7 @@ export function HerdForm({
   fromHerd,
 }: {
   id: string | undefined;
-  genebank: string |undefined;
+  genebank: string | undefined;
   view: "form" | "info";
   change: boolean;
   fromHerd: Herd | undefined;
@@ -160,7 +160,7 @@ export function HerdForm({
       }
     }
     setLoading(false);
-  }, [id,genebank]);
+  }, [id, genebank]);
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -263,7 +263,7 @@ export function HerdForm({
           {change &&
             (user.canEdit(herd.herd) ||
               user.canEdit(herd.genebank) ||
-              herd.genebank.id < 0) && (
+              herd.genebank?.id < 0) && (
               <div className="editButton">
                 [{" "}
                 <a
@@ -285,7 +285,7 @@ export function HerdForm({
             (user.canEdit(genebank) ||
               user.canEdit(herd.herd) ||
               user.canEdit(herd.genebank) ||
-              herd.genebank.id < 0) && (
+              herd.genebank?.id < 0) && (
               <>
                 <form className="herdForm">
                   <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
@@ -383,33 +383,30 @@ export function HerdForm({
                         className="simpleField"
                         disabled={!isNew}
                         value={
-                          (herd.herd?.split(/[G-M]/)[1] ??
-                           herd.herd) || ""}
+                          (herd.herd?.split(/[G-M]/)[1] ?? herd.herd) || ""
+                        }
                         variant={inputVariant}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                             {herd?.herd ?
-                             `${
-                              herd?.herd?.match(
-                                /([G-M]|[G-M]X1)/
-                              )[0]
-                            }`
-                            :`${
-                              herd.genebank
-                                ? genebankOption(herd.genebank).label[0]
-                                : "X"
-                            }`}
+                              {herd?.herd
+                                ? `${herd?.herd?.match(/([G-M]|[G-M]X1)/)[0]}`
+                                : `${
+                                    herd.genebank
+                                      ? genebankOption(herd.genebank).label[0]
+                                      : "X"
+                                  }`}
                             </InputAdornment>
                           ),
                         }}
                         onChange={(event) => {
-                          setFormField("herd",
-                          `${
-                            herd.genebank
-                              ? genebankOption(herd.genebank).label[0]
-                              : "X"
-                          }${event.currentTarget.value}`
+                          setFormField(
+                            "herd",
+                            `${
+                              herd.genebank
+                                ? genebankOption(herd.genebank).label[0]
+                                : "X"
+                            }${event.currentTarget.value}`
                           );
                         }}
                       />
