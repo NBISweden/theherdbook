@@ -196,10 +196,17 @@ export function Manage() {
         setHerdOptions(topicpath);
       }
     } else if (genebanks.length > 0) {
-      const defaultTopic = genebanks[user.is_manager[0] - 1].name;
-      setTopic(defaultTopic);
-      setGenebank(defaultTopic);
-      setHerdOptions(defaultTopic);
+      if (user.is_admin) {
+        const defaultTopic = genebanks[0].name;
+        setTopic(defaultTopic);
+        setGenebank(defaultTopic);
+        setHerdOptions(defaultTopic);
+      } else {
+        const defaultTopic = genebanks[user.is_manager[0] - 1].name;
+        setTopic(defaultTopic);
+        setGenebank(defaultTopic);
+        setHerdOptions(defaultTopic);
+      }
     }
     if (selectpath) {
       setTarget(selectpath);

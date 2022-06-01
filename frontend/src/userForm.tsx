@@ -31,6 +31,7 @@ import {
 } from "@app/data_context_global";
 import { useHistory } from "react-router-dom";
 import { useMessageContext } from "@app/message_context";
+import { useUserContext } from "./user_context";
 import { NameID } from "@app/data_context_global";
 import { Autocomplete } from "@material-ui/lab";
 
@@ -90,9 +91,13 @@ const PermissionLevels = [
 export function UserForm({ id }: { id: number | "new" | undefined }) {
   const { genebanks, users, loadData, setUsers } = useDataContext();
   const { userMessage } = useMessageContext();
-  const [user, setUser] = React.useState({ ...defaultValues } as ManagedUser);
+  const { user } = useUserContext();
+  const [userToEdit, setUser] = React.useState({
+    ...defaultValues,
+  } as ManagedUser);
   const [isNew, setNew] = React.useState(false);
   const [level, setLevel] = React.useState(PermissionLevels[0] as OptionType);
+  const [newPassword, setNewPassword] = React.useState("");
   const [genebank, setGenebank] = React.useState(
     genebanks.length > 0
       ? { value: "" + genebanks[0].id, label: genebanks[0].name }
@@ -123,6 +128,19 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
     );
   };
 
+  async function changePassword() {
+    await post("/api/manage/setpassword/", {
+      newpassword: newPassword,
+    }).then(
+      (data) => {
+        userMessage("Ändrat");
+      },
+      (error) => {
+        userMessage("Något gick fel", "error");
+      }
+    );
+  }
+
   /**
    * Loads the user information for `id`, or sets the form to accept a new user.
    */
@@ -142,7 +160,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
    * the current form is sent as an PATCH request to update the user `id`.
    */
   const submitForm = () => {
-    let postData = { ...user };
+    let postData = { ...userToEdit };
     delete postData["privileges"];
     let protocol = isNew ? post : patch;
     protocol(`/api/manage/user/${id == "new" ? 0 : id}`, postData).then(
@@ -168,10 +186,10 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
             unstable_batchedUpdates(() => {
               setNew(false);
               const new_user = {
-                email: user.email,
+                email: userToEdit.email,
                 id: newUserId,
-                name: user.username,
-                fullname: user.fullname,
+                name: userToEdit.username,
+                fullname: userToEdit.fullname,
               };
               setUsers([...users, new_user]);
               userMessage("User saved", "success");
@@ -264,33 +282,39 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
 
   return (
     <>
-      {user && (
+      {userToEdit && (
         <>
-          <h2>{isNew ? "Ny användare" : user.email}</h2>
+          <h2>{isNew ? "Ny användare" : userToEdit.email}</h2>
           <form className={classes.form} noValidate autoComplete="off">
             <TextField
               label="E-mail"
               type="email"
               variant={inputVariant}
               className={classes.simpleField}
-              value={user.email ?? ""}
-              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              value={userToEdit.email ?? ""}
+              onChange={(e) =>
+                setUser({ ...userToEdit, email: e.target.value })
+              }
             />
             <TextField
               label="Användarnamn"
               type="username"
               variant={inputVariant}
               className={classes.simpleField}
-              value={user.username ?? ""}
-              onChange={(e) => setUser({ ...user, username: e.target.value })}
+              value={userToEdit.username ?? ""}
+              onChange={(e) =>
+                setUser({ ...userToEdit, username: e.target.value })
+              }
             />
             <TextField
               label="Namn"
               type="fullname"
               variant={inputVariant}
               className={classes.simpleField}
-              value={user.fullname ?? ""}
-              onChange={(e) => setUser({ ...user, fullname: e.target.value })}
+              value={userToEdit.fullname ?? ""}
+              onChange={(e) =>
+                setUser({ ...userToEdit, fullname: e.target.value })
+              }
             />
             {isNew ? (
               <TextField
@@ -299,8 +323,10 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                 variant={inputVariant}
                 hidden={true}
                 className={classes.simpleField}
-                value={user.password ?? ""}
-                onChange={(e) => setUser({ ...user, password: e.target.value })}
+                value={userToEdit.password ?? ""}
+                onChange={(e) =>
+                  setUser({ ...userToEdit, password: e.target.value })
+                }
               />
             ) : (
               ""
@@ -309,9 +335,9 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               control={
                 <Checkbox
                   color="primary"
-                  checked={user.validated ?? false}
+                  checked={userToEdit.validated ?? false}
                   onChange={(e) =>
-                    setUser({ ...user, validated: e.target.checked })
+                    setUser({ ...userToEdit, validated: e.target.checked })
                   }
                 />
               }
@@ -331,6 +357,33 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
 
       {!isNew && (
         <>
+          {user?.is_admin ? (
+            <>
+              <h2>Uppdatera lösenord</h2>
+              <form className={classes.form} noValidate autoComplete="off">
+                <TextField
+                  label="Nytt lösenord"
+                  type="password"
+                  variant={inputVariant}
+                  hidden={false}
+                  className={classes.simpleField}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  value={newPassword}
+                />
+              </form>
+              <p></p>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => changePassword()}
+              >
+                Byt lösenord
+              </Button>
+            </>
+          ) : (
+            <></>
+          )}
+
           <h3>Behörigheter</h3>
           <TableContainer component={Paper}>
             <Table className={classes.permissionTable}>
@@ -341,8 +394,8 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {user &&
-                  user.privileges.map((role: any, i: number) => {
+                {userToEdit &&
+                  userToEdit.privileges.map((role: any, i: number) => {
                     return (
                       <TableRow key={i}>
                         <TableCell component="th" scope="row">
@@ -365,7 +418,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                               updateRole({
                                 action: "remove",
                                 role: role.level,
-                                user: user.id,
+                                user: userToEdit.id,
                                 genebank: role?.genebank,
                                 herd: role?.herd,
                               })
@@ -476,7 +529,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               updateRole({
                 action: "add",
                 role: level.value,
-                user: user ? user.id : -1,
+                user: userToEdit ? userToEdit.id : -1,
                 genebank:
                   level.value != "owner" ? +(genebank?.value ?? -1) : undefined,
                 herd: level.value == "owner" ? +(herd?.value ?? -1) : undefined,
