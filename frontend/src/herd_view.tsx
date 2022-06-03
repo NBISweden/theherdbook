@@ -102,7 +102,16 @@ export function HerdView({ id }: { id: string | undefined }) {
 
   React.useEffect(() => {
     if (herd && herd.individuals) {
-      setHerdIndividuals(herd.individuals);
+      if (user?.canEdit(id)) {
+        setHerdIndividuals(herd.individuals);
+      } else if (!user?.canEdit(id)) {
+        const filteredindividual = herd.individuals.filter(
+          (individual) =>
+            individual.certificate != null ||
+            individual.digital_certificate != null
+        );
+        setHerdIndividuals(filteredindividual);
+      }
     }
   }, [herd]);
 

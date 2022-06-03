@@ -21,7 +21,7 @@ Flask-Dance==5.1.0
 Flask-Session
 apscheduler==3.7.0
 pdfrw==0.4
-PyMuPDF==1.18.12
+PyMuPDF==1.19.6
 qrcode==6.1
 cryptography==3.4.7
 endesive==2.0.5
