@@ -404,7 +404,10 @@ export function IndividualCertificate({
           >
             <Page pageNumber={pageNumber} />
           </Document>
-          <div className={style.confirmBox}>
+          <div
+            className={style.confirmBox}
+            style={{ display: isUserGood ? "none" : "block" }}
+          >
             <h2>Bekräftelse</h2>
             <p>
               För att intyga att allt är korrekt, ange ditt besättningsnummer i
