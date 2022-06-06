@@ -90,7 +90,7 @@ const useStyles = makeStyles({
     flexDirection: "column",
     width: "40%",
     ["@media (max-width: 2000px)"]: {
-      width: "60%",
+      width: "80%",
     },
     ["@media (max-width: 1250px)"]: {
       width: "100%",
