@@ -136,6 +136,7 @@ export function IndividualAdd({
   );
   const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
+  const [newSibling, setSibling] = React.useState(false as boolean);
   // states to handle the Autocompletes rerendering
   const [herdKey, setHerdKey] = React.useState(0 as number);
   const [colorKey, setColorKey] = React.useState(0 as number);
@@ -213,7 +214,7 @@ export function IndividualAdd({
   }, [fromDate, currentGenebank, herdId, showDead]);
 
   React.useEffect(() => {
-    if (!!genebank && !success) {
+    if (!!genebank && !success && !newSibling) {
       setCurrentGenebank(genebank);
       setIndividual({
         ...individual,
@@ -223,10 +224,17 @@ export function IndividualAdd({
         number: null,
       });
     } else {
-      const originGenebank = genebanks.find((g) =>
-        g.herds.some((herd) => herd.herd == herdId)
-      );
-      setCurrentGenebank(originGenebank);
+      if (!!herdId) {
+        const originGenebank = genebanks.find((g) =>
+          g.herds.some((herd) => herd.herd == herdId)
+        );
+        setCurrentGenebank(originGenebank);
+      } else {
+        const originGenebank = genebanks.find((g) =>
+          g.herds.some((herd) => herd.herd == individual?.origin_herd?.herd)
+        );
+        setCurrentGenebank(originGenebank);
+      }
     }
     if (herdId) {
       handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
@@ -325,7 +333,7 @@ export function IndividualAdd({
             `/api/breeding/nextind/`,
             limitedBreedingInput
           );
-          setIndividual({ ...individual, number: IndNumber1, litter_size: 0 });
+          setIndividual({ ...individual, number: IndNumber1 });
         }
       }
     };
@@ -521,8 +529,10 @@ export function IndividualAdd({
               );
               if (herdListener == individual.herd) {
                 setHerdChangeListener(herdChangeListener + 1);
+                setSuccess(true);
               }
             } else {
+              userMessage("Kaninen har lagts till!", "success");
               loadData(["genebanks"]);
               setSuccess(true);
             }
@@ -630,6 +640,7 @@ export function IndividualAdd({
       litter_size6w: individual.litter_size6w,
     };
     setIndividual(sibling);
+    setSibling(true);
     setSuccess(false);
   };
 
