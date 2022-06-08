@@ -88,12 +88,12 @@ const useStyles = makeStyles({
     display: "flex",
     flexWrap: "wrap",
     flexDirection: "column",
-    width: "40%",
+    width: "40vw",
     ["@media (max-width: 2000px)"]: {
-      width: "80%",
+      width: "80vw",
     },
     ["@media (max-width: 1250px)"]: {
-      width: "100%",
+      width: "90vw",
     },
     padding: "3em",
   },
