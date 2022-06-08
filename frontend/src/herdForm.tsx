@@ -452,9 +452,9 @@ export function HerdForm({
                       Du bestämmer över dina uppgifter
                     </Typography>
                     <p>
-                      Du som är genbanksinnehavare fyller själv i de
-                      kontaktuppgifter du vill att andra genbanker ska se för
-                      att underlätta kommunikation mellan genbankerna. Du kan
+                      Du som är besättningsinnehavare fyller själv i de
+                      kontaktuppgifter du vill att andra besättningar ska se för
+                      att underlätta kommunikation mellan besättningarna. Du kan
                       själv, när som helst, gå in och ändra i dina
                       kontaktuppgifter.
                     </p>
