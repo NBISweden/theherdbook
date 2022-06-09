@@ -243,11 +243,14 @@ list-item {
 .herdForm {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
 }
 
 /* Used in herdForm.tsx and field_with_permission.tsx */
 .simpleField {
   width: 100%;
+  margin-right: 20px;
+  min-width: 222px;
 }
 
 /* Used in herdForm.tsx */
@@ -268,9 +271,16 @@ list-item {
 .formCard {
   padding: 15px;
   margin: 10px;
-  max-width: 450px;
+  max-width: 475px;
   border: 1px solid grey;
   border-radius: 5px;
+}
+
+/* Used in herdForm.tsx */
+.formInfoCard {
+  flex-shrink: 1;
+  flex-grow: 1;
+  flex-basis: 200px;
 }
 
 /* Used in herdForm.tsx */
@@ -313,9 +323,8 @@ list-item {
 
 /*  Used in field_with_permission.tsx */
 .permissionFieldExtended {
-  width: 200px;
+  min-width: 200px;
   margin-top: 0;
-  margin-left: 45px;
 }
 
 /*  Used in genebanks.tsx, register.tsx and testbreed_form.tsx */
