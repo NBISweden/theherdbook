@@ -51,14 +51,8 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: "0 3em 3em 3em ",
-    width: "40%",
-    ["@media (max-width: 2000px)"]: {
-      width: "60%",
-    },
-    ["@media (max-width: 1250px)"]: {
-      width: "100%",
-    },
+    padding: "0 3em 3em 6em ",
+    width: "310px",
   },
   control: {
     margin: "0.3em",
