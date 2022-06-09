@@ -84,17 +84,14 @@ const useStyles = makeStyles({
     flexWrap: "wrap",
     justifyContent: "left",
   },
+  inputWrapper: {
+    maxWidth: "1280px",
+  },
   inputBox: {
     display: "flex",
     flexWrap: "wrap",
     flexDirection: "column",
-    width: "40vw",
-    ["@media (max-width: 2000px)"]: {
-      width: "80vw",
-    },
-    ["@media (max-width: 1250px)"]: {
-      width: "90vw",
-    },
+    width: "100%",
     padding: "3em",
   },
   responseBox: {
@@ -646,164 +643,174 @@ export function IndividualAdd({
 
   return (
     <>
-      <div className={style.inputBox}>
-        <h1>Registrera en ny kanin</h1>
-        <div className={style.ancestorBox}>
-          <h2>Lägg till härstamningen</h2>
-          <div className={style.datum}>
-            <Button
-              color="primary"
-              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
-            >
-              {showFromDateFilter == false
-                ? is_admin
-                  ? "Filtrera kaniner"
-                  : "Filtrera hanar"
-                : "Dölj"}
-              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
-            </Button>
-            {showFromDateFilter ? (
-              <>
-                <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
-                  <KeyboardDatePicker
-                    autoOk
-                    variant={inputVariant}
-                    inputVariant={inputVariant}
-                    disableFuture
-                    className="simpleField"
-                    label="Född tidigast"
-                    format={dateFormat}
-                    value={fromDate}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(value: Date) => {
-                      fromDate && setFromDate(value);
-                    }}
-                  />
-                </MuiPickersUtilsProvider>
-              </>
-            ) : (
-              <></>
-            )}
-          </div>
-          <FormControlLabel
-            control={<Checkbox showDead />}
-            label="Visa avlidna kaniner"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setshowDead(e.target.checked);
-            }}
-          />
-          <Autocomplete
-            className={style.ancestorInput}
-            options={activeFemalesLimited}
-            getOptionLabel={(option: LimitedIndividual) =>
-              individualLabel(option)
-            }
-            value={individual.mother ?? null}
-            onChange={(event, newValue) =>
-              handleUpdateIndividual("mother", newValue)
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Välj mor" variant={inputVariant} />
-            )}
-          />
-          <div className={style.lineBreak}></div>
-          <Autocomplete
-            className={style.ancestorInput}
-            options={activeMalesLimited}
-            getOptionLabel={(option: LimitedIndividual) =>
-              individualLabel(option)
-            }
-            value={individual.father ?? null}
-            onChange={(event, newValue) =>
-              handleUpdateIndividual("father", newValue)
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Välj far" variant={inputVariant} />
-            )}
-          />
-        </div>
-        <div className={style.ancestorBox}>
-          <h2>Fyll i uppgifterna om kaninen</h2>
-          <IndividualForm
-            genebank={currentGenebank}
-            onUpdateIndividual={handleUpdateIndividual}
-            individual={individual}
-            formAction={FormAction.AddIndividual}
-            colorKey={colorKey}
-            colorError={colorError}
-            numberError={numberError}
-            sexError={sexError}
-            birthDateError={birthDateError}
-            litterError={litterError}
-            litterError6w={litterError6w}
-          />
-        </div>
-        {!herdId && (
-          <>
-            <div className={style.ancestorBox}>
-              <h2 className={style.sellingTitle}>
-                Fyll i bara om kaninen har sålts
-              </h2>
-              <IndividualSellingForm
-                individual={individual}
-                herdOptions={genebank ? genebank.herds : []}
-                herdKey={herdKey}
-                onUpdateIndividual={handleUpdateIndividual}
-              />
-            </div>
-          </>
-        )}
-        {success && (
-          <>
-            <div className={style.bottomBox}>
-              <Box
-                border={3}
-                borderRadius={8}
-                borderColor="success.light"
-                className={style.responseBox}
+      <div className={style.inputWrapper}>
+        <div className={style.inputBox}>
+          <h1>Registrera en ny kanin</h1>
+          <div className={style.ancestorBox}>
+            <h2>Lägg till härstamningen</h2>
+            <div className={style.datum}>
+              <Button
+                color="primary"
+                onClick={() => setShowFromDateFilter(!showFromDateFilter)}
               >
-                <div className={style.boxTitle}>
-                  <h2>Kaninen har lagts till!</h2>
-                  <CheckCircle className={style.successIcon} />
-                </div>
-                <div className={style.paneControls}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={resetBlank}
-                  >
-                    Ny kanin
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={resetSibling}
-                  >
-                    Ny kull-syskon
-                  </Button>
-                </div>
-              </Box>
+                {showFromDateFilter == false
+                  ? is_admin
+                    ? "Filtrera kaniner"
+                    : "Filtrera hanar"
+                  : "Dölj"}
+                {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+              </Button>
+              {showFromDateFilter ? (
+                <>
+                  <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
+                    <KeyboardDatePicker
+                      autoOk
+                      variant={inputVariant}
+                      inputVariant={inputVariant}
+                      disableFuture
+                      className="simpleField"
+                      label="Född tidigast"
+                      format={dateFormat}
+                      value={fromDate}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      onChange={(value: Date) => {
+                        fromDate && setFromDate(value);
+                      }}
+                    />
+                  </MuiPickersUtilsProvider>
+                </>
+              ) : (
+                <></>
+              )}
             </div>
-          </>
-        )}
-      </div>
-      <div className={style.paneControls}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => popup(<HerdView id={herdId} />)}
-        >
-          Tillbaka
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => onSaveIndividual(individual)}
-        >
-          Skapa
-        </Button>
+            <FormControlLabel
+              control={<Checkbox showDead />}
+              label="Visa avlidna kaniner"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setshowDead(e.target.checked);
+              }}
+            />
+            <Autocomplete
+              className={style.ancestorInput}
+              options={activeFemalesLimited}
+              getOptionLabel={(option: LimitedIndividual) =>
+                individualLabel(option)
+              }
+              value={individual.mother ?? null}
+              onChange={(event, newValue) =>
+                handleUpdateIndividual("mother", newValue)
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Välj mor"
+                  variant={inputVariant}
+                />
+              )}
+            />
+            <div className={style.lineBreak}></div>
+            <Autocomplete
+              className={style.ancestorInput}
+              options={activeMalesLimited}
+              getOptionLabel={(option: LimitedIndividual) =>
+                individualLabel(option)
+              }
+              value={individual.father ?? null}
+              onChange={(event, newValue) =>
+                handleUpdateIndividual("father", newValue)
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Välj far"
+                  variant={inputVariant}
+                />
+              )}
+            />
+          </div>
+          <div className={style.ancestorBox}>
+            <h2>Fyll i uppgifterna om kaninen</h2>
+            <IndividualForm
+              genebank={currentGenebank}
+              onUpdateIndividual={handleUpdateIndividual}
+              individual={individual}
+              formAction={FormAction.AddIndividual}
+              colorKey={colorKey}
+              colorError={colorError}
+              numberError={numberError}
+              sexError={sexError}
+              birthDateError={birthDateError}
+              litterError={litterError}
+              litterError6w={litterError6w}
+            />
+          </div>
+          {!herdId && (
+            <>
+              <div className={style.ancestorBox}>
+                <h2 className={style.sellingTitle}>
+                  Fyll i bara om kaninen har sålts
+                </h2>
+                <IndividualSellingForm
+                  individual={individual}
+                  herdOptions={genebank ? genebank.herds : []}
+                  herdKey={herdKey}
+                  onUpdateIndividual={handleUpdateIndividual}
+                />
+              </div>
+            </>
+          )}
+          {success && (
+            <>
+              <div className={style.bottomBox}>
+                <Box
+                  border={3}
+                  borderRadius={8}
+                  borderColor="success.light"
+                  className={style.responseBox}
+                >
+                  <div className={style.boxTitle}>
+                    <h2>Kaninen har lagts till!</h2>
+                    <CheckCircle className={style.successIcon} />
+                  </div>
+                  <div className={style.paneControls}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={resetBlank}
+                    >
+                      Ny kanin
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={resetSibling}
+                    >
+                      Ny kull-syskon
+                    </Button>
+                  </div>
+                </Box>
+              </div>
+            </>
+          )}
+        </div>
+        <div className={style.paneControls}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => popup(<HerdView id={herdId} />)}
+          >
+            Tillbaka
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => onSaveIndividual(individual)}
+          >
+            Skapa
+          </Button>
+        </div>
       </div>
     </>
   );
