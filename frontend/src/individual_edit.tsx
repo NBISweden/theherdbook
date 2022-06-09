@@ -315,6 +315,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
+            genebank={individual.genebank_id}
           />
           <div className={style.paneControls}>
             <Button
