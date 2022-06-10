@@ -492,7 +492,6 @@ list-item {
 
 /* Used in individual_form.tsx */
 .formPane:last-child {
-  padding-left: 5px;
   padding-right: 0;
   border-right: none;
 }
