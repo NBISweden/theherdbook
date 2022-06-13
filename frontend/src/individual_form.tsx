@@ -67,6 +67,9 @@ export function IndividualForm({
     if (user?.is_admin) {
       return true;
     } else {
+      if (!individual?.is_registered) {
+        return true;
+      }
       if (!!genebank?.id) {
         return user?.is_manager?.includes(genebank?.id);
       } else {
