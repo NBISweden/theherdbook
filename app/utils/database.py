@@ -547,17 +547,19 @@ class Individual(BaseModel):
         """
         Returns if an individual fullfils the requirements to be active.
         """
-        is_active = (
+        is_active = bool(
             self.current_herd.is_active
             and not self.death_date
             and not self.death_note
             and not self.castration_date
+            and (self.certificate or self.digital_certificate)
             and self.latest_herdtracking_entry
             and (
                 self.latest_herdtracking_entry.herd_tracking_date
                 > (datetime.now() - timedelta(days=366)).date()
             )
         )
+
         return is_active
 
     @property
@@ -576,6 +578,7 @@ class Individual(BaseModel):
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
         data["is_active"] = self.active
+        data["is_registered"] = bool(self.certificate or self.digital_certificate)
         data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {
             "id": self.origin_herd.id,
