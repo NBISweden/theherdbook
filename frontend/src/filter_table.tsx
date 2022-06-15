@@ -50,7 +50,12 @@ interface Column {
   render?: Function;
 }
 type Order = "asc" | "desc";
-type Filter = { field: keyof Individual; label: string; active?: boolean };
+type Filter = {
+  field: keyof Individual;
+  label: string;
+  logic: boolean;
+  active?: boolean;
+};
 type Action = (event: any, rowData: Individual | Individual[]) => {};
 
 /**
@@ -374,7 +379,7 @@ export function FilterTable({
     }
     return individuals.filter((i: Individual) => {
       for (let filter of currentFilters) {
-        if (!filter.active && !i[filter.field]) {
+        if (!filter.active && i[filter.field] == filter.logic) {
           return false;
         }
       }

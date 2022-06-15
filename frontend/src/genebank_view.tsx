@@ -8,6 +8,7 @@ import React from "react";
 import { Genebank, Individual } from "@app/data_context_global";
 import { CircularProgress, make } from "@material-ui/core";
 import { FilterTable } from "@app/filter_table";
+import { useUserContext } from "@app/user_context";
 
 /**
  * Shows genebank information, with a list of all herds belonging to that
@@ -17,10 +18,18 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
   const [individuals, setIndividuals] = React.useState(
     null as Array<Individual> | null
   );
+  const { user } = useUserContext();
 
   React.useEffect(() => {
-    if (genebank) {
+    if (genebank && user?.is_manager?.includes(genebank.id)) {
       setIndividuals(genebank.individuals);
+    } else {
+      const filteredindividual = genebank.individuals.filter(
+        (individual) =>
+          individual.certificate != null ||
+          individual.digital_certificate != null
+      );
+      setIndividuals(filteredindividual);
     }
   }, [genebank]);
 
@@ -32,9 +41,24 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
             individuals={individuals}
             title={`Individer i ${genebank.name}`}
             filters={[
-              { field: "alive", label: "Visa döda" },
-              { field: "herd_active", label: "Visa inaktiva besättningar" },
-              { field: "is_active", label: "Visa inaktiva djur" },
+              {
+                field: "is_active",
+                label: "Visa aktiva djur",
+                logic: true,
+                active: true,
+              },
+              {
+                field: "is_active",
+                label: "Visa inaktiva djur",
+                logic: false,
+                active: false,
+              },
+              {
+                field: "herd_active",
+                label: "Visa inaktiva besättningar",
+                logic: false,
+              },
+              { field: "alive", label: "Visa döda djur", logic: false },
             ]}
           />
         ) : (
