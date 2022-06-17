@@ -313,6 +313,9 @@ class TestDatabase(DatabaseTest):
             not self.individuals[0].death_date and not self.individuals[0].death_note
         )
         data["is_active"] = False
+        data["is_registered"] = bool(
+            self.individuals[0].certificate or self.individuals[0].digital_certificate
+        )
         data["weights"] = [
             {
                 "weight": self.weights[0].weight,
