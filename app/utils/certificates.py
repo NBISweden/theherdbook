@@ -152,7 +152,7 @@ class CertificateGenerator:
             logging.debug("Failed to read PDF data")
             raise
 
-        page.insertImage(
+        page.insert_image(
             fitz.Rect(
                 qr_code.qrcode_pos["x0"],
                 qr_code.qrcode_pos["y0"],
@@ -222,12 +222,18 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
         dct = {
             "aligned": 0,
             "sigflags": 3,
+            "sigflagsft": 132,
             "sigpage": 0,
+            "sigbutton": True,
+            "sigfield": "Signature1",
+            "auto_sigfield": True,
             "sigandcertify": True,
-            "contact": "https://nbis.se",
+            "signaturebox": (470, 840, 570, 640),
+            "signature": "Veriferat intyg av Föreningen Gotlandskaninen",
+            "contact": "admin@gotlandskaninens.se",
             "location": "Sweden",
             "signingdate": date,
-            "reason": "Issued by NBIS",
+            "reason": "Signerat för Gotlandskaninen",
         }
         datau = pdf_bytes.getbuffer()
         signature = cms.sign(
