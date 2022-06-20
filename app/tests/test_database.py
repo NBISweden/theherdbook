@@ -267,10 +267,22 @@ class TestDatabase(DatabaseTest):
 
         # .children
         self.assertListEqual(
-            self.parents[0].children, [self.individuals[0], self.individuals[1]]
+            self.parents[0].children,
+            [
+                self.individuals[0],
+                self.individuals[1],
+                self.individuals[3],
+                self.individuals[4],
+            ],
         )
         self.assertListEqual(
-            self.parents[1].children, [self.individuals[0], self.individuals[1]]
+            self.parents[1].children,
+            [
+                self.individuals[0],
+                self.individuals[1],
+                self.individuals[3],
+                self.individuals[4],
+            ],
         )
         self.assertListEqual(self.parents[2].children, [self.individuals[2]])
         self.assertListEqual(self.parents[3].children, [self.individuals[2]])
@@ -313,6 +325,9 @@ class TestDatabase(DatabaseTest):
             not self.individuals[0].death_date and not self.individuals[0].death_note
         )
         data["is_active"] = False
+        data["is_registered"] = bool(
+            self.individuals[0].certificate or self.individuals[0].digital_certificate
+        )
         data["weights"] = [
             {
                 "weight": self.weights[0].weight,

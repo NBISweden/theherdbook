@@ -64,13 +64,18 @@ export function IndividualForm({
 
   // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
-    if (!individual?.herd?.herd) {
-      return user?.canEdit(individual?.origin_herd?.herd);
+    if (user?.is_admin) {
+      return true;
     } else {
-      return user?.canEdit(individual?.herd?.herd);
+      if (!individual?.is_registered) {
+        return true;
+      }
+      if (!!genebank?.id) {
+        return user?.is_manager?.includes(genebank?.id);
+      } else {
+        return user?.is_manager?.includes(genebank);
+      }
     }
-
-    return user?.canEdit(genebank?.id);
   }, [user, individual, genebank]);
 
   const canEditBreeding: boolean = React.useMemo(() => {

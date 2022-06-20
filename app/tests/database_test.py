@@ -154,16 +154,30 @@ class DatabaseTest(unittest.TestCase):
                 origin_herd=self.herds[0],
                 breeding=self.breeding[0],
                 color=self.colors[0],
+                certificate="12",
                 number="H1-1",
             )[0],
             db.Individual.get_or_create(
                 origin_herd=self.herds[1],
                 breeding=self.breeding[0],
                 color=self.colors[0],
+                certificate="13",
                 number="H2-2",
             )[0],
             db.Individual.get_or_create(
                 origin_herd=self.herds[0], breeding=self.breeding[1], number="H3-3"
+            )[0],
+            db.Individual.get_or_create(
+                origin_herd=self.herds[0],
+                breeding=self.breeding[0],
+                color=self.colors[0],
+                number="H1-3",
+            )[0],
+            db.Individual.get_or_create(
+                origin_herd=self.herds[1],
+                breeding=self.breeding[0],
+                color=self.colors[0],
+                number="H2-3",
             )[0],
         ]
         for individual in self.individuals:

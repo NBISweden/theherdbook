@@ -52,12 +52,7 @@ export const CertAutocomplete = ({
   return (
     <>
       <Autocomplete
-        disabled={
-          !canManage ||
-          ((individual.certificate != null ||
-            individual.digital_certificate != null) &&
-            edit)
-        }
+        disabled={!canManage && edit}
         className="controlWidth"
         options={certTypeOptions ?? []}
         value={certTypeOptions.find(
@@ -81,7 +76,7 @@ export const CertAutocomplete = ({
       />
       {certType == "paper" ? (
         <TextField
-          disabled={!canManage}
+          disabled={!canManage && edit}
           label="Nummer på pappersintyg"
           className="control controlWidth"
           variant={inputVariant}
@@ -92,7 +87,7 @@ export const CertAutocomplete = ({
         />
       ) : certType == "digital" ? (
         <TextField
-          disabled={!canManage}
+          disabled={!canManage && edit}
           label="Nummer på digitaltintyg"
           className="control controlWidth"
           variant={inputVariant}

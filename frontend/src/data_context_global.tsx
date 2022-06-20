@@ -65,6 +65,7 @@ export interface Individual extends LimitedIndividual {
   herd_tracking: Array<DateValue> | null;
   herd_active: boolean;
   is_active: boolean;
+  is_registered: boolean;
   alive: boolean;
   belly_color: string | null;
   eye_color: string | null;
