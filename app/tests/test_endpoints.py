@@ -371,8 +371,8 @@ class TestEndpoints(FlaskTest):
         Checks that certificate endpoints issuing, updating and verifying work as intended.
         """
 
-        individual = self.individuals[0].number
-        individual_2 = self.individuals[1].number
+        individual = self.individuals[3].number
+        individual_2 = self.individuals[4].number
 
         valid_issue_form = {
             "color_id": 3,
@@ -409,7 +409,7 @@ class TestEndpoints(FlaskTest):
                 f"/api/certificates/issue/{individual}", json=valid_issue_form
             )
             digital_certificate = db.Individual.get(
-                self.individuals[0].id
+                self.individuals[3].id
             ).digital_certificate
             self.assertEqual(digital_certificate, 100000)
             self.assertEqual(
@@ -422,7 +422,7 @@ class TestEndpoints(FlaskTest):
                 f"/api/certificates/issue/{individual_2}", json=valid_issue_form
             )
             digital_certificate = db.Individual.get(
-                self.individuals[1].id
+                self.individuals[4].id
             ).digital_certificate
             self.assertEqual(digital_certificate, 100001)
             self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
@@ -453,7 +453,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(pdf_response.status_code, 200)
             self.assertEqual(pdf_response.headers["Content-Type"], "application/pdf")
             color = db.Individual.get(self.individuals[0].id).color.id
-            self.assertEqual(color, 2)
+            self.assertEqual(color, 1)
 
             # Get the preview of a unsigned certificate
             unsigned_response = context.get(f"/api/certificates/preview/{individual}")

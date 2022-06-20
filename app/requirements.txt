@@ -20,11 +20,11 @@ flask-login==0.5.0
 Flask-Dance==5.1.0
 Flask-Session
 apscheduler==3.7.0
-pdfrw==0.4
+pdfrw2==0.5.0
 PyMuPDF==1.19.6
-qrcode==6.1
+qrcode==7.3.1
 cryptography==3.4.7
-endesive==2.0.5
+endesive==2.0.9
 boto3==1.17.54
 moto==2.0.8
 google-auth

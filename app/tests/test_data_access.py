@@ -504,7 +504,7 @@ class TestDataAccess(DatabaseTest):
                 "id": ind.id,
                 "name": ind.name,
                 "certificate": ind.certificate,
-                "digital_certificate": ind.certificate,
+                "digital_certificate": ind.digital_certificate,
                 "number": ind.number,
                 "sex": ind.sex,
                 "birth_date": dateformat(ind.breeding.birth_date),

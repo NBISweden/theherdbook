@@ -788,6 +788,7 @@ def form_to_individual(form, user=None):
         )
         can_manage = user and (
             user.is_admin
+            or not bool(individual.certificate or individual.digital_certificate)
             or user.is_manager
             and individual.current_herd.genebank_id in user.is_manager
         )
@@ -805,7 +806,7 @@ def form_to_individual(form, user=None):
                     )
 
                 if changed:
-                    raise ValueError(f"Only managers can update {admin_field}")
+                    raise ValueError(f"Bara managers kan uppdatera {admin_field}")
 
     # Make sure a valid breeding id is passed
     if "breeding" in form:
