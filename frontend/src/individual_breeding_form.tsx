@@ -1,6 +1,6 @@
 /**
  * @file This file contains the BreedingForm function. This function allows
- *       users to create and update breeding events in the database.
+ *       users to create and update breeding events in the database for a single individual.
  */
 import React from "react";
 import {
@@ -17,7 +17,6 @@ import {
   Breeding,
   dateFormat,
   Genebank,
-  HerdNameID,
   individualLabel,
   inputVariant,
   LimitedBreeding,
@@ -85,8 +84,6 @@ export function IndividualBreedingForm({
     createBreeding,
     createBirth,
     updateBreeding,
-    findBreedingMatch,
-    findEditableBreedingMatch,
     modifyBreedingUpdates,
     checkBirthUpdate,
   } = useBreedingContext();
@@ -96,7 +93,6 @@ export function IndividualBreedingForm({
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
-  const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -273,55 +269,6 @@ export function IndividualBreedingForm({
     return true;
   };
 
-  const postEmptyIndividual = (individual: Individual): any => {
-    let status = post("/api/individual", individual).then(
-      (json) => {
-        switch (json.status) {
-          case "success": {
-            if (herdListener == individual.herd) {
-              setHerdChangeListener(herdChangeListener + 1);
-            }
-            userMessage("Kaninen har lagts till i din besättning.", "success");
-            return "success";
-          }
-          case "error": {
-            switch (json.message) {
-              case "Not logged in":
-                {
-                  userMessage("Du är inte inloggad.", "error");
-                }
-                return "error";
-              case "Individual must have a valid herd":
-                {
-                  userMessage("Besättningen kunde inte hittas.", "error");
-                }
-                return "error";
-              case "Forbidden": {
-                userMessage(
-                  "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
-                  "error"
-                );
-                return "error";
-              }
-              default: {
-                userMessage(
-                  "Något gick fel. Det här borde inte hända.",
-                  "error"
-                );
-                return "error";
-              }
-            }
-          }
-        }
-      },
-      (error) => {
-        userMessage("Något gick fel.", "error");
-        return "error";
-      }
-    );
-    return status;
-  };
-
   const handleEditableBreedingUpdates = async (
     breeding: Breeding,
     breedingMatch: Breeding
@@ -368,13 +315,13 @@ export function IndividualBreedingForm({
     console.log("reedingMatch", Breedingmatch);
     if (Breedingmatch.breedings != null) {
       userMessage(
-        `Hittade ett befintligt parningstillfälle id : ${Breedingmatch.breedings.id} med parningsdatum : ${Breedingmatch.breedings.breed_date}. Kontrollera att uppgifterna stämmer`,
+        `Hittade ett befintligt parningstillfälle id : ${Breedingmatch.breedings.id} med parningsdatum : ${Breedingmatch.breedings.breed_date}.`,
         "success"
       );
 
       if (breeding.birth_date != Breedingmatch.breedings.birth_date) {
         userMessage(
-          `Födelsedatumet du har angett: ${breeding.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Lägger du till en ny kanin med kommer födelsedatumet att uppdateras.`,
+          `Födelsedatumet du har angett: ${breeding.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Sparar du individen kommer individens födelsedatum att ändras.`,
           "warning"
         );
       }
@@ -423,22 +370,6 @@ export function IndividualBreedingForm({
     }
   };
 
-  // switch (status) {
-  //   case -1:
-
-  //     break;
-  //   case 1:
-  //     // This breeding event already exists. No parents to update
-  //     breeding.father = breedingMatch.father;
-  //     breeding.mother = breedingMatch.mother;
-  //     handleEditableBreedingUpdates(breeding, breedingMatch);
-  //     break;
-  //   default:
-  //     // update breeding event
-  //     handleEditableBreedingUpdates(breeding, breedingMatch);
-  //     break;
-  // }
-
   return (
     <>
       <form className="breedingForm">
@@ -447,8 +378,10 @@ export function IndividualBreedingForm({
             {data == "new" && "Nytt "}Ändra föräldrar
           </Typography>
           <div className="flexRow">
-            Här kan du uppdatera föräldarna för bara denna individ. Är
-            föräldrarna för hela kullen fel vänlig ändra i parningstillfället.{" "}
+            Här kan du uppdatera föräldarna för bara denna individ. OBS Är
+            föräldrarna för hela kullen fel vänlig ändra i parningstillfället.
+            När du updaterar här måste du också spara själva individen i den
+            föregående dialogen för att ändringen ska få effekt.{" "}
           </div>
           <div className="ancestorBox">
             <div className="simpleField">
@@ -625,7 +558,10 @@ export function IndividualBreedingForm({
               color="primary"
               onClick={() => saveBreeding(formState)}
             >
-              Spara
+              Uppdatera
+            </Button>
+            <Button variant="contained" color="secondary" onClick={closeDialog}>
+              {"Avbryt"}
             </Button>
           </div>
         </MuiPickersUtilsProvider>
