@@ -92,12 +92,7 @@ body {
   font-size: 1em;
 }
 
-.ancestorBox: {
-  display: flex;
-  flex-direction: column;
-  margin: 2em 0 0 0;
-  padding: 0 3em;
-}
+
 
 /* Used in navigation.tsx */
 .trigram {

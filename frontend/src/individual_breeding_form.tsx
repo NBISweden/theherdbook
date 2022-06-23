@@ -386,7 +386,7 @@ export function IndividualBreedingForm({
             När du updaterar här måste du också spara själva individen i den
             föregående dialogen för att ändringen ska få effekt.{" "}
           </div>
-          <div className="ancestorBox">
+          <div>
             <div className="simpleField">
               <Button
                 color="primary"
