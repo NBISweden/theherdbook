@@ -392,11 +392,7 @@ export function IndividualBreedingForm({
                 color="primary"
                 onClick={() => setShowFromDateFilter(!showFromDateFilter)}
               >
-                {showFromDateFilter == false
-                  ? is_admin
-                    ? "Filtrera kaniner"
-                    : "Filtrera hanar"
-                  : "Dölj"}
+                {showFromDateFilter == false ? "Filtrera kaniner" : "Dölj"}
                 {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
               </Button>
               {showFromDateFilter ? (

@@ -26,7 +26,13 @@ import {
   LimitedIndividual,
 } from "@app/data_context_global";
 
-import { Button, TextField, Typography } from "@material-ui/core";
+import {
+  Button,
+  TextField,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from "@material-ui/core";
 import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
 import { Autocomplete } from "@material-ui/lab";
@@ -80,6 +86,7 @@ export function BreedingForm({
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
   const { user } = useUserContext();
+  const is_admin = !!(user?.is_manager || user?.is_admin);
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
@@ -87,6 +94,7 @@ export function BreedingForm({
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
+  const [showDead, setshowDead] = React.useState(false as boolean);
   const [activeMalesLimited, setActiveMalesLimited] = React.useState(
     [] as LimitedIndividual[]
   );
@@ -114,8 +122,20 @@ export function BreedingForm({
       females = genebank?.individuals.filter((i) => i.sex === "female");
       males = genebank?.individuals.filter((i) => i.sex === "male");
     } else {
-      females = individualsFromDate(genebank, "female", fromDate, herdId);
-      males = individualsFromDate(genebank, "male", fromDate, undefined);
+      females = individualsFromDate(
+        genebank,
+        "female",
+        fromDate,
+        herdId,
+        showDead
+      );
+      males = individualsFromDate(
+        genebank,
+        "male",
+        fromDate,
+        undefined,
+        showDead
+      );
     }
     if (!!data && data !== "new") {
       const activeMother = females.find((i) => i.number === data.mother);
@@ -137,7 +157,7 @@ export function BreedingForm({
     const limitedMales = toLimitedIndividuals(males);
     setActiveFemalesLimited(limitedFemales);
     setActiveMalesLimited(limitedMales);
-  }, [fromDate, genebank, data]);
+  }, [fromDate, genebank, data, showDead]);
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -452,6 +472,46 @@ export function BreedingForm({
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle
           </Typography>
+          <div className="simpleField">
+            <Button
+              color="primary"
+              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+            >
+              {showFromDateFilter == false ? "Filtrera kaniner" : "Dölj"}
+              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+            </Button>
+            {showFromDateFilter ? (
+              <>
+                <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
+                  <KeyboardDatePicker
+                    autoOk
+                    variant={inputVariant}
+                    inputVariant={inputVariant}
+                    disableFuture
+                    className="simpleField"
+                    label="Född tidigast"
+                    format={dateFormat}
+                    value={fromDate}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(value: Date) => {
+                      fromDate && setFromDate(value);
+                    }}
+                  />
+                </MuiPickersUtilsProvider>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+          <FormControlLabel
+            control={<Checkbox showDead />}
+            label="Visa avlidna kaniner"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setshowDead(e.target.checked);
+            }}
+          />
           <div className="formBox">
             <KeyboardDatePicker
               autoOk
@@ -499,40 +559,6 @@ export function BreedingForm({
                 newValue && setFormField("mother", newValue.number);
               }}
             />
-            {genebank &&
-            (user?.is_admin || user?.is_manager?.includes(genebank.id)) ? (
-              <></>
-            ) : (
-              <Button
-                color="primary"
-                onClick={() => setShowFromDateFilter(!showFromDateFilter)}
-              >
-                {showFromDateFilter == false ? "Filtrera hanar" : "Dölj"}
-                {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
-              </Button>
-            )}
-            {showFromDateFilter ? (
-              <>
-                <KeyboardDatePicker
-                  autoOk
-                  variant="inline"
-                  inputVariant={inputVariant}
-                  disableFuture
-                  className="simpleField"
-                  label="Född tidigast"
-                  format={dateFormat}
-                  value={fromDate}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(value: Date) => {
-                    fromDate && setFromDate(value);
-                  }}
-                />
-              </>
-            ) : (
-              <></>
-            )}
             <Autocomplete
               options={activeMalesLimited ?? []}
               value={
