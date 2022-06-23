@@ -125,6 +125,16 @@ export function HerdForm({
     setPostalcode("");
     setPostalcity("");
     if (fromHerd) {
+      if (
+        fromHerd?.physical_address &&
+        fromHerd.physical_address.includes("|")
+      ) {
+        const [address, postcode, postcity] =
+          fromHerd.physical_address.split("|");
+        fromHerd.physical_address = address;
+        setPostalcode(postcode);
+        setPostalcity(postcity);
+      }
       setHerd(fromHerd);
     } else {
       if (id == "new" || !id) {
@@ -272,7 +282,7 @@ export function HerdForm({
                     setCurrentView(currentView == "form" ? "info" : "form")
                   }
                 >
-                  {currentView == "info" ? "Edit" : "Stop Editing"}
+                  {currentView == "info" ? "Redigera" : "Sluta redigera"}
                 </a>
                 ]
               </div>
