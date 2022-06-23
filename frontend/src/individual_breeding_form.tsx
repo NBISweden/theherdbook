@@ -1,6 +1,6 @@
 /**
  * @file This file contains the BreedingForm function. This function allows
- *       users to create and update breeding events in the database.
+ *       users to create and update breeding events in the database for a single individual.
  */
 import React from "react";
 import {
@@ -17,7 +17,6 @@ import {
   Breeding,
   dateFormat,
   Genebank,
-  HerdNameID,
   individualLabel,
   inputVariant,
   LimitedBreeding,
@@ -47,6 +46,7 @@ const emptyBreeding: Breeding = {
   breed_notes: "",
   father: "",
   mother: "",
+  breeding_herd: "",
   birth_date: null,
   birth_notes: "",
   litter_size: null,
@@ -57,16 +57,21 @@ const emptyBreeding: Breeding = {
  * The BreedingForm function. This function allows users to create and update
  * breeding events in the database.
  */
-export function BreedingForm({
+export function IndividualBreedingForm({
   data,
   herdId,
   handleBreedingsChanged,
   handleActive,
+  individual,
+  onUpdateIndividual,
+  closeDialog,
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
   handleBreedingsChanged: () => void;
   handleActive: (breeding: Breeding) => void;
+  individual: Individual;
+  onUpdateIndividual: any;
 }) {
   const {
     genebanks,
@@ -79,8 +84,6 @@ export function BreedingForm({
     createBreeding,
     createBirth,
     updateBreeding,
-    findBreedingMatch,
-    findEditableBreedingMatch,
     modifyBreedingUpdates,
     checkBirthUpdate,
   } = useBreedingContext();
@@ -90,7 +93,6 @@ export function BreedingForm({
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
-  const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -100,6 +102,9 @@ export function BreedingForm({
   );
   const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
     [] as LimitedIndividual[]
+  );
+  const [breedingMatch, setBreedingMatch] = React.useState(
+    undefined as Breeding | undefined
   );
   const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
 
@@ -264,55 +269,6 @@ export function BreedingForm({
     return true;
   };
 
-  const postEmptyIndividual = (individual: Individual): any => {
-    let status = post("/api/individual", individual).then(
-      (json) => {
-        switch (json.status) {
-          case "success": {
-            if (herdListener == individual.herd) {
-              setHerdChangeListener(herdChangeListener + 1);
-            }
-            userMessage("Kaninen har lagts till i din besättning.", "success");
-            return "success";
-          }
-          case "error": {
-            switch (json.message) {
-              case "Not logged in":
-                {
-                  userMessage("Du är inte inloggad.", "error");
-                }
-                return "error";
-              case "Individual must have a valid herd":
-                {
-                  userMessage("Besättningen kunde inte hittas.", "error");
-                }
-                return "error";
-              case "Forbidden": {
-                userMessage(
-                  "Du saknar rättigheterna för att lägga till en kanin i besättningen.",
-                  "error"
-                );
-                return "error";
-              }
-              default: {
-                userMessage(
-                  "Något gick fel. Det här borde inte hända.",
-                  "error"
-                );
-                return "error";
-              }
-            }
-          }
-        }
-      },
-      (error) => {
-        userMessage("Något gick fel.", "error");
-        return "error";
-      }
-    );
-    return status;
-  };
-
   const handleEditableBreedingUpdates = async (
     breeding: Breeding,
     breedingMatch: Breeding
@@ -341,62 +297,6 @@ export function BreedingForm({
     }
   };
 
-  const createEmptyIndividual = async (
-    breeding: Breeding,
-    birthUpdates: Breeding | Birth,
-    amount: number
-  ) => {
-    if (!herdId) {
-      userMessage("Något gick fel", "error");
-      return;
-    }
-    const originHerdNameID: HerdNameID = {
-      herd: herdId,
-    };
-    const fatherInd: LimitedIndividual = {
-      number: breeding.father,
-    };
-    const motherInd: LimitedIndividual = {
-      number: breeding.mother,
-    };
-    const emptyIndividual = {
-      herd: herdId,
-      origin_herd: originHerdNameID,
-      genebank: genebank?.name,
-      certificate: null,
-      birth_date: birthUpdates.birth_date
-        ? birthUpdates.birth_date
-        : birthUpdates.date,
-      number: null,
-      father: fatherInd,
-      mother: motherInd,
-      color_note: null,
-      death_date: null,
-      death_note: null,
-      litter_size: null,
-      litter_size6w: null,
-      notes: "",
-      herd_tracking: null,
-      herd_active: true,
-      is_active: false,
-      alive: true,
-      belly_color: null,
-      eye_color: null,
-      claw_color: null,
-      hair_notes: "",
-      selling_date: null,
-      breeding: birthUpdates.id ? birthUpdates.id : 0,
-    };
-    for (let i = 0; i < amount; i++) {
-      await new Promise((r) => setTimeout(r, 2000));
-      let status = postEmptyIndividual(emptyIndividual);
-      if (!status || status == "error") {
-        break;
-      }
-    }
-    return;
-  };
-
   /**
    * Function to save the user input to the database.
    * Error handling happens from within the functions imported from data_context.
@@ -409,59 +309,67 @@ export function BreedingForm({
     }
 
     handleActive(breeding);
-    const herdBreedings = await get(`/api/breeding/${herdId}`);
-    const result = await findEditableBreedingMatch(breeding, herdBreedings);
-    //const [breedingMatch, status] = result;
-    const breedingMatch = result[0];
-    const status = result[1];
+    const Breedingmatch = await post(`/api/breeding/${herdId}`, breeding);
+    setBreedingMatch(Breedingmatch.breedings);
+    console.log("breeding", breeding);
+    console.log("reedingMatch", Breedingmatch);
+    if (Breedingmatch.breedings != null) {
+      userMessage(
+        `Hittade ett befintligt parningstillfälle id : ${Breedingmatch.breedings.id} med parningsdatum : ${Breedingmatch.breedings.breed_date}.`,
+        "success"
+      );
 
-    switch (status) {
-      case -1:
-        // create new breeding event
-        const newBreedingData: LimitedBreeding = {
-          date: breeding.breed_date,
-          mother: breeding.mother,
-          father: breeding.father,
-          breeding_herd: herdId,
-          notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
-        };
+      if (breeding.birth_date != Breedingmatch.breedings.birth_date) {
+        userMessage(
+          `Födelsedatumet du har angett: ${breeding.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Sparar du individen kommer individens födelsedatum att ändras.`,
+          "warning"
+        );
+      }
+      onUpdateIndividual("breeding", Breedingmatch.breedings.id);
+      closeDialog();
+    } else {
+      userMessage(
+        `Hittade inget befintligt parningstillfälle kommer skapa ett nytt!`,
+        "info"
+      );
+      // create new breeding event
+      const newBreedingData: LimitedBreeding = {
+        date: breeding.breed_date,
+        mother: breeding.mother,
+        father: breeding.father,
+        breeding_herd: herdId,
+        notes: breeding.breed_notes !== "" ? breeding.breed_notes : undefined,
+      };
 
-        const newBreeding = await createBreeding(newBreedingData);
-        if (!newBreeding) {
-          return;
-        }
+      const newBreeding = await createBreeding(newBreedingData);
+      if (!newBreeding) {
+        return;
+      }
 
-        if (breeding.birth_date === null) {
-          userMessage("Parningen har sparats.", "success");
-          handleBreedingsChanged();
-          return;
-        }
+      if (breeding.birth_date === null) {
+        userMessage("Parningen har sparats.", "success");
+        handleBreedingsChanged();
+        return;
+      }
 
-        const newBirthData: Birth = {
-          date: breeding.birth_date,
-          litter_size: breeding.litter_size,
-          litter_size6w: breeding.litter_size,
-          notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
-          id: newBreeding.breeding_id,
-        };
+      const newBirthData: Birth = {
+        date: breeding.birth_date,
+        litter_size: breeding.litter_size,
+        litter_size6w: breeding.litter_size,
+        notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
+        id: newBreeding.breeding_id,
+      };
 
-        const newBirth = await createBirth(newBirthData);
-        if (!!newBirth) {
-          userMessage("Sparat!", "success");
-          handleBreedingsChanged();
-          createEmptyIndividual(breeding, newBirthData, breeding.litter_size);
-        }
-        break;
-      case 1:
-        // This breeding event already exists. No parents to update
-        breeding.father = breedingMatch.father;
-        breeding.mother = breedingMatch.mother;
-        handleEditableBreedingUpdates(breeding, breedingMatch);
-        break;
-      default:
-        // update breeding event
-        handleEditableBreedingUpdates(breeding, breedingMatch);
-        break;
+      const newBirth = await createBirth(newBirthData);
+      if (!!newBirth) {
+        userMessage(
+          "Ny födelseinformation har skapats glöm inte att spara individen",
+          "success"
+        );
+        handleBreedingsChanged();
+        onUpdateIndividual("breeding", newBreeding.breeding_id);
+        closeDialog();
+      }
     }
   };
 
@@ -470,145 +378,116 @@ export function BreedingForm({
       <form className="breedingForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <Typography variant="h6">
-            {data == "new" && "Nytt "}Parningstillfälle
+            {data == "new" && "Nytt "}Ändra föräldrar
           </Typography>
-          <div className="simpleField">
-            <Button
-              color="primary"
-              onClick={() => setShowFromDateFilter(!showFromDateFilter)}
-            >
-              {showFromDateFilter == false ? "Filtrera kaniner" : "Dölj"}
-              {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
-            </Button>
-            {showFromDateFilter ? (
-              <>
-                <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
-                  <KeyboardDatePicker
-                    autoOk
-                    variant={inputVariant}
-                    inputVariant={inputVariant}
-                    disableFuture
-                    className="simpleField"
-                    label="Född tidigast"
-                    format={dateFormat}
-                    value={fromDate}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(value: Date) => {
-                      fromDate && setFromDate(value);
-                    }}
-                  />
-                </MuiPickersUtilsProvider>
-              </>
-            ) : (
-              <></>
-            )}
+          <div className="flexRow">
+            Här kan du uppdatera föräldarna för bara denna individ. OBS Är
+            föräldrarna för hela kullen fel vänlig ändra i parningstillfället.
+            När du updaterar här måste du också spara själva individen i den
+            föregående dialogen för att ändringen ska få effekt.{" "}
           </div>
-          <FormControlLabel
-            control={<Checkbox showDead />}
-            label="Visa avlidna kaniner"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setshowDead(e.target.checked);
-            }}
-          />
-          <div className="formBox">
-            <KeyboardDatePicker
-              autoOk
-              disableFuture
-              error={false}
-              invalidDateMessage="Datumet har fel format."
-              maxDateMessage="Datumet får inte ligga i framtiden."
-              variant="inline"
-              inputVariant={inputVariant}
-              label="Parningsdatum"
-              format={dateFormat}
-              className="wideControl"
-              value={formState.breed_date ?? null}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(date, value) => {
-                value && setFormField("breed_date", value);
-              }}
-            />
-            <Autocomplete
-              options={activeFemalesLimited ?? []}
-              value={
-                activeFemalesLimited.find(
-                  (option: LimitedIndividual) =>
-                    option.number == formState.mother
-                ) ?? null
-              }
-              // jscpd:ignore-start
-              getOptionLabel={(option: LimitedIndividual) =>
-                individualLabel(option)
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Mor"
-                  className="wideControl"
-                  variant={inputVariant}
-                  margin="normal"
-                />
+          <div>
+            <div className="simpleField">
+              <Button
+                color="primary"
+                onClick={() => setShowFromDateFilter(!showFromDateFilter)}
+              >
+                {showFromDateFilter == false ? "Filtrera kaniner" : "Dölj"}
+                {showFromDateFilter == false ? <ExpandMore /> : <ExpandLess />}
+              </Button>
+              {showFromDateFilter ? (
+                <>
+                  <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
+                    <KeyboardDatePicker
+                      autoOk
+                      variant={inputVariant}
+                      inputVariant={inputVariant}
+                      disableFuture
+                      className="simpleField"
+                      label="Född tidigast"
+                      format={dateFormat}
+                      value={fromDate}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      onChange={(value: Date) => {
+                        fromDate && setFromDate(value);
+                      }}
+                    />
+                  </MuiPickersUtilsProvider>
+                </>
+              ) : (
+                <></>
               )}
-              // jscpd:ignore-end
-
-              onChange={(event: any, newValue: LimitedIndividual | null) => {
-                newValue && setFormField("mother", newValue.number);
+            </div>
+            <FormControlLabel
+              control={<Checkbox showDead />}
+              label="Visa avlidna kaniner"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setshowDead(e.target.checked);
               }}
             />
-            <Autocomplete
-              options={activeMalesLimited ?? []}
-              value={
-                activeMalesLimited.find(
-                  (option: LimitedIndividual) =>
-                    option.number == formState.father
-                ) ?? null
-              }
-              // jscpd:ignore-start
-              getOptionLabel={(option: LimitedIndividual) =>
-                individualLabel(option)
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Far"
+
+            <div className="formBox">
+              <div className="flexRow">
+                <Autocomplete
                   className="wideControl"
-                  variant={inputVariant}
-                  margin="normal"
+                  options={activeFemalesLimited}
+                  getOptionLabel={(option: LimitedIndividual) =>
+                    individualLabel(option)
+                  }
+                  value={
+                    activeFemalesLimited.find(
+                      (option: LimitedIndividual) =>
+                        option.number == formState.mother
+                    ) ?? null
+                  }
+                  onChange={(
+                    event: any,
+                    newValue: LimitedIndividual | null
+                  ) => {
+                    newValue && setFormField("mother", newValue.number);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Välj mor"
+                      variant={inputVariant}
+                      className="controlFull"
+                    />
+                  )}
                 />
-              )}
-              // jscpd:ignore-end
-
-              onChange={(event: any, newValue: LimitedIndividual | null) => {
-                newValue && setFormField("father", newValue.number);
-              }}
-            />
-            <TextField
-              label="Anteckningar om parningstillfället"
-              variant={inputVariant}
-              className="wideControl"
-              multiline
-              rows={2}
-              value={formState.breed_notes ?? ""}
-              onChange={(e: any) => {
-                setFormField("breed_notes", e.target.value);
-              }}
-            />
-          </div>
-          <Button
-            color="primary"
-            onClick={() => setShowBirthForm(!showBirthForm)}
-          >
-            {showBirthForm == false ? "födselinformation" : "bara parning"}
-            {showBirthForm == false ? <ExpandMore /> : <ExpandLess />}
-          </Button>
-          {showBirthForm ? (
-            <>
-              <Typography variant="h6">Födsel</Typography>
-              <div className="formBox">
+              </div>
+              <div className="flexRow">
+                <Autocomplete
+                  className="controlFull"
+                  options={activeMalesLimited}
+                  getOptionLabel={(option: LimitedIndividual) =>
+                    individualLabel(option)
+                  }
+                  value={
+                    activeMalesLimited.find(
+                      (option: LimitedIndividual) =>
+                        option.number == formState.father
+                    ) ?? null
+                  }
+                  onChange={(
+                    event: any,
+                    newValue: LimitedIndividual | null
+                  ) => {
+                    newValue && setFormField("father", newValue.number);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Välj far"
+                      variant={inputVariant}
+                      className="controlFull"
+                    />
+                  )}
+                />
+              </div>
+              <div className="flexRow">
                 <KeyboardDatePicker
                   autoOk
                   disableFuture
@@ -619,7 +498,7 @@ export function BreedingForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  className="wideControl"
+                  className="controlFull"
                   value={formState.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
@@ -628,11 +507,13 @@ export function BreedingForm({
                     value && setFormField("birth_date", value);
                   }}
                 />
+              </div>
+              <div className="flexRow">
                 <TextField
                   label="Kullstorlek"
                   value={formState.litter_size ?? ""}
                   type="number"
-                  className="wideControl"
+                  className="control controlWidth"
                   variant={inputVariant}
                   InputLabelProps={{
                     shrink: true,
@@ -642,9 +523,24 @@ export function BreedingForm({
                   }}
                 />
                 <TextField
+                  label="Levande i kullen efter 6v"
+                  value={formState.litter_size6w ?? ""}
+                  type="number"
+                  className="controlWidth"
+                  variant={inputVariant}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={(e: any) => {
+                    setFormField("litter_size6w", e.target.value);
+                  }}
+                />
+              </div>
+              <div className="flexRow">
+                <TextField
                   label="Anteckningar om födseln"
                   variant={inputVariant}
-                  className="wideControl"
+                  className="controlFull"
                   multiline
                   rows={2}
                   value={formState.birth_notes ?? ""}
@@ -653,17 +549,18 @@ export function BreedingForm({
                   }}
                 />
               </div>
-            </>
-          ) : (
-            <></>
-          )}
-          <div>
+            </div>
+          </div>
+          <div className="paneControls">
             <Button
               variant="contained"
               color="primary"
               onClick={() => saveBreeding(formState)}
             >
-              Spara
+              Uppdatera
+            </Button>
+            <Button variant="contained" color="secondary" onClick={closeDialog}>
+              {"Avbryt"}
             </Button>
           </div>
         </MuiPickersUtilsProvider>

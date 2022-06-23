@@ -106,13 +106,6 @@ export function IndividualForm({
       let father;
       let mother;
 
-      /* if (individual.father?.number) {
-        father = await get(`/api/individual/${individual.father?.number}`);
-        console.log(father);
-        if (!father) {
-          return;
-        }
-      } */
       if (individual.mother?.number && formAction == FormAction.AddIndividual) {
         mother = await get(`/api/individual/${individual.mother?.number}`);
         if (!mother) {
@@ -150,19 +143,6 @@ export function IndividualForm({
     { value: "yes", label: "Ja" },
   ]; //should be boolean but doesn't work together with the OptionType
   // also decide how this should be stored in the backend
-
-  React.useEffect(() => {
-    if (!!genebank) {
-      onUpdateIndividual("genebank", genebank.name);
-    }
-  }, [genebank]);
-
-  /* React.useEffect(() => {
-    if (formAction == FormAction.AddIndividual && !!individual.birth_date) {
-      const year = individual.birth_date[2] + individual.birth_date[3];
-      onUpdateIndividual("number", year);
-    }
-  }, [individual.birth_date]); */
 
   return (
     <>
@@ -358,6 +338,8 @@ export function IndividualForm({
                       breed_id={individual.breeding}
                       open={openBreedDialog}
                       close={() => setBreedDiOpen(false)}
+                      individual={individual}
+                      onUpdateIndividual={onUpdateIndividual}
                     />
                     {!canEditBreeding ? (
                       <div className="controlWidth">
@@ -367,7 +349,7 @@ export function IndividualForm({
                     ) : (
                       <div className="flexRow">
                         <Tooltip
-                          title="Är datumet fel vänligen ändra i parningstillfället"
+                          title="Är datumet fel för hela kullen vänligen ändra i själva parningstillfället"
                           placement="right"
                           arrow
                         >
@@ -382,7 +364,7 @@ export function IndividualForm({
                             setBreedDiOpen(true);
                           }}
                         >
-                          Redigera parningstillfälle
+                          Redigera föräldrar
                         </Button>
                       </div>
                     )}
@@ -514,6 +496,7 @@ export function IndividualForm({
                   href={
                     "https://drive.google.com/file/d/18oKM3eZWVGirFyMf8OHkysKG0n5LSRw4/view?usp=sharing"
                   }
+                  target={"blank"}
                 >
                   {" "}
                   Utförligare färgbeskrivningar finns i Föreningen

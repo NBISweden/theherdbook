@@ -7,7 +7,7 @@ import { Breeding, ExtendedBreeding } from "./data_context_global";
 import { useUserContext } from "./user_context";
 import { SortedTable, Column } from "./sorted_table";
 import { Typography } from "@material-ui/core";
-import { BreedingForm } from "./breeding_form";
+import { IndividualBreedingForm } from "./individual_breeding_form";
 
 // Material UI
 import {
@@ -21,8 +21,12 @@ export const BreedingDialog = ({
   open,
   close,
   breed_id,
+  individual,
+  onUpdateIndividual,
 }: {
   breed_id: string | undefined;
+  individual: Individual;
+  onUpdateIndividual: any;
 }) => {
   const [selectedValue, setSelectedValue] = useState("");
   const [active, setActive] = React.useState(null as any);
@@ -64,18 +68,16 @@ export const BreedingDialog = ({
     >
       <div>
         <DialogContent>
-          <BreedingForm
+          <IndividualBreedingForm
             data={extendedBreeding}
             herdId={extendedBreeding.breeding_herd}
             handleBreedingsChanged={handleBreedingsChanged}
             handleActive={handleActive}
+            individual={individual}
+            onUpdateIndividual={onUpdateIndividual}
+            closeDialog={close}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={close} color="primary">
-            Stäng
-          </Button>
-        </DialogActions>
       </div>
     </Dialog>
   );
