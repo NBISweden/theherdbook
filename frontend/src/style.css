@@ -93,10 +93,10 @@ body {
 }
 
 .ancestorBox: {
-  display: "flex";
-  flexDirection: "column";
-  margin: "2em 0 0 0";
-  padding: "0 3em";
+  display: flex;
+  flexDirection: column;
+  margin: 2em 0 0 0;
+  padding: 0 3em;
 }
 
 /* Used in navigation.tsx */
