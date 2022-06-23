@@ -362,7 +362,10 @@ export function IndividualBreedingForm({
 
       const newBirth = await createBirth(newBirthData);
       if (!!newBirth) {
-        userMessage("Sparat!", "success");
+        userMessage(
+          "Ny födelseinformation har skapats glöm inte att spara individen",
+          "success"
+        );
         handleBreedingsChanged();
         onUpdateIndividual("breeding", newBreeding.breeding_id);
         closeDialog();
