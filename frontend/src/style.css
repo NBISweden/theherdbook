@@ -92,6 +92,8 @@ body {
   font-size: 1em;
 }
 
+
+
 /* Used in navigation.tsx */
 .trigram {
   font-size: 1.8em;
@@ -252,7 +254,6 @@ list-item {
   margin-right: 20px;
   min-width: 222px;
 }
-
 /* Used in herdForm.tsx */
 .titleHerd {
   font-size: 2em;
@@ -458,6 +459,11 @@ list-item {
 /* Used in individual_form.tsx */
 .controlWidth {
   width: 50%;
+}
+
+.controlFull {
+  width: 100%;
+  margin: 0.3em 0;
 }
 
 /* Used in individual_form.tsx */

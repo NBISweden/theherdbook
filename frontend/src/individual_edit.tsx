@@ -100,7 +100,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage, handleCloseDialog } = useMessageContext();
-  const { herdListener, herdChangeListener, setHerdChangeListener } =
+  const { herdListener, herdChangeListener, setHerdChangeListener, loadData } =
     useDataContext();
   const style = useStyles();
 
@@ -283,6 +283,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               setHerdChangeListener(herdChangeListener + 1);
             }
             userMessage(retval.message ?? "Individual updated", "success");
+            loadData(["genebanks"]);
             handleCloseDialog();
             break;
           default:
@@ -315,7 +316,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
-            genebank={individual.genebank_id}
+            genebank={individual.genebank}
           />
           <div className={style.paneControls}>
             <Button
@@ -335,92 +336,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               {"Avbryt"}
             </Button>
           </div>
-        </>
-      ) : individual && showSummary ? (
-        <>
-          <h1>Är alla uppgifter korrekta?</h1>
-          <Document
-            file={previewUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            style={{ border: "2px solid black" }}
-            renderAnnotationLayer={true}
-            loading={<CircularProgress />}
-          >
-            <Page pageNumber={pageNumber} />
-          </Document>
-          <div className={style.confirmBox}>
-            <h2>Bekräftelse</h2>
-            <p>
-              För att intyga att allt är korrekt, ange ditt besättningsnummer i
-              format {individual.number ? individual.number[0] : "X"}XXX.{" "}
-              <br></br>Vill du göra ändringar, kan du gå tillbaka.
-            </p>
-            <div className={style.flexbox}>
-              <TextField
-                id="confirm"
-                className={style.confirmField}
-                variant={inputVariant}
-                autoFocus
-                margin="dense"
-                label="Besättningsnummer"
-                value={confirmId}
-                onChange={(e) => setConfirmId(e.target.value)}
-              />
-              <div
-                className={style.paneControls}
-                style={{ justifyContent: "flex-end" }}
-              >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => authenticate(confirmId)}
-                >
-                  {"Bekräfta"}
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className={style.paneControls}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                setShowForm(true);
-                setShowSummary(false);
-                setIsUserGood(false);
-                setConfirmId("");
-              }}
-            >
-              {"Tillbaka"}
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={isUserGood ? false : true}
-              onClick={() => {
-                switch (action) {
-                  case "issue":
-                    issueCertificate(id, certificateData);
-                    break;
-                  case "update":
-                    updateCertificate(id, certificateData);
-                }
-              }}
-            >
-              {action == "issue"
-                ? "Beställ intyg"
-                : "update"
-                ? "Uppdatera intyg"
-                : "Fortsätt"}
-            </Button>
-          </div>
-        </>
-      ) : individual && showComplete ? (
-        <>
-          <CertificateDownload
-            certUrl={certificateUrl}
-            individual={individual}
-          />
         </>
       ) : (
         <></>

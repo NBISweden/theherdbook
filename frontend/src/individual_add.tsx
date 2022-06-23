@@ -235,10 +235,10 @@ export function IndividualAdd({
   // add the field genebank to the individual to get the color options in the form
   // make sure it also is triggered after resetBlank has been called
   React.useEffect(() => {
-    if (!individual.genebank && currentGenebank) {
+    if (currentGenebank) {
       handleUpdateIndividual("genebank", currentGenebank.name);
     }
-  }, [currentGenebank, individual]);
+  }, [currentGenebank]);
 
   // remove error layout from input fields when user has added an input
   React.useEffect(() => {
@@ -629,6 +629,7 @@ export function IndividualAdd({
       father: individual.father,
       litter_size: individual.litter_size,
       litter_size6w: individual.litter_size6w,
+      genebank: individual.genebank,
     };
     setIndividual(sibling);
     setSibling(true);
