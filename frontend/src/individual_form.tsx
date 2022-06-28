@@ -479,6 +479,15 @@ export function IndividualForm({
                   }}
                 />
                 <TextField
+                  label="Färganteckning"
+                  className="control controlWidth"
+                  variant={inputVariant}
+                  value={individual.color_note ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("color_note", event.currentTarget.value);
+                  }}
+                />
+                <TextField
                   label="Färg på buken"
                   className="control controlWidth"
                   variant={inputVariant}
