@@ -1563,7 +1563,7 @@ def delete_breeding(id, user_uuid):
         if individuals > 0:
             return {
                 "status": "error",
-                "message": f"Parningstillfället innehåller {individuals} individer kan ej ta bort! prova att uppdatera sidan.",
+                "message": f"Parningstillfället innehåller {individuals} individer kan ej ta bort! prova att uppdatera sidan.",  # noqa: E501
             }
     except ValueError as error:
         errors += [str(error)]
