@@ -298,10 +298,10 @@ def herd_breeding_list(h_id):
     """
     Returns a list of all breeding events connected to a given herd.
     If post search for a matching breeding given the birth date
-    calculate breed date from birth date to find a match or take the exact birth date
-    if it exists.
+    calculate breed date from birth date to find a match or take the
+    exact birth date if it exists.
     """
-    breedings = da.get_breeding_events(h_id, session.get("user_id", None))
+    breedings = da.get_breeding_events_with_ind(h_id, session.get("user_id", None))
     if request.method == "POST":
         form = request.json
         birth_date = da.validate_date(form.get("birth_date", None))
@@ -370,6 +370,24 @@ def register_breeding():
         status = da.register_breeding(form, session.get("user_id", None))
     if request.method == "PATCH":
         status = da.update_breeding(form, session.get("user_id", None))
+    return jsonify(status)
+
+
+@APP.route("/api/breeding/delete", methods=["POST"])
+@login_required
+def delete_breeding():
+    """
+    Used to delete breeding events in the database.
+    Returns a message formatted like:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string
+        }
+    """
+    breeding_id = request.json
+    status = {"status": "error", "message": "Unknown request"}
+    if request.method == "POST":
+        status = da.delete_breeding(breeding_id, session.get("user_id", None))
     return jsonify(status)
 
 
