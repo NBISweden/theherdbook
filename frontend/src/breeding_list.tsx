@@ -10,7 +10,7 @@ import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "./data_context";
 import { Breeding, ExtendedBreeding } from "./data_context_global";
 import { useUserContext } from "./user_context";
-import { SortedTable, Column } from "./sorted_table";
+import { CollapsibleSortedTable, Column } from "./collapsible_sorted_table";
 import { Typography } from "@material-ui/core";
 import { BreedingForm } from "./breeding_form";
 
@@ -60,6 +60,12 @@ export function BreedingList({ id }: { id: string | undefined }) {
 
   const columns: Column[] = [
     {
+      field: "birth_date",
+      sortAs: "date",
+      label: "Födelsedatum",
+      hidden: false,
+    },
+    {
       field: "breed_date",
       label: "Parningsdatum",
       sortAs: "date",
@@ -70,12 +76,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
     { field: "mother_name", label: "Moderns namn", hidden: false },
     { field: "father", label: "Fader", sortAs: "numbers", hidden: false },
     { field: "father_name", label: "Faderns namn", hidden: false },
-    {
-      field: "birth_date",
-      sortAs: "date",
-      label: "Födelsedatum",
-      hidden: false,
-    },
+
     { field: "birth_notes", label: "Födselanteckningar", hidden: true },
     {
       field: "litter_size",
@@ -114,11 +115,12 @@ export function BreedingList({ id }: { id: string | undefined }) {
     <>
       <Typography variant="h5">Parningstillfällen</Typography>
       <div className="breeding">
-        <SortedTable
+        <CollapsibleSortedTable
           columns={columns}
           data={extendedBreedings}
           addButton={id && user?.canEdit(id) ? () => setActive("new") : null}
           className="breedingTable"
+          handleBreedingsChanged={handleBreedingsChanged}
           onClick={(row: any[]) => {
             setActive(row);
           }}

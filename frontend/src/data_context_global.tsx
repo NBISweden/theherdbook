@@ -139,6 +139,7 @@ export interface Breeding {
 export interface ExtendedBreeding extends Breeding {
   mother_name: string | null | undefined;
   father_name: string | null | undefined;
+  individuals: Array | null | undefined;
 }
 
 export interface Birth {
