@@ -16,6 +16,7 @@ import {
   Birth,
   Breeding,
   dateFormat,
+  ExtendedBreeding,
   Genebank,
   HerdNameID,
   individualLabel,
