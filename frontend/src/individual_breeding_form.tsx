@@ -277,20 +277,12 @@ export function IndividualBreedingForm({
       breeding,
       breedingMatch
     );
-    const newIndsNumber = checkBirthUpdate(
-      breedingMatch,
-      modifiedBreedingUpdates
-    );
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
       userMessage("Parningstillfället har uppdaterats.", "success");
       handleBreedingsChanged();
       setHerdChangeListener(herdChangeListener + 1);
       loadData(["genebanks"]);
-      if (newIndsNumber == 0) {
-        return;
-      }
-      createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
     } else {
       userMessage("Något gick fel. Parningen kunde inte uppdateras.", "error");
       return;
@@ -311,8 +303,6 @@ export function IndividualBreedingForm({
     handleActive(breeding);
     const Breedingmatch = await post(`/api/breeding/${herdId}`, breeding);
     setBreedingMatch(Breedingmatch.breedings);
-    console.log("breeding", breeding);
-    console.log("reedingMatch", Breedingmatch);
     if (Breedingmatch.breedings != null) {
       userMessage(
         `Hittade ett befintligt parningstillfälle id : ${Breedingmatch.breedings.id} med parningsdatum : ${Breedingmatch.breedings.breed_date}.`,
@@ -326,6 +316,7 @@ export function IndividualBreedingForm({
         );
       }
       onUpdateIndividual("breeding", Breedingmatch.breedings.id);
+      handleEditableBreedingUpdates(breeding, Breedingmatch.breedings);
       closeDialog();
     } else {
       userMessage(
