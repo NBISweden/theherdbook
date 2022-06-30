@@ -115,10 +115,10 @@ def get_certificate_data(ind, user_id):
         "issue_date": date,
         "photos": False,
     }
-    ind["notes"] = " ".join(
+    ind["notes"] = ".\r\n ".join(
         [
             str(ind.get("notes", "")),
-            "Färg upplysningar: " + str(ind.get("color_note", " ")),
+            "Färganteckning: " + str(ind.get("color_note", " ")),
         ]
     )
     sex_to_kon = {"female": "Hona", "male": "Hane"}
