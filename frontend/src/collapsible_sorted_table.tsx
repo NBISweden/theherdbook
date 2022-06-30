@@ -249,11 +249,7 @@ export function CollapsibleSortedTable({
         {data ? (
           <>
             <TableContainer>
-              <Table
-                aria-labelledby="tableTitle"
-                size={"medium"}
-                aria-label="enhanced table"
-              >
+              <Table size={"medium"} aria-label="enhanced table">
                 <TableHead>
                   <TableRow className={classes.root}>
                     <TableCell />
@@ -352,7 +348,7 @@ export function CollapsibleSortedTable({
                                       </Typography>
                                       <Table
                                         size="small"
-                                        aria-label="purchases"
+                                        aria-label="table containing inidividuals"
                                       >
                                         <TableHead>
                                           <TableRow>
