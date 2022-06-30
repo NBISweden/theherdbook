@@ -92,8 +92,6 @@ body {
   font-size: 1em;
 }
 
-
-
 /* Used in navigation.tsx */
 .trigram {
   font-size: 1.8em;
@@ -213,6 +211,7 @@ list-item {
 /* Used in sorted_table.tsx */
 .bottomButton {
   float: left;
+  padding-bottom: 15px;
 }
 
 .title {
