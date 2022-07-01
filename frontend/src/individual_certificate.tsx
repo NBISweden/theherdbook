@@ -116,6 +116,7 @@ export function IndividualCertificate({
     notes: individual?.notes,
     sex: individual?.sex,
     genebank: individual?.genebank,
+    color_note: individual?.color_note,
   };
 
   /**
