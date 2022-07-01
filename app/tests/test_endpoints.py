@@ -139,7 +139,6 @@ class TestEndpoints(FlaskTest):
         """
         Checks that `herdbook.breeding_list` returns the intended information.
         """
-
         # not logged in
         self.assertEqual(self.app.get("/api/breeding").get_json(), None)
 
@@ -152,9 +151,32 @@ class TestEndpoints(FlaskTest):
             # register a valid breeding event
             response = context.get("/api/breeding/%s" % self.herds[0].herd)
 
-            breeding2 = db.Breeding.get(self.breeding[-1].id)
-            breeding = db.Breeding.get(2)
-            expected = {"breedings": [breeding.as_dict(), breeding2.as_dict()]}
+            breedings_dict = []
+            for breedings in db.Breeding.select().where(
+                db.Breeding.breeding_herd == self.herds[0]
+            ):
+                individuals_dict = []
+                for data in db.Individual.select(
+                    db.Individual.number,
+                    db.Individual.name,
+                    db.Individual.color,
+                    db.Individual.sex,
+                    db.Individual.id,
+                    db.Individual.origin_herd,
+                ).where(db.Individual.breeding_id == breedings.id):
+                    ind = dict()
+                    if data:
+                        ind["number"] = data.number
+                        ind["name"] = data.name
+                        ind["sex"] = data.sex
+                        ind["color"] = data.color.name if data.color else None
+                        ind["current_herd"] = data.current_herd.herd
+                    individuals_dict.append(ind)
+                b = breedings.as_dict()
+                b["individuals"] = individuals_dict
+                breedings_dict.append(b)
+
+            expected = {"breedings": breedings_dict}
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json(), expected)
         # jscpd:ignore-end
@@ -164,7 +186,6 @@ class TestEndpoints(FlaskTest):
         Checks that `herdbook.load_user_from_request` works as intended for
         authenticating the supplied user.
         """
-
         herd = self.herds[0].herd
 
         # not logged in
@@ -181,12 +202,32 @@ class TestEndpoints(FlaskTest):
             bytes(self.admin.email, "utf-8") + b":pass"
         ).strip()
 
-        expected_breedings = {
-            "breedings": [
-                db.Breeding.get(2).as_dict(),
-                db.Breeding.get(self.breeding[-1].id).as_dict(),
-            ]
-        }
+        breedings_dict = []
+        for breedings in db.Breeding.select().where(
+            db.Breeding.breeding_herd == self.herds[0]
+        ):
+            individuals_dict = []
+            for data in db.Individual.select(
+                db.Individual.number,
+                db.Individual.name,
+                db.Individual.color,
+                db.Individual.sex,
+                db.Individual.id,
+                db.Individual.origin_herd,
+            ).where(db.Individual.breeding_id == breedings.id):
+                ind = dict()
+                if data:
+                    ind["number"] = data.number
+                    ind["name"] = data.name
+                    ind["sex"] = data.sex
+                    ind["color"] = data.color.name if data.color else None
+                    ind["current_herd"] = data.current_herd.herd
+                individuals_dict.append(ind)
+            b = breedings.as_dict()
+            b["individuals"] = individuals_dict
+            breedings_dict.append(b)
+
+        expected_breedings = {"breedings": breedings_dict}
 
         response = self.app.get(
             "/api/breeding/%s" % herd,

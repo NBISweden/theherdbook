@@ -38,9 +38,6 @@ psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE m_data SET "Nummer" = CONCAT('M', "Nummer")
 		WHERE "Nummer" IS NOT NULL AND "Nummer" NOT LIKE 'M%';
 
-	ALTER TABLE m_data ALTER "Intyg" TYPE NUMERIC USING "Intyg"::numeric;
-	ALTER TABLE m_data ALTER "Intyg" TYPE INTEGER USING "Intyg"::integer;
-
 	ALTER TABLE m_data ALTER "Kull" TYPE NUMERIC USING "Kull"::numeric;
 	ALTER TABLE m_data ALTER "Kull" TYPE INTEGER USING "Kull"::integer;
 

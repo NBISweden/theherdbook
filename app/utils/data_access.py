@@ -1368,7 +1368,6 @@ def get_breeding_events(herd_id, user_uuid):
 
     try:
         herd = Herd.get(Herd.herd == herd_id)
-
         if herd.genebank.id not in user.accessible_genebanks:
             return []
 
@@ -1377,6 +1376,52 @@ def get_breeding_events(herd_id, user_uuid):
             return [b.as_dict() for b in query.iterator()]
     except DoesNotExist:
         logger.warning("Unknown herd %s", herd_id)
+
+    return []
+
+
+def get_breeding_events_with_ind(herd_id, user_uuid):
+    """
+    Returns a list of all breeding events given by `herd_id`
+    and all individuals with the same breeding id.
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return []
+    try:
+        herd = Herd.get(Herd.herd == herd_id)
+        if herd.genebank.id not in user.accessible_genebanks:
+            return []
+        breedings_dict = []
+        with DATABASE.atomic():
+            for breedings in Breeding.select().where(Breeding.breeding_herd == herd):
+                individuals_dict = []
+                for data in Individual.select(
+                    Individual.number,
+                    Individual.name,
+                    Individual.color,
+                    Individual.sex,
+                    Individual.id,
+                    Individual.origin_herd,
+                ).where(Individual.breeding_id == breedings.id):
+                    ind = dict()
+                    if data:
+                        ind["number"] = data.number
+                        ind["name"] = data.name
+                        ind["sex"] = data.sex
+                        ind["color"] = data.color.name if data.color else None
+                        ind["current_herd"] = data.current_herd.herd
+                    individuals_dict.append(ind)
+                b = breedings.as_dict()
+                b["individuals"] = individuals_dict
+                breedings_dict.append(b)
+
+            return breedings_dict
+
+    except DatabaseError as exception:
+        logger.error("Database error: %s", exception)
+    # except DoesNotExist:
+    #     logger.warning("Unknown herd %s", herd_id)
 
     return []
 
@@ -1474,6 +1519,68 @@ def register_breeding(form, user_uuid):
         breeding.save()
         logger.info(f"User:{user.username} added breeding: {breeding.as_dict()}")
         return {"status": "success", "breeding_id": breeding.id}
+
+
+def delete_breeding(id, user_uuid):
+    """
+    Delete an empty breeding with `id` (if the
+    given `user` has sufficient permissions).
+
+    The response will be on the format:
+    JSON:  {
+            status: 'success' | 'error',
+            message?: string
+           }
+    """
+    user = fetch_user_info(user_uuid)
+    if user is None:
+        return {
+            "status": "error",
+            "message": "Du är inte inloggad. Logga in och försök igen",
+        }
+
+    try:
+        breeding = Breeding.get(id)
+    except (DoesNotExist, KeyError):
+        return {
+            "status": "error",
+            "message": f"Kan inte hitta parningen med id {id} i databasen",
+        }
+
+    # A user can insert a breeding event if they have permission to edit at
+    # least one of the parents.
+    if not (user.can_edit(breeding.mother.number)):
+        return {"status": "error", "message": "Du har inte rätt behörighet"}
+
+    errors = []
+    # check if the breeding has any a
+    try:
+        individuals = (
+            Individual.select(Individual.number)
+            .where(Individual.breeding_id == breeding.id)
+            .count()
+        )
+        if individuals > 0:
+            return {
+                "status": "error",
+                "message": f"Parningstillfället innehåller {individuals} individer \
+                kan ej ta bort! prova att uppdatera sidan.",
+            }
+    except ValueError as error:
+        errors += [str(error)]
+
+    if errors:
+        return {"status": "error", "message": ", ".join(errors)}
+    try:
+        with DATABASE.atomic():
+            Breeding.delete().where(Breeding.id == id).execute()
+            logger.info(f"User:{user.username} deleted empty: {breeding.as_dict()}")
+            return {"status": "success"}
+    except DoesNotExist:
+        return {
+            "status": "error",
+            "message": f"Kan inte hitta parningen med id {id} i databasen",
+        }
 
 
 def register_birth(form, user_uuid):

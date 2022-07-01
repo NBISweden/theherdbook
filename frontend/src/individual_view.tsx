@@ -65,7 +65,7 @@ const useStyles = makeStyles({
       float: "left",
     },
     "& dt": {
-      width: "50px",
+      width: "70px",
       clear: "both",
     },
   },
@@ -229,10 +229,10 @@ export function IndividualView({ id }: { id: string }) {
                   </dt>
                   <dd>{individual?.MK}%</dd>
                   <dt>Färg:</dt>
+                  <dd>{individual?.color}</dd>
+                  <dt>Färganteckning:</dt>
                   <dd>
-                    {individual?.color}
-                    <br />
-                    {individual?.color_note}
+                    {individual?.color_note ? individual.color_note : "-"}
                   </dd>
                   <dt>Född:</dt>
                   <dd>

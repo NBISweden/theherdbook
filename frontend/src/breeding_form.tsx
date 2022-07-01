@@ -16,6 +16,7 @@ import {
   Birth,
   Breeding,
   dateFormat,
+  ExtendedBreeding,
   Genebank,
   HerdNameID,
   individualLabel,
@@ -472,6 +473,10 @@ export function BreedingForm({
           <Typography variant="h6">
             {data == "new" && "Nytt "}Parningstillfälle
           </Typography>
+          <div className="flexRow">
+            Här kan du uppdatera föräldarna för alla individer du ser listade.
+            Ändra här om hela kullen har fel föräldrar{" "}
+          </div>
           <div className="simpleField">
             <Button
               color="primary"
@@ -619,7 +624,7 @@ export function BreedingForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  className="wideControl"
+                  className="controlFull"
                   value={formState.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
@@ -628,23 +633,38 @@ export function BreedingForm({
                     value && setFormField("birth_date", value);
                   }}
                 />
-                <TextField
-                  label="Kullstorlek"
-                  value={formState.litter_size ?? ""}
-                  type="number"
-                  className="wideControl"
-                  variant={inputVariant}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  onChange={(e: any) => {
-                    setFormField("litter_size", e.target.value);
-                  }}
-                />
+                <div className="flexRow">
+                  <TextField
+                    label="Kullstorlek"
+                    value={formState.litter_size ?? ""}
+                    type="number"
+                    className="control controlWidth"
+                    variant={inputVariant}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(e: any) => {
+                      setFormField("litter_size", e.target.value);
+                    }}
+                  />
+                  <TextField
+                    label="Levande i kullen efter 6v"
+                    value={formState.litter_size6w ?? ""}
+                    type="number"
+                    className="controlWidth"
+                    variant={inputVariant}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(e: any) => {
+                      setFormField("litter_size6w", e.target.value);
+                    }}
+                  />
+                </div>
                 <TextField
                   label="Anteckningar om födseln"
                   variant={inputVariant}
-                  className="wideControl"
+                  className="controlFull"
                   multiline
                   rows={2}
                   value={formState.birth_notes ?? ""}

@@ -320,8 +320,7 @@ export function IndividualForm({
                       />
                     </div>
                   </>
-                ) : formAction == FormAction.handleCertificate ||
-                  formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
+                ) : formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                   <div className="flexRow">
                     <TextField
                       disabled={
@@ -476,6 +475,15 @@ export function IndividualForm({
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
                     onUpdateIndividual("color", newValue?.value ?? "");
+                  }}
+                />
+                <TextField
+                  label="Färganteckning"
+                  className="control controlWidth"
+                  variant={inputVariant}
+                  value={individual.color_note ?? ""}
+                  onChange={(event) => {
+                    onUpdateIndividual("color_note", event.currentTarget.value);
                   }}
                 />
                 <TextField
