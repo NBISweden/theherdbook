@@ -52,7 +52,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         ...breeding,
         mother_name: mother?.name,
         father_name: father?.name,
-        individuals: [],
+        individuals: breeding.individuals,
       };
       return newBreeding;
     });
