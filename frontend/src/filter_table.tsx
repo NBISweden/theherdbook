@@ -468,8 +468,24 @@ export function FilterTable({
                     name={filter.field}
                     checked={filter.active ?? false}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      filter.active = e.target.checked;
-                      setFilters([...currentFilters]);
+                      if (
+                        filter.field == "alive" ||
+                        filter.field == "is_registered"
+                      ) {
+                        filter.active = e.target.checked;
+                        const isActiveFilter = currentFilters.find(
+                          (i) => i.label == "Visa inaktiva djur"
+                        );
+                        isActiveFilter.active = e.target.checked;
+                        const newcurrentFilters = currentFilters.filter(
+                          (i) => i.label != "Visa inaktiva djur"
+                        );
+                        newcurrentFilters.splice(1, 0, isActiveFilter);
+                        setFilters([...newcurrentFilters]);
+                      } else {
+                        filter.active = e.target.checked;
+                        setFilters([...currentFilters]);
+                      }
                     }}
                   />
                 }
