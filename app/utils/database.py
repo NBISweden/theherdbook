@@ -475,7 +475,7 @@ class Individual(BaseModel):
     id = AutoField(primary_key=True, column_name="individual_id")
     origin_herd = ForeignKeyField(Herd)
     name = CharField(50, null=True)
-    certificate = CharField(20, null=True)
+    certificate = CharField(20, unique=True, null=True)
     digital_certificate = IntegerField(unique=True, null=True)
     number = CharField(20, unique=True)
     sex = CharField(15, null=True)
