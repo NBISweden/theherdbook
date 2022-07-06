@@ -377,6 +377,7 @@ export function IndividualCertificate({
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
+            genebank={individual.genebank_id}
           />
           <div className={style.paneControls}>
             <Button

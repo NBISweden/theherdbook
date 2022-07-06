@@ -70,6 +70,8 @@ export function IndividualForm({
       if (!individual?.is_registered) {
         return true;
       }
+      console.log(genebank);
+      console.log(user?.is_manager);
       if (!!genebank?.id) {
         return user?.is_manager?.includes(genebank?.id);
       } else {
@@ -192,22 +194,29 @@ export function IndividualForm({
                 <></>
               )}
               {formAction == FormAction.handleCertificate ? (
-                <div className="adminPane">
-                  <div className="paneTitle">
-                    Kan endast ändras av genbanksansvarig
+                <div className={!canManage ? "adminPane" : "whitePane"}>
+                  <div className="flexRow">
+                    {!canManage ? (
+                      <div className="paneTitle">
+                        Kan endast ändras av genbanksansvarig
+                      </div>
+                    ) : (
+                      <></>
+                    )}
+
+                    <TextField
+                      disabled={!canManage}
+                      required
+                      error={numberError}
+                      label="Individnummer"
+                      className="control"
+                      variant={inputVariant}
+                      value={individual.number ?? ""}
+                      onChange={(event) => {
+                        onUpdateIndividual("number", event.currentTarget.value);
+                      }}
+                    />
                   </div>
-                  <TextField
-                    disabled={!canManage}
-                    required
-                    error={numberError}
-                    label="Individnummer"
-                    className="control"
-                    variant={inputVariant}
-                    value={individual.number ?? ""}
-                    onChange={(event) => {
-                      onUpdateIndividual("number", event.currentTarget.value);
-                    }}
-                  />
                   {individual.digital_certificate ? (
                     <p className="certNumber">
                       Intygsnummer: {individual.digital_certificate}
