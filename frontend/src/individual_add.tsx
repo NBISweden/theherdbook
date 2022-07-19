@@ -329,7 +329,12 @@ export function IndividualAdd({
       }
     };
     getBreeding();
-  }, [individual?.birth_date, individual?.father, individual?.mother]);
+  }, [
+    individual?.birth_date,
+    individual?.father,
+    individual?.mother,
+    newSibling,
+  ]);
 
   const validateUserInput = (individual: Individual) => {
     setSuccess(false);
