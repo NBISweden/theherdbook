@@ -140,14 +140,13 @@ update_data <- function(genebank_id) {
 #* @serializer csv
 #* @get /kinship/<genebank_id:int>
 calculate_kinship <- function(genebank_id, update_data="FALSE") {
-
-  summary(genebanks)
   
   if(!(genebank_id %in% genebanks)){stop("must be a valid genebank_id")}
   if(update_data){
     MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
+      print("MOD has changed will update data")
       assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
       update_data(genebank_id)
     }
