@@ -525,6 +525,7 @@ export function IndividualAdd({
               );
               if (herdListener == individual.herd) {
                 setHerdChangeListener(herdChangeListener + 1);
+                loadData(["genebanks"]);
                 setSuccess(true);
               }
             } else {
