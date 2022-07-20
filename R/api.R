@@ -243,10 +243,13 @@ meankinship <- function(genebank_id,update_from_db="FALSE") {
 
 #* @post /testbreed/
 testbreed <- function(req, update_data="FALSE"){
+  body <- req$argsBody
+  genebank_id <- body$genebankId
   if(update_data){
     MOD_change<-get_modifications_digest(genebank_id)
     if(get(paste0("MOD_",genebank_id))!= MOD_change)
     {
+      print("MOD has changed will update data")
       assign(paste0("MOD_",genebank_id),MOD_change,envir = .GlobalEnv)
       update_data(genebank_id)
     }
