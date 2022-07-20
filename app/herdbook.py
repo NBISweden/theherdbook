@@ -836,6 +836,7 @@ def testbreed():
             offspring_coi = kinship_matrix[payload["male"]][payload["female"]]
         # One/both parents not registrered, thus not present in the kinship matrix
         else:
+            payload["update_data"] = "TRUE"
             response = requests.post(
                 "http://{}:{}/testbreed/".format(
                     settings.rapi.host, settings.rapi.port
