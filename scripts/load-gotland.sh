@@ -28,7 +28,7 @@ psql --echo-errors --quiet <<-'END_SQL'
 	UPDATE g_data SET "Intyg" = NULL where "Intyg" = '0' or "Intyg" = '?';
 
 	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = 'u';
-	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = '0' AND "2021" IS NOT NULL;
+	UPDATE g_data SET "ny G" = NULL WHERE "ny G" = '0' AND "2022" IS NOT NULL;
 
 	ALTER TABLE g_data ALTER "ny G" TYPE NUMERIC USING "ny G"::numeric;
 	ALTER TABLE g_data ALTER "ny G" TYPE INTEGER USING "ny G"::integer;
@@ -159,7 +159,7 @@ psql --echo-errors --quiet <<-'END_SQL'
      LOOP
         WITH b AS (
            INSERT INTO breeding(breed_date, breeding_herd_id)
-	   SELECT NULL, i.origin_herd_id
+	       SELECT NULL, i.origin_herd_id
 	   FROM individual i
            WHERE i.individual_id = iid
            RETURNING breeding_id)
@@ -220,9 +220,9 @@ END_SQL
 
 done | psql  --quiet
 
-# Load tracking data for years 2000 through to 2021
+# Load tracking data for years 2000 through to 2022
 year=2000
-while [ "$year" -le 2021 ]; do
+while [ "$year" -le 2022 ]; do
 	column=$year
 
 	cat <<-END_SQL
