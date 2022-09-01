@@ -205,9 +205,9 @@ END_SQL
 
 done | psql --quiet
 
-# Load tracking data for years 2000 through to 2020
+# Load tracking data for years 2000 through to 2022
 year=2000
-while [ "$year" -le 2020 ]; do
+while [ "$year" -le 2022 ]; do
 	cat <<-END_SQL
 		-- Fix column type etc.
 		ALTER TABLE m_data ALTER "$year" TYPE VARCHAR(12);
