@@ -61,3 +61,21 @@ psql --quiet <<-'END_SQL'
 	GROUP BY	i.certificate
 	HAVING	COUNT(*) > 1;
 END_SQL
+
+echo 'Tracking data innan kaninen är född '
+psql --quiet <<-'END_SQL'
+SELECT       i.number, b.birth_date, h.herd, herd_tracking_date
+                FROM    herd_tracking ht_inner
+                JOIN	herd h ON (ht_inner.herd_id = h.herd_id)
+                JOIN    individual i ON (ht_inner.individual_id = i.individual_id)
+                JOIN    breeding b ON (i.breeding_id = b.breeding_id)
+                JOIN    genebank gb ON (h.genebank_id = gb.genebank_id)
+                WHERE   gb.name = 'Mellerudskanin'
+                AND     ht_inner.herd_tracking_date = (
+                        SELECT  MIN(herd_tracking_date)
+                        FROM    herd_tracking
+                        WHERE   individual_id = ht_inner.individual_id
+                        )
+                  AND
+                  b.birth_date > herd_tracking_date;
+END_SQL
