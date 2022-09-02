@@ -23,7 +23,7 @@ jobs:
 
              branch=${GITHUB_REF##*/}
              
-             for image in herdbook_main herdbook_frontend; do
+             for image in herdbook_r-api herdbook_main herdbook_frontend; do
                docker pull "ghcr.io/nbisweden/$image:latest" || true
                docker pull "ghcr.io/nbisweden/$image:$branch" || true
              done
@@ -32,7 +32,7 @@ jobs:
                mv "$p" "${p%.default}"
              done
 
-             docker-compose build --build-arg BUILDKIT_INLINE_CACHE=1
+             docker-compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main;
 
              for image in herdbook_main herdbook_frontend; do
                docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
