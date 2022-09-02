@@ -34,7 +34,7 @@ jobs:
 
              docker-compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main;
 
-             for image in herdbook_r-api herdbook_main herdbook_frontend; do
+             for image in herdbook_main herdbook_frontend; do
                docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
                docker push "ghcr.io/nbisweden/$image:$branch"
 
