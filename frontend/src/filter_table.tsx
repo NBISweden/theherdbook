@@ -498,6 +498,7 @@ export function FilterTable({
               label="Sök"
               variant={inputVariant}
               onChange={(e) => setSearch(e.currentTarget.value)}
+              className="data-hj-allow"
             />
             <TableContainer>
               <Table
