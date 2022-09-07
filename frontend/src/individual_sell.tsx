@@ -78,8 +78,13 @@ export function IndividualSell({ individual }: { individual: Individual }) {
   const [checked, setChecked] = React.useState(false as boolean);
   const [invalidSale, setInvalidSale] = React.useState(false as boolean);
   const [success, setSuccess] = React.useState(false as boolean);
-  const { genebanks, herdListener, herdChangeListener, setHerdChangeListener } =
-    useDataContext();
+  const {
+    genebanks,
+    herdListener,
+    herdChangeListener,
+    setHerdChangeListener,
+    loadData,
+  } = useDataContext();
   const { userMessage } = useMessageContext();
   const style = useStyles();
   const disabled: boolean =
@@ -148,6 +153,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
         if (individual.herd_tracking[0].herd == herdListener) {
           setHerdChangeListener(herdChangeListener + 1);
         }
+        loadData(["genebanks"]);
         setSuccess(true);
         return;
       }
