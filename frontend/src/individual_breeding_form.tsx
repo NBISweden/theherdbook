@@ -395,7 +395,7 @@ export function IndividualBreedingForm({
                       variant={inputVariant}
                       inputVariant={inputVariant}
                       disableFuture
-                      className="simpleField data-hj-allow"
+                      className="simpleField"
                       label="Född tidigast"
                       format={dateFormat}
                       value={fromDate}
@@ -445,7 +445,7 @@ export function IndividualBreedingForm({
                       {...params}
                       label="Välj mor"
                       variant={inputVariant}
-                      className="controlFull data-hj-allow"
+                      className="controlFull"
                     />
                   )}
                 />
@@ -474,7 +474,7 @@ export function IndividualBreedingForm({
                       {...params}
                       label="Välj far"
                       variant={inputVariant}
-                      className="controlFull data-hj-allow"
+                      className="controlFull"
                     />
                   )}
                 />
@@ -490,7 +490,7 @@ export function IndividualBreedingForm({
                   inputVariant={inputVariant}
                   label="Födelsedatum"
                   format={dateFormat}
-                  className="controlFull data-hj-allow"
+                  className="controlFull"
                   value={formState.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
@@ -505,7 +505,7 @@ export function IndividualBreedingForm({
                   label="Kullstorlek"
                   value={formState.litter_size ?? ""}
                   type="number"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
                   variant={inputVariant}
                   InputLabelProps={{
                     shrink: true,
@@ -518,7 +518,7 @@ export function IndividualBreedingForm({
                   label="Levande i kullen efter 6v"
                   value={formState.litter_size6w ?? ""}
                   type="number"
-                  className="controlWidth data-hj-allow"
+                  className="controlWidth"
                   variant={inputVariant}
                   InputLabelProps={{
                     shrink: true,
@@ -532,7 +532,7 @@ export function IndividualBreedingForm({
                 <TextField
                   label="Anteckningar om födseln"
                   variant={inputVariant}
-                  className="controlFull data-hj-allow"
+                  className="controlFull"
                   multiline
                   rows={2}
                   value={formState.birth_notes ?? ""}

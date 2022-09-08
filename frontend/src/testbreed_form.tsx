@@ -249,7 +249,7 @@ export function InbreedingForm() {
                     variant="inline"
                     inputVariant={inputVariant}
                     disableFuture
-                    className="simpleField data-hj-allow"
+                    className="simpleField"
                     label="Född tidigast"
                     format={dateFormat}
                     value={fromDate}
@@ -304,7 +304,6 @@ export function InbreedingForm() {
                   label="Välj mor"
                   helperText="Om ännu ej registrerad, välj morföräldrar nedan"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -341,7 +340,6 @@ export function InbreedingForm() {
                   {...params}
                   label="Välj mormor"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -375,7 +373,6 @@ export function InbreedingForm() {
                   {...params}
                   label="Välj morfar"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -410,7 +407,6 @@ export function InbreedingForm() {
                   label="Välj far"
                   helperText="Om ännu ej registrerad, välj farföräldrar nedan"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -447,7 +443,6 @@ export function InbreedingForm() {
                   {...params}
                   label="Välj farmor"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -481,7 +476,6 @@ export function InbreedingForm() {
                   {...params}
                   label="Välj farfar"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
