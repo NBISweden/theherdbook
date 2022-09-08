@@ -169,7 +169,8 @@ export function IndividualForm({
                         required
                         error={numberError}
                         label="Individnummer"
-                        className="control controlWidth data-hj-allow"
+                        className="control controlWidth"
+                        inputProps={{ className: "data-hj-allow" }}
                         variant={inputVariant}
                         value={individual.number ?? ""}
                         onChange={(event) => {
@@ -209,7 +210,8 @@ export function IndividualForm({
                       required
                       error={numberError}
                       label="Individnummer"
-                      className="control data-hj-allow"
+                      className="control"
+                      inputProps={{ className: "data-hj-allow" }}
                       variant={inputVariant}
                       value={individual.number ?? ""}
                       onChange={(event) => {
@@ -238,7 +240,8 @@ export function IndividualForm({
                           disabled
                           noOptionsText={"Välj härstamningen först"}
                           getOptionLabel={(option: OptionType) => option.label}
-                          className="wideControlInd data-hj-allow"
+                          className="wideControlInd"
+                          inputProps={{ className: "data-hj-allow" }}
                           value={
                             herdOptions.find(
                               (option) =>
@@ -255,7 +258,7 @@ export function IndividualForm({
                               label="Ursprungsbesättning "
                               variant={inputVariant}
                               margin="normal"
-                              className="data-hj-allow"
+                              inputProps={{ className: "data-hj-allow" }}
                             />
                           )}
                         />
@@ -267,7 +270,8 @@ export function IndividualForm({
                         error={birthDateError}
                         autoOk
                         variant="inline"
-                        className="control controlWidth data-hj-allow"
+                        className="control controlWidth"
+                        inputProps={{ className: "data-hj-allow" }}
                         inputVariant={inputVariant}
                         label="Födelsedatum"
                         format={dateFormat}
@@ -285,7 +289,8 @@ export function IndividualForm({
                         error={numberError}
                         disabled={isIndNull}
                         label="Individnummer"
-                        className="control controlWidth data-hj-allow"
+                        className="control controlWidth"
+                        inputProps={{ className: "data-hj-allow" }}
                         variant={inputVariant}
                         value={
                           (individual.number?.split(/-\d{0,2}/)[1] ??
@@ -338,7 +343,8 @@ export function IndividualForm({
                         formAction == FormAction.editIndividual
                       }
                       variant={inputVariant}
-                      className="control controlWidth data-hj-allow"
+                      className="control controlWidth"
+                      inputProps={{ className: "data-hj-allow" }}
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
                     />
@@ -385,7 +391,8 @@ export function IndividualForm({
               <div className="flexRow">
                 <TextField
                   label="Namn"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   value={individual.name ?? ""}
                   onChange={(event) => {
@@ -394,7 +401,8 @@ export function IndividualForm({
                 />
                 <Autocomplete
                   options={sexOptions ?? []}
-                  className="controlWidth data-hj-allow"
+                  className="controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   value={
                     sexOptions.find(
                       (option) => option.value == individual.sex
@@ -405,7 +413,8 @@ export function IndividualForm({
                     <TextField
                       {...params}
                       label="Kön"
-                      className="control data-hj-allow"
+                      className="control"
+                      inputProps={{ className: "data-hj-allow" }}
                       variant={inputVariant}
                       margin="normal"
                       required
@@ -423,7 +432,8 @@ export function IndividualForm({
                     required
                     error={litterError}
                     label="Antal födda i kullen"
-                    className="control controlWidth data-hj-allow"
+                    className="control controlWidth"
+                    inputProps={{ className: "data-hj-allow" }}
                     variant={inputVariant}
                     value={individual.litter_size ?? ""}
                     type="number"
@@ -438,7 +448,8 @@ export function IndividualForm({
                     required
                     error={litterError6w}
                     label="Levande i kullen efter 6v"
-                    className="control controlWidth data-hj-allow"
+                    className="control controlWidth"
+                    inputProps={{ className: "data-hj-allow" }}
                     variant={inputVariant}
                     value={individual.litter_size6w ?? ""}
                     type="number"
@@ -476,7 +487,8 @@ export function IndividualForm({
                     <TextField
                       {...params}
                       label="Färg"
-                      className="control data-hj-allow"
+                      className="control"
+                      inputProps={{ className: "data-hj-allow" }}
                       variant={inputVariant}
                       margin="normal"
                       required
@@ -489,7 +501,8 @@ export function IndividualForm({
                 />
                 <TextField
                   label="Färganteckning"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   value={individual.color_note ?? ""}
                   onChange={(event) => {
@@ -498,7 +511,8 @@ export function IndividualForm({
                 />
                 <TextField
                   label="Färg på buken"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   value={individual.belly_color ?? ""}
                   onChange={(event) => {
@@ -524,7 +538,8 @@ export function IndividualForm({
               <div className="flexRow">
                 <TextField
                   label="Ögonfärg"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   value={individual.eye_color ?? ""}
                   onChange={(event) => {
@@ -533,7 +548,8 @@ export function IndividualForm({
                 />
                 <TextField
                   label="Klofärg(er)"
-                  className="control controlWidth data-hj-allow"
+                  className="control controlWidth"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   value={individual.claw_color ?? ""}
                   onChange={(event) => {
@@ -548,7 +564,8 @@ export function IndividualForm({
                     <TextField
                       {...params}
                       label="Foto finns"
-                      className="control data-hj-allow"
+                      className="control"
+                      inputProps={{ className: "data-hj-allow" }}
                       variant={inputVariant}
                       margin="normal"
                     />
@@ -559,7 +576,8 @@ export function IndividualForm({
                 <TextField
                   label="Avvikande hårlag"
                   variant={inputVariant}
-                  className="wideControlInd data-hj-allow"
+                  className="wideControlInd"
+                  inputProps={{ className: "data-hj-allow" }}
                   multiline
                   rows={1}
                   value={individual.hair_notes ?? ""}
@@ -572,7 +590,8 @@ export function IndividualForm({
                 <TextField
                   label="Anteckningar"
                   variant={inputVariant}
-                  className="wideControlInd data-hj-allow"
+                  className="wideControlInd"
+                  inputProps={{ className: "data-hj-allow" }}
                   multiline
                   rows={4}
                   value={individual.notes ?? ""}

@@ -240,6 +240,7 @@ export function Manage() {
                       label="Genbank"
                       variant={inputVariant}
                       margin="normal"
+                      inputProps={{ className: "data-hj-allow" }}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
@@ -286,6 +287,7 @@ export function Manage() {
                 label={topic == "user" ? "Sök användare" : "Sök besättning"}
                 variant={inputVariant}
                 margin="normal"
+                inputProps={{ className: "data-hj-allow" }}
               />
             )}
             onChange={(event: any, newValue: OptionType | null) => {

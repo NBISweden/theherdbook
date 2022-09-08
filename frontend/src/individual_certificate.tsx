@@ -424,6 +424,7 @@ export function IndividualCertificate({
                 autoFocus
                 margin="dense"
                 label="Besättningsnummer"
+                inputProps={{ className: "data-hj-allow" }}
                 value={confirmId}
                 onChange={(e) => setConfirmId(e.target.value)}
               />

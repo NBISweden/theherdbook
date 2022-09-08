@@ -227,6 +227,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                 disabled={!isDead}
                 variant={inputVariant}
                 className={style.wideControl}
+                inputProps={{ className: "data-hj-allow" }}
                 multiline
                 rows={2}
                 value={deadIndividual.death_note ?? ""}

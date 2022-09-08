@@ -528,7 +528,12 @@ export function BreedingForm({
               inputVariant={inputVariant}
               label="Parningsdatum"
               format={dateFormat}
+<<<<<<< HEAD
               className="wideControl data-hj-allow"
+=======
+              inputProps={{ className: "data-hj-allow" }}
+              className="wideControl"
+>>>>>>> 5a1d39b... Put the attribute in the right place
               value={formState.breed_date ?? null}
               InputLabelProps={{
                 shrink: true,
@@ -553,7 +558,8 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Mor"
-                  className="wideControl data-hj-allow"
+                  className="wideControl"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   margin="normal"
                 />
@@ -580,7 +586,8 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Far"
-                  className="wideControl data-hj-allow"
+                  className="wideControl"
+                  inputProps={{ className: "data-hj-allow" }}
                   variant={inputVariant}
                   margin="normal"
                 />
@@ -595,6 +602,7 @@ export function BreedingForm({
               label="Anteckningar om parningstillfället"
               variant={inputVariant}
               className="wideControl"
+              inputProps={{ className: "data-hj-allow" }}
               multiline
               rows={2}
               value={formState.breed_notes ?? ""}
@@ -640,6 +648,7 @@ export function BreedingForm({
                     type="number"
                     className="control controlWidth"
                     variant={inputVariant}
+                    inputProps={{ className: "data-hj-allow" }}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -653,6 +662,7 @@ export function BreedingForm({
                     type="number"
                     className="controlWidth"
                     variant={inputVariant}
+                    inputProps={{ className: "data-hj-allow" }}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -665,6 +675,7 @@ export function BreedingForm({
                   label="Anteckningar om födseln"
                   variant={inputVariant}
                   className="controlFull"
+                  inputProps={{ className: "data-hj-allow" }}
                   multiline
                   rows={2}
                   value={formState.birth_notes ?? ""}

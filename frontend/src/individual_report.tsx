@@ -119,6 +119,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
         setSuccess(true);
+        loadData(["genebanks"]);
         return;
       }
       if (json.status == "error") {

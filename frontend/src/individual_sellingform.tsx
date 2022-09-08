@@ -58,6 +58,7 @@ export function IndividualSellingForm({
           <TextField
             {...params}
             label="Välj besättning"
+            inputProps={{ className: "data-hj-allow" }}
             variant="outlined"
             margin="normal"
             helperText={

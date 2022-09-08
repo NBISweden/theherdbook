@@ -385,6 +385,7 @@ export const IndividualWeigthull = ({
                   endAdornment: (
                     <InputAdornment position="end">Kg</InputAdornment>
                   ),
+                  className: "data-hj-allow",
                   inputProps: { min: 0 },
                   inputComponent: NumberFormatCustom as any,
                 }}
@@ -465,6 +466,7 @@ export const IndividualWeigthull = ({
                     className="control controlWidth"
                     variant={inputVariant}
                     margin="normal"
+                    inputProps={{ className: "data-hj-allow" }}
                   />
                 )}
                 onChange={(event: any, newValue: OptionType | null) => {

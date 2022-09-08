@@ -450,7 +450,12 @@ export function FilterTable({
             option.value == value.value
           }
           renderInput={(params) => (
-            <TextField {...params} variant={inputVariant} margin="normal" />
+            <TextField
+              {...params}
+              inputProps={{ className: "data-hj-allow" }}
+              variant={inputVariant}
+              margin="normal"
+            />
           )}
           onChange={(event: any, newValues: OptionType[] | null) => {
             newValues && updateColumns(newValues);
@@ -498,7 +503,11 @@ export function FilterTable({
               label="Sök"
               variant={inputVariant}
               onChange={(e) => setSearch(e.currentTarget.value)}
+<<<<<<< HEAD
               className="data-hj-allow"
+=======
+              inputProps={{ className: "data-hj-allow" }}
+>>>>>>> 5a1d39b... Put the attribute in the right place
             />
             <TableContainer>
               <Table

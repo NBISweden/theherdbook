@@ -65,7 +65,8 @@ export const CertAutocomplete = ({
           <TextField
             {...params}
             label="Typ av intyg"
-            className="control data-hj-allow"
+            className="control"
+            inputProps={{ className: "data-hj-allow" }}
             variant={inputVariant}
             margin="normal"
           />
@@ -78,7 +79,8 @@ export const CertAutocomplete = ({
         <TextField
           disabled={!canManage && edit}
           label="Nummer på pappersintyg"
-          className="control controlWidth data-hj-allow"
+          className="control controlWidth"
+          inputProps={{ className: "data-hj-allow" }}
           variant={inputVariant}
           value={individual.certificate ?? ""}
           onChange={(event) => {
@@ -89,7 +91,8 @@ export const CertAutocomplete = ({
         <TextField
           disabled={!canManage && edit}
           label="Nummer på digitaltintyg"
-          className="control controlWidth data-hj-allow"
+          className="control controlWidth"
+          inputProps={{ className: "data-hj-allow" }}
           variant={inputVariant}
           value={individual.digital_certificate ?? ""}
           onChange={(event) => {
@@ -100,7 +103,8 @@ export const CertAutocomplete = ({
         <TextField
           label="Intygsnummer - välj typ först"
           disabled
-          className="control controlWidth data-hj-allow"
+          className="control controlWidth"
+          inputProps={{ className: "data-hj-allow" }}
           variant={inputVariant}
           value=""
           onChange={() => {}}
