@@ -528,7 +528,7 @@ export function BreedingForm({
               inputVariant={inputVariant}
               label="Parningsdatum"
               format={dateFormat}
-              className="wideControl data-hj-allow"
+              className="wideControl"
               value={formState.breed_date ?? null}
               InputLabelProps={{
                 shrink: true,
@@ -553,7 +553,7 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Mor"
-                  className="wideControl data-hj-allow"
+                  className="wideControl"
                   variant={inputVariant}
                   margin="normal"
                 />
@@ -580,7 +580,7 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Far"
-                  className="wideControl data-hj-allow"
+                  className="wideControl"
                   variant={inputVariant}
                   margin="normal"
                 />

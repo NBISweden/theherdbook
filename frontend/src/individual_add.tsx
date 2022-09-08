@@ -708,7 +708,6 @@ export function IndividualAdd({
                   {...params}
                   label="Välj mor"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
@@ -728,7 +727,6 @@ export function IndividualAdd({
                   {...params}
                   label="Välj far"
                   variant={inputVariant}
-                  className="data-hj-allow"
                 />
               )}
             />
