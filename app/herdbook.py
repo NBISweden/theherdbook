@@ -474,7 +474,10 @@ def external_login_handler(service):
 
     user = da.authenticate_with_credentials(service, persistent_id)
 
-    if user:
+    if user and not user.validated:
+        return "Du behöver gå en kurs och bli validerad först kontakta admin@gotlandskaninen.se"
+
+    if user and user.validated:
         APP.logger.info(
             "Logging in user %s (%s - #%d) by persistent id %s for service %s, refferrer is %s"
             % (
@@ -504,7 +507,7 @@ def external_login_handler(service):
         accountdetails["email"],
         None,
         username=accountdetails["username"],
-        validated=True,
+        validated=False,
         fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
         privileges=[
             {"level": "viewer", "genebank": 1},
@@ -533,9 +536,6 @@ def external_login_handler(service):
         % (persistent_id, accountdetails["email"], service)
     )
 
-    # FIXME: this is how we "really" log in the user
-    session["user_id"] = user.uuid
-
     # If we got a herd from external, setup ownership
     if "herd" in accountdetails:
         for h in ["G", "M"]:
@@ -552,9 +552,13 @@ def external_login_handler(service):
             else:
                 APP.logger.warning("Could not find herd id for herd %s" % h.strip())
 
-    login_user(user)
-
-    return redirect("/start")
+    # FIXME: this is how we "really" log in the user
+    if user.validated:
+        session["user_id"] = user.uuid
+        login_user(user)
+        return redirect("/start")
+    else:
+        return "Du behöver gå en kurs och bli validerad först kontakta admin@gotlandskaninen.se"
 
 
 @APP.route("/api/link/<string:service>", methods=["GET", "POST"])
