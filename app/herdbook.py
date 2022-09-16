@@ -457,7 +457,7 @@ def external_login_handler(service):
     user = da.authenticate_with_credentials(service, persistent_id)
 
     if user and not user.validated:
-        return "Du behöver gå kurs och bli validerad först kontakta admin@gotlandskaninen.se"
+        return "Du behöver gå en kurs och bli validerad först kontakta admin@gotlandskaninen.se"
 
     if user and user.validated:
         APP.logger.info(
@@ -540,7 +540,7 @@ def external_login_handler(service):
         login_user(user)
         return redirect("/start")
     else:
-        return "Du behöver gå kurs och bli validerad först kontakta admin@gotlandskaninen.se"
+        return "Du behöver gå en kurs och bli validerad först kontakta admin@gotlandskaninen.se"
 
 
 @APP.route("/api/link/<string:service>", methods=["GET", "POST"])
