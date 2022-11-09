@@ -72,6 +72,12 @@ export const CertAutocomplete = ({
             className="control"
             variant={inputVariant}
             margin="normal"
+            InputProps={{
+              ...params.InputProps,
+              classes: {
+                input: "data-hj-allow",
+              },
+            }}
           />
         )}
         onChange={(event: any, newValue: OptionType) => {
@@ -86,6 +92,7 @@ export const CertAutocomplete = ({
             className="control controlWidth"
             variant={inputVariant}
             value={individual.certificate ?? ""}
+            inputProps={{ className: "data-hj-allow" }}
             onChange={(event) => {
               updateIndividual("certificate", event.currentTarget.value);
             }}
@@ -99,6 +106,7 @@ export const CertAutocomplete = ({
             className="control controlWidth"
             variant={inputVariant}
             value={individual.digital_certificate ?? ""}
+            inputProps={{ className: "data-hj-allow" }}
             onChange={(event) => {
               updateIndividual(
                 "digital_certificate",
@@ -113,6 +121,7 @@ export const CertAutocomplete = ({
             label="Lägg till intyg senare"
             disabled
             className="control controlWidth"
+            inputProps={{ className: "data-hj-allow" }}
             variant={inputVariant}
             value=""
             onChange={() => {}}

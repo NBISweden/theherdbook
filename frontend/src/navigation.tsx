@@ -214,17 +214,6 @@ export function Navigation() {
       visible: is_admin,
       icon: <GroupIcon />,
     },
-    {
-      label: "Inställningar",
-      path: "/settings",
-      component: (
-        <Restricted>
-          <Settings />
-        </Restricted>
-      ),
-      visible: is_logged_in,
-      icon: <GroupIcon />,
-    },
 
     {
       label: "Bli Medlem",
@@ -287,17 +276,12 @@ export function Navigation() {
             <span className="trigram">☰</span>
             <Typography variant="subtitle1">Menu</Typography>
           </Button>
-          {is_logged_in && (
-            <Button
-              onClick={() => {
-                history.push("/settings");
-              }}
-            >
-              <b>
-                <Typography variant="subtitle1">{user.username}</Typography>
-              </b>
-            </Button>
-          )}
+
+          <Button>
+            <b>
+              <Typography variant="subtitle1">{user?.username}</Typography>
+            </b>
+          </Button>
 
           <StyledMenu
             id="customized-menu"
