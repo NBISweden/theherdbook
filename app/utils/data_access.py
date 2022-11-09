@@ -860,6 +860,8 @@ def form_to_individual(form, user=None):
             else:
                 if not form.get("new_individual", False):
                     if getattr(individual, key) != form[key]:
+                        if key == "digital_certificate" and form[key] == "":
+                            form[key] = None
                         update_logger.info(
                             f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},"
                         )
