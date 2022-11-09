@@ -67,11 +67,6 @@ export function IndividualForm({
     if (user?.is_admin) {
       return true;
     } else {
-      if (!individual?.is_registered) {
-        return true;
-      }
-      console.log(genebank);
-      console.log(user?.is_manager);
       if (!!genebank?.id) {
         return user?.is_manager?.includes(genebank?.id);
       } else {
@@ -155,9 +150,15 @@ export function IndividualForm({
               {formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                 <>
                   <div className="titleText">Redigera Individ</div>
-                  <div className={!canManage ? "adminPane" : "whitePane"}>
+                  <div
+                    className={
+                      !canManage && individual?.is_registered
+                        ? "adminPane"
+                        : "whitePane"
+                    }
+                  >
                     <div className="flexRow">
-                      {!canManage ? (
+                      {!canManage && individual?.is_registered ? (
                         <div className="paneTitle">
                           Kan endast ändras av genbanksansvarig
                         </div>
@@ -165,7 +166,7 @@ export function IndividualForm({
                         <></>
                       )}
                       <TextField
-                        disabled={!canManage}
+                        disabled={!canManage && individual?.is_registered}
                         required
                         error={numberError}
                         label="Individnummer"
@@ -185,7 +186,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
-                        edit={true}
+                        edit={individual?.is_registered}
                       />
                     </div>
                   </div>
