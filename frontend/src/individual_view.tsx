@@ -206,7 +206,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>{individual?.number}</dd>
                   <dt>Intyg:</dt>
                   <dd>
-                    {individual?.certificate | individual?.digital_certificate}
+                    {individual?.certificate || individual?.digital_certificate}
                   </dd>
                   <dt>Kön:</dt>
                   <dd>
