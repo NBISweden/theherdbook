@@ -1,4 +1,4 @@
-import { TextField } from "@material-ui/core";
+import { TextField, Tooltip } from "@material-ui/core";
 import React from "react";
 import { OptionType } from "./data_context_global";
 import { Individual, inputVariant } from "@app/data_context_global";
@@ -54,7 +54,11 @@ export const CertAutocomplete = ({
       <Autocomplete
         disabled={!canManage && edit}
         className="controlWidth"
-        options={certTypeOptions ?? []}
+        options={
+          edit
+            ? certTypeOptions ?? []
+            : certTypeOptions.filter((option) => option.value != "digital")
+        }
         value={certTypeOptions.find(
           (option) =>
             option.value == certType ??
@@ -75,36 +79,45 @@ export const CertAutocomplete = ({
         }}
       />
       {certType == "paper" ? (
-        <TextField
-          disabled={!canManage && edit}
-          label="Nummer på pappersintyg"
-          className="control controlWidth"
-          variant={inputVariant}
-          value={individual.certificate ?? ""}
-          onChange={(event) => {
-            updateIndividual("certificate", event.currentTarget.value);
-          }}
-        />
+        <Tooltip title="Detta är nummret på ditt pappers intyg, dvs antingen de du skriver för hand med eller de du köper och skriver ut med din skrivare.">
+          <TextField
+            disabled={!canManage && edit}
+            label="Nummer på pappersintyg"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.certificate ?? ""}
+            onChange={(event) => {
+              updateIndividual("certificate", event.currentTarget.value);
+            }}
+          />
+        </Tooltip>
       ) : certType == "digital" ? (
-        <TextField
-          disabled={!canManage && edit}
-          label="Nummer på digitaltintyg"
-          className="control controlWidth"
-          variant={inputVariant}
-          value={individual.digital_certificate ?? ""}
-          onChange={(event) => {
-            updateIndividual("digital_certificate", event.currentTarget.value);
-          }}
-        />
+        <Tooltip title="För att utfärda ett Digitalt intyg välj 'Skapa nytt intyg' på kaninens profilsida.">
+          <TextField
+            disabled={true}
+            label="Sätts automatiskt av systemet"
+            className="control controlWidth"
+            variant={inputVariant}
+            value={individual.digital_certificate ?? ""}
+            onChange={(event) => {
+              updateIndividual(
+                "digital_certificate",
+                event.currentTarget.value
+              );
+            }}
+          />
+        </Tooltip>
       ) : (
-        <TextField
-          label="Intygsnummer - välj typ först"
-          disabled
-          className="control controlWidth"
-          variant={inputVariant}
-          value=""
-          onChange={() => {}}
-        />
+        <Tooltip title="Väljer du 'Inget Intyg' kan du i ett senare steg utfärda ett Digitaltintyg för kaninen eller lägga till ett intygs nummer från ett pappersintyg. Du hittar kaninen om du klickar i 'Oregistrerade djur' under 'Min besättnning' ">
+          <TextField
+            label="Lägg till intyg senare"
+            disabled
+            className="control controlWidth"
+            variant={inputVariant}
+            value=""
+            onChange={() => {}}
+          />
+        </Tooltip>
       )}
     </>
   );
