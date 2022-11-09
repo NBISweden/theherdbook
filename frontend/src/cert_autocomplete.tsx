@@ -43,7 +43,7 @@ export const CertAutocomplete = ({
     if (type.value == "digital") {
       updateIndividual("certificate", null);
     } else if (type.value == "paper") {
-      updateIndividual("digital_certificate", null);
+      updateIndividual("digital_certificate", "");
     } else {
       updateIndividual("digital_certificate", null);
       updateIndividual("certificate", null);
@@ -94,7 +94,7 @@ export const CertAutocomplete = ({
       ) : certType == "digital" ? (
         <Tooltip title="För att utfärda ett Digitalt intyg välj 'Skapa nytt intyg' på kaninens profilsida.">
           <TextField
-            disabled={true}
+            disabled={!canManage}
             label="Sätts automatiskt av systemet"
             className="control controlWidth"
             variant={inputVariant}
