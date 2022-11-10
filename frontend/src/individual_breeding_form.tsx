@@ -414,7 +414,7 @@ export function IndividualBreedingForm({
             </div>
             <FormControlLabel
               control={<Checkbox showDead />}
-              label="Visa avlidna kaniner"
+              label="Visa döda kaniner"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setshowDead(e.target.checked);
               }}
