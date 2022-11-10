@@ -18,7 +18,7 @@ const Main = (
       <CssBaseline />
       <CookieConsent buttonText="Okej! Jag förstår!">
         För att få Stamboken att fungera måste vi lagra några kakor på din
-        dator. Genom att fortsätta använda sidan godkänner du detta.
+        enhet. Genom att fortsätta använda sidan godkänner du detta.
       </CookieConsent>
       <BrowserRouter>
         <WithDataContext>
