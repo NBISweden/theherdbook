@@ -28,3 +28,4 @@ endesive==2.0.9
 boto3==1.17.54
 moto==2.0.8
 google-auth
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
