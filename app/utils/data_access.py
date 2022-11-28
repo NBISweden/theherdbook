@@ -860,8 +860,24 @@ def form_to_individual(form, user=None):
             else:
                 if not form.get("new_individual", False):
                     if getattr(individual, key) != form[key]:
-                        if key == "digital_certificate" and form[key] == "":
-                            form[key] = None
+                        # Reset if switching from paper to digital certificate or vice versa
+                        if (
+                            key == "digital_certificate"
+                            and getattr(individual, "certificate") is not None
+                        ):
+                            update_logger.info(
+                                f"{user.username},{individual.number},certificate,{getattr(individual,'certificate')},'None',"
+                            )
+                            setattr(individual, "certificate", None)
+
+                        if (
+                            key == "certificate"
+                            and getattr(individual, "digital_certificate") is not None
+                        ):
+                            update_logger.info(
+                                f"{user.username},{individual.number},digital_certificate,{getattr(individual,'digital_certificate')},'None',"
+                            )
+                            setattr(individual, "digital_certificate", None)
                         update_logger.info(
                             f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},"
                         )
