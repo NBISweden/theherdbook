@@ -435,7 +435,7 @@ export function IndividualAdd({
     ) {
       userMessage(
         `Individens nummer ska börja med antingen moderns eller faderns nuvarande besättning. 
-         I det här fallet ${motherHerd} eller ${fatherHerd}. deg is ${is_admin}.`,
+         I det här fallet ${motherHerd} eller ${fatherHerd}.`,
         "warning"
       );
       return;

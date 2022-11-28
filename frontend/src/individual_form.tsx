@@ -108,7 +108,6 @@ export function IndividualForm({
         }
         let herds = mother.herd_tracking;
         individual.origin_herd = mother.herd;
-        //individual.number = mother.herd.herd + "-";
         setIndNull(false);
         if (herds.length > 0) {
           const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
@@ -117,7 +116,7 @@ export function IndividualForm({
           herdOptions.filter(
             (item, index) => herdOptions.indexOf(item) === index
           );
-          //Filter unika herds from herd_tracking
+          //Filter unique herds from herd_tracking
           let unique = [
             ...new Map(
               herdOptions.map((item) => [item["label"], item])
