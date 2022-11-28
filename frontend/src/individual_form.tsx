@@ -311,8 +311,8 @@ export function IndividualForm({
                             ""
                           }
                           InputProps={{
-                             classes: {
-                               input: "data-hj-allow",
+                            classes: {
+                              input: "data-hj-allow",
                             },
                             startAdornment: (
                               <InputAdornment position="start">
