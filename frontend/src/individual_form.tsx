@@ -58,7 +58,7 @@ export function IndividualForm({
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [openBreedDialog, setBreedDiOpen] = React.useState(false);
-  const { colors, genebanks } = useDataContext();
+  const { colors } = useDataContext();
   const { user } = useUserContext();
   const [isIndNull, setIndNull] = React.useState(true);
 
@@ -99,8 +99,6 @@ export function IndividualForm({
 
   React.useEffect(() => {
     const getParents = async () => {
-      let herds = [];
-      let father;
       let mother;
 
       if (individual.mother?.number && formAction == FormAction.AddIndividual) {
@@ -108,22 +106,28 @@ export function IndividualForm({
         if (!mother) {
           return;
         }
-        herds.push(mother.herd);
+        let herds = mother.herd_tracking;
         individual.origin_herd = mother.herd;
-        individual.number = mother.herd.herd + "-";
+        //individual.number = mother.herd.herd + "-";
         setIndNull(false);
-      }
-      if (herds.length > 0) {
-        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
-          return { value: h, label: herdLabel(h) };
-        });
-        herdOptions.filter(
-          (item, index) => herdOptions.indexOf(item) === index
-        );
-        setHerdOptions(herdOptions);
-        return;
-      } else {
-        return [];
+        if (herds.length > 0) {
+          const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+            return { value: h, label: herdLabel(h) };
+          });
+          herdOptions.filter(
+            (item, index) => herdOptions.indexOf(item) === index
+          );
+          //Filter unika herds from herd_tracking
+          let unique = [
+            ...new Map(
+              herdOptions.map((item) => [item["label"], item])
+            ).values(),
+          ];
+          setHerdOptions(unique);
+          return;
+        } else {
+          return [];
+        }
       }
     };
     getParents();
@@ -236,7 +240,7 @@ export function IndividualForm({
                       <Tooltip title="Ursprungsbesättning är alltid den besättning som modern befinner sig i. Är detta fel måste modern först säljas till rätt besättning">
                         <Autocomplete
                           options={herdOptions}
-                          disabled
+                          disabled={!canManage}
                           noOptionsText={"Välj härstamningen först"}
                           getOptionLabel={(option: OptionType) => option.label}
                           className="wideControlInd"
@@ -280,46 +284,48 @@ export function IndividualForm({
                             onUpdateIndividual("birth_date", value);
                         }}
                       />
-                      <TextField
-                        required
-                        error={numberError}
-                        disabled={isIndNull}
-                        label="Individnummer"
-                        className="control controlWidth"
-                        variant={inputVariant}
-                        value={
-                          (individual.number?.split(/-\d{0,2}/)[1] ??
-                            individual.number) ||
-                          ""
-                        }
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              {individual?.number
-                                ? `${
-                                    individual.number?.match(
-                                      /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                    )[0]
-                                  }`
-                                : `${
-                                    individual.genebank
-                                      ? individual.genebank[0]
-                                      : "X"
-                                  }XXX-XX`}
-                            </InputAdornment>
-                          ),
-                        }}
-                        onChange={(event) => {
-                          onUpdateIndividual(
-                            "number",
-                            `${
-                              individual.number?.match(
-                                /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                              )[0]
-                            }${event.currentTarget.value}`
-                          );
-                        }}
-                      />
+                      <Tooltip title="Du kommer här få ett förslag på kull- och individnummer. Nummret kommer bara vara korrekt om du registrerar alla kaniner och kullar i kronologisk ordning.">
+                        <TextField
+                          required
+                          error={numberError}
+                          disabled={isIndNull || individual?.number == null}
+                          label="Individnummer"
+                          className="control controlWidth"
+                          variant={inputVariant}
+                          value={
+                            (individual.number?.split(/-\d{0,2}/)[1] ??
+                              individual.number) ||
+                            ""
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                {individual?.number
+                                  ? `${
+                                      individual.number?.match(
+                                        /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                                      )[0]
+                                    }`
+                                  : `${
+                                      individual.genebank
+                                        ? individual.genebank[0]
+                                        : "X"
+                                    }XXX-XX`}
+                              </InputAdornment>
+                            ),
+                          }}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "number",
+                              `${
+                                individual.number?.match(
+                                  /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                                )[0]
+                              }${event.currentTarget.value}`
+                            );
+                          }}
+                        />
+                      </Tooltip>
                     </div>{" "}
                     <div className="flexRow">
                       <CertAutocomplete
