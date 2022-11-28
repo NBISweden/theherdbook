@@ -238,7 +238,7 @@ export function IndividualAdd({
     if (currentGenebank) {
       handleUpdateIndividual("genebank", currentGenebank.name);
     }
-  }, [currentGenebank]);
+  }, [currentGenebank, success]);
 
   // remove error layout from input fields when user has added an input
   React.useEffect(() => {
@@ -308,13 +308,20 @@ export function IndividualAdd({
             `/api/breeding/nextind/`,
             Breedingmatch.breedings
           );
-          setIndividual({
-            ...individual,
-            origin_herd: BreedHerd,
-            number: IndNumber,
-            litter_size: Breedingmatch.breedings.litter_size,
-            litter_size6w: Breedingmatch.breedings.litter_size6w,
-          });
+          if (IndNumber == null) {
+            userMessage(
+              `Du får max registrera 9 kaniner från en och samma kull.`,
+              "error"
+            );
+          } else {
+            setIndividual({
+              ...individual,
+              //origin_herd: BreedHerd,
+              number: IndNumber,
+              litter_size: Breedingmatch.breedings.litter_size,
+              litter_size6w: Breedingmatch.breedings.litter_size6w,
+            });
+          }
         } else {
           userMessage(
             `Hittade inget befintligt parningstillfälle kommer skapa ett nytt!`,
@@ -333,6 +340,7 @@ export function IndividualAdd({
     individual?.birth_date,
     individual?.father,
     individual?.mother,
+    individual?.origin_herd,
     newSibling,
   ]);
 
@@ -420,7 +428,11 @@ export function IndividualAdd({
     }
     const motherHerd = await getParentHerd(individual.mother.number);
     const fatherHerd = await getParentHerd(individual.father.number);
-    if (originHerdNumber !== motherHerd && originHerdNumber !== fatherHerd) {
+    if (
+      originHerdNumber !== motherHerd &&
+      originHerdNumber !== fatherHerd &&
+      !is_admin
+    ) {
       userMessage(
         `Individens nummer ska börja med antingen moderns eller faderns nuvarande besättning. 
          I det här fallet ${motherHerd} eller ${fatherHerd}.`,
@@ -609,26 +621,19 @@ export function IndividualAdd({
       breeding: breedingId,
     };
     createIndividual(newIndividual);
+    if (newSibling) {
+      setSibling(false);
+    }
   };
 
   const resetBlank = () => {
     // change the keys to something new to cause rerender of the Autocompletes
-    setHerdKey(Date.now());
-    setColorKey(Date.now());
     setIndividual({} as Individual);
     setSuccess(false);
   };
 
   const resetSibling = () => {
-    const numberParts: string[] = individual?.number?.split("-");
     const sibling: Individual = {
-      number: numberParts
-        ? numberParts[0] +
-          "-" +
-          numberParts[1][0] +
-          numberParts[1][1] +
-          numberParts[1][2]
-        : null,
       origin_herd: individual.origin_herd,
       birth_date: individual.birth_date,
       mother: individual.mother,
@@ -693,7 +698,7 @@ export function IndividualAdd({
             </div>
             <FormControlLabel
               control={<Checkbox showDead />}
-              label="Visa avlidna kaniner"
+              label="Visa döda kaniner"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setshowDead(e.target.checked);
               }}

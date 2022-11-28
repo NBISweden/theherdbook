@@ -43,7 +43,7 @@ export const CertAutocomplete = ({
     if (type.value == "digital") {
       updateIndividual("certificate", null);
     } else if (type.value == "paper") {
-      updateIndividual("digital_certificate", "");
+      updateIndividual("digital_certificate", null);
     } else {
       updateIndividual("digital_certificate", null);
       updateIndividual("certificate", null);
