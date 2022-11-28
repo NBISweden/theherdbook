@@ -866,7 +866,8 @@ def form_to_individual(form, user=None):
                             and getattr(individual, "certificate") is not None
                         ):
                             update_logger.info(
-                                f"{user.username},{individual.number},certificate,{getattr(individual,'certificate')},'None',"
+                                f"{user.username},{individual.number},"
+                                f"certificate,{getattr(individual,'certificate')},'None',"
                             )
                             setattr(individual, "certificate", None)
 
@@ -875,7 +876,8 @@ def form_to_individual(form, user=None):
                             and getattr(individual, "digital_certificate") is not None
                         ):
                             update_logger.info(
-                                f"{user.username},{individual.number},digital_certificate,{getattr(individual,'digital_certificate')},'None',"
+                                f"{user.username},{individual.number},"
+                                f"digital_certificate,{getattr(individual,'digital_certificate')},'None',"
                             )
                             setattr(individual, "digital_certificate", None)
                         update_logger.info(
