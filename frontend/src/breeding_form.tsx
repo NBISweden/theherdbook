@@ -497,6 +497,11 @@ export function BreedingForm({
                     label="Född tidigast"
                     format={dateFormat}
                     value={fromDate}
+                    InputProps={{
+                      classes: {
+                        input: "data-hj-allow",
+                      },
+                    }}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -530,6 +535,11 @@ export function BreedingForm({
               format={dateFormat}
               className="wideControl"
               value={formState.breed_date ?? null}
+              InputProps={{
+                classes: {
+                  input: "data-hj-allow",
+                },
+              }}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -556,6 +566,12 @@ export function BreedingForm({
                   className="wideControl"
                   variant={inputVariant}
                   margin="normal"
+                  InputProps={{
+                    ...params.InputProps,
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                 />
               )}
               // jscpd:ignore-end
@@ -583,6 +599,12 @@ export function BreedingForm({
                   className="wideControl"
                   variant={inputVariant}
                   margin="normal"
+                  InputProps={{
+                    ...params.InputProps,
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                 />
               )}
               // jscpd:ignore-end
@@ -597,6 +619,7 @@ export function BreedingForm({
               className="wideControl"
               multiline
               rows={2}
+              inputProps={{ className: "data-hj-allow" }}
               value={formState.breed_notes ?? ""}
               onChange={(e: any) => {
                 setFormField("breed_notes", e.target.value);
@@ -626,6 +649,11 @@ export function BreedingForm({
                   format={dateFormat}
                   className="controlFull"
                   value={formState.birth_date ?? null}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -639,6 +667,7 @@ export function BreedingForm({
                     value={formState.litter_size ?? ""}
                     type="number"
                     className="control controlWidth"
+                    inputProps={{ className: "data-hj-allow" }}
                     variant={inputVariant}
                     InputLabelProps={{
                       shrink: true,
@@ -653,6 +682,7 @@ export function BreedingForm({
                     type="number"
                     className="controlWidth"
                     variant={inputVariant}
+                    inputProps={{ className: "data-hj-allow" }}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -667,6 +697,7 @@ export function BreedingForm({
                   className="controlFull"
                   multiline
                   rows={2}
+                  inputProps={{ className: "data-hj-allow" }}
                   value={formState.birth_notes ?? ""}
                   onChange={(e: any) => {
                     setFormField("birth_notes", e.target.value);

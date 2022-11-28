@@ -678,6 +678,11 @@ export function IndividualAdd({
                       label="Född tidigast"
                       format={dateFormat}
                       value={fromDate}
+                      InputProps={{
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                       InputLabelProps={{
                         shrink: true,
                       }}
@@ -713,6 +718,12 @@ export function IndividualAdd({
                   {...params}
                   label="Välj mor"
                   variant={inputVariant}
+                  InputProps={{
+                    ...params.InputProps,
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                 />
               )}
             />
@@ -732,6 +743,12 @@ export function IndividualAdd({
                   {...params}
                   label="Välj far"
                   variant={inputVariant}
+                  InputProps={{
+                    ...params.InputProps,
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                 />
               )}
             />

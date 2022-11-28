@@ -365,6 +365,11 @@ export const IndividualWeigthull = ({
                 label="Mätningsdatum"
                 format={dateFormat}
                 value={weightDate}
+                InputProps={{
+                  classes: {
+                    input: "data-hj-allow",
+                  },
+                }}
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -387,6 +392,9 @@ export const IndividualWeigthull = ({
                   ),
                   inputProps: { min: 0 },
                   inputComponent: NumberFormatCustom as any,
+                  classes: {
+                    input: "data-hj-allow",
+                  },
                 }}
                 InputLabelProps={{
                   shrink: true,
@@ -439,6 +447,11 @@ export const IndividualWeigthull = ({
                 label="Mätningsdatum"
                 format={dateFormat}
                 value={bodyfatDate}
+                InputProps={{
+                  classes: {
+                    input: "data-hj-allow",
+                  },
+                }}
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -465,6 +478,12 @@ export const IndividualWeigthull = ({
                     className="control controlWidth"
                     variant={inputVariant}
                     margin="normal"
+                    InputProps={{
+                      ...params.InputProps,
+                      classes: {
+                        input: "data-hj-allow",
+                      },
+                    }}
                   />
                 )}
                 onChange={(event: any, newValue: OptionType | null) => {
