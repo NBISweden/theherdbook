@@ -276,7 +276,9 @@ export function IndividualAdd({
         individual?.birth_date &&
         individual?.father &&
         individual?.mother &&
-        individual?.origin_herd
+        individual?.origin_herd &&
+        !success &&
+        !(success && newSibling)
       ) {
         let limitedBreedingInput: LimitedBreeding = {
           birth_date: individual.birth_date,
@@ -539,11 +541,17 @@ export function IndividualAdd({
                 setHerdChangeListener(herdChangeListener + 1);
                 loadData(["genebanks"]);
                 setSuccess(true);
+                if (newSibling) {
+                  setSibling(false);
+                }
               }
             } else {
               userMessage("Kaninen har lagts till!", "success");
               loadData(["genebanks"]);
               setSuccess(true);
+              if (newSibling) {
+                setSibling(false);
+              }
             }
             break;
           }
@@ -571,11 +579,21 @@ export function IndividualAdd({
                 );
                 break;
               }
-              default: {
+              case json.message.match(
+                /^duplicate key value violates unique constraint "individual_certificate"/
+              )?.input: {
                 userMessage(
-                  "Något gick fel. Det här borde inte hända.",
+                  `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
                   "error"
                 );
+                break;
+              }
+              default: {
+                userMessage(
+                  `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+                  "error"
+                );
+                console.log("Fel från API: ", json.message);
               }
             }
           }
@@ -621,9 +639,6 @@ export function IndividualAdd({
       breeding: breedingId,
     };
     createIndividual(newIndividual);
-    if (newSibling) {
-      setSibling(false);
-    }
   };
 
   const resetBlank = () => {
@@ -642,8 +657,8 @@ export function IndividualAdd({
       litter_size6w: individual.litter_size6w,
       genebank: individual.genebank,
     };
-    setIndividual(sibling);
     setSibling(true);
+    setIndividual(sibling);
     setSuccess(false);
   };
 
