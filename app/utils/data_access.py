@@ -923,6 +923,13 @@ def add_individual(form, user_uuid):
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
 
+    if (
+        Individual.select()
+        .where(Individual.certificate == form["certificate"])
+        .exists()
+    ):
+        return {"status": "error", "message": "Individual certificate already exists"}
+
     birth_date = form.get("birth_date", None)
     if birth_date is None:
         return {"status": "error", "message": "Birth date must be defined"}

@@ -579,9 +579,7 @@ export function IndividualAdd({
                 );
                 break;
               }
-              case json.message.match(
-                /^duplicate key value violates unique constraint "individual_certificate"/
-              )?.input: {
+              case "Individual certificate already exists": {
                 userMessage(
                   `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
                   "error"
