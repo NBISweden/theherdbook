@@ -596,7 +596,7 @@ export function BreedingForm({
               variant={inputVariant}
               className="wideControl"
               multiline
-              rows={2}
+              minRows={2}
               value={formState.breed_notes ?? ""}
               onChange={(e: any) => {
                 setFormField("breed_notes", e.target.value);
@@ -666,7 +666,7 @@ export function BreedingForm({
                   variant={inputVariant}
                   className="controlFull"
                   multiline
-                  rows={2}
+                  minRows={2}
                   value={formState.birth_notes ?? ""}
                   onChange={(e: any) => {
                     setFormField("birth_notes", e.target.value);

@@ -534,7 +534,7 @@ export function IndividualBreedingForm({
                   variant={inputVariant}
                   className="controlFull"
                   multiline
-                  rows={2}
+                  minRows={2}
                   value={formState.birth_notes ?? ""}
                   onChange={(e: any) => {
                     setFormField("birth_notes", e.target.value);

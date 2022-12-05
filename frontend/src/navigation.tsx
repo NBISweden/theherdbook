@@ -8,7 +8,7 @@ import {
   useHistory,
 } from "react-router-dom";
 
-import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import { svSE } from "@material-ui/core/locale";
 import Paper from "@material-ui/core/Paper";
 import HomeIcon from "@material-ui/icons/Home";
@@ -120,7 +120,7 @@ export function Navigation() {
   const is_admin = !!(user?.is_manager || user?.is_admin);
   const is_owner = !!(user?.is_owner && user.is_owner.length > 0);
   const is_logged_in = !!user;
-  const theme = createMuiTheme({}, svSE);
+  const theme = createTheme({}, svSE);
   const history = useHistory();
 
   const tabs: ui.RoutedTab[] = [
@@ -309,6 +309,7 @@ export function Navigation() {
             {tabs.map((tab) => (
               <Link
                 to={tab.path ?? "/"}
+                key={tab.label}
                 className="link"
                 style={{ display: tab.visible === false ? "none" : undefined }}
                 onClick={() => {

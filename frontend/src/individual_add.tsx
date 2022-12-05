@@ -713,7 +713,7 @@ export function IndividualAdd({
               )}
             </div>
             <FormControlLabel
-              control={<Checkbox showDead />}
+              control={<Checkbox />}
               label="Visa döda kaniner"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setshowDead(e.target.checked);
