@@ -43,6 +43,7 @@ export function IndividualForm({
   birthDateError,
   litterError,
   litterError6w,
+  intygError,
 }: {
   genebank: Genebank;
   individual: Individual;
@@ -55,6 +56,7 @@ export function IndividualForm({
   birthDateError: boolean;
   litterError: boolean;
   litterError6w: boolean;
+  intygError: boolean;
 }) {
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [openBreedDialog, setBreedDiOpen] = React.useState(false);
@@ -331,6 +333,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
+                        intygError={intygError}
                         edit={false}
                       />
                     </div>
@@ -566,7 +569,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={1}
+                  minRows={1}
                   value={individual.hair_notes ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("hair_notes", event.currentTarget.value);
@@ -579,7 +582,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={4}
+                  minRows={4}
                   value={individual.notes ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("notes", event.currentTarget.value);

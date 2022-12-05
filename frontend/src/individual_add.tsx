@@ -138,6 +138,7 @@ export function IndividualAdd({
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
   const [litterError6w, setLitterError6w] = React.useState(false as boolean);
+  const [intygError, setIntygError] = React.useState(false as boolean);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -260,6 +261,9 @@ export function IndividualAdd({
     if (individual?.litter_size6w) {
       setLitterError6w(false);
     }
+    if (individual?.certificate) {
+      setIntygError(false);
+    }
   }, [
     individual?.color,
     individual?.number,
@@ -267,6 +271,7 @@ export function IndividualAdd({
     individual?.birth_date,
     individual?.litter_size,
     individual?.litter_size6w,
+    individual?.certificate,
   ]);
   //Searches for existing breedings and update form with data from that found breeding
   //Suggest the next individual number
@@ -373,6 +378,7 @@ export function IndividualAdd({
       setLitterError6w(true);
       error = true;
     }
+
     if (error) {
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
@@ -577,6 +583,7 @@ export function IndividualAdd({
                   "Det finns redan en kanin med detta nummer i databasen.",
                   "error"
                 );
+                setNumberError(true);
                 break;
               }
               case "Individual certificate already exists": {
@@ -584,6 +591,7 @@ export function IndividualAdd({
                   `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
                   "error"
                 );
+                setIntygError(true);
                 break;
               }
               default: {
@@ -763,6 +771,7 @@ export function IndividualAdd({
               birthDateError={birthDateError}
               litterError={litterError}
               litterError6w={litterError6w}
+              intygError={intygError}
             />
           </div>
           {!herdId && (
