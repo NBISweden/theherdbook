@@ -256,6 +256,7 @@ export function asLocale(dateString?: string) {
  * @param sex the sex of the active individuals
  * @param fromDate the latest birth date from which individuals should be retrieved
  * @param herdId the id of the herd to filter individual data
+ * @param showDead boolen to show or hide dead animals
  */
 export function individualsFromDate(
   genebank: Genebank | undefined,
@@ -283,7 +284,11 @@ export const toLimitedIndividuals = (
   inds: Individual[]
 ): LimitedIndividual[] => {
   const active = inds.map((i) => {
-    return { id: i.id, name: i.name, number: i.number };
+    return {
+      id: i.id,
+      name: i.name,
+      number: i.number,
+    };
   });
   return active;
 };
