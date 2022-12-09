@@ -41,7 +41,7 @@ import { get, patch, post } from "./communication";
 import { useBreedingContext } from "./breeding_context";
 import { useUserContext } from "./user_context";
 
-const emptyBreeding: Breeding = {
+const emptyBreeding: ExtendedBreeding = {
   id: -1,
   breed_date: null,
   breed_notes: "",
@@ -67,12 +67,13 @@ export function IndividualBreedingForm({
   onUpdateIndividual,
   closeDialog,
 }: {
-  data: Breeding | "new";
+  data: ExtendedBreeding | undefined;
   herdId: string | undefined;
   handleBreedingsChanged: () => void;
   handleActive: (breeding: Breeding) => void;
   individual: Individual;
   onUpdateIndividual: any;
+  closeDialog: any;
 }) {
   const {
     genebanks,
@@ -114,7 +115,7 @@ export function IndividualBreedingForm({
   }, [genebanks, data]);
 
   React.useEffect(() => {
-    setFormState(!data || data == "new" ? emptyBreeding : data);
+    setFormState(!data ? emptyBreeding : data);
   }, [data]);
 
   React.useEffect(() => {
