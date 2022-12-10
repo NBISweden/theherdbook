@@ -14,13 +14,11 @@ import InfoOutlinedIcon from "@material-ui/icons/InfoOutlined";
 import {
   dateFormat,
   Genebank,
-  herdLabel,
   inputVariant,
   Individual,
-  LimitedHerd,
   OptionType,
 } from "@app/data_context_global";
-import { get } from "./communication";
+
 import { useUserContext } from "./user_context";
 import { BreedingDialog } from "./breeding_dialog";
 import { CertAutocomplete } from "./cert_autocomplete";
@@ -43,6 +41,8 @@ export function IndividualForm({
   birthDateError,
   litterError,
   litterError6w,
+  intygError,
+  herdOptions,
 }: {
   genebank: Genebank;
   individual: Individual;
@@ -55,12 +55,12 @@ export function IndividualForm({
   birthDateError: boolean;
   litterError: boolean;
   litterError6w: boolean;
+  intygError: boolean;
+  herdOptions: OptionType[];
 }) {
-  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [openBreedDialog, setBreedDiOpen] = React.useState(false);
   const { colors } = useDataContext();
   const { user } = useUserContext();
-  const [isIndNull, setIndNull] = React.useState(true);
 
   // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
@@ -80,12 +80,8 @@ export function IndividualForm({
   }, [user, individual]);
 
   const colorOptions: OptionType[] = React.useMemo(() => {
-    if (
-      individual &&
-      colors &&
-      Object.keys(colors).includes(individual.genebank)
-    ) {
-      return colors[individual.genebank].map((c) => {
+    if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
+      return colors[genebank.name].map((c) => {
         return {
           id: c.id,
           comment: c.comment,
@@ -95,42 +91,7 @@ export function IndividualForm({
       });
     }
     return [];
-  }, [colors, individual]);
-
-  React.useEffect(() => {
-    const getParents = async () => {
-      let mother;
-
-      if (individual.mother?.number && formAction == FormAction.AddIndividual) {
-        mother = await get(`/api/individual/${individual.mother?.number}`);
-        if (!mother) {
-          return;
-        }
-        let herds = mother.herd_tracking;
-        individual.origin_herd = mother.herd;
-        setIndNull(false);
-        if (herds.length > 0) {
-          const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
-            return { value: h, label: herdLabel(h) };
-          });
-          herdOptions.filter(
-            (item, index) => herdOptions.indexOf(item) === index
-          );
-          //Filter unique herds from herd_tracking
-          let unique = [
-            ...new Map(
-              herdOptions.map((item) => [item["label"], item])
-            ).values(),
-          ];
-          setHerdOptions(unique);
-          return;
-        } else {
-          return [];
-        }
-      }
-    };
-    getParents();
-  }, [individual.mother?.number]);
+  }, [colors, genebank]);
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -287,7 +248,7 @@ export function IndividualForm({
                         <TextField
                           required
                           error={numberError}
-                          disabled={isIndNull || individual?.number == null}
+                          disabled={individual?.number == null}
                           label="Individnummer"
                           className="control controlWidth"
                           variant={inputVariant}
@@ -306,9 +267,7 @@ export function IndividualForm({
                                       )[0]
                                     }`
                                   : `${
-                                      individual.genebank
-                                        ? individual.genebank[0]
-                                        : "X"
+                                      genebank ? genebank.name[0] : "X"
                                     }XXX-XX`}
                               </InputAdornment>
                             ),
@@ -331,6 +290,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
+                        intygError={intygError}
                         edit={false}
                       />
                     </div>
@@ -566,7 +526,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={1}
+                  minRows={1}
                   value={individual.hair_notes ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("hair_notes", event.currentTarget.value);
@@ -579,7 +539,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={4}
+                  minRows={4}
                   value={individual.notes ?? ""}
                   onChange={(event) => {
                     onUpdateIndividual("notes", event.currentTarget.value);

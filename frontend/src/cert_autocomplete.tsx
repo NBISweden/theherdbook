@@ -9,6 +9,7 @@ export const CertAutocomplete = ({
   updateIndividual,
   canManage,
   edit,
+  intygError,
 }: {
   individual: Individual;
   updateIndividual: <T extends keyof Individual>(
@@ -17,6 +18,7 @@ export const CertAutocomplete = ({
   ) => void;
   canManage: boolean;
   edit: boolean;
+  intygError: boolean;
 }) => {
   const defaultCert = !!individual.certificate
     ? "paper"
@@ -83,6 +85,7 @@ export const CertAutocomplete = ({
           <TextField
             disabled={!canManage && edit}
             label="Nummer på pappersintyg"
+            error={intygError}
             className="control controlWidth"
             variant={inputVariant}
             value={individual.certificate ?? ""}

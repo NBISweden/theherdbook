@@ -16,6 +16,7 @@ import {
   DialogActions,
   DialogContent,
 } from "@material-ui/core";
+import { Individual } from "@app/data_context_global";
 
 export const BreedingDialog = ({
   open,
@@ -24,16 +25,17 @@ export const BreedingDialog = ({
   individual,
   onUpdateIndividual,
 }: {
-  breed_id: string | undefined;
+  open: any;
+  close: any;
+  breed_id: number | null;
   individual: Individual;
   onUpdateIndividual: any;
 }) => {
-  const [selectedValue, setSelectedValue] = useState("");
-  const [active, setActive] = React.useState(null as any);
+  const [setActive] = React.useState(null as any);
   const [extendedBreeding, setExtendedBreeding] = React.useState(
-    [] as Breeding[]
+    undefined as ExtendedBreeding | undefined
   );
-  const [breedingsChanged, setBreedingsChanged] = React.useState(true);
+  const [setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const handleBreedingsChanged = () => {
     setBreedingsChanged(true);
@@ -41,7 +43,7 @@ export const BreedingDialog = ({
   React.useEffect(() => {
     if (breed_id) {
       get(`/api/breeding/id/${breed_id}`).then(
-        (data: { breeding: Breeding[] }) => {
+        (data: { breeding: ExtendedBreeding }) => {
           data && setExtendedBreeding(data.breeding);
         },
         (error) => {
@@ -70,7 +72,7 @@ export const BreedingDialog = ({
         <DialogContent>
           <IndividualBreedingForm
             data={extendedBreeding}
-            herdId={extendedBreeding.breeding_herd}
+            herdId={extendedBreeding?.breeding_herd}
             handleBreedingsChanged={handleBreedingsChanged}
             handleActive={handleActive}
             individual={individual}

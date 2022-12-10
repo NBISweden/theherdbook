@@ -138,7 +138,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               }}
             />
             <Tab
-              label="Parningstillfällen"
+              label="Kullar och parningar"
               disabled={!user?.canEdit(id)}
               value="breeding"
             />
