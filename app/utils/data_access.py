@@ -914,14 +914,33 @@ def add_individual(form, user_uuid):
         return {"status": "error", "message": "Forbidden"}
 
     if form.get("number", None) is None and "breeding" in form:
-        form["number"] = next_individual_number(
+        nextind = next_individual_number(
             herd=form["herd"],
             birth_date=form["birth_date"],
             breeding_event=form["breeding"],
         )
+        logger.error(f"nextind is ${nextind}")
+        if nextind.get("status", None) == "success":
+            form["number"] = nextind["number"]
+        else:
+            logger.error(f"Next in is not successfull: ${nextind.get('message')}")
+            return {
+                "status": "error",
+                "message": f"kan inte hämta nästa individ nummer: ${nextind.get('message')}",
+            }
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
+    if form.get("certificate", None) is not None:
+        if (
+            Individual.select()
+            .where(Individual.certificate == form["certificate"])
+            .exists()
+        ):
+            return {
+                "status": "error",
+                "message": "Individual certificate already exists",
+            }
 
     birth_date = form.get("birth_date", None)
     if birth_date is None:

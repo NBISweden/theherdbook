@@ -65,7 +65,7 @@ export function Register() {
                 );
               })}
           </div>
-          <IndividualAdd genebank={genebank} />
+          <IndividualAdd genebank={genebank} key={genebank.id} />
         </Paper>
       ) : user && !user.is_admin && !user.is_manager ? (
         <p>Du har inte rättigheterna att registrera nya kaniner.</p>

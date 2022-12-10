@@ -472,10 +472,11 @@ export function FilterTable({
           <>
             {currentFilters.map((filter) => (
               <FormControlLabel
-                key={filter.field}
+                key={filter.label}
                 control={
                   <Checkbox
                     name={filter.field}
+                    key={filter.field + filter.label}
                     checked={filter.active ?? false}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       if (
@@ -523,7 +524,7 @@ export function FilterTable({
                       <TableCell
                         key={column.field}
                         align={column.numeric ? "right" : "left"}
-                        padding={"default"}
+                        padding={"normal"}
                         sortDirection={orderBy === column.field ? order : false}
                       >
                         <TableSortLabel
@@ -581,7 +582,7 @@ export function FilterTable({
                 variant="contained"
                 color="primary"
                 onClick={() =>
-                  popup(<IndividualAdd herdId={id} />, undefined, true)
+                  popup(<IndividualAdd herdId={id} key={id} />, undefined, true)
                 }
               >
                 Lägg till
@@ -593,8 +594,8 @@ export function FilterTable({
               count={filteredIndividuals.length}
               rowsPerPage={rowsPerPage}
               page={page}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </>
         ) : (

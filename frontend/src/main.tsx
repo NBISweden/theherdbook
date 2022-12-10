@@ -4,6 +4,7 @@ import styled, * as sc from "styled-components";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import CookieConsent from "react-cookie-consent";
 import { BrowserRouter } from "react-router-dom";
+import { SnackbarProvider } from "notistack";
 
 import { WithUserContext } from "@app/user_context";
 import { WithDataContext } from "@app/data_context";
@@ -24,9 +25,11 @@ const Main = (
         <WithDataContext>
           <WithUserContext>
             <WithBreedingContext>
-              <WithMessageContext>
-                <Navigation />
-              </WithMessageContext>
+              <SnackbarProvider maxSnack={3} autoHideDuration={10000}>
+                <WithMessageContext>
+                  <Navigation />
+                </WithMessageContext>
+              </SnackbarProvider>
             </WithBreedingContext>
           </WithUserContext>
         </WithDataContext>

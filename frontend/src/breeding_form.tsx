@@ -516,7 +516,7 @@ export function BreedingForm({
             )}
           </div>
           <FormControlLabel
-            control={<Checkbox showDead />}
+            control={<Checkbox />}
             label="Visa döda kaniner"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setshowDead(e.target.checked);
@@ -618,7 +618,7 @@ export function BreedingForm({
               variant={inputVariant}
               className="wideControl"
               multiline
-              rows={2}
+              minRows={2}
               inputProps={{ className: "data-hj-allow" }}
               value={formState.breed_notes ?? ""}
               onChange={(e: any) => {
@@ -696,7 +696,7 @@ export function BreedingForm({
                   variant={inputVariant}
                   className="controlFull"
                   multiline
-                  rows={2}
+                  minRows={2}
                   inputProps={{ className: "data-hj-allow" }}
                   value={formState.birth_notes ?? ""}
                   onChange={(e: any) => {
