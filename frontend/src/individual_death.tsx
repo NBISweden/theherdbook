@@ -186,6 +186,11 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                   label="Dödsdatum"
                   format="yyyy-MM-dd"
                   value={deadIndividual.death_date ?? null}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -230,6 +235,11 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                 multiline
                 minRows={2}
                 value={deadIndividual.death_note ?? ""}
+                InputProps={{
+                  classes: {
+                    input: "data-hj-allow",
+                  },
+                }}
                 onChange={(event) => {
                   handleUpdateIndividual(
                     "death_note",

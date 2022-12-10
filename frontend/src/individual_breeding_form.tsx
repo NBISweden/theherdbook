@@ -400,6 +400,11 @@ export function IndividualBreedingForm({
                       label="Född tidigast"
                       format={dateFormat}
                       value={fromDate}
+                      InputProps={{
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                       InputLabelProps={{
                         shrink: true,
                       }}
@@ -447,6 +452,12 @@ export function IndividualBreedingForm({
                       label="Välj mor"
                       variant={inputVariant}
                       className="controlFull"
+                      InputProps={{
+                        ...params.InputProps,
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                     />
                   )}
                 />
@@ -476,6 +487,12 @@ export function IndividualBreedingForm({
                       label="Välj far"
                       variant={inputVariant}
                       className="controlFull"
+                      InputProps={{
+                        ...params.InputProps,
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                     />
                   )}
                 />
@@ -493,6 +510,11 @@ export function IndividualBreedingForm({
                   format={dateFormat}
                   className="controlFull"
                   value={formState.birth_date ?? null}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -508,6 +530,11 @@ export function IndividualBreedingForm({
                   type="number"
                   className="control controlWidth"
                   variant={inputVariant}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -521,6 +548,11 @@ export function IndividualBreedingForm({
                   type="number"
                   className="controlWidth"
                   variant={inputVariant}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
+                  }}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -539,6 +571,11 @@ export function IndividualBreedingForm({
                   value={formState.birth_notes ?? ""}
                   onChange={(e: any) => {
                     setFormField("birth_notes", e.target.value);
+                  }}
+                  InputProps={{
+                    classes: {
+                      input: "data-hj-allow",
+                    },
                   }}
                 />
               </div>
