@@ -114,7 +114,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
 
   return (
     <>
-      <Typography variant="h5">Parningstillfällen</Typography>
+      <Typography variant="h5">Kullar</Typography>
       <div className="breeding">
         <CollapsibleSortedTable
           columns={columns}
