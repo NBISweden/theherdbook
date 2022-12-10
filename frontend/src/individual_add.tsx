@@ -122,9 +122,6 @@ export function IndividualAdd({
   genebank?: Genebank;
 }) {
   const [individual, setIndividual] = React.useState({} as Individual);
-  const [currentGenebank, setCurrentGenebank] = React.useState(
-    undefined as Genebank | undefined
-  );
   const [showFromDateFilter, setShowFromDateFilter] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
   const [newSibling, setSibling] = React.useState(false as boolean);
@@ -143,14 +140,19 @@ export function IndividualAdd({
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
   const [showDead, setshowDead] = React.useState(false as boolean);
-  const [activeMalesLimited, setActiveMalesLimited] = React.useState([]);
-  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState([]);
+  const [activeMalesLimited, setActiveMalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
+  const [activeFemalesLimited, setActiveFemalesLimited] = React.useState(
+    [] as LimitedIndividual[]
+  );
   const [breedingMatch, setBreedingMatch] = React.useState(
     undefined as Breeding | undefined
   );
   const { userMessage, popup } = useMessageContext();
   const { user } = useUserContext();
   const is_admin = !!(user?.is_manager || user?.is_admin);
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const {
     genebanks,
     herdListener,
@@ -166,6 +168,29 @@ export function IndividualAdd({
     modifyBreedingUpdates,
   } = useBreedingContext();
   const style = useStyles();
+  //Calculated value instead of effect
+  const isGenbankorHerd = (
+    genebank: Genebank | undefined,
+    herdId: string | undefined
+  ) => {
+    if (!!genebank) {
+      return genebank;
+    } else {
+      if (!!herdId) {
+        const originGenebank = genebanks.find((g) =>
+          g.herds.some((herd) => herd.herd == herdId)
+        );
+        return originGenebank;
+      } else {
+        const originGenebank = genebanks.find((g) =>
+          g.herds.some((herd) => herd.herd == individual?.origin_herd?.herd)
+        );
+        return originGenebank;
+      }
+    }
+  };
+
+  const currentGenebank = isGenbankorHerd(genebank, herdId);
 
   /**
    * Updates a single field in `individual`.
@@ -178,6 +203,41 @@ export function IndividualAdd({
     value: Individual[T]
   ) => {
     individual && setIndividual({ ...individual, [field]: value });
+  };
+
+  const handleUpdateMother = async (value: LimitedIndividual) => {
+    let mother;
+    if (value) {
+      mother = await get(`/api/individual/${value.number}`);
+      if (!mother) {
+        return;
+      }
+      console.log("Mother get is", mother);
+      let herds = mother.herd_tracking;
+
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        //Filter unique herds from herd_tracking
+        let unique = [
+          ...new Map(herdOptions.map((item) => [item["label"], item])).values(),
+        ];
+
+        setHerdOptions(unique);
+        setIndividual({
+          ...individual,
+          origin_herd: mother.herd,
+          mother: value,
+        });
+        return;
+      } else {
+        return [];
+      }
+    }
   };
 
   React.useEffect(() => {
@@ -204,42 +264,6 @@ export function IndividualAdd({
       )
     );
   }, [fromDate, currentGenebank, herdId, showDead]);
-
-  React.useEffect(() => {
-    if (!!genebank && !success && !newSibling) {
-      setCurrentGenebank(genebank);
-      setIndividual({
-        ...individual,
-        mother: null,
-        father: null,
-        origin_herd: null,
-        number: null,
-      });
-    } else {
-      if (!!herdId) {
-        const originGenebank = genebanks.find((g) =>
-          g.herds.some((herd) => herd.herd == herdId)
-        );
-        setCurrentGenebank(originGenebank);
-      } else {
-        const originGenebank = genebanks.find((g) =>
-          g.herds.some((herd) => herd.herd == individual?.origin_herd?.herd)
-        );
-        setCurrentGenebank(originGenebank);
-      }
-    }
-    if (herdId) {
-      handleUpdateIndividual("herd", herdId); // backend right now requires a string for field herd. Inconsistent with other database entries.
-    }
-  }, [herdId, genebank]);
-
-  // add the field genebank to the individual to get the color options in the form
-  // make sure it also is triggered after resetBlank has been called
-  React.useEffect(() => {
-    if (currentGenebank) {
-      handleUpdateIndividual("genebank", currentGenebank.name);
-    }
-  }, [currentGenebank, success]);
 
   // remove error layout from input fields when user has added an input
   React.useEffect(() => {
@@ -282,6 +306,8 @@ export function IndividualAdd({
         individual?.father &&
         individual?.mother &&
         individual?.origin_herd &&
+        individual?.origin_herd.herd !== "GX1" &&
+        individual?.origin_herd.herd !== "MX1" &&
         !success &&
         !(success && newSibling)
       ) {
@@ -297,9 +323,12 @@ export function IndividualAdd({
           limitedBreedingInput
         );
         setBreedingMatch(Breedingmatch.breedings);
-        if (Breedingmatch.breedings != null) {
+        if (
+          Breedingmatch.breedings !== null &&
+          Breedingmatch.breedings.birth_date !== null
+        ) {
           userMessage(
-            `Hittade ett befintligt parningstillfälle med parningsdatum : ${Breedingmatch.breedings.breed_date}. Kontrollera att uppgifterna stämmer`,
+            `Kull hittad i ${individual?.origin_herd.herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och födelsedatum ${Breedingmatch.breedings.birth_date}. Kontrollera att uppgifterna stämmer!`,
             "success"
           );
           if (individual.birth_date != Breedingmatch.breedings.birth_date) {
@@ -308,38 +337,30 @@ export function IndividualAdd({
               "warning"
             );
           }
-          let BreedHerd: LimitedHerd = await get(
-            `/api/herd/${Breedingmatch.breedings.breeding_herd}`
+          getIndnumbSuggestion(Breedingmatch.breedings);
+        } else if (
+          Breedingmatch.breedings != null &&
+          Breedingmatch.breedings.birth_date === null
+        ) {
+          Breedingmatch.breedings.birth_date = individual.birth_date;
+          getIndnumbSuggestion(Breedingmatch.breedings);
+          userMessage(
+            `En parning är funnen i ${individual?.origin_herd.herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och parningsdatum ${Breedingmatch.breedings.breed_date}.
+             Parningen kommer uppdateras med födelsedatum  och kullstorlek från detta formulär. Kontrollera att uppgifterna stämmer!`,
+            "success"
           );
-          const IndNumber = await post(
-            `/api/breeding/nextind/`,
-            Breedingmatch.breedings
-          );
-          if (IndNumber == null) {
-            userMessage(
-              `Du får max registrera 9 kaniner från en och samma kull.`,
-              "error"
-            );
-          } else {
-            setIndividual({
-              ...individual,
-              //origin_herd: BreedHerd,
-              number: IndNumber,
-              litter_size: Breedingmatch.breedings.litter_size,
-              litter_size6w: Breedingmatch.breedings.litter_size6w,
-            });
-          }
         } else {
           userMessage(
-            `Hittade inget befintligt parningstillfälle kommer skapa ett nytt!`,
+            `Kommer skapa en ny kull i ${individual?.origin_herd.herd} med Mor: ${individual?.mother.number} Far: ${individual?.father.number} Kontrollera att uppgifterna stämmer!`,
             "info"
           );
-          const IndNumber1 = await post(
-            `/api/breeding/nextind/`,
-            limitedBreedingInput
-          );
-          setIndividual({ ...individual, number: IndNumber1 });
+          getIndnumbSuggestion(limitedBreedingInput);
         }
+      } else if (
+        individual?.origin_herd.herd === "GX1" ||
+        individual?.origin_herd.herd === "MX1"
+      ) {
+        handleUpdateIndividual("number", null);
       }
     };
     getBreeding();
@@ -347,7 +368,7 @@ export function IndividualAdd({
     individual?.birth_date,
     individual?.father,
     individual?.mother,
-    individual?.origin_herd,
+    individual?.origin_herd?.herd,
     newSibling,
   ]);
 
@@ -495,13 +516,6 @@ export function IndividualAdd({
       father: individual.father.number,
     };
 
-    // Check if there already is a breeding
-    //const herdBreedings = await get(`/api/breeding/${herdId}`);
-    //'const breedingMatch = await findBreedingMatch(
-    //  breedingInput,
-    //  herdBreedings
-    //);
-
     // If there is a breeding, update it
     if (breedingMatch) {
       const modifiedBreedingUpdates = modifyBreedingUpdates(
@@ -531,6 +545,83 @@ export function IndividualAdd({
         return newBreeding.breeding_id;
       }
     }
+  };
+  const getIndnumbSuggestion = async (
+    BreedingMatch: Breeding | LimitedBreeding
+  ) => {
+    console.log(BreedingMatch);
+    post(`/api/breeding/nextind/`, BreedingMatch).then(
+      (json) => {
+        switch (json.status) {
+          case "success": {
+            setIndividual({
+              ...individual,
+              number: json.number,
+              litter_size: BreedingMatch?.litter_size ?? null,
+              litter_size6w: BreedingMatch?.litter_size6w ?? null,
+            });
+            break;
+          }
+          case "error": {
+            switch (json.message) {
+              case "litter_size": {
+                setIndividual({
+                  ...individual,
+                  number: null,
+                  litter_size: BreedingMatch?.litter_size ?? null,
+                  litter_size6w: BreedingMatch?.litter_size6w ?? null,
+                });
+                userMessage(
+                  "Alla kaniner i denna kull är redan registrerade",
+                  "error"
+                );
+                break;
+              }
+              case "NINE": {
+                setIndividual({
+                  ...individual,
+                  number: null,
+                  litter_size: BreedingMatch?.litter_size ?? null,
+                  litter_size6w: BreedingMatch?.litter_size6w ?? null,
+                });
+                userMessage(
+                  "Du får max registrera 9 kaniner från en och samma kull.",
+                  "error",
+                  true
+                );
+                break;
+              }
+              case "kull": {
+                setIndividual({
+                  ...individual,
+                  number: json.number,
+                  litter_size: BreedingMatch?.litter_size ?? null,
+                  litter_size6w: BreedingMatch?.litter_size6w ?? null,
+                });
+                userMessage(
+                  `En eller flera kaniner i kullen är registrerade med fel kull nummer: ${json.wrong}
+                  om du har registrerat alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
+                  Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
+                  "error",
+                  true
+                );
+                break;
+              }
+              default: {
+                userMessage(
+                  `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+                  "error"
+                );
+                console.log("Fel från API: ", json.message);
+              }
+            }
+          }
+        }
+      },
+      (error) => {
+        userMessage("Något gick fel.", "error");
+      }
+    );
   };
 
   const createIndividual = (individual: Individual) => {
@@ -726,9 +817,7 @@ export function IndividualAdd({
                 individualLabel(option)
               }
               value={individual.mother ?? null}
-              onChange={(event, newValue) =>
-                handleUpdateIndividual("mother", newValue)
-              }
+              onChange={(event, newValue) => handleUpdateMother(newValue)}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -772,6 +861,7 @@ export function IndividualAdd({
               litterError={litterError}
               litterError6w={litterError6w}
               intygError={intygError}
+              herdOptions={herdOptions}
             />
           </div>
           {!herdId && (
