@@ -48,7 +48,11 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
   const [fullWidth, setFullWidth] = React.useState(false);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const userMessage = async (message: string, variant: VariantType) => {
+  const userMessage = async (
+    message: string,
+    variant: VariantType,
+    persist?: boolean
+  ) => {
     // print json format if the message isn't a string.
     enqueueSnackbar(
       typeof message == "string"
@@ -56,7 +60,10 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
         : JSON.stringify(message, undefined, 2),
       {
         variant,
-        anchorOrigin: { horizontal: "right", vertical: "bottom" },
+        persist,
+        className: "snackBar",
+        style: { whiteSpace: "pre-line" },
+        // anchorOrigin: { horizontal: "right", vertical: "bottom" },
         action: (key) => (
           <IconButton aria-label="close" onClick={() => closeSnackbar(key)}>
             <CloseIcon />
