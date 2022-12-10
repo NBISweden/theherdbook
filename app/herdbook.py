@@ -302,6 +302,7 @@ def herd_breeding_list(h_id):
     exact birth date if it exists.
     """
     breedings = da.get_breeding_events_with_ind(h_id, session.get("user_id", None))
+
     if request.method == "POST":
         form = request.json
         birth_date = da.validate_date(form.get("birth_date", None))
@@ -316,13 +317,17 @@ def herd_breeding_list(h_id):
                 and (
                     start
                     <= (
-                        da.validate_date(item["birth_date"])
+                        da.validate_date(item.get("birth_date"))
                         - datetime.timedelta(days=30)
                         if item.get("breed_date") is None
                         else da.validate_date(item.get("breed_date"))
                     )
                     <= end
-                    or da.validate_date(item["birth_date"]) == birth_date
+                    or (
+                        da.validate_date(item.get("birth_date")) == birth_date
+                        if item.get("birth_date") is not None
+                        else None
+                    )
                 )
             ),
             None,
