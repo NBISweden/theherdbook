@@ -427,7 +427,8 @@ def next_individual_number(herd, birth_date, breeding_event):
                 fn.COALESCE(
                     Breeding.birth_date,
                     Breeding.breed_date + 30,
-                )
+                ),
+                Breeding.id,
             ]
         )
         events = (
