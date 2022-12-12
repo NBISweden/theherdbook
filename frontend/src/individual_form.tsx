@@ -89,6 +89,19 @@ export function IndividualForm({
           label: `${c.id} - ${c.name}`,
         };
       });
+    } else if (
+      individual &&
+      colors &&
+      Object.keys(colors).includes(individual.genebank)
+    ) {
+      return colors[individual.genebank].map((c) => {
+        return {
+          id: c.id,
+          comment: c.comment,
+          value: c.name,
+          label: `${c.id} - ${c.name}`,
+        };
+      });
     }
     return [];
   }, [colors, genebank]);

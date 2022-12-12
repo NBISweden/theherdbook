@@ -212,7 +212,6 @@ export function IndividualAdd({
       if (!mother) {
         return;
       }
-      console.log("Mother get is", mother);
       let herds = mother.herd_tracking;
 
       if (herds.length > 0) {
@@ -357,8 +356,8 @@ export function IndividualAdd({
           getIndnumbSuggestion(limitedBreedingInput);
         }
       } else if (
-        individual?.origin_herd.herd === "GX1" ||
-        individual?.origin_herd.herd === "MX1"
+        individual?.origin_herd?.herd === "GX1" ||
+        individual?.origin_herd?.herd === "MX1"
       ) {
         handleUpdateIndividual("number", null);
       }
@@ -549,7 +548,6 @@ export function IndividualAdd({
   const getIndnumbSuggestion = async (
     BreedingMatch: Breeding | LimitedBreeding
   ) => {
-    console.log(BreedingMatch);
     post(`/api/breeding/nextind/`, BreedingMatch).then(
       (json) => {
         switch (json.status) {
