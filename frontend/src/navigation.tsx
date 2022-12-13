@@ -57,6 +57,7 @@ import {
   withStyles,
 } from "@material-ui/core";
 import { MenuProps } from "@material-ui/core/Menu";
+import hotjar from "react-hotjar";
 
 import "./style.css";
 
@@ -259,6 +260,14 @@ export function Navigation() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  React.useEffect(() => {
+    return history.listen((location) => {
+      hotjar.hotjar.identify(user?.username, {
+        is_manager: user?.is_manager,
+        is_owner: user?.is_owner?.toString(),
+      });
+    });
+  }, [history]);
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
