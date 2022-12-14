@@ -490,7 +490,7 @@ export function InbreedingForm() {
               popup(
                 <InbreedingRecommendation
                   chosenAncestors={individuals}
-                  genebankId={genebank?.id}
+                  genebank={genebank}
                 />,
                 undefined
               )
