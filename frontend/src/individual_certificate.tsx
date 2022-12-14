@@ -406,7 +406,7 @@ export function IndividualCertificate({
             <Page
               pageNumber={pageNumber}
               renderAnnotationLayer={true}
-              renderForms={false}
+              renderTextLayer={false}
               scale={1.5}
             />
           </Document>
