@@ -5,6 +5,7 @@
 import * as React from "react";
 import { Paper, Typography } from "@material-ui/core";
 import "./style.css";
+import tags from "./tags.json";
 
 // jscpd:ignore-start
 
@@ -36,6 +37,133 @@ export function About() {
           genbanksbesättningar, där avel på Gotlands- respektive Mellerudskanin
           bedrivs.
         </p>
+      </Typography>
+    </div>
+  );
+}
+
+export function HelpStamboken() {
+  return (
+    <div className="staticMain">
+      <Typography variant="h3" className="heading">
+        Stamboken Online
+      </Typography>
+      <Typography variant="body1" className="pSpace">
+        <p>
+          En anv&auml;ndarmanual &auml;r p&aring;b&ouml;rjad men den &auml;r
+          inte komplett:
+          <a
+            target="_blank"
+            href="https://docs.google.com/document/d/1JvRkCF_shc7u9XtWH0uMXyhI0MTA2TOmaqPH4nHr_bU/"
+          >
+            Anv&auml;ndarmanual f&ouml;r Stamboken Online
+          </a>
+          Bidra g&auml;rna med &auml;ndringar till dokumentet eller l&auml;gg
+          till kommentarer osv.{" "}
+        </p>
+        <p></p>
+        <p>
+          Som ett komplement till den oskrivna manualen finns f&ouml;ljande
+          presentationsserie :
+        </p>
+        <p></p>
+        <ul>
+          <li>
+            <a
+              target="_blank"
+              href="https://docs.google.com/presentation/d/e/2PACX-1vRFpCPl_UG4TTHpuo342uR-AmjWSgLrZOAEBItIlH1NnSML0Xxh_8mXI94Xars4Hg/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
+            >
+              Del 1 &Ouml;verblick
+            </a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://docs.google.com/presentation/d/e/2PACX-1vTPYymU-2TkiTl-2VvCeodXT-MIa4fFjXiY4SDlEkSJT0GA4pve0tRehC0Xw0xh7A/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
+            >
+              Del 2 Registrera ny kanin
+            </a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://docs.google.com/presentation/d/e/2PACX-1vQgciSjLnDLn7cVutnE2dVOFIy0VUGjHqUSQtqU3sXTDFtVtgSjLkfc36fHDzEYeg/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000h"
+            >
+              Del 3 Utf&auml;rda digitalt Genbanksintyg
+            </a>
+          </li>
+          <li>
+            <a
+              target="_blank"
+              href="https://docs.google.com/presentation/d/e/2PACX-1vTsJQdkHkKCw1Qr-V6Q0HY5xVg9pEKEEheu5wrlXSDo6jw6_XzQSQ0K6K3zXoqjmA/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
+            >
+              Del 4 Kullar och parningar
+            </a>
+          </li>
+        </ul>
+        <p></p>
+        <p>
+          Om n&aring;got fortfarande &auml;r oklart finns det flera s&auml;tt
+          att f&aring; hj&auml;lp :
+        </p>
+        <p></p>
+        <ol>
+          <li>
+            Posta en fr&aring;ga i forumet. Tex i &nbsp;
+            <a
+              target="_blank"
+              href="https://forum.gotlandskaninen.se/t/stamboken-online/228?u=jonas"
+            >
+              Tr&aring;den om Stamboken online
+            </a>
+            .
+          </li>
+          <li>
+            Du kan ocks&aring; anv&auml;nda feedback funktionen direkt p&aring;
+            sidan, den &auml;r v&auml;ldigt bra om du st&ouml;ter p&aring; en
+            tex bugg. D&aring; klickar du p&aring; den r&ouml;da rutan till
+            h&ouml;ger d&auml;r det st&aring;r &quot;Ge oss feedback&quot;.
+          </li>
+          <li>
+            Anv&auml;nd v&aring;rt{" "}
+            <a
+              target="_blank"
+              href="https://chat.google.com/room/AAAAGHaEuvo?cls%3D7"
+            >
+              chatrum
+            </a>
+            &nbsp;.
+          </li>
+          <li>
+            S&auml;nd &nbsp;E-post till{" "}
+            <a target="_blank" href="mailto:admin@gotlandskaninen.se">
+              admin@gotlandskaninen.se
+            </a>
+            .
+          </li>
+          <li>
+            Beh&ouml;ver du hj&auml;lp med redigering &nbsp;av n&aring;gon kanin
+            s&aring; kontaktar du Genbanksansvariga direkt.{" "}
+          </li>
+
+          <ul>
+            <li>
+              <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
+                gotlandskanin@gotlandskaninen.se
+              </a>
+            </li>
+            <li>
+              <a
+                target="_blank"
+                href="mailto:mellerudskanin@gotlandskaninen.se"
+              >
+                mellerudskanin@gotlandskaninen.se
+              </a>
+            </li>
+          </ul>
+
+          <li>Kontakta valfri person i styrelsen,</li>
+        </ol>
       </Typography>
     </div>
   );
@@ -80,7 +208,7 @@ export function Gotlandskaninen() {
         <p>
           Om du är intresserad av att veta mer, eller vill starta en
           genbanksbesättning för Gotlandskanin, kontakta genbanksansvarig,
-          <a href="mailto:gotlandskanin@gotlandskaninen.se">
+          <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
             gotlandskanin@gotlandskaninen.se
           </a>
           .
@@ -134,7 +262,7 @@ export function Mellerudskaninen() {
         <p>
           Om du är intresserad av att veta mer, eller vill starta en
           genbanksbesättning för Mellerudskanin, kontakta genbanksansvarig,
-          <a href="mailto:mellerudskanin@gotlandskaninen.se">
+          <a target="_blank" href="mailto:mellerudskanin@gotlandskaninen.se">
             mellerudskanin@gotlandskaninen.se
           </a>
           .
@@ -174,26 +302,36 @@ export function Kontakt() {
       </Typography>
       <Typography variant="body1" className="pSpace">
         <p>
-          <a href="mailto:info@gotlandskaninen.se">info@gotlandskaninen.se</a>
+          <a target="_blank" href="mailto:info@gotlandskaninen.se">
+            info@gotlandskaninen.se
+          </a>
           Kontakt med föreningen, annonser och material till hemsidan
         </p>
         <p>
-          <a href="mailto:gotlandskanin@gotlandskaninen.se">
+          <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
             gotlandskanin@gotlandskaninen.se
           </a>
           Genbanksansvarig för Gotlandskanin, kassör
         </p>
         <p>
-          <a href="mailto:mellerudskanin@gotlandskaninen.se">
+          <a target="_blank" href="mailto:mellerudskanin@gotlandskaninen.se">
             mellerudskanin@gotlandskaninen.se
           </a>
-          Genbanksansvarig för Mellerudskanin, vice ordförande
+          Genbanksansvarig för Mellerudskanin
         </p>
         <p>
-          <a href="mailto:ordforande@gotlandskaninen.se">
+          <a target="_blank" href="mailto:ordforande@gotlandskaninen.se">
             ordforande@gotlandskaninen.se
           </a>
           Ordförande
+        </p>
+        <p>
+          <a
+            target="_blank"
+            href="https://forum.gotlandskaninen.se/t/stamboken-online/228?u=jonas"
+          >
+            Tråd om Stamboken online i vårt forum
+          </a>
         </p>
       </Typography>
     </div>
@@ -206,12 +344,29 @@ export function Footer() {
       <div className="euLogo">
         <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
       </div>
-      <Typography className="euText">
-        Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands- och
-        Mellerudskanin. Stödet går till genbanksbesättningarna,
-        medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser och
-        utbildningar, transport av värdefulla djur samt obduktioner.
-      </Typography>
+      <div>
+        <Typography className="euText">
+          Föreningen Gotlandskaninen får stöd från EU för att bevara Gotlands-
+          och Mellerudskanin. Stödet går till genbanksbesättningarna,
+          medlemstidningen, trycksaker, genbanksintyg, marknadsföring, kurser
+          och utbildningar, transport av värdefulla djur samt obduktioner.
+        </Typography>
+
+        <Typography className="euText">
+          <p>
+            Stamboken Online version :{" "}
+            <a
+              target={"_blank"}
+              href={
+                "https://github.com/NBISweden/theherdbook/tree/" +
+                tags.gitBranch
+              }
+            >
+              {tags.gitBranch}
+            </a>
+          </p>
+        </Typography>
+      </div>
       <div>
         <img src="/images/logo.png" alt="logo" className="logoImage" />
       </div>
