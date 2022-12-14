@@ -62,6 +62,12 @@ export function IndividualSellingForm({
             label="Välj besättning"
             variant="outlined"
             margin="normal"
+            InputProps={{
+              ...params.InputProps,
+              classes: {
+                input: "data-hj-allow",
+              },
+            }}
             helperText={
               herdHelperText ??
               "Tomt om kaninen är kvar i ursprungsbesättningen"
@@ -88,6 +94,11 @@ export function IndividualSellingForm({
             "Tomt om kaninen är kvar i ursprungsbesättningen"
           }
           value={individual.selling_date ?? null}
+          InputProps={{
+            classes: {
+              input: "data-hj-allow",
+            },
+          }}
           InputLabelProps={{
             shrink: true,
           }}
