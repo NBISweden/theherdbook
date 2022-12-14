@@ -75,10 +75,6 @@ export function IndividualForm({
     }
   }, [user, individual, genebank]);
 
-  const canEditBreeding: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.origin_herd?.herd);
-  }, [user, individual]);
-
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
       return colors[genebank.name].map((c) => {
@@ -345,7 +341,7 @@ export function IndividualForm({
                       individual={individual}
                       onUpdateIndividual={onUpdateIndividual}
                     />
-                    {!canEditBreeding || individual?.is_registered ? (
+                    {!canManage && individual?.is_registered ? (
                       <div className="controlWidth">
                         Kan endast ändras av genbanksansvarig!
                       </div>
@@ -360,9 +356,7 @@ export function IndividualForm({
                         </Tooltip>
                         <Button
                           className="control editButton"
-                          disabled={
-                            !canEditBreeding || individual?.is_registered
-                          }
+                          disabled={!canManage && individual?.is_registered}
                           variant="outlined"
                           color="primary"
                           onClick={() => {
