@@ -31,11 +31,11 @@ export const BreedingDialog = ({
   individual: Individual;
   onUpdateIndividual: any;
 }) => {
-  const [setActive] = React.useState(null as any);
+  const [active, setActive] = React.useState(null as any);
   const [extendedBreeding, setExtendedBreeding] = React.useState(
     undefined as ExtendedBreeding | undefined
   );
-  const [setBreedingsChanged] = React.useState(true);
+  const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
   const handleBreedingsChanged = () => {
     setBreedingsChanged(true);
