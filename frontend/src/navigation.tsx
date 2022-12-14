@@ -346,7 +346,6 @@ export function Navigation() {
                 Du måste logga in med ditt Gotlandskaninkonto{" "}
                 <a href="/api/login/google">Logga in</a>{" "}
               </Route>
-              <Route path="/">Välkommen till Stamboken Online!</Route>
             </Switch>
           </Paper>
         </div>

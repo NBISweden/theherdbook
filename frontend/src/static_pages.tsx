@@ -13,29 +13,25 @@ export function About() {
   return (
     <div className="staticMain">
       <Typography variant="h3" className="heading">
-        Föreningen
+        Välkommen till Stamboken Online
       </Typography>
       <Typography variant="body1" className="pSpace">
         <p>
-          Gotlandskaninen är en rest av den gamla svenska lantraskaninen. På
-          1970-talet uppmärksammades att det fanns några gårdar på Gotland som
-          hade kvar kaniner av den gamla stammen. De gavs då namnet
-          Gotlandskanin. Efter en inventering 1993 slöts rasregistret och dagens
-          Gotlandskaniner är ättlingar till inventeringsdjuren.
+          Detta är Föreningen Gotlandskaninens system för stambokföring online.
+          Använd menyn för att logga in med hjälp av ditt Gottiskonto. Har du
+          inget sådant kan du som är medlem i föreningen ansöka om ett via detta
+          formulär.{" "}
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSe_Pe8Bl6BIHp-VW6x4iziiBs5AfxpMF3OaqLtIVyVXM-JrsQ/viewform?usp=share_link"
+          >
+            Kontoansökan
+          </a>
         </p>
         <p>
-          En annan rest av den gamla lantraskaninen är den så kallade
-          Mellerudskaninen. Den fanns i en besättning hos Edith Johansson, som
-          bodde nära Mellerud i Dalsland. Kaninerna liknar mycket
-          Gotlandskaninen i kroppsbyggnaden, men finns bara som brokigt
-          svartvita (holländarteckning) eller som helvita (albino).
-        </p>
-        <p>
-          Föreningen Gotlandskaninens syfte är att bevara den svenska
-          lantraskaninen för framtiden samt att sprida kunskap om rasen och dess
-          roll i självhushållet. Bevarandearbetet organiseras i form av
-          genbanksbesättningar, där avel på Gotlands- respektive Mellerudskanin
-          bedrivs.
+          Behöver du hjälp kontakt admin@gotlandskanin.se, du kommer också åt
+          hjälpsidorna under menyval "Hjälp" när du väl har loggat in.
         </p>
       </Typography>
     </div>
@@ -54,6 +50,7 @@ export function HelpStamboken() {
           inte komplett:
           <a
             target="_blank"
+            rel="noopener noreferrer"
             href="https://docs.google.com/document/d/1JvRkCF_shc7u9XtWH0uMXyhI0MTA2TOmaqPH4nHr_bU/"
           >
             Anv&auml;ndarmanual f&ouml;r Stamboken Online
@@ -71,6 +68,7 @@ export function HelpStamboken() {
           <li>
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://docs.google.com/presentation/d/e/2PACX-1vRFpCPl_UG4TTHpuo342uR-AmjWSgLrZOAEBItIlH1NnSML0Xxh_8mXI94Xars4Hg/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
             >
               Del 1 &Ouml;verblick
@@ -79,6 +77,7 @@ export function HelpStamboken() {
           <li>
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://docs.google.com/presentation/d/e/2PACX-1vTPYymU-2TkiTl-2VvCeodXT-MIa4fFjXiY4SDlEkSJT0GA4pve0tRehC0Xw0xh7A/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
             >
               Del 2 Registrera ny kanin
@@ -87,6 +86,7 @@ export function HelpStamboken() {
           <li>
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://docs.google.com/presentation/d/e/2PACX-1vQgciSjLnDLn7cVutnE2dVOFIy0VUGjHqUSQtqU3sXTDFtVtgSjLkfc36fHDzEYeg/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000h"
             >
               Del 3 Utf&auml;rda digitalt Genbanksintyg
@@ -95,6 +95,7 @@ export function HelpStamboken() {
           <li>
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://docs.google.com/presentation/d/e/2PACX-1vTsJQdkHkKCw1Qr-V6Q0HY5xVg9pEKEEheu5wrlXSDo6jw6_XzQSQ0K6K3zXoqjmA/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
             >
               Del 4 Kullar och parningar
@@ -112,6 +113,7 @@ export function HelpStamboken() {
             Posta en fr&aring;ga i forumet. Tex i &nbsp;
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://forum.gotlandskaninen.se/t/stamboken-online/228?u=jonas"
             >
               Tr&aring;den om Stamboken online
@@ -128,6 +130,7 @@ export function HelpStamboken() {
             Anv&auml;nd v&aring;rt{" "}
             <a
               target="_blank"
+              rel="noopener noreferrer"
               href="https://chat.google.com/room/AAAAGHaEuvo?cls%3D7"
             >
               chatrum
@@ -136,7 +139,11 @@ export function HelpStamboken() {
           </li>
           <li>
             S&auml;nd &nbsp;E-post till{" "}
-            <a target="_blank" href="mailto:admin@gotlandskaninen.se">
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="mailto:admin@gotlandskaninen.se"
+            >
               admin@gotlandskaninen.se
             </a>
             .
@@ -148,13 +155,18 @@ export function HelpStamboken() {
 
           <ul>
             <li>
-              <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="mailto:gotlandskanin@gotlandskaninen.se"
+              >
                 gotlandskanin@gotlandskaninen.se
               </a>
             </li>
             <li>
               <a
                 target="_blank"
+                rel="noopener noreferrer"
                 href="mailto:mellerudskanin@gotlandskaninen.se"
               >
                 mellerudskanin@gotlandskaninen.se
@@ -208,7 +220,11 @@ export function Gotlandskaninen() {
         <p>
           Om du är intresserad av att veta mer, eller vill starta en
           genbanksbesättning för Gotlandskanin, kontakta genbanksansvarig,
-          <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:gotlandskanin@gotlandskaninen.se"
+          >
             gotlandskanin@gotlandskaninen.se
           </a>
           .
@@ -262,7 +278,11 @@ export function Mellerudskaninen() {
         <p>
           Om du är intresserad av att veta mer, eller vill starta en
           genbanksbesättning för Mellerudskanin, kontakta genbanksansvarig,
-          <a target="_blank" href="mailto:mellerudskanin@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:mellerudskanin@gotlandskaninen.se"
+          >
             mellerudskanin@gotlandskaninen.se
           </a>
           .
@@ -302,25 +322,41 @@ export function Kontakt() {
       </Typography>
       <Typography variant="body1" className="pSpace">
         <p>
-          <a target="_blank" href="mailto:info@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:info@gotlandskaninen.se"
+          >
             info@gotlandskaninen.se
           </a>
           Kontakt med föreningen, annonser och material till hemsidan
         </p>
         <p>
-          <a target="_blank" href="mailto:gotlandskanin@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:gotlandskanin@gotlandskaninen.se"
+          >
             gotlandskanin@gotlandskaninen.se
           </a>
           Genbanksansvarig för Gotlandskanin, kassör
         </p>
         <p>
-          <a target="_blank" href="mailto:mellerudskanin@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:mellerudskanin@gotlandskaninen.se"
+          >
             mellerudskanin@gotlandskaninen.se
           </a>
           Genbanksansvarig för Mellerudskanin
         </p>
         <p>
-          <a target="_blank" href="mailto:ordforande@gotlandskaninen.se">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="mailto:ordforande@gotlandskaninen.se"
+          >
             ordforande@gotlandskaninen.se
           </a>
           Ordförande
@@ -328,6 +364,7 @@ export function Kontakt() {
         <p>
           <a
             target="_blank"
+            rel="noopener noreferrer"
             href="https://forum.gotlandskaninen.se/t/stamboken-online/228?u=jonas"
           >
             Tråd om Stamboken online i vårt forum
@@ -357,6 +394,7 @@ export function Footer() {
             Stamboken Online version :{" "}
             <a
               target={"_blank"}
+              rel={"noopener noreferrer"}
               href={
                 "https://github.com/NBISweden/theherdbook/tree/" +
                 tags.gitBranch
