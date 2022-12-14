@@ -19,8 +19,9 @@ export function PedigreeNetwork({
   const network = useRef(null);
 
   const options = {
-    width: Math.round(window.innerWidth * 0.6) + "px", //width is calculated considering the parent component width
-    height: Math.round(window.innerHeight * 0.6) + "px", //height uses the window height as reference, the domNode did not worked
+    width: "100%",
+    height: "100%",
+    autoResize: true,
 
     layout: {
       hierarchical: {
@@ -60,5 +61,16 @@ export function PedigreeNetwork({
     });
   }, [pedigree]);
 
-  return <div ref={domNode} />;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: "0px",
+        right: "0px",
+        bottom: "0px",
+        left: "0px",
+      }}
+      ref={domNode}
+    />
+  );
 }

@@ -92,7 +92,7 @@ export function IndividualForm({
     } else if (
       individual &&
       colors &&
-      Object.keys(colors).includes(individual.genebank)
+      Object.keys(colors).includes(individual?.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
         return {
@@ -345,10 +345,9 @@ export function IndividualForm({
                       individual={individual}
                       onUpdateIndividual={onUpdateIndividual}
                     />
-                    {!canEditBreeding ? (
+                    {!canEditBreeding || individual?.is_registered ? (
                       <div className="controlWidth">
-                        Kan endast ändras av genbanksansvarig eller ägare av
-                        ursprungsbesättning
+                        Kan endast ändras av genbanksansvarig!
                       </div>
                     ) : (
                       <div className="flexRow">
@@ -361,7 +360,9 @@ export function IndividualForm({
                         </Tooltip>
                         <Button
                           className="control editButton"
-                          disabled={!canEditBreeding}
+                          disabled={
+                            !canEditBreeding || individual?.is_registered
+                          }
                           variant="outlined"
                           color="primary"
                           onClick={() => {

@@ -339,12 +339,6 @@ export function IndividualBreedingForm({
         return;
       }
 
-      if (breeding.birth_date === null) {
-        userMessage("Parningen har sparats.", "success");
-        handleBreedingsChanged();
-        return;
-      }
-
       const newBirthData: Birth = {
         date: breeding.birth_date,
         litter_size: breeding.litter_size,

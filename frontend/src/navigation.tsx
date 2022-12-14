@@ -23,6 +23,7 @@ import PostAddIcon from "@material-ui/icons/PostAdd";
 import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
 import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
 import EcoIcon from "@material-ui/icons/Eco";
+import { Help } from "@material-ui/icons";
 
 import { get } from "@app/communication";
 import { Login } from "@app/login";
@@ -39,13 +40,11 @@ import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
 import {
   About,
-  Gotlandskaninen,
-  Mellerudskaninen,
   Medlem,
   Kontakt,
   Footer,
+  HelpStamboken,
 } from "@app/static_pages";
-import { Forum } from "@app/forum";
 import * as ui from "@app/ui_utils";
 import {
   Button,
@@ -134,30 +133,6 @@ export function Navigation() {
       icon: <HomeIcon />,
     },
     {
-      label: "Gotlandskaninen",
-      path: "/gotlandskaninen",
-      exact: true,
-      component: <Gotlandskaninen />,
-      visible: true,
-      icon: <EcoIcon />,
-    },
-    {
-      label: "Mellerudskaninen",
-      path: "/mellerudskaninen",
-      exact: true,
-      component: <Mellerudskaninen />,
-      visible: true,
-      icon: <EmojiNatureIcon />,
-    },
-    {
-      label: "Forum",
-      path: "/forum",
-      exact: true,
-      component: <Forum />,
-      visible: is_logged_in,
-      icon: <ForumIcon />,
-    },
-    {
       label: "Genbanker",
       path: "/genebank",
       component: (
@@ -215,16 +190,6 @@ export function Navigation() {
       visible: is_admin,
       icon: <GroupIcon />,
     },
-
-    {
-      label: "Bli Medlem",
-      path: "/medlem",
-      exact: true,
-      component: <Medlem />,
-      visible: !is_logged_in,
-      icon: <PersonAddIcon />,
-    },
-
     {
       label: "Logga in",
       path: "",
@@ -235,12 +200,12 @@ export function Navigation() {
       icon: <MeetingRoom />,
     },
     {
-      label: "Logga ut",
-      path: "/",
+      label: "Hjälp",
+      path: "/help",
       exact: true,
+      component: <HelpStamboken />,
       visible: is_logged_in,
-      on_click: logout,
-      icon: <VpnKeyIcon />,
+      icon: <Help />,
     },
     {
       label: "Kontakt",
@@ -249,6 +214,14 @@ export function Navigation() {
       component: <Kontakt />,
       visible: true,
       icon: <ContactMail />,
+    },
+    {
+      label: "Logga ut",
+      path: "/",
+      exact: true,
+      visible: is_logged_in,
+      on_click: logout,
+      icon: <VpnKeyIcon />,
     },
   ];
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -366,7 +339,6 @@ export function Navigation() {
                 Du måste logga in med ditt Gotlandskaninkonto{" "}
                 <a href="/api/login/google">Logga in</a>{" "}
               </Route>
-              <Route path="/">Välkommen till Stamboken Online!</Route>
             </Switch>
           </Paper>
         </div>
