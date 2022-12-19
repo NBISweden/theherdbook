@@ -3,7 +3,6 @@ import React from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import {
   Button,
@@ -99,7 +98,7 @@ export function IndividualCertificate({
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
-  const { herdListener, herdChangeListener, setHerdChangeListener } =
+  const { herdListener, herdChangeListener, setHerdChangeListener, loadData } =
     useDataContext();
   const style = useStyles();
 
@@ -296,6 +295,7 @@ export function IndividualCertificate({
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
+          loadData(["genebanks"]);
           if (herdListener == individual?.herd.herd) {
             setHerdChangeListener(herdChangeListener + 1);
           }
@@ -407,6 +407,7 @@ export function IndividualCertificate({
               pageNumber={pageNumber}
               renderAnnotationLayer={true}
               renderTextLayer={false}
+              renderInteractiveForms={false}
               scale={1.5}
             />
           </Document>
