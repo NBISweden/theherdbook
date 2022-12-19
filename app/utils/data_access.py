@@ -1442,6 +1442,8 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
                     Individual.sex,
                     Individual.id,
                     Individual.origin_herd,
+                    Individual.certificate,
+                    Individual.digital_certificate,
                 ).where(Individual.breeding_id == breedings.id):
                     ind = dict()
                     if data:
@@ -1450,6 +1452,11 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
+                        ind["is_registerd"] = (
+                            True
+                            if data.certificate or data.digital_certificate
+                            else False
+                        )
                     individuals_dict.append(ind)
                 b = breedings.as_dict()
                 b["individuals"] = individuals_dict
