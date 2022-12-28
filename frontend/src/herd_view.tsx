@@ -138,7 +138,7 @@ export function HerdView({ id }: { id: string | undefined }) {
               }}
             />
             <Tab
-              label="Parningstillfällen"
+              label="Kullar och parningar"
               disabled={!user?.canEdit(id)}
               value="breeding"
             />
@@ -208,14 +208,22 @@ export function HerdView({ id }: { id: string | undefined }) {
               </select>
             </label>
           </div>
-          {pedigreeView && (
-            <PedigreeNetwork
-              pedigree={pedigree}
-              onClick={(node: string) =>
-                popup(<IndividualView id={node} />, `/individual/${node}`)
-              }
-            />
-          )}
+          <div
+            style={{
+              minWidth: "100vh",
+              height: "50vh",
+              position: "relative",
+            }}
+          >
+            {pedigreeView && (
+              <PedigreeNetwork
+                pedigree={pedigree}
+                onClick={(node: string) =>
+                  popup(<IndividualView id={node} />, `/individual/${node}`)
+                }
+              />
+            )}
+          </div>
         </TabPanel>
       </Paper>
     </>

@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 
 import {
   Button,
+  IconButton,
   Dialog,
   DialogActions,
   DialogContent,
-  Snackbar,
 } from "@material-ui/core";
-import Alert from "@material-ui/lab/Alert";
+import CloseIcon from "@material-ui/icons/Close";
+import { VariantType, useSnackbar } from "notistack";
 import { unstable_batchedUpdates } from "react-dom";
 
 /**
@@ -16,10 +17,8 @@ import { unstable_batchedUpdates } from "react-dom";
  * consistent manner.
  */
 
-export type MessageLevel = "error" | "warning" | "info" | "success";
-
 export interface MessageContext {
-  userMessage(msg: string, level: MessageLevel): void;
+  userMessage(msg: string, variant: VariantType): void;
   popup(content: JSX.Element, link: string | undefined, full?: boolean): void;
   handleCloseDialog(): void;
 }
@@ -39,9 +38,6 @@ export function useMessageContext(): MessageContext {
 }
 
 export function WithMessageContext(props: { children: React.ReactNode }) {
-  const [severity, setSeverity] = React.useState("info" as MessageLevel);
-  const [message, setMessage] = React.useState("" as string);
-  const [showMessage, setShowMessage] = React.useState(false);
   const [showDialog, setShowDialog] = React.useState(false);
   const [dialogContent, setDialogContent] = React.useState(
     (<></>) as JSX.Element
@@ -50,17 +46,32 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
     undefined as string | undefined
   );
   const [fullWidth, setFullWidth] = React.useState(false);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  function userMessage(message: string, severity: MessageLevel) {
+  const userMessage = async (
+    message: string,
+    variant: VariantType,
+    persist?: boolean
+  ) => {
     // print json format if the message isn't a string.
-    setMessage(
+    enqueueSnackbar(
       typeof message == "string"
         ? message
-        : JSON.stringify(message, undefined, 2)
+        : JSON.stringify(message, undefined, 2),
+      {
+        variant,
+        persist,
+        className: "snackBar",
+        style: { whiteSpace: "pre-line" },
+        // anchorOrigin: { horizontal: "right", vertical: "bottom" },
+        action: (key) => (
+          <IconButton aria-label="close" onClick={() => closeSnackbar(key)}>
+            <CloseIcon />
+          </IconButton>
+        ),
+      }
     );
-    setSeverity(severity);
-    setShowMessage(true);
-  }
+  };
 
   function popup(
     content: JSX.Element,
@@ -76,13 +87,6 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
       }
     });
   }
-
-  const handleCloseMessage = (event: any, reason: string) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setShowMessage(false);
-  };
 
   const handleCloseDialog = () => {
     unstable_batchedUpdates(() => {
@@ -115,20 +119,6 @@ export function WithMessageContext(props: { children: React.ReactNode }) {
           </Button>
         </DialogActions>
       </Dialog>
-      <Snackbar
-        open={showMessage}
-        autoHideDuration={5000}
-        onClose={handleCloseMessage}
-      >
-        <Alert
-          elevation={6}
-          variant="filled"
-          onClose={handleCloseMessage}
-          severity={severity}
-        >
-          {message}
-        </Alert>
-      </Snackbar>
     </MessageContext.Provider>
   );
 }

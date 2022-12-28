@@ -47,7 +47,9 @@ const useStyles = makeStyles({
     borderLeft: "1px solid lightgrey",
   },
   fillWidth: {
-    width: "100%",
+    // width: "100%",
+    //minWidth: "80vh",
+    height: "100%",
   },
   flexColumn: {
     minWidth: "300px",
@@ -206,7 +208,7 @@ export function IndividualView({ id }: { id: string }) {
                   <dd>{individual?.number}</dd>
                   <dt>Intyg:</dt>
                   <dd>
-                    {individual?.certificate | individual?.digital_certificate}
+                    {individual?.certificate || individual?.digital_certificate}
                   </dd>
                   <dt>Kön:</dt>
                   <dd>
@@ -522,14 +524,19 @@ export function IndividualView({ id }: { id: string }) {
                 </ul>
               </div>
             </div>
+            <div className={style.flexColumn}>
+              <div className={style.fillWidth}>
+                <h3>Släktträd</h3>
+                <IndividualPedigree
+                  id={id}
+                  generations={3}
+                ></IndividualPedigree>
+              </div>
+            </div>
           </>
         ) : (
           "Loading"
         )}
-        <div className={style.fillWidth}>
-          <h3>Släktträd</h3>
-          <IndividualPedigree id={id} generations={3}></IndividualPedigree>
-        </div>
       </div>
     </>
   );

@@ -422,47 +422,120 @@ def next_individual_number(herd, birth_date, breeding_event):
         assert isinstance(birth_date, datetime)
     try:
         herd_id = Herd.get(Herd.herd == herd)
-        rank_expr = fn.ROW_NUMBER().over(order_by=[Breeding.birth_date])
+        rank_expr = fn.ROW_NUMBER().over(
+            order_by=[
+                fn.COALESCE(
+                    Breeding.birth_date,
+                    Breeding.breed_date + 30,
+                ),
+                Breeding.id,
+            ]
+        )
         events = (
-            Breeding.select(rank_expr.alias("litter_number"), Breeding.id)
+            Breeding.select(
+                rank_expr.alias("litter_number"), Breeding.id, Breeding.litter_size
+            )
             .where(Breeding.breeding_herd == herd_id)
             .where(
-                (DATABASE.extract_date("year", Breeding.birth_date) == birth_date.year)
+                (
+                    DATABASE.extract_date(
+                        "year", fn.COALESCE(Breeding.birth_date, Breeding.breed_date)
+                    )
+                    == birth_date.year
+                )
             )
         )
         ev = events.execute()
         if len(ev) == 0:
             litter_number = 1
-            litter_size = 0
+            number_in_kull = 1
         else:
             query = (
-                Select(columns=[events.c.litter_number])
+                Select(columns=[events.c.litter_number, events.c.litter_size])
                 .from_(events)
                 .where(events.c.breeding_id == breeding_event)
                 .bind(DATABASE)
             ).execute()
             if len(query) == 0:
                 litter_number = len(ev) + 1
-                litter_size = 0
+                number_in_kull = 1
             else:
                 litter_number = query[0].get("litter_number")
-                individuals = (
-                    Individual.select(Individual).where(
-                        Individual.breeding == breeding_event
-                    )
-                ).execute()
-
-                litter_size = len(individuals)
+                real_litter_size = (
+                    query[0].get("litter_size") if query[0].get("litter_size") else 0
+                )
+                if real_litter_size == 0:
+                    number_in_kull = 1
+                else:
+                    individuals = (
+                        Individual.select(Individual.number).where(
+                            Individual.breeding == breeding_event
+                        )
+                    ).execute()
+                    litter_size = len(individuals)
+                    if litter_size >= real_litter_size:
+                        return {
+                            "status": "error",
+                            "message": "litter_size",
+                            "number": None,
+                        }
+                    elif litter_size == 9:
+                        return {"status": "error", "message": "NINE", "number": None}
+                    else:
+                        litter_number_list = list()
+                        for ind in individuals:
+                            try:
+                                indnumber = int(
+                                    ind.number.split(
+                                        f"{herd}-{str(birth_date.year)[2:4]}{litter_number}"
+                                    )[-1]
+                                )
+                            except ValueError:
+                                return {
+                                    "status": "error",
+                                    "message": "kull",
+                                    "kull": litter_number,
+                                    "wrong": ind.number,
+                                    "number": f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{1}",
+                                }
+                            litter_number_list.append(indnumber)
+                        litter_number_list.sort()
+                        try:
+                            number_in_kull = sorted(
+                                set(range(1, min(real_litter_size + 1, 10))).difference(
+                                    litter_number_list
+                                )
+                            )[0]
+                        except IndexError:
+                            if (
+                                litter_size >= real_litter_size
+                                and real_litter_size <= 9
+                            ):
+                                return {
+                                    "status": "error",
+                                    "message": "litter_size",
+                                    "number": None,
+                                }
+                            else:
+                                return {
+                                    "status": "error",
+                                    "message": "NINE",
+                                    "number": None,
+                                }
 
         ind_number = (
-            f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{litter_size + 1}"
+            f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{number_in_kull}"
         )
 
-        return ind_number
+        return {
+            "status": "success",
+            "message": "ledigt nummer hittat",
+            "number": ind_number,
+        }
 
-    except DoesNotExist:
-        pass
-    return None
+    except Exception as exception:
+        logger.error(exception)
+        return {"status": "error", "message": exception, "number": None}
 
 
 class Individual(BaseModel):
@@ -480,15 +553,15 @@ class Individual(BaseModel):
     number = CharField(20, unique=True)
     sex = CharField(15, null=True)
     color = ForeignKeyField(Color, null=True)
-    color_note = CharField(100, null=True)
+    color_note = TextField(null=True)
     death_date = DateField(null=True)
-    death_note = CharField(50, null=True)
-    notes = CharField(100, null=True)
+    death_note = TextField(null=True)
+    notes = TextField(null=True)
     breeding = ForeignKeyField(Breeding, null=True)
-    eye_color = CharField(null=True)
-    claw_color = CharField(null=True)
-    belly_color = CharField(null=True)
-    hair_notes = CharField(null=True)
+    eye_color = TextField(null=True)
+    claw_color = TextField(null=True)
+    belly_color = TextField(null=True)
+    hair_notes = TextField(null=True)
     is_active = BooleanField(null=True, default=True)
     butchered = BooleanField(null=True, default=False)
     castration_date = DateField(null=True, default=None)

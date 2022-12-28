@@ -35,9 +35,9 @@ export function Owner() {
 
   React.useEffect(() => {
     if (user && user.is_owner) {
-      setActiveHerd(user.is_owner[0])
+      setActiveHerd(user.is_owner[0]);
     }
-  }, [user])
+  }, [user]);
 
   return (
     <>

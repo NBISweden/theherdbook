@@ -266,8 +266,8 @@ export function InbreedingForm() {
                     }}
                   />
                   <FormControlLabel
-                    control={<Checkbox showDead />}
-                    label="Visa avlidna kaniner"
+                    control={<Checkbox />}
+                    label="Visa döda kaniner"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setshowDead(e.target.checked);
                     }}
@@ -531,7 +531,7 @@ export function InbreedingForm() {
               popup(
                 <InbreedingRecommendation
                   chosenAncestors={individuals}
-                  genebankId={genebank?.id}
+                  genebank={genebank}
                 />,
                 undefined
               )

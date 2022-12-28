@@ -212,7 +212,7 @@ export function SortedTable({
                       <TableCell
                         key={column.field}
                         align={column.numeric ? "right" : "left"}
-                        padding={"default"}
+                        padding={"normal"}
                         sortDirection={orderBy === column.field ? order : false}
                       >
                         <TableSortLabel
@@ -291,8 +291,8 @@ export function SortedTable({
               count={data.length}
               rowsPerPage={rowsPerPage}
               page={page}
-              onChangePage={handleChangePage}
-              onChangeRowsPerPage={handleChangeRowsPerPage}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </>
         ) : (

@@ -14,13 +14,11 @@ import InfoOutlinedIcon from "@material-ui/icons/InfoOutlined";
 import {
   dateFormat,
   Genebank,
-  herdLabel,
   inputVariant,
   Individual,
-  LimitedHerd,
   OptionType,
 } from "@app/data_context_global";
-import { get } from "./communication";
+
 import { useUserContext } from "./user_context";
 import { BreedingDialog } from "./breeding_dialog";
 import { CertAutocomplete } from "./cert_autocomplete";
@@ -43,6 +41,8 @@ export function IndividualForm({
   birthDateError,
   litterError,
   litterError6w,
+  intygError,
+  herdOptions,
 }: {
   genebank: Genebank;
   individual: Individual;
@@ -55,23 +55,18 @@ export function IndividualForm({
   birthDateError: boolean;
   litterError: boolean;
   litterError6w: boolean;
+  intygError: boolean;
+  herdOptions: OptionType[];
 }) {
-  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [openBreedDialog, setBreedDiOpen] = React.useState(false);
-  const { colors, genebanks } = useDataContext();
+  const { colors } = useDataContext();
   const { user } = useUserContext();
-  const [isIndNull, setIndNull] = React.useState(true);
 
   // returns true if you are an admin or the manager of the genebank the individual belongs to
   const canManage: boolean = React.useMemo(() => {
     if (user?.is_admin) {
       return true;
     } else {
-      if (!individual?.is_registered) {
-        return true;
-      }
-      console.log(genebank);
-      console.log(user?.is_manager);
       if (!!genebank?.id) {
         return user?.is_manager?.includes(genebank?.id);
       } else {
@@ -80,15 +75,20 @@ export function IndividualForm({
     }
   }, [user, individual, genebank]);
 
-  const canEditBreeding: boolean = React.useMemo(() => {
-    return user?.canEdit(individual?.origin_herd?.herd);
-  }, [user, individual]);
-
   const colorOptions: OptionType[] = React.useMemo(() => {
-    if (
+    if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
+      return colors[genebank.name].map((c) => {
+        return {
+          id: c.id,
+          comment: c.comment,
+          value: c.name,
+          label: `${c.id} - ${c.name}`,
+        };
+      });
+    } else if (
       individual &&
       colors &&
-      Object.keys(colors).includes(individual.genebank)
+      Object.keys(colors).includes(individual?.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
         return {
@@ -100,39 +100,7 @@ export function IndividualForm({
       });
     }
     return [];
-  }, [colors, individual]);
-
-  React.useEffect(() => {
-    const getParents = async () => {
-      let herds = [];
-      let father;
-      let mother;
-
-      if (individual.mother?.number && formAction == FormAction.AddIndividual) {
-        mother = await get(`/api/individual/${individual.mother?.number}`);
-        if (!mother) {
-          return;
-        }
-        herds.push(mother.herd);
-        individual.origin_herd = mother.herd;
-        individual.number = mother.herd.herd + "-";
-        setIndNull(false);
-      }
-      if (herds.length > 0) {
-        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
-          return { value: h, label: herdLabel(h) };
-        });
-        herdOptions.filter(
-          (item, index) => herdOptions.indexOf(item) === index
-        );
-        setHerdOptions(herdOptions);
-        return;
-      } else {
-        return [];
-      }
-    };
-    getParents();
-  }, [individual.mother?.number]);
+  }, [colors, genebank]);
 
   const sexOptions = [
     { value: "female", label: "Hona" },
@@ -155,9 +123,15 @@ export function IndividualForm({
               {formAction == FormAction.editIndividual ? ( // jscpd:ignore-start
                 <>
                   <div className="titleText">Redigera Individ</div>
-                  <div className={!canManage ? "adminPane" : "whitePane"}>
+                  <div
+                    className={
+                      !canManage && individual?.is_registered
+                        ? "adminPane"
+                        : "whitePane"
+                    }
+                  >
                     <div className="flexRow">
-                      {!canManage ? (
+                      {!canManage && individual?.is_registered ? (
                         <div className="paneTitle">
                           Kan endast ändras av genbanksansvarig
                         </div>
@@ -165,7 +139,7 @@ export function IndividualForm({
                         <></>
                       )}
                       <TextField
-                        disabled={!canManage}
+                        disabled={!canManage && individual?.is_registered}
                         required
                         error={numberError}
                         label="Individnummer"
@@ -186,7 +160,7 @@ export function IndividualForm({
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
-                        edit={true}
+                        edit={individual?.is_registered}
                       />
                     </div>
                   </div>
@@ -237,7 +211,7 @@ export function IndividualForm({
                       <Tooltip title="Ursprungsbesättning är alltid den besättning som modern befinner sig i. Är detta fel måste modern först säljas till rätt besättning">
                         <Autocomplete
                           options={herdOptions}
-                          disabled
+                          disabled={!canManage}
                           noOptionsText={"Välj härstamningen först"}
                           getOptionLabel={(option: OptionType) => option.label}
                           className="wideControlInd"
@@ -292,55 +266,56 @@ export function IndividualForm({
                             onUpdateIndividual("birth_date", value);
                         }}
                       />
-                      <TextField
-                        required
-                        error={numberError}
-                        disabled={isIndNull}
-                        label="Individnummer"
-                        className="control controlWidth"
-                        variant={inputVariant}
-                        value={
-                          (individual.number?.split(/-\d{0,2}/)[1] ??
-                            individual.number) ||
-                          ""
-                        }
-                        InputProps={{
-                          classes: {
-                            input: "data-hj-allow",
-                          },
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              {individual?.number
-                                ? `${
-                                    individual.number?.match(
-                                      /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                    )[0]
-                                  }`
-                                : `${
-                                    individual.genebank
-                                      ? individual.genebank[0]
-                                      : "X"
-                                  }XXX-XX`}
-                            </InputAdornment>
-                          ),
-                        }}
-                        onChange={(event) => {
-                          onUpdateIndividual(
-                            "number",
-                            `${
-                              individual.number?.match(
-                                /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                              )[0]
-                            }${event.currentTarget.value}`
-                          );
-                        }}
-                      />
+                      <Tooltip title="Du kommer här få ett förslag på kull- och individnummer. Nummret kommer bara vara korrekt om du registrerar alla kaniner och kullar i kronologisk ordning.">
+                        <TextField
+                          required
+                          error={numberError}
+                          disabled={individual?.number == null}
+                          label="Individnummer"
+                          className="control controlWidth"
+                          variant={inputVariant}
+                          value={
+                            (individual.number?.split(/-\d{0,2}/)[1] ??
+                              individual.number) ||
+                            ""
+                          }
+                          InputProps={{
+                            classes: {
+                              input: "data-hj-allow",
+                            },
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                {individual?.number
+                                  ? `${
+                                      individual.number?.match(
+                                        /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                                      )[0]
+                                    }`
+                                  : `${
+                                      genebank ? genebank.name[0] : "X"
+                                    }XXX-XX`}
+                              </InputAdornment>
+                            ),
+                          }}
+                          onChange={(event) => {
+                            onUpdateIndividual(
+                              "number",
+                              `${
+                                individual.number?.match(
+                                  /([G-M]\d+|[G-M]X1)-\d{0,2}/
+                                )[0]
+                              }${event.currentTarget.value}`
+                            );
+                          }}
+                        />
+                      </Tooltip>
                     </div>{" "}
                     <div className="flexRow">
                       <CertAutocomplete
                         individual={individual}
                         canManage={canManage}
                         updateIndividual={onUpdateIndividual}
+                        intygError={intygError}
                         edit={false}
                       />
                     </div>
@@ -366,10 +341,9 @@ export function IndividualForm({
                       individual={individual}
                       onUpdateIndividual={onUpdateIndividual}
                     />
-                    {!canEditBreeding ? (
+                    {!canManage && individual?.is_registered ? (
                       <div className="controlWidth">
-                        Kan endast ändras av genbanksansvarig eller ägare av
-                        ursprungsbesättning
+                        Kan endast ändras av genbanksansvarig!
                       </div>
                     ) : (
                       <div className="flexRow">
@@ -382,7 +356,7 @@ export function IndividualForm({
                         </Tooltip>
                         <Button
                           className="control editButton"
-                          disabled={!canEditBreeding}
+                          disabled={!canManage && individual?.is_registered}
                           variant="outlined"
                           color="primary"
                           onClick={() => {
@@ -602,7 +576,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={1}
+                  minRows={1}
                   value={individual.hair_notes ?? ""}
                   inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
@@ -616,7 +590,7 @@ export function IndividualForm({
                   variant={inputVariant}
                   className="wideControlInd"
                   multiline
-                  rows={4}
+                  minRows={4}
                   value={individual.notes ?? ""}
                   inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {

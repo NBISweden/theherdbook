@@ -233,7 +233,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
                 variant={inputVariant}
                 className={style.wideControl}
                 multiline
-                rows={2}
+                minRows={2}
                 value={deadIndividual.death_note ?? ""}
                 InputProps={{
                   classes: {

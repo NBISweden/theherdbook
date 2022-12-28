@@ -36,15 +36,25 @@ export function IndividualPedigree({
           shrink: true,
         }}
       />
-      {React.useMemo(
-        () => (
-          <PedigreeNetwork
-            pedigree={pedigree}
-            onClick={(nodeId: string) => history.push("/individual/" + nodeId)}
-          />
-        ),
-        [pedigree]
-      )}
+      <div
+        style={{
+          minWidth: "110vh",
+          height: "85%",
+          position: "relative",
+        }}
+      >
+        {React.useMemo(
+          () => (
+            <PedigreeNetwork
+              pedigree={pedigree}
+              onClick={(nodeId: string) =>
+                history.push("/individual/" + nodeId)
+              }
+            />
+          ),
+          [pedigree]
+        )}
+      </div>
     </>
   );
 }

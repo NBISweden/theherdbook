@@ -3,6 +3,7 @@ import React from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import {
   Button,
@@ -377,7 +378,7 @@ export function IndividualCertificate({
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
-            genebank={individual.genebank_id}
+            genebank={individual?.genebank}
           />
           <div className={style.paneControls}>
             <Button
@@ -400,11 +401,14 @@ export function IndividualCertificate({
           <Document
             file={previewUrl}
             onLoadSuccess={onDocumentLoadSuccess}
-            style={{ border: "2px solid black" }}
-            renderAnnotationLayer={true}
             loading={<CircularProgress />}
           >
-            <Page pageNumber={pageNumber} />
+            <Page
+              pageNumber={pageNumber}
+              renderAnnotationLayer={true}
+              renderTextLayer={false}
+              scale={1.5}
+            />
           </Document>
           <div
             className={style.confirmBox}

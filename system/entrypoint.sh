@@ -2,7 +2,7 @@
 
 # Set up self signed certificate in case none is supplied.
 
-yes '' | openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /code/key.pem -out /code/cert.pem > /dev/null 2>/dev/null
+yes '' | openssl req -x509 -nodes -days 7304 -newkey rsa:4096 -keyout /code/key.pem -out /code/cert.pem > /dev/null 2>/dev/null
 cp /code/cert.pem /code/ca.pem
 
 for p in {cert,key,ca}; do 
