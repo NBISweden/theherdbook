@@ -41,6 +41,6 @@ const Main = (
 
 ReactDOM.render(Main, document.querySelector("#root"));
 
-hotjar.hotjar.initialize(3131066, 6);
+hotjar.hotjar.initialize(3243614, 6);
 // https://www.snowpack.dev/#hot-module-replacement
 import.meta?.hot?.accept(); // Dan: OK to ignore esbuild warning on this line
