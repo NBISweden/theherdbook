@@ -403,7 +403,11 @@ export function IndividualAdd({
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
     }
-    if (!/^([a-zA-Z][0-9]+-[0-9][0-9][0-9][0-9]+)$/.test(individual.number)) {
+    if (
+      !/^([a-zA-Z][0-9]+-[0-9][0-9](([1-9][1-9])|([1-9][0-9][0-9])))$/.test(
+        individual.number
+      )
+    ) {
       userMessage("Individens nummer har fel format.", "warning");
       return false;
     }
@@ -700,8 +704,84 @@ export function IndividualAdd({
     );
   };
 
+  const isValidNum = async (individualNumber: string | null) => {
+    const json = await post("/api/checkindnumber", {
+      number: individualNumber,
+    });
+    switch (json.status) {
+      case "success": {
+        setNumberError(false);
+        return true;
+      }
+      case "error": {
+        switch (json.message) {
+          case "Individual number already exists": {
+            userMessage(
+              `Det finns redan en kanin med nummer ${individual.number} i databasen.`,
+              "error"
+            );
+            setNumberError(true);
+            return false;
+          }
+          default: {
+            userMessage(
+              `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+              "error"
+            );
+            console.log("Fel från API: ", json.message);
+            return false;
+          }
+        }
+      }
+      default: {
+        userMessage(
+          `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+          "error"
+        );
+        console.log("Fel från API: ", json.message);
+        return false;
+      }
+    }
+  };
+  const isValidCert = async (intyg?: string | null) => {
+    const json = await post("/api/checkintyg", {
+      certificate: intyg,
+    });
+    switch (json.status) {
+      case "success": {
+        setIntygError(false);
+        return true;
+      }
+      case "error": {
+        userMessage(
+          `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
+          "error"
+        );
+        setIntygError(true);
+        return false;
+      }
+      default: {
+        userMessage(
+          `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+          "error"
+        );
+        console.log("Fel från API: ", json.message);
+        return false;
+      }
+    }
+  };
   const onSaveIndividual = async (individual: Individual) => {
     let newIndividual = individual;
+    const isValidNumber = await isValidNum(individual?.number);
+    if (!isValidNumber) {
+      return;
+    }
+
+    const isValidIntyg = await isValidCert(individual?.certificate);
+    if (!isValidIntyg) {
+      return;
+    }
+
     const inputValid = validateUserInput(individual);
     if (!inputValid) {
       return;
@@ -920,6 +1000,7 @@ export function IndividualAdd({
             Tillbaka
           </Button>
           <Button
+            disabled={success}
             variant="contained"
             color="primary"
             onClick={() => onSaveIndividual(individual)}
