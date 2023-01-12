@@ -721,6 +721,74 @@ def edit_individual():
     return jsonify(retval)
 
 
+@APP.route("/api/checkindnumber", methods=["POST"])
+@login_required
+def check_ind_number():
+    """
+    Check if indivdual number exists.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string,
+        }
+    """
+    form = request.json
+    try:
+        if (
+            db.Individual.select()
+            .where(db.Individual.number == form["number"])
+            .exists()
+        ):
+            return jsonify(
+                {"status": "error", "message": "Individual number already exists"}
+            )
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500
+    return jsonify(
+        {
+            "status": "success",
+            "message": "No duplicates",
+        }
+    )
+
+
+@APP.route("/api/checkintyg", methods=["POST"])
+@login_required
+def check_ind_intyg():
+    """
+    Check  if certificate/intyg  exists.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string,
+        }
+    """
+    form = request.json
+    try:
+        if form.get("certificate", None) is not None:
+            if (
+                db.Individual.select()
+                .where(db.Individual.certificate == form["certificate"])
+                .exists()
+            ):
+                return jsonify(
+                    {
+                        "status": "error",
+                        "message": "Individual certificate already exists",
+                    }
+                )
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500
+    return jsonify(
+        {
+            "status": "success",
+            "message": "No duplicates",
+        }
+    )
+
+
 def get_ind_inbreeding(i_number, g_id):
     """
     Returns  the inbreeding coefficient of the individual given by `i_number`.
