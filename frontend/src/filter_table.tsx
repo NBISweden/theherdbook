@@ -602,7 +602,7 @@ export function FilterTable({
               </Button>
             )}
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[5, 10, 25, 50, 100, 500]}
               component="div"
               count={filteredIndividuals.length}
               rowsPerPage={rowsPerPage}
