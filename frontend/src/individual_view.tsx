@@ -101,7 +101,10 @@ export function IndividualView({ id }: { id: string }) {
   // state to control the certificate menu button
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
-
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const showEditbutton =
+    (!individual?.death_date && !individual?.death_note) || is_admin;
+  const isDead = individual?.death_date || individual?.death_note;
   // funtions to control the certificate menu button
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -201,7 +204,10 @@ export function IndividualView({ id }: { id: string }) {
           <>
             <div className={style.flexColumn}>
               <div>
-                <h3>{individual?.name ?? individual.number}</h3>
+                <h3>
+                  {isDead ? "AVLIDEN" : ""}{" "}
+                  {individual?.name ?? individual.number}
+                </h3>
                 <dl className={style.sameLine}>
                   <dt>Namn:</dt>
                   <dd>{individual?.name}</dd>
@@ -430,8 +436,16 @@ export function IndividualView({ id }: { id: string }) {
                 </ul>
                 {user?.canEdit(individual.herd.herd) && (
                   <>
-                    {!individual.death_date && !individual.death_note && (
+                    {showEditbutton && (
                       <div className={style.flexColumn}>
+                        {is_admin &&
+                          (individual.death_date || individual.death_note) && (
+                            <Typography variant="h6">
+                              Du är Manager och kaninen är död var försiktig med
+                              funktionerna nedan!
+                            </Typography>
+                          )}
+
                         <Button
                           className={style.editButton}
                           variant="outlined"
@@ -472,7 +486,9 @@ export function IndividualView({ id }: { id: string }) {
                             popup(<IndividualDeath individual={individual} />)
                           }
                         >
-                          Rapportera som död
+                          {individual?.death_note && !individual?.death_date
+                            ? "Uppdatera dödsdatum"
+                            : "Rapportera som död"}
                         </Button>
                       </div>
                     )}

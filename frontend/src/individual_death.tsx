@@ -67,7 +67,8 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
   const [deadIndividual, setDeadIndividual] = React.useState(
     individual as Individual
   );
-  const [isDead, setIsDead] = React.useState(false);
+  const indIsDead = individual.death_date || individual.death_note;
+  const [isDead, setIsDead] = React.useState(indIsDead);
   const [success, setSuccess] = React.useState(false as boolean);
   const style = useStyles();
   const { userMessage } = useMessageContext();
@@ -93,26 +94,6 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
   ) => {
     deadIndividual && setDeadIndividual({ ...deadIndividual, [field]: value });
   };
-
-  /**
-   * make sure "butchered", "death notes" and "death_date" always follow isDead
-   * (an alive rabbit can't be butchered=true and can't have death notes or death_date)
-   */
-  React.useEffect(() => {
-    if (!isDead) {
-      handleUpdateIndividual("butchered", false);
-    }
-  }, [isDead]);
-  React.useEffect(() => {
-    if (!isDead && !deadIndividual.butchered) {
-      handleUpdateIndividual("death_note", "");
-    }
-  }, [isDead, deadIndividual.butchered]);
-  React.useEffect(() => {
-    if (!isDead && !deadIndividual.butchered && !deadIndividual.death_note) {
-      handleUpdateIndividual("death_date", null);
-    }
-  }, [isDead, deadIndividual.death_note, deadIndividual.butchered]);
 
   const onSave = () => {
     if (!isDead) {
@@ -144,34 +125,42 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
     <>
       <div className={style.popupContainer}>
         <h2>
-          Rapportera {individual.name} {individual.number} som död
+          {!indIsDead
+            ? `Rapportera ${individual.name} ${individual.number} som död `
+            : `Uppdatera dödsdatum för ${individual.name} ${individual.number}`}
         </h2>
         {!success ? (
           <>
             <div className={style.formContainer}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend" required>
-                  Har kaninen dött under året?
-                </FormLabel>
-                <RadioGroup
-                  row
-                  aria-required
-                  aria-label="death"
-                  value={isDead}
-                  onChange={() => setIsDead(!isDead)}
-                >
-                  <FormControlLabel
-                    value={false}
-                    control={<Radio />}
-                    label="Nej"
-                  />
-                  <FormControlLabel
-                    value={true}
-                    control={<Radio />}
-                    label="Ja"
-                  />
-                </RadioGroup>
-              </FormControl>
+              {!indIsDead ? (
+                <>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend" required>
+                      Har kaninen {deadIndividual.number} dött under året?
+                    </FormLabel>
+                    <RadioGroup
+                      row
+                      aria-required
+                      aria-label="death"
+                      value={isDead}
+                      onChange={() => setIsDead(!isDead)}
+                    >
+                      <FormControlLabel
+                        value={false}
+                        control={<Radio />}
+                        label="Nej"
+                      />
+                      <FormControlLabel
+                        value={true}
+                        control={<Radio />}
+                        label="Ja"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </>
+              ) : (
+                <></>
+              )}
               <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
                 <KeyboardDatePicker
                   autoOk
