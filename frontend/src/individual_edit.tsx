@@ -144,7 +144,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
           }
         )
       : userMessage("Något gick fel.", "error");
-  }, [id, herdChangeListener]);
+  }, [id]);
 
   /**
    * The API sends the birth date in a format like this:
@@ -175,10 +175,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    */
   const handleUpdateIndividual = <T extends keyof Individual>(
     field: T,
-    value: Individual[T]
+    value: Individual[T],
+    field2?: T,
+    value2?: Individual[T]
   ) => {
     individual &&
-      (setIndividual({ ...individual, [field]: value }), setIsSaveActive(true));
+      (setIndividual({ ...individual, [field]: value, [field2]: value2 }),
+      setIsSaveActive(true));
   };
 
   /**
@@ -272,6 +275,8 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    */
   const save = (data: Individual) => {
     if (isEqual(data, oldIndividual)) {
+      userMessage(`Inga ändringar gjorda, finns inget att spara.`, "info");
+      setIsSaveActive(false);
       return;
     }
     const postData = { ...data };
@@ -282,12 +287,19 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             if (postData.herd.herd == herdListener) {
               setHerdChangeListener(herdChangeListener + 1);
             }
-            userMessage(retval.message ?? "Individual updated", "success");
+            userMessage(
+              retval.message ??
+                `${data.name} med nummer ${data.number} har lagts till `,
+              "success"
+            );
             loadData(["genebanks"]);
             handleCloseDialog();
             break;
           default:
-            userMessage(retval.message ?? "something went wrong", "error");
+            userMessage(
+              retval.message ?? "Något gick fel kontakta admin.",
+              "error"
+            );
         }
       },
       (error) => {
