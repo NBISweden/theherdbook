@@ -50,7 +50,7 @@ export function IndividualForm({
   intygError,
   herdOptions,
 }: {
-  genebank: Genebank;
+  genebank?: Genebank;
   individual: Individual;
   onUpdateIndividual: any;
   formAction: FormAction;
@@ -500,6 +500,13 @@ export function IndividualForm({
                       className="control"
                       variant={inputVariant}
                       margin="normal"
+                      value={individual.has_photo ?? ""}
+                      onChange={(event) => {
+                        onUpdateIndividual(
+                          "has_photo",
+                          event.currentTarget.value
+                        );
+                      }}
                     />
                   )}
                 />
