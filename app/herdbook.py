@@ -717,7 +717,16 @@ def edit_individual():
         if request.method == "POST":
             retval = da.add_individual(form, session.get("user_id", None))
     except Exception as error:
-        return jsonify({"status": "error", "message": str(error)}), 500
+        APP.logger.error("Unexpected error when edit individual: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                }
+            ),
+            500,
+        )
     return jsonify(retval)
 
 
@@ -744,7 +753,16 @@ def check_ind_number():
                 {"status": "error", "message": "Individual number already exists"}
             )
     except Exception as error:
-        return jsonify({"status": "error", "message": str(error)}), 500
+        APP.logger.error("Unexpected error when checking number: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                }
+            ),
+            500,
+        )
     return jsonify(
         {
             "status": "success",
@@ -780,7 +798,16 @@ def check_ind_intyg():
                     }
                 )
     except Exception as error:
-        return jsonify({"status": "error", "message": str(error)}), 500
+        APP.logger.error("Unexpected error when checking number: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                }
+            ),
+            500,
+        )
     return jsonify(
         {
             "status": "success",
