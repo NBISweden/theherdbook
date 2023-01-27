@@ -84,12 +84,7 @@ export function IndividualForm({
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
       return colors[genebank.name].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     } else if (
       individual &&
@@ -97,12 +92,7 @@ export function IndividualForm({
       Object.keys(colors).includes(individual?.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     }
     return [];
@@ -596,4 +586,13 @@ export function IndividualForm({
       </div>
     </>
   );
+
+  function returnColorData(c: any) {
+    return {
+      id: c.id,
+      comment: c.comment,
+      value: c.name,
+      label: `${c.id} - ${c.name}`,
+    };
+  }
 }
