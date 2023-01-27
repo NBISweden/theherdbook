@@ -993,7 +993,11 @@ def add_individual(form, user_uuid):
     logging.getLogger(f"{individual.current_herd.genebank.name}_create").info(
         f"{user.username},{individual.number},{individual.name},{new_herd.herd},{selling_date}"
     )
-    return {"status": "success", "message": "Individual Created"}
+    return {
+        "status": "success",
+        "message": "Individual Created",
+        "number": individual.number,
+    }
 
 
 def update_herdtracking_values(individual, new_herd, user_signature, tracking_date):

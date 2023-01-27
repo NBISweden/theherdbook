@@ -274,7 +274,10 @@ export function BreedingForm({
       (json) => {
         switch (json.status) {
           case "success": {
-            userMessage(`En kanin har lagts till i din besättning.`, "success");
+            userMessage(
+              `Kaninen med nummer ${json.number} har lagts till i din besättning.`,
+              "success"
+            );
             return "success";
           }
           case "error": {
