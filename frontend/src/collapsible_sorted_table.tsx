@@ -339,7 +339,7 @@ export function CollapsibleSortedTable({
                                   <>
                                     <Box margin={1}>
                                       <Typography
-                                        variant="h7"
+                                        variant="subtitle2"
                                         gutterBottom
                                         component="div"
                                       >
@@ -406,7 +406,7 @@ export function CollapsibleSortedTable({
                                   <>
                                     <Box margin={2}>
                                       <Typography
-                                        variant="h7"
+                                        variant="h6"
                                         gutterBottom
                                         component="div"
                                       >

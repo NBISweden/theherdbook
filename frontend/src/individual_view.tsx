@@ -10,6 +10,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  Typography,
 } from "@material-ui/core";
 import { ArrowForward } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
@@ -219,13 +220,29 @@ export function IndividualView({ id }: { id: string }) {
                       : ""}
                   </dd>
                   <dt>
-                    <Tooltip title="Inavelskoefficient">
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>{"Inavelskoefficient"}</Typography>
+                        </React.Fragment>
+                      }
+                    >
                       <span>F:</span>
                     </Tooltip>
                   </dt>
                   <dd>{individual?.inbreeding}%</dd>
                   <dt>
-                    <Tooltip title="Genomsnittligt släktskap/ Mean Kinship">
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>
+                            {"Genomsnittligt släktskap/ Mean Kinship"}
+                          </Typography>
+                        </React.Fragment>
+                      }
+                    >
                       <span>MK:</span>
                     </Tooltip>
                   </dt>
@@ -271,6 +288,14 @@ export function IndividualView({ id }: { id: string }) {
                   </dd>
                   <dt>Anteckningar</dt>
                   <dd>{individual?.notes ?? "-"}</dd>
+                  {individual?.death_note ? (
+                    <span>
+                      <dt>Dödsnotering</dt>
+                      <dd>{individual?.death_note}</dd>
+                    </span>
+                  ) : (
+                    ""
+                  )}
                 </dl>
               </div>
               {user?.canEdit(individual.herd.herd) && (

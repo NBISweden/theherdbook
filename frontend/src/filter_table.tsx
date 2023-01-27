@@ -161,7 +161,10 @@ function searchFilter(
   columns: Column[]
 ) {
   let searchResult = false;
-  const searchRegExp = new RegExp(search, "i");
+  const searchRegExp = new RegExp(
+    search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    "i"
+  );
   for (let column of columns) {
     if (!individual[column.field]) {
       continue;

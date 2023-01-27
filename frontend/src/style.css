@@ -200,6 +200,15 @@ list-item {
   align-items: center;
 }
 
+
+.react-pdf__Page__annotations {
+  --scale-factor: 1.5 ! important;
+  left:5px;
+  top:2px;
+}
+
+
+
 /* Used in filter_table.tsx */
 .functionLink {
   color: blue;

@@ -1,6 +1,12 @@
 import React from "react";
 
-import { Button, InputAdornment, TextField, Tooltip } from "@material-ui/core";
+import {
+  Button,
+  InputAdornment,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -78,12 +84,7 @@ export function IndividualForm({
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
       return colors[genebank.name].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     } else if (
       individual &&
@@ -91,12 +92,7 @@ export function IndividualForm({
       Object.keys(colors).includes(individual?.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     }
     return [];
@@ -206,7 +202,18 @@ export function IndividualForm({
                 {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                   <>
                     <div className="flexRow">
-                      <Tooltip title="Ursprungsbesättning är alltid den besättning som modern befinner sig i. Är detta fel måste modern först säljas till rätt besättning">
+                      <Tooltip
+                        arrow
+                        title={
+                          <React.Fragment>
+                            <Typography>
+                              Ursprungsbesättning är alltid den besättning som
+                              modern befinner sig i. Är detta fel måste modern
+                              först säljas till rätt besättning"
+                            </Typography>
+                          </React.Fragment>
+                        }
+                      >
                         <Autocomplete
                           options={herdOptions}
                           disabled={!canManage}
@@ -253,7 +260,19 @@ export function IndividualForm({
                             onUpdateIndividual("birth_date", value);
                         }}
                       />
-                      <Tooltip title="Du kommer här få ett förslag på kull- och individnummer. Nummret kommer bara vara korrekt om du registrerar alla kaniner och kullar i kronologisk ordning.">
+                      <Tooltip
+                        title={
+                          <React.Fragment>
+                            <Typography>
+                              Du kommer här få ett förslag på kull- och
+                              individnummer. Nummret kommer bara vara korrekt om
+                              du registrerar alla kaniner och kullar i
+                              kronologisk ordning.
+                            </Typography>
+                          </React.Fragment>
+                        }
+                        arrow
+                      >
                         <TextField
                           required
                           error={numberError}
@@ -331,7 +350,14 @@ export function IndividualForm({
                     ) : (
                       <div className="flexRow">
                         <Tooltip
-                          title="Är datumet fel för hela kullen vänligen ändra i själva parningstillfället"
+                          title={
+                            <React.Fragment>
+                              <Typography>
+                                Är datumet fel för hela kullen vänligen ändra i
+                                själva parningstillfället
+                              </Typography>
+                            </React.Fragment>
+                          }
                           placement="right"
                           arrow
                         >
@@ -560,4 +586,13 @@ export function IndividualForm({
       </div>
     </>
   );
+
+  function returnColorData(c: any) {
+    return {
+      id: c.id,
+      comment: c.comment,
+      value: c.name,
+      label: `${c.id} - ${c.name}`,
+    };
+  }
 }
