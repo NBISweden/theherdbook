@@ -449,7 +449,7 @@ export function BreedingForm({
         const newBirthData: Birth = {
           date: breeding.birth_date,
           litter_size: breeding.litter_size,
-          litter_size6w: breeding.litter_size,
+          litter_size6w: breeding.litter_size6w,
           notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
           id: newBreeding.breeding_id,
         };
@@ -462,7 +462,7 @@ export function BreedingForm({
             await createEmptyIndividual(
               breeding,
               newBirthData,
-              Math.min(breeding.litter_size, 9)
+              Math.min(breeding.litter_size6w, 9)
             );
           }
           await setHerdChangeListener(herdChangeListener + 1);
@@ -719,10 +719,10 @@ export function BreedingForm({
                 title={
                   <React.Fragment>
                     <Typography>
-                      Om du klickar i denna ruta kommer systemet försöka skapa
-                      tomma kaniner. Du måste då registrera kullarna i rätt
-                      ordning för att systemet ska kunna numrerar dem rätt!{" "}
-                      <p></p>
+                      Om du klickar i denna ruta kommer systemet försöka skapa{" "}
+                      {Math.min(formState?.litter_size6w, 9)} st tomma kaniner.
+                      Du måste då registrera kullarna i rätt ordning för att
+                      systemet ska kunna numrerar dem rätt! <p></p>
                       <b>
                         OBS max 9 kaniner från en kull Kommer läggas in i
                         systemet!
