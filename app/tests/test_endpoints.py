@@ -163,6 +163,8 @@ class TestEndpoints(FlaskTest):
                     db.Individual.sex,
                     db.Individual.id,
                     db.Individual.origin_herd,
+                    db.Individual.certificate,
+                    db.Individual.digital_certificate,
                 ).where(db.Individual.breeding_id == breedings.id):
                     ind = dict()
                     if data:
@@ -171,6 +173,11 @@ class TestEndpoints(FlaskTest):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
+                        ind["is_registerd"] = (
+                            True
+                            if data.certificate or data.digital_certificate
+                            else False
+                        )
                     individuals_dict.append(ind)
                 b = breedings.as_dict()
                 b["individuals"] = individuals_dict
@@ -214,6 +221,8 @@ class TestEndpoints(FlaskTest):
                 db.Individual.sex,
                 db.Individual.id,
                 db.Individual.origin_herd,
+                db.Individual.certificate,
+                db.Individual.digital_certificate,
             ).where(db.Individual.breeding_id == breedings.id):
                 ind = dict()
                 if data:
@@ -222,6 +231,9 @@ class TestEndpoints(FlaskTest):
                     ind["sex"] = data.sex
                     ind["color"] = data.color.name if data.color else None
                     ind["current_herd"] = data.current_herd.herd
+                    ind["is_registerd"] = (
+                        True if data.certificate or data.digital_certificate else False
+                    )
                 individuals_dict.append(ind)
             b = breedings.as_dict()
             b["individuals"] = individuals_dict

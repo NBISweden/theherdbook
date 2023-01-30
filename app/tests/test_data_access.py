@@ -362,17 +362,34 @@ class TestDataAccess(DatabaseTest):
         )
 
         status = da.add_individual(forms["valid"], self.admin.uuid)
-        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        self.assertEqual(
+            status,
+            {
+                "status": "success",
+                "number": forms["valid"]["number"],
+                "message": "Individual Created",
+            },
+        )
         ind = da.get_individual(forms["valid"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
         self.assertEqual(ind["herd"], {"id": 1, "herd": "H1", "herd_name": "herd1"})
 
         status = da.add_individual(forms["empty"], self.admin.uuid)
-        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        self.assertEqual(
+            status,
+            {
+                "status": "success",
+                "message": "Individual Created",
+                "number": "H2-2121",
+            },
+        )
         ind = da.get_individual(forms["empty"]["number"], self.admin.uuid)
 
         status = da.add_individual(forms["secondempty"], self.admin.uuid)
-        self.assertEqual(status, {"status": "success", "message": "Individual Created"})
+        self.assertEqual(
+            status,
+            {"status": "success", "message": "Individual Created", "number": "H2-2112"},
+        )
         ind = da.get_individual(forms["secondempty"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
 
