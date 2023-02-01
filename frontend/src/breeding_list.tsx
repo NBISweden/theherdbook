@@ -125,7 +125,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
             setActive(row);
           }}
           rowsPerPage={10}
-          orderBy="breed_date"
+          orderBy="birth_date"
           style={{ width: active ? "60%" : "calc(100% - 2px)" }}
         />
         <div className="breedingListForm" style={{ width: active ? "40%" : 0 }}>
