@@ -1439,16 +1439,20 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
         with DATABASE.atomic():
             for breedings in Breeding.select().where(Breeding.breeding_herd == herd):
                 individuals_dict = []
-                for data in Individual.select(
-                    Individual.number,
-                    Individual.name,
-                    Individual.color,
-                    Individual.sex,
-                    Individual.id,
-                    Individual.origin_herd,
-                    Individual.certificate,
-                    Individual.digital_certificate,
-                ).where(Individual.breeding_id == breedings.id):
+                for data in (
+                    Individual.select(
+                        Individual.number,
+                        Individual.name,
+                        Individual.color,
+                        Individual.sex,
+                        Individual.id,
+                        Individual.origin_herd,
+                        Individual.certificate,
+                        Individual.digital_certificate,
+                    )
+                    .where(Individual.breeding_id == breedings.id)
+                    .order_by(Individual.number)
+                ):
                     ind = dict()
                     if data:
                         ind["number"] = data.number
