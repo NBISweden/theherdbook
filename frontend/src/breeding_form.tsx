@@ -316,7 +316,7 @@ export function BreedingForm({
               }
               case "kull": {
                 userMessage(
-                  `En eller flera kaniner i kullen är inlagd med fel kull nummer: ${json.wrong}
+                  `En eller flera kaniner i kullen är inlagd med fel kullnummer: ${json.wrong}
                   om du har lagt till alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
                   Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
                   "error",
@@ -746,7 +746,7 @@ export function BreedingForm({
                     <Typography>
                       Om du klickar i denna ruta kommer systemet försöka skapa{" "}
                       {Math.min(formState?.litter_size6w, 9)} st tomma kaniner.
-                      Du måste då registrera kullarna i rätt ordning för att
+                      Du måste då lägga till kullarna i rätt ordning för att
                       systemet ska kunna numrerar dem rätt! <p></p>
                       <b>
                         OBS max 9 kaniner från en kull Kommer läggas in i

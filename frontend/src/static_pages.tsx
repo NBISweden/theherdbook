@@ -80,7 +80,7 @@ export function HelpStamboken() {
               rel="noopener noreferrer"
               href="https://docs.google.com/presentation/d/e/2PACX-1vTPYymU-2TkiTl-2VvCeodXT-MIa4fFjXiY4SDlEkSJT0GA4pve0tRehC0Xw0xh7A/pub?start%3Dfalse%26loop%3Dfalse%26delayms%3D3000"
             >
-              Del 2 Registrera ny kanin
+              Del 2 Lägg till ny kanin
             </a>
           </li>
           <li>
