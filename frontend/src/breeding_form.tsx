@@ -241,6 +241,14 @@ export function BreedingForm({
       return false;
     }
 
+    if (userInput?.litter_size6w > userInput?.litter_size) {
+      userMessage(
+        "Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.",
+        "warning"
+      );
+      return false;
+    }
+
     if (!!userInput.birth_date && !userInput.litter_size) {
       userMessage(
         "Om du vill spara information om födseln måste du ange ett födelsedatum och en kullstorlek.",
@@ -299,9 +307,26 @@ export function BreedingForm({
                 );
                 return "error";
               }
+              case "litter_size": {
+                userMessage(
+                  "Alla kaniner i denna kull finns redan i systemet.",
+                  "error"
+                );
+                return "error";
+              }
+              case "kull": {
+                userMessage(
+                  `En eller flera kaniner i kullen är inlagd med fel kull nummer: ${json.wrong}
+                  om du har lagt till alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
+                  Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
+                  "error",
+                  true
+                );
+                break;
+              }
               default: {
                 userMessage(
-                  "Något gick fel. Det här borde inte hända.",
+                  `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
                   "error"
                 );
                 return "error";

@@ -924,10 +924,7 @@ def add_individual(form, user_uuid):
             form["number"] = nextind["number"]
         else:
             logger.error(f"Next in is not successfull: ${nextind.get('message')}")
-            return {
-                "status": "error",
-                "message": f"kan inte hämta nästa individ nummer: ${nextind.get('message')}",
-            }
+            return nextind
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
