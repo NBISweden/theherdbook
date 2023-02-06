@@ -192,7 +192,6 @@ export function CollapsibleSortedTable({
     // return the unsorted data if the columnn isn't valid
     return tableData;
   }, [tableData, orderBy, order]);
-
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -203,7 +202,6 @@ export function CollapsibleSortedTable({
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: any
@@ -353,6 +351,7 @@ export function CollapsibleSortedTable({
                                         <TableHead>
                                           <TableRow>
                                             <TableCell>Nummer</TableCell>
+                                            <TableCell>Registrerad</TableCell>
                                             <TableCell>Namn</TableCell>
                                             <TableCell>Färg</TableCell>
                                             <TableCell>Kön</TableCell>
@@ -381,6 +380,11 @@ export function CollapsibleSortedTable({
                                                 >
                                                   {indi.number}
                                                 </a>
+                                              </TableCell>
+                                              <TableCell>
+                                                {indi.is_registerd
+                                                  ? "Ja"
+                                                  : "Nej"}
                                               </TableCell>
                                               <TableCell>{indi.name}</TableCell>
                                               <TableCell>

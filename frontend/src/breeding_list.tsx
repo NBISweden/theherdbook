@@ -130,6 +130,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         />
         <div className="breedingListForm" style={{ width: active ? "40%" : 0 }}>
           <BreedingForm
+            key={active?.id}
             data={active}
             herdId={id}
             handleBreedingsChanged={handleBreedingsChanged}

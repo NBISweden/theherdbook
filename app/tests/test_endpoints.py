@@ -156,14 +156,20 @@ class TestEndpoints(FlaskTest):
                 db.Breeding.breeding_herd == self.herds[0]
             ):
                 individuals_dict = []
-                for data in db.Individual.select(
-                    db.Individual.number,
-                    db.Individual.name,
-                    db.Individual.color,
-                    db.Individual.sex,
-                    db.Individual.id,
-                    db.Individual.origin_herd,
-                ).where(db.Individual.breeding_id == breedings.id):
+                for data in (
+                    db.Individual.select(
+                        db.Individual.number,
+                        db.Individual.name,
+                        db.Individual.color,
+                        db.Individual.sex,
+                        db.Individual.id,
+                        db.Individual.origin_herd,
+                        db.Individual.certificate,
+                        db.Individual.digital_certificate,
+                    )
+                    .where(db.Individual.breeding_id == breedings.id)
+                    .order_by(db.Individual.number)
+                ):
                     ind = dict()
                     if data:
                         ind["number"] = data.number
@@ -171,6 +177,11 @@ class TestEndpoints(FlaskTest):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
+                        ind["is_registerd"] = (
+                            True
+                            if data.certificate or data.digital_certificate
+                            else False
+                        )
                     individuals_dict.append(ind)
                 b = breedings.as_dict()
                 b["individuals"] = individuals_dict
@@ -207,14 +218,20 @@ class TestEndpoints(FlaskTest):
             db.Breeding.breeding_herd == self.herds[0]
         ):
             individuals_dict = []
-            for data in db.Individual.select(
-                db.Individual.number,
-                db.Individual.name,
-                db.Individual.color,
-                db.Individual.sex,
-                db.Individual.id,
-                db.Individual.origin_herd,
-            ).where(db.Individual.breeding_id == breedings.id):
+            for data in (
+                db.Individual.select(
+                    db.Individual.number,
+                    db.Individual.name,
+                    db.Individual.color,
+                    db.Individual.sex,
+                    db.Individual.id,
+                    db.Individual.origin_herd,
+                    db.Individual.certificate,
+                    db.Individual.digital_certificate,
+                )
+                .where(db.Individual.breeding_id == breedings.id)
+                .order_by(db.Individual.number)
+            ):
                 ind = dict()
                 if data:
                     ind["number"] = data.number
@@ -222,6 +239,9 @@ class TestEndpoints(FlaskTest):
                     ind["sex"] = data.sex
                     ind["color"] = data.color.name if data.color else None
                     ind["current_herd"] = data.current_herd.herd
+                    ind["is_registerd"] = (
+                        True if data.certificate or data.digital_certificate else False
+                    )
                 individuals_dict.append(ind)
             b = breedings.as_dict()
             b["individuals"] = individuals_dict

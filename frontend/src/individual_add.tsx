@@ -574,7 +574,7 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  "Alla kaniner i denna kull är redan registrerade",
+                  "Alla kaniner i denna kull finns redan i systemet.",
                   "error"
                 );
                 break;
@@ -587,7 +587,7 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  "Du får max registrera 9 kaniner från en och samma kull.",
+                  "Du får max lägga till 9 kaniner från en och samma kull.",
                   "error",
                   true
                 );
@@ -601,8 +601,8 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  `En eller flera kaniner i kullen är registrerade med fel kull nummer: ${json.wrong}
-                  om du har registrerat alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
+                  `En eller flera kaniner i kullen är inlagd med fel kullnummer: ${json.wrong}
+                  om du har lagt till alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
                   Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
                   "error",
                   true
@@ -841,7 +841,7 @@ export function IndividualAdd({
     <>
       <div className={style.inputWrapper}>
         <div className={style.inputBox}>
-          <h1>Registrera en ny kanin</h1>
+          <h1>Lägg till en ny kanin</h1>
           <div className={style.ancestorBox}>
             <h2>Lägg till härstamningen</h2>
             <div className={style.datum}>

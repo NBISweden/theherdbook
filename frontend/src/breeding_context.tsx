@@ -238,14 +238,17 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
    * @returns number of new individuals that should be created
    */
   const checkBirthUpdate = (breeding: Breeding, breedingUpdates: Breeding) => {
-    if (!(breedingUpdates.birth_date && breedingUpdates.litter_size)) {
+    if (!(breedingUpdates.birth_date && breedingUpdates.litter_size6w)) {
       return 0;
     }
-    if (!breeding.litter_size) {
-      return Math.min(breedingUpdates.litter_size, 9);
+    if (!breeding.litter_size6w) {
+      return Math.min(breedingUpdates.litter_size6w, 9);
     }
-    if (breeding.litter_size < breedingUpdates.litter_size) {
-      return Math.min(breedingUpdates.litter_size - breeding.litter_size, 9);
+    if (breeding.litter_size6w < breedingUpdates.litter_size6w) {
+      return (
+        Math.min(breedingUpdates.litter_size6w, 9) -
+        Math.min(breeding.litter_size6w, 9)
+      );
     }
     return 0;
   };

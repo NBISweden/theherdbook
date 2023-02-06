@@ -924,10 +924,7 @@ def add_individual(form, user_uuid):
             form["number"] = nextind["number"]
         else:
             logger.error(f"Next in is not successfull: ${nextind.get('message')}")
-            return {
-                "status": "error",
-                "message": f"kan inte hämta nästa individ nummer: ${nextind.get('message')}",
-            }
+            return nextind
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
@@ -993,7 +990,11 @@ def add_individual(form, user_uuid):
     logging.getLogger(f"{individual.current_herd.genebank.name}_create").info(
         f"{user.username},{individual.number},{individual.name},{new_herd.herd},{selling_date}"
     )
-    return {"status": "success", "message": "Individual Created"}
+    return {
+        "status": "success",
+        "message": "Individual Created",
+        "number": individual.number,
+    }
 
 
 def update_herdtracking_values(individual, new_herd, user_signature, tracking_date):
@@ -1435,14 +1436,20 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
         with DATABASE.atomic():
             for breedings in Breeding.select().where(Breeding.breeding_herd == herd):
                 individuals_dict = []
-                for data in Individual.select(
-                    Individual.number,
-                    Individual.name,
-                    Individual.color,
-                    Individual.sex,
-                    Individual.id,
-                    Individual.origin_herd,
-                ).where(Individual.breeding_id == breedings.id):
+                for data in (
+                    Individual.select(
+                        Individual.number,
+                        Individual.name,
+                        Individual.color,
+                        Individual.sex,
+                        Individual.id,
+                        Individual.origin_herd,
+                        Individual.certificate,
+                        Individual.digital_certificate,
+                    )
+                    .where(Individual.breeding_id == breedings.id)
+                    .order_by(Individual.number)
+                ):
                     ind = dict()
                     if data:
                         ind["number"] = data.number
@@ -1450,6 +1457,11 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
+                        ind["is_registerd"] = (
+                            True
+                            if data.certificate or data.digital_certificate
+                            else False
+                        )
                     individuals_dict.append(ind)
                 b = breedings.as_dict()
                 b["individuals"] = individuals_dict
