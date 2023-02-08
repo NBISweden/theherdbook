@@ -102,8 +102,7 @@ export function IndividualView({ id }: { id: string }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
   const is_admin = !!(user?.is_manager || user?.is_admin);
-  const showEditbutton =
-    (!individual?.death_date && !individual?.death_note) || is_admin;
+  const showEditbutton = !individual?.death_date || is_admin;
   const isDead = individual?.death_date || individual?.death_note;
   // funtions to control the certificate menu button
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -170,14 +169,22 @@ export function IndividualView({ id }: { id: string }) {
       return [];
     }
     return (
-      genebank.individuals.filter(
-        (i) =>
-          (i.mother && i.mother.number == individual.number) ||
-          (i.father && i.father.number == individual.number)
-      ) ?? []
+      genebank.individuals
+        .filter(
+          (i) =>
+            (i.mother && i.mother.number == individual.number) ||
+            (i.father && i.father.number == individual.number)
+        )
+        .sort((a, b) => {
+          if (a.birth_date === b.birth_date) {
+            const [, aSubNum] = a.number.split("-");
+            const [, bSubNum] = b.number.split("-");
+            return parseInt(aSubNum) - parseInt(bSubNum);
+          }
+          return a.birth_date.localeCompare(b.birth_date);
+        }) ?? []
     );
   }, [individual, genebanks]);
-
   const activeIcon = "✅";
   const inactiveIcon = "❌";
   const deadIcon = "✞";
@@ -205,8 +212,10 @@ export function IndividualView({ id }: { id: string }) {
             <div className={style.flexColumn}>
               <div>
                 <h3>
-                  {isDead ? "AVLIDEN" : ""}{" "}
+                  {isDead ? "✞AVLIDEN" : ""}{" "}
                   {individual?.name ?? individual.number}
+                  {isDead ? " ✞" : ""}
+                  {""}
                 </h3>
                 <dl className={style.sameLine}>
                   <dt>Namn:</dt>
@@ -413,6 +422,7 @@ export function IndividualView({ id }: { id: string }) {
                       if (herdTrack.herd) {
                         return (
                           <Link
+                            to={`/herd/${herdTrack.herd}`}
                             onClick={() =>
                               popup(
                                 <HerdView id={herdTrack.herd} />,
@@ -447,6 +457,7 @@ export function IndividualView({ id }: { id: string }) {
                           )}
 
                         <Button
+                          disabled={isDead && !is_admin}
                           className={style.editButton}
                           variant="outlined"
                           color="primary"
@@ -457,6 +468,7 @@ export function IndividualView({ id }: { id: string }) {
                           Sälj individ
                         </Button>
                         <Button
+                          disabled={isDead && !is_admin}
                           className={style.editButton}
                           variant="outlined"
                           color="primary"
@@ -503,6 +515,7 @@ export function IndividualView({ id }: { id: string }) {
                       Mor:
                       {individual.mother ? (
                         <Link
+                          to={`/individual/${individual.mother.number}`}
                           onClick={() =>
                             popup(
                               <IndividualView id={individual.mother.number} />,
@@ -520,6 +533,7 @@ export function IndividualView({ id }: { id: string }) {
                       Far:
                       {individual.father ? (
                         <Link
+                          to={`/individual/${individual.father.number}`}
                           onClick={() =>
                             popup(
                               <IndividualView id={individual.father.number} />,
@@ -551,6 +565,7 @@ export function IndividualView({ id }: { id: string }) {
                           : deadIcon}
                       </span>
                       <Link
+                        to={`/individual/${child.number}`}
                         onClick={() =>
                           popup(
                             <IndividualView id={child.number} />,
