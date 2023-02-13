@@ -1101,6 +1101,19 @@ def update_individual(form, user_uuid):
                     raise exception
 
             individual.save()
+            # if origin_herd has change update birth herd tracking.
+            if old_individual.origin_herd != form["origin_herd"]:
+                logger.info("in origin herd change")
+                ht_birth = HerdTracking.get(
+                    (HerdTracking.individual == individual)
+                    & (
+                        HerdTracking.herd_tracking_date
+                        == individual.breeding.birth_date.strftime("%Y-%m-%d")
+                    )
+                )
+                ht_birth.herd = form["origin_herd"]
+                ht_birth.save()
+
             # Move the certificate to the new number.
             if new_number and individual.digital_certificate:
                 s3.get_s3_client().copy_object(
