@@ -722,7 +722,7 @@ def edit_individual():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
@@ -758,7 +758,7 @@ def check_ind_number():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
@@ -803,7 +803,7 @@ def check_ind_intyg():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
