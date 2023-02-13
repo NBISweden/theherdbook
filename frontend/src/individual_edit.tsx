@@ -184,8 +184,6 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     }
   };
   React.useEffect(() => {
-    console.log("new orign", individual?.origin_herd?.herd);
-    console.log("old", oldIndividual?.origin_herd?.herd);
     if (individual?.number && oldIndividual?.origin_herd?.herd) {
       let newNumber =
         individual?.origin_herd?.herd + "-" + individual.number.split("-")[1];
@@ -335,18 +333,14 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               setHerdChangeListener(herdChangeListener + 1);
             }
             userMessage(
-              retval.message ??
-                `${data.name} med nummer ${data.number} har lagts till `,
+              `${data.name} med nummer ${data.number} har uppdaterats`,
               "success"
             );
             loadData(["genebanks"]);
             handleCloseDialog();
             break;
           default:
-            userMessage(
-              retval.message ?? "Något gick fel kontakta admin.",
-              "error"
-            );
+            userMessage("Något gick fel kontakta admin.", "error");
         }
       },
       (error) => {
