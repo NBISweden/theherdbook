@@ -134,21 +134,45 @@ export function IndividualForm({
                       ) : (
                         <></>
                       )}
-                      <TextField
-                        disabled={!canManage && individual?.is_registered}
-                        required
-                        error={numberError}
-                        label="Individnummer"
-                        className="control controlWidth"
-                        variant={inputVariant}
-                        value={individual.number ?? ""}
-                        onChange={(event) => {
-                          onUpdateIndividual(
-                            "number",
-                            event.currentTarget.value
-                          );
-                        }}
-                      />
+                      <Tooltip
+                        arrow
+                        title={
+                          <React.Fragment>
+                            <Typography>
+                              Ursprungsbesättning är alltid den besättning som
+                              modern befinner sig i. Är detta fel måste modern
+                              först säljas till rätt besättning"
+                            </Typography>
+                          </React.Fragment>
+                        }
+                      >
+                        <Autocomplete
+                          options={herdOptions}
+                          disabled={!canManage && individual?.is_registered}
+                          noOptionsText={"Välj härstamningen först"}
+                          getOptionLabel={(option: OptionType) => option.label}
+                          className="control controlWidth"
+                          value={
+                            herdOptions.find(
+                              (option) =>
+                                option.value.herd ==
+                                individual.origin_herd?.herd
+                            ) ?? null
+                          }
+                          onChange={(event, value) =>
+                            onUpdateIndividual("origin_herd", value?.value)
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Ursprungsbesättning "
+                              variant={inputVariant}
+                              margin="normal"
+                            />
+                          )}
+                        />
+                      </Tooltip>
+                      {indNumberForm(!canManage && individual?.is_registered)}
                     </div>
                     <div className="flexRow">
                       <CertAutocomplete
@@ -266,51 +290,14 @@ export function IndividualForm({
                             <Typography>
                               Du kommer här få ett förslag på kull- och
                               individnummer. Nummret kommer bara vara korrekt om
-                              du registrerar alla kaniner och kullar i
-                              kronologisk ordning.
+                              du lagt till alla kaniner och kullar i kronologisk
+                              ordning.
                             </Typography>
                           </React.Fragment>
                         }
                         arrow
                       >
-                        <TextField
-                          required
-                          error={numberError}
-                          disabled={individual?.number == null}
-                          label="Individnummer"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={
-                            (individual.number?.split(/-\d{0,2}/)[1] ??
-                              individual.number) ||
-                            ""
-                          }
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                {individual?.number
-                                  ? `${
-                                      individual.number?.match(
-                                        /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                      )[0]
-                                    }`
-                                  : `${
-                                      genebank ? genebank.name[0] : "X"
-                                    }XXX-XX`}
-                              </InputAdornment>
-                            ),
-                          }}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "number",
-                              `${
-                                individual.number?.match(
-                                  /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                )[0]
-                              }${event.currentTarget.value}`
-                            );
-                          }}
-                        />
+                        {indNumberForm(individual?.number == null)}
                       </Tooltip>
                     </div>{" "}
                     <div className="flexRow">
@@ -586,6 +573,41 @@ export function IndividualForm({
       </div>
     </>
   );
+
+  function indNumberForm(_disabeld: boolean | undefined) {
+    return (
+      <TextField
+        required
+        error={numberError}
+        disabled={_disabeld}
+        label="Individnummer"
+        className="control controlWidth"
+        variant={inputVariant}
+        value={
+          (individual.number?.split(/-\d{0,2}/)[1] ?? individual.number) || ""
+        }
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              {individual?.number
+                ? `${
+                    individual?.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]
+                  }`
+                : `${genebank ? genebank.name[0] : "X"}XXX-XX`}
+            </InputAdornment>
+          ),
+        }}
+        onChange={(event) => {
+          onUpdateIndividual(
+            "number",
+            `${individual.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]}${
+              event.currentTarget.value
+            }`
+          );
+        }}
+      />
+    );
+  }
 
   function returnColorData(c: any) {
     return {
