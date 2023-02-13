@@ -1103,7 +1103,6 @@ def update_individual(form, user_uuid):
             individual.save()
             # if origin_herd has change update birth herd tracking.
             if old_individual.origin_herd != form["origin_herd"]:
-                logger.info("in origin herd change")
                 ht_birth = HerdTracking.get(
                     (HerdTracking.individual == individual)
                     & (
