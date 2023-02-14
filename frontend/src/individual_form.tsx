@@ -197,19 +197,32 @@ export function IndividualForm({
                     ) : (
                       <></>
                     )}
-
-                    <TextField
-                      disabled={!canManage}
-                      required
-                      error={numberError}
-                      label="Individnummer"
-                      className="control"
-                      variant={inputVariant}
-                      value={individual.number ?? ""}
-                      onChange={(event) => {
-                        onUpdateIndividual("number", event.currentTarget.value);
-                      }}
-                    />
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>
+                            Är nummret fel vänligen ändra i redigera individ.
+                          </Typography>
+                        </React.Fragment>
+                      }
+                    >
+                      <TextField
+                        disabled={true}
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className="control"
+                        variant={inputVariant}
+                        value={individual.number ?? ""}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    </Tooltip>
                   </div>
                   {individual.digital_certificate ? (
                     <p className="certNumber">
@@ -405,36 +418,60 @@ export function IndividualForm({
               </div>
               {formAction != FormAction.editIndividual ? ( // jscpd:ignore-start
                 <div className="flexRow">
-                  <TextField
-                    required
-                    error={litterError}
-                    label="Antal födda i kullen"
-                    className="control controlWidth"
-                    variant={inputVariant}
-                    value={individual.litter_size ?? ""}
-                    type="number"
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "litter_size",
-                        +event.currentTarget.value
-                      );
-                    }}
-                  />
-                  <TextField
-                    required
-                    error={litterError6w}
-                    label="Levande i kullen efter 6v"
-                    className="control controlWidth"
-                    variant={inputVariant}
-                    value={individual.litter_size6w ?? ""}
-                    type="number"
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "litter_size6w",
-                        +event.currentTarget.value
-                      );
-                    }}
-                  />
+                  <Tooltip
+                    arrow
+                    title={
+                      <React.Fragment>
+                        <Typography>
+                          OBS! Ändrar du här ändrar du detta för alla kaniner i
+                          kullen.
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  >
+                    <TextField
+                      required
+                      error={litterError}
+                      label="Antal födda i kullen"
+                      className="control controlWidth"
+                      variant={inputVariant}
+                      value={individual.litter_size ?? ""}
+                      type="number"
+                      onChange={(event) => {
+                        onUpdateIndividual(
+                          "litter_size",
+                          +event.currentTarget.value
+                        );
+                      }}
+                    />
+                  </Tooltip>
+                  <Tooltip
+                    arrow
+                    title={
+                      <React.Fragment>
+                        <Typography>
+                          OBS! Ändrar du här ändrar du detta för alla kaniner i
+                          kullen.
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  >
+                    <TextField
+                      required
+                      error={litterError6w}
+                      label="Levande i kullen efter 6v"
+                      className="control controlWidth"
+                      variant={inputVariant}
+                      value={individual.litter_size6w ?? ""}
+                      type="number"
+                      onChange={(event) => {
+                        onUpdateIndividual(
+                          "litter_size6w",
+                          +event.currentTarget.value
+                        );
+                      }}
+                    />
+                  </Tooltip>
                 </div>
               ) : (
                 <></>
