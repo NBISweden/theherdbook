@@ -134,44 +134,10 @@ export function IndividualForm({
                       ) : (
                         <></>
                       )}
-                      <Tooltip
-                        arrow
-                        title={
-                          <React.Fragment>
-                            <Typography>
-                              Ursprungsbesättning är alltid den besättning som
-                              modern befinner sig i. Är detta fel måste modern
-                              först säljas till rätt besättning"
-                            </Typography>
-                          </React.Fragment>
-                        }
-                      >
-                        <Autocomplete
-                          options={herdOptions}
-                          disabled={!canManage && individual?.is_registered}
-                          noOptionsText={"Välj härstamningen först"}
-                          getOptionLabel={(option: OptionType) => option.label}
-                          className="control controlWidth"
-                          value={
-                            herdOptions.find(
-                              (option) =>
-                                option.value.herd ==
-                                individual.origin_herd?.herd
-                            ) ?? null
-                          }
-                          onChange={(event, value) =>
-                            onUpdateIndividual("origin_herd", value?.value)
-                          }
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Ursprungsbesättning "
-                              variant={inputVariant}
-                              margin="normal"
-                            />
-                          )}
-                        />
-                      </Tooltip>
+                      {originHerdForm(
+                        !canManage && individual?.is_registered,
+                        "control controlWidth"
+                      )}
                       {indNumberForm(!canManage && individual?.is_registered)}
                     </div>
                     <div className="flexRow">
@@ -239,44 +205,7 @@ export function IndividualForm({
                 {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                   <>
                     <div className="flexRow">
-                      <Tooltip
-                        arrow
-                        title={
-                          <React.Fragment>
-                            <Typography>
-                              Ursprungsbesättning är alltid den besättning som
-                              modern befinner sig i. Är detta fel måste modern
-                              först säljas till rätt besättning"
-                            </Typography>
-                          </React.Fragment>
-                        }
-                      >
-                        <Autocomplete
-                          options={herdOptions}
-                          disabled={!canManage}
-                          noOptionsText={"Välj härstamningen först"}
-                          getOptionLabel={(option: OptionType) => option.label}
-                          className="wideControlInd"
-                          value={
-                            herdOptions.find(
-                              (option) =>
-                                option.value.herd ==
-                                individual.origin_herd?.herd
-                            ) ?? null
-                          }
-                          onChange={(event, value) =>
-                            onUpdateIndividual("origin_herd", value?.value)
-                          }
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Ursprungsbesättning "
-                              variant={inputVariant}
-                              margin="normal"
-                            />
-                          )}
-                        />
-                      </Tooltip>
+                      {originHerdForm(!canManage, "wideControlInd")}
                     </div>
                     <div className="flexRow">
                       <KeyboardDatePicker
@@ -610,6 +539,46 @@ export function IndividualForm({
       </div>
     </>
   );
+
+  function originHerdForm(_disabeld: boolean | undefined, _classname: string) {
+    return (
+      <Tooltip
+        arrow
+        title={
+          <React.Fragment>
+            <Typography>
+              Ursprungsbesättning är alltid den besättning som modern befinner
+              sig i. Är detta fel måste modern först säljas till rätt
+              besättning"
+            </Typography>
+          </React.Fragment>
+        }
+      >
+        <Autocomplete
+          options={herdOptions}
+          disabled={_disabeld}
+          noOptionsText={"Välj härstamningen först"}
+          getOptionLabel={(option: OptionType) => option.label}
+          className={_classname}
+          value={
+            herdOptions.find(
+              (option) => option.value.herd == individual.origin_herd?.herd
+            ) ?? null
+          }
+          onChange={(event, value) =>
+            onUpdateIndividual("origin_herd", value?.value)
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Ursprungsbesättning "
+              variant={inputVariant}
+            />
+          )}
+        />
+      </Tooltip>
+    );
+  }
 
   function indNumberForm(_disabeld: boolean | undefined) {
     return (
