@@ -12,7 +12,7 @@ peewee==3.13.2
 psycopg2-binary==2.8.5
 pylint==2.4.4
 six==1.14.0
-Werkzeug==1.0.1
+Werkzeug==2.2.3
 wrapt==1.11.2
 requests
 Flask-Caching==1.7.1
