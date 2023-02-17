@@ -139,13 +139,7 @@ export function BreedingForm({
         herdId,
         showDead
       );
-      males = individualsFromDate(
-        genebank,
-        "male",
-        fromDate,
-        undefined,
-        showDead
-      );
+      males = individualsFromDate(genebank, "male", fromDate, herdId, showDead);
     }
     if (!!data && data !== "new") {
       const activeMother = females.find((i) => i.number === data.mother);

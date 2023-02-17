@@ -253,13 +253,7 @@ export function IndividualAdd({
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(
-          currentGenebank,
-          "male",
-          fromDate,
-          undefined,
-          showDead
-        )
+        individualsFromDate(currentGenebank, "male", fromDate, herdId, showDead)
       )
     );
   }, [fromDate, currentGenebank, herdId, showDead]);
