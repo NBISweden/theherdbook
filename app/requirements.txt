@@ -23,7 +23,7 @@ apscheduler==3.7.0
 pdfrw2==0.5.0
 PyMuPDF==1.19.6
 qrcode==7.3.1
-cryptography==3.4.7
+cryptography==39.0.1
 endesive==2.0.9
 boto3==1.17.54
 moto==2.0.8
