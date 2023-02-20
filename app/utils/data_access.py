@@ -919,11 +919,11 @@ def add_individual(form, user_uuid):
             birth_date=form["birth_date"],
             breeding_event=form["breeding"],
         )
-        logger.error(f"nextind is ${nextind}")
+        logger.info(f"nextind is {nextind}")
         if nextind.get("status", None) == "success":
             form["number"] = nextind["number"]
         else:
-            logger.error(f"Next in is not successfull: ${nextind.get('message')}")
+            logger.error(f"Next in is not successfull: {nextind.get('message')}")
             return nextind
 
     if Individual.select().where(Individual.number == form["number"]).exists():
@@ -1792,8 +1792,8 @@ def update_breeding(form, user_uuid):
         return {"status": "error", "message": ", ".join(errors)}
 
     with DATABASE.atomic():
-        breeding.birth_notes = form.get("birth_notes", None)
-        breeding.breed_notes = form.get("breed_notes", None)
-        breeding.litter_size6w = form.get("litter_size6w", None)
+        breeding.birth_notes = form.get("birth_notes", breeding.birth_notes)
+        breeding.breed_notes = form.get("breed_notes", breeding.breed_notes)
+        breeding.litter_size6w = form.get("litter_size6w", breeding.litter_size6w)
         breeding.save()
         return {"status": "success"}
