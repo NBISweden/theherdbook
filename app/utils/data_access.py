@@ -1044,6 +1044,17 @@ def update_individual(form, user_uuid):
     if old_individual.number != form["number"]:
         new_number = form["number"]
         form["number"] = old_individual.number
+    if old_individual.origin_herd != form["origin_herd"]:
+        if (
+            Individual.select()
+            .where(Individual.breeding_id == form["breeding"])
+            .count()
+            != 1
+        ):
+            return {
+                "status": "error",
+                "message": "origin_herd more inds",
+            }
 
     if form["herd"] and isinstance(form["herd"], dict):
         form["herd"] = form["herd"].get("herd", None)
@@ -1101,6 +1112,16 @@ def update_individual(form, user_uuid):
                     raise exception
 
             individual.save()
+
+            # Move the certificate to the new number.
+            if new_number and individual.digital_certificate:
+                s3.get_s3_client().copy_object(
+                    old_object_name=f"{old_individual.number}/certificate.pdf",
+                    object_name=f"{individual.number}/certificate.pdf",
+                )
+                s3.get_s3_client().delete_object(
+                    f"{old_individual.number}/certificate.pdf"
+                )
             # if origin_herd has change update birth herd tracking.
             if old_individual.origin_herd != form["origin_herd"]:
                 ht_birth = HerdTracking.get(
@@ -1112,16 +1133,18 @@ def update_individual(form, user_uuid):
                 )
                 ht_birth.herd = form["origin_herd"]
                 ht_birth.save()
-
-            # Move the certificate to the new number.
-            if new_number and individual.digital_certificate:
-                s3.get_s3_client().copy_object(
-                    old_object_name=f"{old_individual.number}/certificate.pdf",
-                    object_name=f"{individual.number}/certificate.pdf",
-                )
-                s3.get_s3_client().delete_object(
-                    f"{old_individual.number}/certificate.pdf"
-                )
+                # Update breeding breeding_herd if only one individual connected to herd.
+                if (
+                    Individual.select()
+                    .where(Individual.breeding_id == individual.breeding)
+                    .count()
+                    == 1
+                ):
+                    breeding = Breeding.get(Breeding.id == individual.breeding)
+                    breeding.breeding_herd_id = form["origin_herd"]
+                    breeding.save()
+                else:
+                    return
 
         return {
             "status": "success",

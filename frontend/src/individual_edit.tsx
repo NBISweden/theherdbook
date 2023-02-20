@@ -339,6 +339,22 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             loadData(["genebanks"]);
             handleCloseDialog();
             break;
+          case "error": {
+            switch (retval.message) {
+              case "origin_herd more inds": {
+                userMessage(
+                  "Går tyvärr inte att uppdatera ursprungsbesättningen, det finns andra kaniner i samma kull. Är ursprungsbesättningen fel för hela kullen vänligen ändra i kullen",
+                  "error"
+                );
+                break;
+              }
+              default: {
+                userMessage(retval.message, "error");
+                break;
+              }
+            }
+            break;
+          }
           default:
             userMessage("Något gick fel kontakta admin.", "error");
         }
