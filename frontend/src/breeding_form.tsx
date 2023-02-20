@@ -25,6 +25,9 @@ import {
   locale,
   Individual,
   LimitedIndividual,
+  herdLabel,
+  LimitedHerd,
+  OptionType,
 } from "@app/data_context_global";
 
 import {
@@ -92,6 +95,7 @@ export function BreedingForm({
     user?.canEdit(herdId) &&
     !data?.individuals?.find((e) => e.is_registerd)?.is_registerd;
   const canManage = !!(user?.is_manager || user?.is_admin);
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
@@ -114,6 +118,7 @@ export function BreedingForm({
 
   React.useEffect(() => {
     setFormState(!data || data == "new" ? emptyBreeding : data);
+    handleUpdateMother(data?.mother);
   }, [data]);
 
   React.useEffect(() => {
@@ -163,6 +168,37 @@ export function BreedingForm({
     setActiveFemalesLimited(limitedFemales);
     setActiveMalesLimited(limitedMales);
   }, [fromDate, genebank, data, showDead]);
+
+  const handleUpdateMother = async (value: LimitedIndividual) => {
+    let mother;
+
+    if (value) {
+      mother = await get(`/api/individual/${value}`);
+      if (!mother) {
+        return;
+      }
+
+      let herds = mother.herd_tracking;
+
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        //Filter unique herds from herd_tracking
+        let unique = [
+          ...new Map(herdOptions.map((item) => [item["label"], item])).values(),
+        ];
+
+        setHerdOptions(unique);
+        return;
+      } else {
+        return [];
+      }
+    }
+  };
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -355,7 +391,6 @@ export function BreedingForm({
       breedingMatch,
       modifiedBreedingUpdates
     );
-    console.log("newinds", newIndsNumber);
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
       userMessage("Parningstillfället har uppdaterats.", "success");
@@ -575,7 +610,51 @@ export function BreedingForm({
               setshowDead(e.target.checked);
             }}
           />
+
           <div className="formBox">
+            {canManage ? (
+              <>
+                <Tooltip
+                  arrow
+                  title={
+                    <React.Fragment>
+                      <Typography>
+                        Ursprungsbesättning är alltid den besättning som modern
+                        befinner sig i. Är detta fel måste modern först säljas
+                        till rätt besättning"
+                      </Typography>
+                    </React.Fragment>
+                  }
+                >
+                  <Autocomplete
+                    options={herdOptions}
+                    disabled={!canEditBreeding && !canManage}
+                    noOptionsText={"Välj härstamningen först"}
+                    getOptionLabel={(option: OptionType) => option.label}
+                    className="wideControl"
+                    value={
+                      herdOptions.find(
+                        (option) => option.value.herd == formState.breeding_herd
+                      ) ?? null
+                    }
+                    onChange={(event, value) =>
+                      value && setFormField("breeding_herd", value?.value)
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Ursprungsbesättning "
+                        variant={inputVariant}
+                        margin="normal"
+                      />
+                    )}
+                  />
+                </Tooltip>
+              </>
+            ) : (
+              <></>
+            )}
+
             <KeyboardDatePicker
               autoOk
               disableFuture
