@@ -134,10 +134,7 @@ export function IndividualForm({
                       ) : (
                         <></>
                       )}
-                      {originHerdForm(
-                        !canManage && individual?.is_registered,
-                        "control controlWidth"
-                      )}
+                      {originHerdForm(!canManage, "control controlWidth")}
                       {indNumberForm(!canManage && individual?.is_registered)}
                     </div>
                     <div className="flexRow">
