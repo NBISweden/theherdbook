@@ -153,7 +153,7 @@ class TestEndpoints(FlaskTest):
 
             breedings_dict = []
             for breedings in db.Breeding.select().where(
-                db.Breeding.breeding_herd == self.herds[0]
+                db.Breeding.breeding_herd_id == self.herds[0]
             ):
                 individuals_dict = []
                 for data in (
@@ -215,7 +215,7 @@ class TestEndpoints(FlaskTest):
 
         breedings_dict = []
         for breedings in db.Breeding.select().where(
-            db.Breeding.breeding_herd == self.herds[0]
+            db.Breeding.breeding_herd_id == self.herds[0]
         ):
             individuals_dict = []
             for data in (
