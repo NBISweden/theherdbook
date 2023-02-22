@@ -638,7 +638,7 @@ export function BreedingForm({
                       ) ?? null
                     }
                     onChange={(event, value) =>
-                      value && setFormField("breeding_herd", value?.value)
+                      value && setFormField("breeding_herd", value?.value.herd)
                     }
                     renderInput={(params) => (
                       <TextField
