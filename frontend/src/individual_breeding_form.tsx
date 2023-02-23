@@ -300,6 +300,7 @@ export function IndividualBreedingForm({
       breeding,
       breedingMatch
     );
+
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
       userMessage(
@@ -321,8 +322,9 @@ export function IndividualBreedingForm({
    * (updateBreeding, createBreeding and createBirth)
    */
   const saveBreeding = async (breeding: Breeding): Promise<any> => {
-    //Only search for birth_date and do not update breed_date if it exists.
+    //Only search for birth_date and do not update breed_date, and breed_note if it exists.
     breeding.breed_date = null;
+    breeding.breed_note = null;
     const isInputValid = validateUserInput(breeding);
     if (!isInputValid) {
       return;
