@@ -26,7 +26,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
   const [active, setActive] = React.useState(null as any);
   const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
-  const { genebanks } = useDataContext();
+  const { genebanks, herdChangeListener } = useDataContext();
   const { user } = useUserContext();
 
   // Parent information from the genebank
@@ -89,7 +89,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
   ];
 
   React.useEffect(() => {
-    if (id && breedingsChanged) {
+    if ((id && breedingsChanged) || herdChangeListener) {
       get(`/api/breeding/${id}`)
         .then(
           (data: { breedings: Breeding[] }) => {
@@ -102,7 +102,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         )
         .then(() => setBreedingsChanged(false));
     }
-  }, [id, breedingsChanged]);
+  }, [id, breedingsChanged, herdChangeListener]);
 
   const handleBreedingsChanged = () => {
     setBreedingsChanged(true);

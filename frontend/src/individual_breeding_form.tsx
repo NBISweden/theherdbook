@@ -59,6 +59,7 @@ const emptyBreeding: ExtendedBreeding = {
  * breeding events in the database.
  */
 export function IndividualBreedingForm({
+  open,
   data,
   herdId,
   handleBreedingsChanged,
@@ -67,6 +68,7 @@ export function IndividualBreedingForm({
   onUpdateIndividual,
   closeDialog,
 }: {
+  open: Boolean;
   data: ExtendedBreeding | undefined;
   herdId: string | undefined;
   handleBreedingsChanged: () => void;
@@ -92,9 +94,9 @@ export function IndividualBreedingForm({
   const { userMessage } = useMessageContext();
   const { user } = useUserContext();
   const is_admin = !!(user?.is_manager || user?.is_admin);
-  const [formState, setFormState] = React.useState(
-    emptyBreeding as ExtendedBreeding
-  );
+
+  const [formState, setFormState] = React.useState(data as ExtendedBreeding);
+  let didInit = false;
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -114,8 +116,75 @@ export function IndividualBreedingForm({
     return genebanks.find((g) => g.herds.find((h) => h.herd == herdId));
   }, [genebanks, data]);
 
+  //Searches for existing breedings and update form with data from that found breeding
   React.useEffect(() => {
-    setFormState(!data ? emptyBreeding : data);
+    const getBreeding = async () => {
+      if (
+        formState?.birth_date &&
+        formState?.father &&
+        formState?.mother &&
+        formState?.breeding_herd &&
+        open
+      ) {
+        let limitedBreedingInput: LimitedBreeding = {
+          birth_date: formState.birth_date,
+          herd: formState.breeding_herd,
+          breeding_herd: formState.breeding_herd,
+          mother: formState.mother,
+          father: formState.father,
+        };
+        const Breedingmatch = await post(
+          `/api/breeding/${formState.breeding_herd}`,
+          limitedBreedingInput
+        );
+        setBreedingMatch(Breedingmatch.breedings);
+        if (
+          Breedingmatch.breedings !== null &&
+          Breedingmatch.breedings.birth_date !== null
+        ) {
+          userMessage(
+            `Kull ID ${Breedingmatch.breedings.id} hittad i ${formState.breeding_herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och födelsedatum ${Breedingmatch.breedings.birth_date}. Kontrollera att uppgifterna stämmer!`,
+            "success"
+          );
+          setFormState({
+            ...formState,
+            litter_size: Breedingmatch?.breedings.litter_size ?? null,
+            litter_size6w: Breedingmatch?.breedings.litter_size6w ?? null,
+            birth_notes: Breedingmatch?.breedings.birth_notes ?? null,
+          });
+          if (formState.birth_date != Breedingmatch.breedings.birth_date) {
+            userMessage(
+              `Födelsedatumet du har angett: ${formState.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Trycker du på uppdatera kommer födelsedatumet att uppdateras.`,
+              "warning"
+            );
+          }
+        } else if (
+          Breedingmatch.breedings != null &&
+          Breedingmatch.breedings.birth_date === null
+        ) {
+          Breedingmatch.breedings.birth_date = formState.birth_date;
+
+          userMessage(
+            `En parning är funnen i ${formState?.breeding_herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och parningsdatum ${Breedingmatch.breedings.breed_date}.
+             Parningen kommer uppdateras med födelsedatum  och kullstorlek från detta formulär. Kontrollera att uppgifterna stämmer!`,
+            "success"
+          );
+        } else {
+          userMessage(
+            `Kommer skapa en ny kull i ${formState?.breeding_herd} med Mor: ${formState?.mother} Far: ${formState?.father} Kontrollera att uppgifterna stämmer!`,
+            "info"
+          );
+        }
+      }
+    };
+    getBreeding();
+  }, [formState?.birth_date, formState?.father, formState?.mother]);
+
+  React.useEffect(() => {
+    if (!didInit) {
+      didInit = true;
+      setFormState(!data ? emptyBreeding : data);
+    }
   }, [data]);
 
   React.useEffect(() => {
@@ -177,51 +246,12 @@ export function IndividualBreedingForm({
     formState && setFormState({ ...formState, [label]: value });
   };
 
-  const autoFillBreedDate = (dateString: string) => {
-    let breedDate: Date | number = new Date(dateString);
-    breedDate.setDate(breedDate.getDate() - 30);
-    const breedDateLocal = breedDate.toLocaleDateString(locale);
-    setFormField("breed_date", breedDateLocal);
-  };
-
-  React.useEffect(() => {
-    if (
-      formState.breed_date == null &&
-      typeof formState.birth_date == "string"
-    ) {
-      autoFillBreedDate(formState.birth_date);
-    }
-  }, [formState.birth_date]);
-
-  const validateDates = (
-    breedingDateString: string,
-    birthDateString: string
-  ) => {
-    const breedingDate: Date | number = new Date(breedingDateString);
-    const birthDate: Date | number = new Date(birthDateString);
-    const daysBetween =
-      (birthDate.getTime() - breedingDate.getTime()) / 86400000;
-    if (daysBetween < 26 || daysBetween > 38) {
-      userMessage(
-        "Tiden mellan parningsdatum och födelsedatum ska vara mellan 26 och 38 dagar.",
-        "warning"
-      );
-      return false;
-    }
-    return true;
-  };
-
   const validateUserInput = (userInput: Breeding) => {
     if (userInput.id === undefined) {
       return false;
     }
     if (userInput === emptyBreeding) {
       userMessage("Fyll i information om parningstillfället.", "warning");
-      return false;
-    }
-
-    if (userInput.breed_date === null) {
-      userMessage("Ange ett parningsdatum.", "warning");
       return false;
     }
 
@@ -259,15 +289,6 @@ export function IndividualBreedingForm({
       return false;
     }
 
-    if (userInput.breed_date !== null && userInput.birth_date !== null) {
-      const datesValid = validateDates(
-        userInput.breed_date,
-        userInput.birth_date
-      );
-      if (datesValid === false) {
-        return false;
-      }
-    }
     return true;
   };
 
@@ -279,9 +300,13 @@ export function IndividualBreedingForm({
       breeding,
       breedingMatch
     );
+
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
-      userMessage("Parningstillfället har uppdaterats.", "success");
+      userMessage(
+        `Kullen med ID ${modifiedBreedingUpdates.id} har uppdaterats glöm inte att spara individen om du har ändrat kull`,
+        "success"
+      );
       handleBreedingsChanged();
       setHerdChangeListener(herdChangeListener + 1);
       loadData(["genebanks"]);
@@ -297,6 +322,9 @@ export function IndividualBreedingForm({
    * (updateBreeding, createBreeding and createBirth)
    */
   const saveBreeding = async (breeding: Breeding): Promise<any> => {
+    //Only search for birth_date and do not update breed_date, and breed_note if it exists.
+    breeding.breed_date = null;
+    breeding.breed_note = null;
     const isInputValid = validateUserInput(breeding);
     if (!isInputValid) {
       return;
@@ -304,27 +332,18 @@ export function IndividualBreedingForm({
 
     handleActive(breeding);
     const Breedingmatch = await post(`/api/breeding/${herdId}`, breeding);
+
     setBreedingMatch(Breedingmatch.breedings);
     if (Breedingmatch.breedings != null) {
-      userMessage(
-        `Hittade ett befintligt parningstillfälle id : ${Breedingmatch.breedings.id} med parningsdatum : ${Breedingmatch.breedings.breed_date}.`,
-        "success"
+      onUpdateIndividual(
+        "breeding",
+        Breedingmatch.breedings.id,
+        "birth_date",
+        breeding.birth_date
       );
-
-      if (breeding.birth_date != Breedingmatch.breedings.birth_date) {
-        userMessage(
-          `Födelsedatumet du har angett: ${breeding.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Sparar du individen kommer individens födelsedatum att ändras.`,
-          "warning"
-        );
-      }
-      onUpdateIndividual("breeding", Breedingmatch.breedings.id);
       handleEditableBreedingUpdates(breeding, Breedingmatch.breedings);
       closeDialog();
     } else {
-      userMessage(
-        `Hittade inget befintligt parningstillfälle kommer skapa ett nytt!`,
-        "info"
-      );
       // create new breeding event
       const newBreedingData: LimitedBreeding = {
         date: breeding.breed_date,
@@ -354,7 +373,12 @@ export function IndividualBreedingForm({
           "success"
         );
         handleBreedingsChanged();
-        onUpdateIndividual("breeding", newBreeding.breeding_id);
+        onUpdateIndividual(
+          "breeding",
+          newBreeding.breeding_id,
+          "birth_date",
+          newBirth.birth_date
+        );
         closeDialog();
       }
     }
@@ -426,7 +450,7 @@ export function IndividualBreedingForm({
                   value={
                     activeFemalesLimited.find(
                       (option: LimitedIndividual) =>
-                        option.number == formState.mother
+                        option.number == formState?.mother
                     ) ?? null
                   }
                   onChange={(
@@ -455,7 +479,7 @@ export function IndividualBreedingForm({
                   value={
                     activeMalesLimited.find(
                       (option: LimitedIndividual) =>
-                        option.number == formState.father
+                        option.number == formState?.father
                     ) ?? null
                   }
                   onChange={(
@@ -486,19 +510,19 @@ export function IndividualBreedingForm({
                   label="Födelsedatum"
                   format={dateFormat}
                   className="controlFull"
-                  value={formState.birth_date ?? null}
+                  value={formState?.birth_date ?? null}
                   InputLabelProps={{
                     shrink: true,
                   }}
                   onChange={(date, value) => {
-                    value && setFormField("birth_date", value);
+                    !isNaN(date) && setFormField("birth_date", value);
                   }}
                 />
               </div>
               <div className="flexRow">
                 <TextField
                   label="Kullstorlek"
-                  value={formState.litter_size ?? ""}
+                  value={formState?.litter_size ?? ""}
                   type="number"
                   className="control controlWidth"
                   variant={inputVariant}
@@ -511,7 +535,7 @@ export function IndividualBreedingForm({
                 />
                 <TextField
                   label="Levande i kullen efter 6v"
-                  value={formState.litter_size6w ?? ""}
+                  value={formState?.litter_size6w ?? ""}
                   type="number"
                   className="controlWidth"
                   variant={inputVariant}
@@ -530,7 +554,7 @@ export function IndividualBreedingForm({
                   className="controlFull"
                   multiline
                   minRows={2}
-                  value={formState.birth_notes ?? ""}
+                  value={formState?.birth_notes ?? ""}
                   onChange={(e: any) => {
                     setFormField("birth_notes", e.target.value);
                   }}
