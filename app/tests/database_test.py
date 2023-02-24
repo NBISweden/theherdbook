@@ -108,7 +108,7 @@ class DatabaseTest(unittest.TestCase):
             breed_date=datetime(2019, 1, 1),
             litter_size=2,
             litter_size6w=2,
-            breeding_herd=self.herds[1],
+            breeding_herd_id=self.herds[1],
         )[0]
 
         self.parents = [
@@ -135,7 +135,7 @@ class DatabaseTest(unittest.TestCase):
                 father=self.parents[1],
                 litter_size=2,
                 litter_size6w=2,
-                breeding_herd=self.herds[0],
+                breeding_herd_id=self.herds[0],
             )[0],
             db.Breeding.get_or_create(
                 breed_date=datetime(2021, 1, 1),
@@ -143,7 +143,7 @@ class DatabaseTest(unittest.TestCase):
                 father=self.parents[3],
                 litter_size=1,
                 litter_size6w=1,
-                breeding_herd=self.herds[1],
+                breeding_herd_id=self.herds[1],
             )[0],
         ]
         for breeding in self.breeding:
@@ -191,7 +191,7 @@ class DatabaseTest(unittest.TestCase):
                 father=self.individuals[1],
                 litter_size=3,
                 litter_size6w=2,
-                breeding_herd=self.herds[0],
+                breeding_herd_id=self.herds[0],
             )[0],
         ]
         self.breeding[-1].save()

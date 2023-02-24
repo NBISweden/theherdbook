@@ -486,7 +486,8 @@ class TestDataAccess(DatabaseTest):
 
         # Add some herd tracking entries
         form = {
-            "herd": self.individuals[0].current_herd,
+            "herd": self.individuals[0].current_herd.herd,
+            "origin_herd": {"herd": self.individuals[0].current_herd.herd},
             "number": self.individuals[0].number,
             "id": self.individuals[0].id,
         }
@@ -496,6 +497,7 @@ class TestDataAccess(DatabaseTest):
             form["selling_date"] = (datetime.now() + timedelta(days=n * 365)).strftime(
                 "%Y-%m-%d"
             )
+            form["origin_herd"] = {"herd": self.individuals[0].current_herd.herd}
 
         # herds 0 and 1 are in genebank 0
         gb0_expected = []

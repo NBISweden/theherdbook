@@ -8,7 +8,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 from flask import has_request_context, request
 
-logger = logging.getLogger("herdbook.genbanklogging")
+Glogger = logging.getLogger("herdbook.genbanklogging")
 
 
 class RequestFormatter(logging.Formatter):
@@ -43,7 +43,7 @@ class MyTimedRotatingFileHandler(TimedRotatingFileHandler):
     def doRollover(self):
         super(MyTimedRotatingFileHandler, self).doRollover()
         self.write_header()
-        logger.info("Rotating logs %s", self.baseFilename)
+        Glogger.info("Rotating logs %s", self.baseFilename)
 
     def configureHeaderWriter(self, header, log):
         self._header = header
@@ -58,6 +58,7 @@ def create_genebank_logs(first_path, first_log_name):
         log_name = f"{first_log_name}_{log_type}"
         path = f"{first_path}{log_name}.csv"
         logger = logging.getLogger(log_name)
+        logger.setLevel(logging.INFO)
         handler = MyTimedRotatingFileHandler(path, when="W6")
         logger.addHandler(handler)
         if log_type == "update" or log_type == "create":

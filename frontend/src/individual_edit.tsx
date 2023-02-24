@@ -18,7 +18,14 @@ import { get, patch } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
-import { Individual, inputVariant, OptionType } from "@app/data_context_global";
+import {
+  herdLabel,
+  Individual,
+  inputVariant,
+  LimitedHerd,
+  LimitedIndividual,
+  OptionType,
+} from "@app/data_context_global";
 import { CertificateDownload } from "./certificate_download";
 import { FormAction } from "@app/individual_form";
 
@@ -75,6 +82,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individualLoaded, setIndividualLoaded] = React.useState(
     false as boolean
   );
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
   //States for conditional rendering
   const [showForm, setShowForm] = React.useState(false as boolean);
@@ -138,6 +146,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             setIndividual(data);
             setOldIndividual(data);
             setIndividualLoaded(true);
+            handleUpdateMother(data.mother);
           },
           (error) => {
             userMessage(error, "error");
@@ -145,6 +154,42 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
         )
       : userMessage("Något gick fel.", "error");
   }, [id]);
+
+  const handleUpdateMother = async (value: LimitedIndividual) => {
+    let mother;
+    if (value) {
+      mother = await get(`/api/individual/${value.number}`);
+      if (!mother) {
+        return;
+      }
+      let herds = mother.herd_tracking;
+
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        //Filter unique herds from herd_tracking
+        let unique = [
+          ...new Map(herdOptions.map((item) => [item["label"], item])).values(),
+        ];
+
+        setHerdOptions(unique);
+        return;
+      } else {
+        return [];
+      }
+    }
+  };
+  React.useEffect(() => {
+    if (individual?.number && oldIndividual?.origin_herd?.herd) {
+      let newNumber =
+        individual?.origin_herd?.herd + "-" + individual.number.split("-")[1];
+      handleUpdateIndividual("number", newNumber);
+    }
+  }, [individual?.origin_herd?.herd]);
 
   /**
    * The API sends the birth date in a format like this:
@@ -288,18 +333,30 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               setHerdChangeListener(herdChangeListener + 1);
             }
             userMessage(
-              retval.message ??
-                `${data.name} med nummer ${data.number} har lagts till `,
+              `${data.name} med nummer ${data.number} har uppdaterats`,
               "success"
             );
             loadData(["genebanks"]);
             handleCloseDialog();
             break;
+          case "error": {
+            switch (retval.message) {
+              case "origin_herd more inds": {
+                userMessage(
+                  "Går tyvärr inte att uppdatera ursprungsbesättningen, det finns andra kaniner i samma kull. Är ursprungsbesättningen fel för hela kullen vänligen ändra i kullen",
+                  "error"
+                );
+                break;
+              }
+              default: {
+                userMessage(retval.message, "error");
+                break;
+              }
+            }
+            break;
+          }
           default:
-            userMessage(
-              retval.message ?? "Något gick fel kontakta admin.",
-              "error"
-            );
+            userMessage("Något gick fel kontakta admin.", "error");
         }
       },
       (error) => {
@@ -329,6 +386,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             litterError={litterError}
             litterError6w={litterError6w}
             genebank={individual.genebank_id}
+            herdOptions={herdOptions}
           />
           <div className={style.paneControls}>
             <Button

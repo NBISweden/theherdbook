@@ -72,8 +72,7 @@ file_handler = TimedRotatingFileHandler(
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(
     gblogging.RequestFormatter(
-        "[%(asctime)s] %(remote_addr)s requested %(url)s\n"
-        "%(levelname)s in %(module)s: %(message)s",
+        "[%(asctime)s] %(module)s.%(levelname)s: %(message)s, URL: %(url)s ",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 )
@@ -127,7 +126,7 @@ def load_user_from_request(request):
         user = da.authenticate_user(username, password)
 
         if user:
-            if user.username != "rapiuser":
+            if user.username != "rapiuser" or user.username != "r-api-system-user":
                 APP.logger.info("User %s logged in from request header", user.username)
 
             session["user_id"] = user.uuid
@@ -722,7 +721,7 @@ def edit_individual():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
@@ -758,7 +757,7 @@ def check_ind_number():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
@@ -803,7 +802,7 @@ def check_ind_intyg():
             jsonify(
                 {
                     "status": "error",
-                    "message": f"Be Admin kolla server loggarna ange {datetime.now()}",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
                 }
             ),
             500,
