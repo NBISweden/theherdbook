@@ -271,13 +271,32 @@ export function individualsFromDate(
   if (!genebank) {
     return [];
   }
-  return genebank?.individuals.filter(
-    (i) =>
-      i.sex == sex &&
-      (showDead || i.alive) &&
-      (herdId ? i.herd.herd == originHerdNameID.herd : true) &&
-      new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
-  );
+  return genebank?.individuals
+    .filter(
+      (i) =>
+        i.sex == sex &&
+        (showDead || i.alive) &&
+        (sex === "female" && herdId
+          ? i.herd.herd == originHerdNameID.herd
+          : true) &&
+        new Date(i.birth_date ? i.birth_date : new Date()) >= fromDate
+    )
+    .sort((a, b) => {
+      if (sex === "male") {
+        if (
+          a.herd.herd === originHerdNameID.herd &&
+          b.herd.herd !== originHerdNameID.herd
+        ) {
+          return -1; // a is male from the matching herd and should come before b
+        } else if (
+          a.herd.herd !== originHerdNameID.herd &&
+          b.herd.herd === originHerdNameID.herd
+        ) {
+          return 1; // b is male from the matching herd and should come before a
+        }
+      }
+      return 0; // default case, leave a and b in their current order
+    });
 }
 
 export const toLimitedIndividuals = (
