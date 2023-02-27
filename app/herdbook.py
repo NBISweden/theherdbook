@@ -121,8 +121,7 @@ def load_user_from_request(request):
             return None
 
         username = api_key[: api_key.find(b":")]
-        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
-
+        password = api_key[api_key.find(b":") + 1 :].decode()  # noqa: E203
         user = da.authenticate_user(username, password)
 
         if user:
