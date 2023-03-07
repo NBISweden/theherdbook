@@ -16,9 +16,7 @@ import sys
 import time
 import uuid
 from logging.handlers import TimedRotatingFileHandler
-
 import apscheduler.schedulers.background
-import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
@@ -29,6 +27,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+import flask_session
 from utils.cert_acess import (
     check_certificate_s3,
     create_pdf_response,
@@ -59,7 +58,7 @@ APP.config.update(
     SESSION_COOKIE_SAMESITE="None",
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
-    CACHE_TYPE="filesystem",
+    CACHE_TYPE="FileSystemCache",
     CACHE_DIR="/tmp",
     CACHE_DEFAULT_TIMEOUT=300,
 )
@@ -110,7 +109,6 @@ def after_request(response):
 
 @LOGIN.request_loader
 def load_user_from_request(request):
-
     # Try to login using Basic Auth
     api_key = request.headers.get("Authorization")
     if api_key:
@@ -1110,7 +1108,7 @@ def verify_certificate(i_number):
     try:
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
         signed = verify_signature(uploaded_bytes)
-        present = verify_certificate_checksum(ind["number"], checksum=checksum)
+        present = verify_certificate_checksum(i_number, checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while verifying certificate " + str(ex))
         return jsonify({"response": "Error processing your request"}), 400
