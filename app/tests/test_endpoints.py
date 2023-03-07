@@ -45,6 +45,7 @@ class FlaskTest(DatabaseTest):
         """
         APP.config["TESTING"] = True
         APP.config["DEBUG"] = False
+        APP.config["SESSION_COOKIE_NAME"] = "test"
         APP.static_folder = "../frontend/"
         self.app = APP.test_client()
         super().setUp()
@@ -530,7 +531,6 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(
                 unsigned_response.headers["Content-Type"], "application/pdf"
             )
-
             # Verify using an unsigned certificate
             response = context.post(
                 f"/api/certificates/verify/{individual}", data=unsigned_response.data

@@ -59,7 +59,7 @@ APP.config.update(
     SESSION_COOKIE_SAMESITE="None",
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
-    CACHE_TYPE="filesystem",
+    CACHE_TYPE="FileSystemCache",
     CACHE_DIR="/tmp",
     CACHE_DEFAULT_TIMEOUT=300,
 )
@@ -110,7 +110,6 @@ def after_request(response):
 
 @LOGIN.request_loader
 def load_user_from_request(request):
-
     # Try to login using Basic Auth
     api_key = request.headers.get("Authorization")
     if api_key:
@@ -121,8 +120,7 @@ def load_user_from_request(request):
             return None
 
         username = api_key[: api_key.find(b":")]
-        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
-
+        password = api_key[api_key.find(b":") + 1 :].decode()  # noqa: E203
         user = da.authenticate_user(username, password)
 
         if user:
@@ -843,6 +841,7 @@ def get_inbreeding(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -869,6 +868,7 @@ def get_kinship(g_id):
     response = requests.get(
         "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
         params={"update_data": "TRUE"},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -906,6 +906,7 @@ def get_mean_kinship(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -941,6 +942,7 @@ def testbreed():
                     settings.rapi.host, settings.rapi.port
                 ),
                 data=payload,
+                timeout=30,
             )
             offspring_coi = response.json()["calculated_coi"][0]
     except Exception as ex:  # pylint: disable=broad-except
@@ -1111,7 +1113,7 @@ def verify_certificate(i_number):
     try:
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
         signed = verify_signature(uploaded_bytes)
-        present = verify_certificate_checksum(ind["number"], checksum=checksum)
+        present = verify_certificate_checksum(i_number, checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while verifying certificate " + str(ex))
         return jsonify({"response": "Error processing your request"}), 400
