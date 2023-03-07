@@ -19,6 +19,10 @@ jobs:
       - name: Install general prerequisities 
         run: pip3 install wheel setuptools pytest pyopenssl
         working-directory: app
+        
+      - name: Upgrade pyopenssl 
+        run: pip3 install -U pyopenssl
+        working-directory: app
 
       - name: Install requirements
         run: pip3 install -r requirements.txt
