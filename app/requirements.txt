@@ -14,6 +14,7 @@ pdfrw2==0.5.0
 peewee==3.15.4
 psycopg2-binary==2.9.5
 PyMuPDF==1.21.1
+pyOpenSSL==23.0.0
 qrcode==7.4.2
 requests
 setuptools==65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
