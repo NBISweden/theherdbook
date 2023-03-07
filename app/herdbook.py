@@ -16,7 +16,9 @@ import sys
 import time
 import uuid
 from logging.handlers import TimedRotatingFileHandler
+
 import apscheduler.schedulers.background
+import flask_session
 import requests
 from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from flask_caching import Cache
@@ -27,7 +29,6 @@ from flask_login import (
     login_user,
     logout_user,
 )
-import flask_session
 from utils.cert_acess import (
     check_certificate_s3,
     create_pdf_response,
@@ -840,6 +841,7 @@ def get_inbreeding(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -866,6 +868,7 @@ def get_kinship(g_id):
     response = requests.get(
         "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
         params={"update_data": "TRUE"},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -903,6 +906,7 @@ def get_mean_kinship(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -938,6 +942,7 @@ def testbreed():
                     settings.rapi.host, settings.rapi.port
                 ),
                 data=payload,
+                timeout=30,
             )
             offspring_coi = response.json()["calculated_coi"][0]
     except Exception as ex:  # pylint: disable=broad-except
