@@ -19,6 +19,8 @@ import {
   Table,
   TablePagination,
   TableBody,
+  Tooltip,
+  Typography,
   SvgIcon,
 } from "@material-ui/core";
 import { Autocomplete } from "@material-ui/lab";
@@ -55,6 +57,7 @@ type Filter = {
   label: string;
   logic: boolean;
   active?: boolean;
+  tooltip?: string;
 };
 type Action = (event: any, rowData: Individual | Individual[]) => {};
 
@@ -464,37 +467,46 @@ export function FilterTable({
         {individuals ? (
           <>
             {currentFilters.map((filter) => (
-              <FormControlLabel
-                key={filter.label}
-                control={
-                  <Checkbox
-                    name={filter.field}
-                    key={filter.field + filter.label}
-                    checked={filter.active ?? false}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      if (
-                        filter.field == "alive" ||
-                        filter.field == "is_registered"
-                      ) {
-                        filter.active = e.target.checked;
-                        const isActiveFilter = currentFilters.find(
-                          (i) => i.label == "Visa inaktiva djur"
-                        );
-                        isActiveFilter.active = e.target.checked;
-                        const newcurrentFilters = currentFilters.filter(
-                          (i) => i.label != "Visa inaktiva djur"
-                        );
-                        newcurrentFilters.splice(1, 0, isActiveFilter);
-                        setFilters([...newcurrentFilters]);
-                      } else {
-                        filter.active = e.target.checked;
-                        setFilters([...currentFilters]);
-                      }
-                    }}
-                  />
+              <Tooltip
+                arrow
+                title={
+                  <React.Fragment>
+                    <Typography>{filter.tooltip}</Typography>
+                  </React.Fragment>
                 }
-                label={filter.label}
-              />
+              >
+                <FormControlLabel
+                  key={filter.label}
+                  control={
+                    <Checkbox
+                      name={filter.field}
+                      key={filter.field + filter.label}
+                      checked={filter.active ?? false}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        if (
+                          filter.field == "alive" ||
+                          filter.field == "is_registered"
+                        ) {
+                          filter.active = e.target.checked;
+                          const isActiveFilter = currentFilters.find(
+                            (i) => i.label == "Visa inaktiva djur"
+                          );
+                          isActiveFilter.active = e.target.checked;
+                          const newcurrentFilters = currentFilters.filter(
+                            (i) => i.label != "Visa inaktiva djur"
+                          );
+                          newcurrentFilters.splice(1, 0, isActiveFilter);
+                          setFilters([...newcurrentFilters]);
+                        } else {
+                          filter.active = e.target.checked;
+                          setFilters([...currentFilters]);
+                        }
+                      }}
+                    />
+                  }
+                  label={filter.label}
+                />
+              </Tooltip>
             ))}
 
             <TextField
