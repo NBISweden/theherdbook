@@ -7,6 +7,12 @@ RUN apt update \
   libpng-dev \
   libgl1-mesa-dev \
   zlib1g-dev \
+  libudunits2-dev \
+  libgdal-dev \
+  gdal-bin \
+  libgeos-dev \
+  libproj-dev \
+  libsqlite3-dev \
   pandoc\
   make \
   cmake \
