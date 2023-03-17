@@ -1382,8 +1382,8 @@ def get_individuals(genebank_id, user_uuid=None):
         )
 
         # individuals are considered invalid if they don't have a herd tracking
-        # value newer than one year ago.
-        max_report_time = (datetime.now() - timedelta(days=366)).date()
+        # value newer than 13 months ago.
+        max_report_time = (datetime.now() - timedelta(days=365 + 30)).date()
 
         def as_date(value):
             """
