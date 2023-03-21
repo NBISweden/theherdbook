@@ -173,7 +173,8 @@ export function IndividualSell({ individual }: { individual: Individual }) {
             <Typography variant="body1" className={style.infoText}>
               Ange besättningen som individen ska flyttas till, samt ett datum
               för flytten. Individen kommer tas bort från din besättning och
-              läggas till i besättningen du anger.
+              läggas till i besättningen du anger.Har kaninen inget intyg kan du
+              bara sälja den externt till {defaultHerd}.
             </Typography>
             <Typography variant="body1" className={style.infoText}>
               Observera att du då inte längre kan ändra informationen om
@@ -186,7 +187,13 @@ export function IndividualSell({ individual }: { individual: Individual }) {
               herdHelperText={`Väl ${defaultHerd} om du har sålt kaninen till en person utanför genbanksystemet`}
               buyDateHelperText="Vänligen ange datum för försäljningen"
               individual={individualForSale}
-              herdOptions={genebank ? genebank.herds : []}
+              herdOptions={
+                individual.is_registered
+                  ? genebank?.herds ?? []
+                  : (genebank?.herds ?? []).filter(
+                      (h) => h.herd === "GX1" || h.herd === "MX1"
+                    )
+              }
               onUpdateIndividual={handleUpdateIndividual}
             />
           </div>
