@@ -113,6 +113,7 @@ export function IndividualCertificate({
     name: individual?.name,
     litter_size: individual?.litter_size,
     litter_size6w: individual?.litter_size6w,
+    has_photo: individual?.has_photo,
     notes: individual?.notes,
     sex: individual?.sex,
     genebank: individual?.genebank,
