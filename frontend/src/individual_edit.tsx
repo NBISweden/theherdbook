@@ -149,7 +149,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             handleUpdateMother(data.mother);
           },
           (error) => {
-            userMessage(error, "error");
+            userMessage("Något gick fel kontakta Admin: " + error, "error");
           }
         )
       : userMessage("Något gick fel.", "error");
@@ -349,18 +349,21 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 break;
               }
               default: {
-                userMessage(retval.message, "error");
+                userMessage(
+                  "Något gick fel kontakta Admin: " + retval.message,
+                  "error"
+                );
                 break;
               }
             }
             break;
           }
           default:
-            userMessage("Något gick fel kontakta admin.", "error");
+            userMessage("Något gick fel kontakta Admin.", "error");
         }
       },
       (error) => {
-        userMessage("" + error, "error");
+        userMessage("Något gick fel kontakta Admin: " + error, "error");
         console.error(error);
       }
     );

@@ -1116,7 +1116,12 @@ def verify_certificate(i_number):
         present = verify_certificate_checksum(i_number, checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while verifying certificate " + str(ex))
-        return jsonify({"response": "Error processing your request"}), 400
+        return (
+            jsonify(
+                {"response": "Oväntat fel vid verifiering av intyget kontakta Admin."}
+            ),
+            400,
+        )
 
     if present and signed:
         return jsonify({"response": "Certificate is valid"}), 200

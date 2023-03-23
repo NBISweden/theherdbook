@@ -131,11 +131,11 @@ export function IndividualCertificate({
             setShowForm(true);
           },
           (error) => {
-            userMessage(error, "error");
+            userMessage("Något gick fel kontakta Admin: " + error, "error");
           }
         )
       : userMessage(
-          "You do not have permission to edit this individual",
+          "Du har inte behörighet att editera denna individ.",
           "error"
         );
   }, [id, user]);
@@ -256,7 +256,7 @@ export function IndividualCertificate({
         setPreviewUrl(data);
       })
       .catch((error) => {
-        userMessage(error.message, "error");
+        userMessage("Något gick fel kontakta Admin: " + error.message, "error");
       });
   };
 
@@ -308,7 +308,10 @@ export function IndividualCertificate({
       })
       .catch((error) => {
         {
-          userMessage(error.message, "error");
+          userMessage(
+            "Något gick fel kontakta Admin: " + error.message,
+            "error"
+          );
         }
       });
   };
@@ -349,7 +352,10 @@ export function IndividualCertificate({
       })
       .catch((error) => {
         {
-          userMessage(error.message, "error");
+          userMessage(
+            "Något gick fel kontakta Admin: " + error.message,
+            "error"
+          );
         }
       });
   };

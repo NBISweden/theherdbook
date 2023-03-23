@@ -234,7 +234,10 @@ export function CollapsibleSortedTable({
       return;
     }
 
-    userMessage(breedingDeleteResponse.message, "error");
+    userMessage(
+      "Något gick fel kontakta Admin: " + breedingDeleteResponse.message,
+      "error"
+    );
     return;
   };
 

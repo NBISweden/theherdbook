@@ -137,13 +137,12 @@ export function IndividualView({ id }: { id: string }) {
         }
       })
       .catch((error) => {
-        userMessage(error.message, "error");
+        userMessage("Något gick fel kontakta Admin: " + error.message, "error");
       });
   };
 
   React.useEffect(() => {
     if (individual && certificateUrl) {
-      console.log("use effect", certificateUrl);
       popup(
         <CertificateDownload certUrl={certificateUrl} individual={individual} />
       );
@@ -199,7 +198,7 @@ export function IndividualView({ id }: { id: string }) {
       },
       (error) => {
         console.error(error);
-        userMessage(error, "error");
+        userMessage("Något gick fel kontakta Admin: " + error, "error");
       }
     );
   }, [id]);

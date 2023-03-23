@@ -116,7 +116,7 @@ export const IndividualDeath = ({ individual }: { individual: Individual }) => {
         return;
       }
       if (json.status == "error") {
-        userMessage("Något gick fel.", "error");
+        userMessage("Något gick fel kontakta Admin.", "error");
       }
     });
   };

@@ -437,7 +437,7 @@ export function IndividualAdd({
     const parent: Individual = await get(`/api/individual/${individualNumber}`);
     const herd: string = parent.herd.herd;
     if (!herd) {
-      userMessage("Något gick fel.", "error");
+      userMessage("Något gick fel kontakta Admin!", "error");
       return;
     }
     return herd;
