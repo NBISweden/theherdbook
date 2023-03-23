@@ -83,7 +83,7 @@ const useStyles = makeStyles({
 });
 
 export function IndividualReport({ individual }: { individual: Individual }) {
-  const [reportDate, setReportDate] = React.useState(null as Date | null);
+  const [reportDate, setReportDate] = React.useState(new Date() as Date | null);
   const [isStillOwner, setIsStillOwner] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
   const {
