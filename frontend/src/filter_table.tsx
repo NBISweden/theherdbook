@@ -218,9 +218,29 @@ export function FilterTable({
 
   const allColumns: Column[] = [
     {
+      field: "number",
+      label: "Nummer",
+      sortAs: "numbers",
+      render: (rowData: any) => (
+        <a
+          className="functionLink"
+          onClick={() =>
+            popup(
+              <IndividualView id={rowData.number} />,
+              `/individual/${rowData.number}`
+            )
+          }
+        >
+          {rowData.number}
+        </a>
+      ),
+    },
+    { field: "name", label: "Namn" },
+    {
       field: "herd",
       label: "Besättning",
       sortAs: "number",
+      hidden: id ? true : false,
       sortBy: "herd",
       action: (rowData: any) =>
         popup(
@@ -253,31 +273,19 @@ export function FilterTable({
         </a>
       ),
     },
-    { field: "name", label: "Namn" },
-    { field: "certificate", label: "Intyg", hidden: true },
+
     {
-      field: "digital_certificate",
-      label: "Digitaltintyg",
+      field: "certificate",
+      label: "Intyg",
       hidden: true,
+      render: (rowData: any) =>
+        rowData["certificate"]
+          ? rowData["certificate"]
+          : rowData["digital_certificate"]
+          ? rowData["digital_certificate"]
+          : "",
     },
-    {
-      field: "number",
-      label: "Nummer",
-      sortAs: "numbers",
-      render: (rowData: any) => (
-        <a
-          className="functionLink"
-          onClick={() =>
-            popup(
-              <IndividualView id={rowData.number} />,
-              `/individual/${rowData.number}`
-            )
-          }
-        >
-          {rowData.number}
-        </a>
-      ),
-    },
+
     {
       field: "sex",
       label: "Kön",
@@ -294,15 +302,7 @@ export function FilterTable({
       sortAs: "date",
       render: (rowData: any) => asLocale(rowData["birth_date"]),
     },
-    {
-      field: "death_date",
-      label: "Dödsdatum",
-      hidden: true,
-      sortAs: "date",
-      render: (rowData: any) => asLocale(rowData["death_date"]),
-    },
-    { field: "death_note", label: "Dödsanteckning", hidden: true },
-    { field: "children", label: "Ungar", numeric: true },
+    { field: "children", label: "Ungar", hidden: id ? true : false },
     {
       field: "mother",
       label: "Moder",
@@ -356,6 +356,14 @@ export function FilterTable({
       },
     },
     { field: "color_note", label: "Färganteckning", hidden: true },
+    {
+      field: "death_date",
+      label: "Dödsdatum",
+      hidden: true,
+      sortAs: "date",
+      render: (rowData: any) => asLocale(rowData["death_date"]),
+    },
+    { field: "death_note", label: "Dödsanteckning", hidden: true },
   ];
 
   const [columns, setColumns] = React.useState(allColumns);
@@ -518,7 +526,7 @@ export function FilterTable({
             <TableContainer>
               <Table
                 aria-labelledby="tableTitle"
-                size={"medium"}
+                size={"small"}
                 aria-label="enhanced table"
               >
                 <TableHead>
@@ -528,6 +536,7 @@ export function FilterTable({
                       <TableCell
                         key={column.field}
                         align={column.numeric ? "right" : "left"}
+                        size={"small"}
                         padding={"normal"}
                         sortDirection={orderBy === column.field ? order : false}
                       >
@@ -593,7 +602,7 @@ export function FilterTable({
               </Button>
             )}
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[5, 10, 25, 50, 100, 500]}
               component="div"
               count={filteredIndividuals.length}
               rowsPerPage={rowsPerPage}
