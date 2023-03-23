@@ -66,6 +66,7 @@ export interface Individual extends LimitedIndividual {
   herd_active: boolean;
   is_active: boolean;
   is_registered: boolean;
+  has_photo: boolean;
   alive: boolean;
   belly_color: string | null;
   eye_color: string | null;

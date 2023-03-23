@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 9
+CURRENT_SCHEMA_VERSION = 10
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -566,6 +566,7 @@ class Individual(BaseModel):
     belly_color = TextField(null=True)
     hair_notes = TextField(null=True)
     is_active = BooleanField(null=True, default=True)
+    has_photo = BooleanField(null=True, default=False)
     butchered = BooleanField(null=True, default=False)
     castration_date = DateField(null=True, default=None)
 
@@ -1592,6 +1593,35 @@ def migrate_8_to_9():
             version=9,
             comment="Add breerding_litter_size6w to breeding",
             applied=datetime.now(),
+        ).execute()
+
+
+def migrate_9_to_10():
+    """
+    Migrate between schema version 9 and 10.
+    """
+    with DATABASE.atomic():
+        if "individual" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=10,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("individual")]
+
+        if "has_photo" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "individual",
+                    "has_photo",
+                    BooleanField(null=True, default=False),
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=10, comment="Add has_photo to individual", applied=datetime.now()
         ).execute()
 
 

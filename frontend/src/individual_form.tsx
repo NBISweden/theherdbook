@@ -50,7 +50,7 @@ export function IndividualForm({
   intygError,
   herdOptions,
 }: {
-  genebank: Genebank;
+  genebank?: Genebank;
   individual: Individual;
   onUpdateIndividual: any;
   formAction: FormAction;
@@ -105,10 +105,9 @@ export function IndividualForm({
   ];
 
   const photoOptions = [
-    { value: "no", label: "Nej" },
-    { value: "yes", label: "Ja" },
-  ]; //should be boolean but doesn't work together with the OptionType
-  // also decide how this should be stored in the backend
+    { value: false, label: "Nej" },
+    { value: true, label: "Ja" },
+  ];
 
   return (
     <>
@@ -493,6 +492,11 @@ export function IndividualForm({
                   options={photoOptions ?? []}
                   className="controlWidth"
                   getOptionLabel={(option: OptionType) => option.label}
+                  value={
+                    photoOptions.find(
+                      (option) => option.value == individual.has_photo
+                    ) ?? photoOptions[0] //"nej as defult pos 0 "
+                  }
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -502,6 +506,9 @@ export function IndividualForm({
                       margin="normal"
                     />
                   )}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    onUpdateIndividual("has_photo", newValue?.value ?? "");
+                  }}
                 />
               </div>
               <div className="flexRow">
