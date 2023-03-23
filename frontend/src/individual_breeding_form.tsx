@@ -327,6 +327,7 @@ export function IndividualBreedingForm({
     breeding.breed_note = null;
     const isInputValid = validateUserInput(breeding);
     if (!isInputValid) {
+      userMessage("Något stämmer inte kontakta Admin!", "error");
       return;
     }
 
@@ -344,9 +345,12 @@ export function IndividualBreedingForm({
       handleEditableBreedingUpdates(breeding, Breedingmatch.breedings);
       closeDialog();
     } else {
+      let breedDate: Date | number = new Date(breeding.birth_date);
+      breedDate.setDate(breedDate.getDate() - 30);
+      const breedDateLocal = breedDate.toLocaleDateString(locale);
       // create new breeding event
       const newBreedingData: LimitedBreeding = {
-        date: breeding.breed_date,
+        date: breedDateLocal,
         mother: breeding.mother,
         father: breeding.father,
         breeding_herd: herdId,
