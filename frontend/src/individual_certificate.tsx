@@ -264,6 +264,8 @@ export function IndividualCertificate({
   async function authenticate(userInput: string) {
     if (userInput == individual.herd.herd) {
       setIsUserGood(true);
+    } else {
+      userMessage("Tyvärr fel besättningsnummer!", "error");
     }
   }
 
@@ -310,7 +312,6 @@ export function IndividualCertificate({
         }
       });
   };
-
   // Returns the updated certificate.
   // jscpd:ignore-start
   const updateCertificate = (id: string, content: any) => {
