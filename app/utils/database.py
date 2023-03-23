@@ -633,7 +633,7 @@ class Individual(BaseModel):
             and self.latest_herdtracking_entry
             and (
                 self.latest_herdtracking_entry.herd_tracking_date
-                > (datetime.now() - timedelta(days=366)).date()
+                > (datetime.now() - timedelta(days=365 + 30)).date()
             )
         )
 
