@@ -28,6 +28,9 @@ class TestDataAccess(DatabaseTest):
     Checks that data access functions return the correct data.
     """
 
+    # Uncoment to get max diff
+    # maxDiff = None
+
     def test_add_user(self):
         """
         Checks that `utils.data_access.get_colors` is working as intended.
@@ -314,8 +317,8 @@ class TestDataAccess(DatabaseTest):
             "unknown_herd": {"herd": "does-not-exist"},
             "valid": {
                 "herd": self.herds[0].herd,
-                "origin_herd": {"herd": self.herds[1].herd},
-                "number": "H1-4",
+                "origin_herd": {"herd": self.herds[0].herd},
+                "number": "G1-1922",
                 "breeding": 1,
                 "birth_date": (datetime.now() - timedelta(days=30)).strftime(
                     "%Y-%m-%d"
@@ -338,7 +341,7 @@ class TestDataAccess(DatabaseTest):
             "secondempty": {
                 "herd": self.herds[1].herd,
                 "origin_herd": {"herd": self.herds[1].herd},
-                "number": "H2-2112",
+                "number": "G2-2112",
                 "breeding": 2,
                 "birth_date": (datetime(2021, 1, 1) + timedelta(days=30)).strftime(
                     "%Y-%m-%d"
@@ -372,7 +375,9 @@ class TestDataAccess(DatabaseTest):
         )
         ind = da.get_individual(forms["valid"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
-        self.assertEqual(ind["herd"], {"id": 1, "herd": "H1", "herd_name": "herd1"})
+        self.assertEqual(
+            ind["herd"], {"id": 1, "herd": "G1", "herd_name": "Gotlandsherd1"}
+        )
 
         status = da.add_individual(forms["empty"], self.admin.uuid)
         self.assertEqual(
@@ -380,7 +385,7 @@ class TestDataAccess(DatabaseTest):
             {
                 "status": "success",
                 "message": "Individual Created",
-                "number": "H2-2121",
+                "number": "G2-2111",
             },
         )
         ind = da.get_individual(forms["empty"]["number"], self.admin.uuid)
@@ -388,7 +393,7 @@ class TestDataAccess(DatabaseTest):
         status = da.add_individual(forms["secondempty"], self.admin.uuid)
         self.assertEqual(
             status,
-            {"status": "success", "message": "Individual Created", "number": "H2-2112"},
+            {"status": "success", "message": "Individual Created", "number": "G2-2112"},
         )
         ind = da.get_individual(forms["secondempty"]["number"], self.admin.uuid)
         self.assertIsNotNone(ind)
@@ -481,7 +486,7 @@ class TestDataAccess(DatabaseTest):
             Returns parent information or None.
             """
             if not data:
-                return None
+                return {"id": None, "name": None, "number": None}
             return {"id": data.id, "name": data.name, "number": data.number}
 
         # Add some herd tracking entries
@@ -501,7 +506,13 @@ class TestDataAccess(DatabaseTest):
 
         # herds 0 and 1 are in genebank 0
         gb0_expected = []
-        for ind in [self.individuals[0], self.individuals[1]]:
+
+        for ind in [
+            self.parents[0],
+            self.individuals[0],
+            self.individuals[1],
+            self.individuals[3],
+        ]:
 
             active = (
                 (
@@ -605,9 +616,7 @@ class TestDataAccess(DatabaseTest):
         expected = [breeding.as_dict()]
 
         # success
-        self.assertEqual(
-            da.get_breeding_events(self.herds[0].herd, self.admin.uuid)[1], expected[0]
-        )
+        self.assertEqual(da.get_breeding_events("G1", self.admin.uuid)[2], expected[0])
 
     def test_register_breeding(self):
         """
@@ -665,7 +674,7 @@ class TestDataAccess(DatabaseTest):
         )
         self.assertEqual(
             da.register_breeding(valid_form, self.admin.uuid),
-            {"breeding_id": 5, "status": "success"},
+            {"breeding_id": 10, "status": "success"},
         )
         self.assertEqual(
             da.register_breeding(valid_form, self.admin.uuid),
@@ -677,24 +686,24 @@ class TestDataAccess(DatabaseTest):
         Checks that `utils.data_access.register_birth` works as intended.
         """
         valid_form = {
-            "id": self.breeding[0].id,
-            "date": datetime.today().strftime("%Y-%m-%d"),
+            "id": self.breeding[3].id,
+            "date": datetime(2022, 2, 1).strftime("%Y-%m-%d"),
             "litter_size": 4,
         }
         invalid_id = {"id": "knasboll"}
-        missing_date = {"id": self.breeding[0].id, "litter_size": 4}
-        invalid_date = {"id": self.breeding[0].id, "litter_size": 4, "date": "20-31-11"}
+        missing_date = {"id": self.breeding[3].id, "litter_size": 4}
+        invalid_date = {"id": self.breeding[3].id, "litter_size": 4, "date": "20-31-11"}
         missing_litter = {
-            "id": self.breeding[0].id,
+            "id": self.breeding[3].id,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         unknown_litter = {
-            "id": self.breeding[0].id,
+            "id": self.breeding[3].id,
             "litter_size": "jamaica",
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
         invalid_litter = {
-            "id": self.breeding[0].id,
+            "id": self.breeding[3].id,
             "litter_size": 0,
             "date": datetime.today().strftime("%Y-%m-%d"),
         }
