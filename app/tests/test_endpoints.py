@@ -178,7 +178,7 @@ class TestEndpoints(FlaskTest):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
-                        ind["is_registerd"] = (
+                        ind["is_registered"] = (
                             True
                             if data.certificate or data.digital_certificate
                             else False
@@ -240,7 +240,7 @@ class TestEndpoints(FlaskTest):
                     ind["sex"] = data.sex
                     ind["color"] = data.color.name if data.color else None
                     ind["current_herd"] = data.current_herd.herd
-                    ind["is_registerd"] = (
+                    ind["is_registered"] = (
                         True if data.certificate or data.digital_certificate else False
                     )
                 individuals_dict.append(ind)
@@ -286,7 +286,7 @@ class TestEndpoints(FlaskTest):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 response.get_json(),
-                {"breeding_id": 5, "status": "success"},
+                {"breeding_id": 10, "status": "success"},
             )
         # jscpd:ignore-end
 
@@ -299,7 +299,7 @@ class TestEndpoints(FlaskTest):
         """
 
         valid_form = {
-            "id": self.breeding[0].id,
+            "id": self.breeding[3].id,
             "date": datetime.today().strftime("%Y-%m-%d"),
             "litter_size": 4,
         }
