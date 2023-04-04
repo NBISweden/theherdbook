@@ -140,6 +140,7 @@ export function IndividualForm({
                       <CertAutocomplete
                         individual={individual}
                         canManage={canManage}
+                        intygError={intygError}
                         updateIndividual={onUpdateIndividual}
                         edit={individual?.is_registered}
                       />
@@ -279,7 +280,7 @@ export function IndividualForm({
                             <React.Fragment>
                               <Typography>
                                 Är datumet fel för hela kullen vänligen ändra i
-                                själva parningstillfället
+                                "Kullar och parningar"
                               </Typography>
                             </React.Fragment>
                           }

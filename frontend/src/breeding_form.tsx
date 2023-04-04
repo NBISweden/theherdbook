@@ -93,7 +93,7 @@ export function BreedingForm({
   const { user } = useUserContext();
   const canEditBreeding =
     user?.canEdit(herdId) &&
-    !data?.individuals?.find((e) => e.is_registerd)?.is_registerd;
+    !data?.individuals?.find((e) => e.is_registered)?.is_registered;
   const canManage = !!(user?.is_manager || user?.is_admin);
   const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [formState, setFormState] = React.useState(
@@ -244,7 +244,7 @@ export function BreedingForm({
       return false;
     }
     if (userInput === emptyBreeding) {
-      userMessage("Fyll i information om parningstillfället.", "warning");
+      userMessage("Fyll i information om parningen.", "warning");
       return false;
     }
 
@@ -387,7 +387,7 @@ export function BreedingForm({
     );
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
-      userMessage("Parningstillfället har uppdaterats.", "success");
+      userMessage("Parningen har uppdaterats.", "success");
 
       if (newIndsNumber == 0) {
         return;
@@ -495,7 +495,7 @@ export function BreedingForm({
         }
 
         if (breeding.birth_date === null) {
-          userMessage("Parningen har sparats.", "success");
+          userMessage("Kullen har sparats.", "success");
 
           return;
         }
@@ -545,7 +545,7 @@ export function BreedingForm({
       <form className="breedingForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <Typography variant="h6">
-            {data == "new" && "Nytt "}Parningstillfälle
+            {data == "new" && "Ny "}Parning och Födsel
           </Typography>
           <div className="flexRow">
             {canEditBreeding ? (
@@ -725,7 +725,7 @@ export function BreedingForm({
               }}
             />
             <TextField
-              label="Anteckningar om parningstillfället"
+              label="Anteckningar om parningen"
               variant={inputVariant}
               className="wideControl"
               multiline

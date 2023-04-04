@@ -1087,7 +1087,31 @@ def update_individual(form, user_uuid):
     )
     if old_individual.number != form["number"]:
         new_number = form["number"]
+        if Individual.select().where(Individual.number == form["number"]).exists():
+            logger.warning(
+                f"User: {user.username} "
+                f"trying to update {old_individual.id}:"
+                f"{old_individual.number} new number "
+                f"already exists {new_number}"
+            )
+            return {"status": "error", "message": "Individual number already exists"}
         form["number"] = old_individual.number
+
+    if form.get("certificate", None) is not None:
+        if (
+            Individual.select()
+            .where(Individual.certificate == form["certificate"])
+            .exists()
+        ):
+            logger.warning(
+                f"User: {user.username} trying to change "
+                f"{old_individual.id}:{old_individual.number} "
+                f"intyg number already exists {form.get('certificate', None)}"
+            )
+            return {
+                "status": "error",
+                "message": "Individual certificate already exists",
+            }
     if form.get("origin_herd") and isinstance(form["origin_herd"], dict):
         try:
             with DATABASE.atomic():
@@ -1180,6 +1204,19 @@ def update_individual(form, user_uuid):
                 s3.get_s3_client().delete_object(
                     f"{old_individual.number}/certificate.pdf"
                 )
+            # if breeding changed and breeding birth_date is changed
+            # update birth_date herd_tracking_date
+            if (
+                old_individual.breeding.id != individual.breeding.id
+                and old_individual.breeding.birth_date.strftime("%Y-%m-%d")
+                != individual.breeding.birth_date.strftime("%Y-%m-%d")
+            ):
+                update_birth_date_herd_tracking(
+                    individual,
+                    user.username,
+                    new_date=individual.breeding.birth_date,
+                    old_date=old_individual.breeding.birth_date,
+                )
 
             # if origin_herd has change update birth herd tracking.
 
@@ -1218,8 +1255,11 @@ def update_individual(form, user_uuid):
             "message": "Individual Updated",
             "digital_certificate": individual.digital_certificate,
         }
-    except DoesNotExist:
-        return {"status": "error", "message": "Unknown herd"}
+    except Exception as e:
+        logger.error(
+            f"Expetion in update individual {individual.id}:{individual.number}, user: {user.username} exception: {e}"
+        )
+        return {"status": "error", "message": "Kunde inte uppdatera individ."}
 
 
 def update_weights(individual, weights, username):
@@ -1573,7 +1613,7 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
-                        ind["is_registerd"] = (
+                        ind["is_registered"] = (
                             True
                             if data.certificate or data.digital_certificate
                             else False
@@ -1895,6 +1935,21 @@ def update_breeding(form, user_uuid):
                         f"{user.username},breeding_id:{breeding.id},changed_{bdate},{getattr(breeding,bdate)},{form[bdate]}"  # noqa: E501
                     )
                     setattr(breeding, bdate, validate_date(form[bdate]))
+                    # If birth_date changed update birth_date herd tracking date
+                    if bdate == "birth_date":
+                        for ind in Individual.select().where(
+                            Individual.breeding_id == breeding.id
+                        ):
+                            logger.info(
+                                f"Indi: {ind.number} birth: {ind.breeding.birth_date}"
+                            )
+                            update_birth_date_herd_tracking(
+                                ind,
+                                user.username,
+                                new_date=validate_date(form[bdate]),
+                                old_date=ind.breeding.birth_date,
+                            )
+
             except ValueError as error:
                 errors += [str(error)]
 
@@ -1911,7 +1966,7 @@ def update_breeding(form, user_uuid):
         return {"status": "error", "message": ", ".join(errors)}
 
     # Check if breeding_herd has changed
-    # Update breeding_herd to new hed ID.
+    # Update breeding_herd to new herd ID.
     # Update all Indivuduals in breeding
     if "breeding_herd" in form:
         new_herd = Herd.get(Herd.herd == form["breeding_herd"])
@@ -1930,3 +1985,47 @@ def update_breeding(form, user_uuid):
         breeding.litter_size6w = form.get("litter_size6w", breeding.litter_size6w)
         breeding.save()
         return {"status": "success"}
+
+
+def update_birth_date_herd_tracking(individual, username, new_date, old_date):
+    """
+    Updates the birth_date herd_tracking_date
+    for the given indivudal
+    """
+
+    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
+    update_logger.info(
+        f"{username},{individual.id}:{individual.number},"
+        "UPDATE birth tracking date,"
+        f"{old_date},{new_date},"
+    )
+    if new_date.strftime("%y") != old_date.strftime("%y"):
+        update_logger.info(
+            f"{username},{individual.id},"
+            "UPDATE year in number,"
+            f"{old_date.strftime('%y')},{new_date.strftime('%y')},"
+        )
+        with DATABASE.atomic():
+            individual.number = (
+                individual.number.split("-")[0]
+                + "-"
+                + new_date.strftime("%y")
+                + individual.number.split("-")[1][2:]
+            )
+            logger.info(
+                f"New number Year change for id: {individual.id} is: {individual.number}"
+            )
+            individual.save()
+
+    try:
+        with DATABASE.atomic():
+            ht_birth = HerdTracking.get(
+                (HerdTracking.individual == individual)
+                & (HerdTracking.herd_tracking_date == old_date.strftime("%Y-%m-%d"))
+            )
+            ht_birth.herd_tracking_date = new_date
+            ht_birth.save()
+
+    except DoesNotExist:
+        logger.info(f"{individual.number} does not have birth_date herdtracking event")
+        raise ValueError("Individual does not have birth_date herdtracking event")

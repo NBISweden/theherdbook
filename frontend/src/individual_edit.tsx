@@ -104,6 +104,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
   const [litterError6w, setLitterError6w] = React.useState(false as boolean);
+  const [intygError, setIntygError] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
@@ -195,6 +196,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    * The API sends the birth date in a format like this:
    * "Thu, 08 Jul 2021 00:00:00 GMT".
    * This function turns it into a format like this: "YYYY-MM-DD"
+   * If breeding birth date has changed the year part in the number
+   * needs to be updated the else if takes care of it to update the
+   * number in the form. Backend will also check and update this.
    */
   React.useEffect(() => {
     const formatDate = (fullDate: string) => {
@@ -209,6 +213,16 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       individual.birth_date.length > 10
     ) {
       handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
+    } else if (
+      individual?.birth_date?.split("-")[0].slice(-2) !=
+      oldIndividual?.birth_date?.split("-")[0].slice(-2)
+    ) {
+      let newNumber =
+        individual?.number?.split("-")[0] +
+        "-" +
+        individual?.birth_date?.split("-")[0].slice(-2) +
+        individual?.number?.split("-")[1].substring(2);
+      handleUpdateIndividual("number", newNumber);
     }
   }, [individual?.birth_date]);
 
@@ -348,6 +362,22 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
                 );
                 break;
               }
+              case "Individual number already exists": {
+                userMessage(
+                  "Det finns redan en kanin med detta nummer i databasen.",
+                  "error"
+                );
+                setNumberError(true);
+                break;
+              }
+              case "Individual certificate already exists": {
+                userMessage(
+                  `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
+                  "error"
+                );
+                setIntygError(true);
+                break;
+              }
               default: {
                 userMessage(
                   "Något gick fel kontakta Admin: " + retval.message,
@@ -388,6 +418,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
+            intygError={intygError}
             genebank={individual.genebank_id}
             herdOptions={herdOptions}
           />
