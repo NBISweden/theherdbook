@@ -47,14 +47,14 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
                 logic: true,
                 active: true,
                 tooltip:
-                  "Visar kaniner som är registrerade och årsrapporterade inom 13 månader, i aktiva besättningar",
+                  "Visar kaniner som är registrerade och årsrapporterade inom 13 månader, i aktiva besättningar.",
               },
               {
                 field: "is_active",
                 label: "Visa inaktiva djur",
                 logic: false,
                 active: false,
-                tooltip: "Visar kaniner som inte är aktiva",
+                tooltip: "Visar kaniner som inte är aktiva.",
               },
               {
                 field: "herd_active",
@@ -67,7 +67,7 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
                 field: "alive",
                 label: "Visa döda djur",
                 logic: false,
-                tooltip: "Visar inaktiva kaniner som också är döda",
+                tooltip: "Visar inaktiva kaniner som också är döda.",
               },
             ]}
           />
