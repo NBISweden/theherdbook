@@ -154,7 +154,7 @@ export function IndividualBreedingForm({
           });
           if (formState.birth_date != Breedingmatch.breedings.birth_date) {
             userMessage(
-              `Födelsedatumet du har angett: ${formState.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Trycker du på uppdatera kommer födelsedatumet att uppdateras.`,
+              `Födelsedatumet du har angett: ${formState.birth_date} skiljer sig från det existerande: ${Breedingmatch.breedings.birth_date}. Trycker du på uppdatera kommer födelsedatumet att uppdateras för alla kaniner i kullen.`,
               "warning"
             );
           }
@@ -165,8 +165,8 @@ export function IndividualBreedingForm({
           Breedingmatch.breedings.birth_date = formState.birth_date;
 
           userMessage(
-            `En parning är funnen i ${formState?.breeding_herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och parningsdatum ${Breedingmatch.breedings.breed_date}.
-             Parningen kommer uppdateras med födelsedatum  och kullstorlek från detta formulär. Kontrollera att uppgifterna stämmer!`,
+            `En kull är funnen i ${formState?.breeding_herd} mellan Mor: ${Breedingmatch.breedings.mother} Far: ${Breedingmatch.breedings.father} och parningsdatum ${Breedingmatch.breedings.breed_date}.
+             Kullen och alla dess individer kommer uppdateras med födelsedatum  och kullstorlek från detta formulär. Kontrollera att uppgifterna stämmer!`,
             "success"
           );
         } else {
@@ -251,7 +251,7 @@ export function IndividualBreedingForm({
       return false;
     }
     if (userInput === emptyBreeding) {
-      userMessage("Fyll i information om parningstillfället.", "warning");
+      userMessage("Fyll i information om parningen.", "warning");
       return false;
     }
 
@@ -397,9 +397,9 @@ export function IndividualBreedingForm({
           </Typography>
           <div className="flexRow">
             Här kan du uppdatera föräldarna för bara denna individ. OBS Är
-            föräldrarna för hela kullen fel vänlig ändra i parningstillfället.
-            När du updaterar här måste du också spara själva individen i den
-            föregående dialogen för att ändringen ska få effekt.{" "}
+            föräldrarna för hela kullen fel vänlig ändra i "Kullar och
+            Parningar" När du updaterar här måste du också spara själva
+            individen i den föregående dialogen för att ändringen ska få effekt.{" "}
           </div>
           <div>
             <div className="simpleField">

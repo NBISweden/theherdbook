@@ -227,7 +227,7 @@ export function CollapsibleSortedTable({
 
     if (breedingDeleteResponse.status === "success") {
       userMessage(
-        "Parningstillfället med id: " + breedingId + " är nu borttaget",
+        "Kullen med id: " + breedingId + " är nu borttaget",
         "success"
       );
       handleBreedingsChanged();
@@ -250,7 +250,7 @@ export function CollapsibleSortedTable({
         {data ? (
           <>
             <TableContainer>
-              <Table size={"medium"} aria-label="enhanced table">
+              <Table size={"small"} aria-label="enhanced table">
                 <TableHead>
                   <TableRow className={classes.root}>
                     <TableCell />
@@ -385,7 +385,7 @@ export function CollapsibleSortedTable({
                                                 </a>
                                               </TableCell>
                                               <TableCell>
-                                                {indi.is_registerd
+                                                {indi.is_registered
                                                   ? "Ja"
                                                   : "Nej"}
                                               </TableCell>
@@ -417,8 +417,8 @@ export function CollapsibleSortedTable({
                                         gutterBottom
                                         component="div"
                                       >
-                                        Inga kaniner finns kopplade till detta
-                                        parningstillfälle med ID: {row.id}
+                                        Inga kaniner finns kopplade till denna
+                                        Kull med ID: {row.id}
                                       </Typography>
                                       <Button
                                         className="bottomButton"
