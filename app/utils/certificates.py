@@ -229,7 +229,7 @@ class CertificateSigner:  # pylint: disable=too-few-public-methods
             "auto_sigfield": True,
             "sigandcertify": True,
             "signaturebox": (470, 840, 570, 640),
-            "signature": "Veriferat intyg av Föreningen Gotlandskaninen",
+            "signature": "EJ GILTIGT! TESTINTYG",
             "contact": "admin@gotlandskaninens.se",
             "location": "Sweden",
             "signingdate": date,
