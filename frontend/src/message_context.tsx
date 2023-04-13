@@ -18,7 +18,7 @@ import { unstable_batchedUpdates } from "react-dom";
  */
 
 export interface MessageContext {
-  userMessage(msg: string, variant: VariantType): void;
+  userMessage(msg: string, variant: VariantType, persist?: boolean): void;
   popup(content: JSX.Element, link: string | undefined, full?: boolean): void;
   handleCloseDialog(): void;
 }

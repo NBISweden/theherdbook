@@ -253,13 +253,7 @@ export function IndividualAdd({
     );
     setActiveMalesLimited(
       toLimitedIndividuals(
-        individualsFromDate(
-          currentGenebank,
-          "male",
-          fromDate,
-          undefined,
-          showDead
-        )
+        individualsFromDate(currentGenebank, "male", fromDate, herdId, showDead)
       )
     );
   }, [fromDate, currentGenebank, herdId, showDead]);
@@ -403,7 +397,11 @@ export function IndividualAdd({
       userMessage("Fyll i alla obligatoriska fält.", "warning");
       return false;
     }
-    if (!/^([a-zA-Z][0-9]+-[0-9][0-9][0-9][0-9]+)$/.test(individual.number)) {
+    if (
+      !/^([a-zA-Z][0-9]+-[0-9][0-9](([1-9][1-9])|([1-9][0-9][0-9])))$/.test(
+        individual.number
+      )
+    ) {
       userMessage("Individens nummer har fel format.", "warning");
       return false;
     }
@@ -439,7 +437,7 @@ export function IndividualAdd({
     const parent: Individual = await get(`/api/individual/${individualNumber}`);
     const herd: string = parent.herd.herd;
     if (!herd) {
-      userMessage("Något gick fel.", "error");
+      userMessage("Något gick fel kontakta Admin!", "error");
       return;
     }
     return herd;
@@ -570,7 +568,7 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  "Alla kaniner i denna kull är redan registrerade",
+                  "Alla kaniner i denna kull finns redan i systemet.",
                   "error"
                 );
                 break;
@@ -583,7 +581,7 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  "Du får max registrera 9 kaniner från en och samma kull.",
+                  "Du får max lägga till 9 kaniner från en och samma kull.",
                   "error",
                   true
                 );
@@ -597,8 +595,8 @@ export function IndividualAdd({
                   litter_size6w: BreedingMatch?.litter_size6w ?? null,
                 });
                 userMessage(
-                  `En eller flera kaniner i kullen är registrerade med fel kull nummer: ${json.wrong}
-                  om du har registrerat alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
+                  `En eller flera kaniner i kullen är inlagd med fel kullnummer: ${json.wrong}
+                  om du har lagt till alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
                   Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
                   "error",
                   true
@@ -700,8 +698,84 @@ export function IndividualAdd({
     );
   };
 
+  const isValidNum = async (individualNumber: string | null) => {
+    const json = await post("/api/checkindnumber", {
+      number: individualNumber,
+    });
+    switch (json.status) {
+      case "success": {
+        setNumberError(false);
+        return true;
+      }
+      case "error": {
+        switch (json.message) {
+          case "Individual number already exists": {
+            userMessage(
+              `Det finns redan en kanin med nummer ${individual.number} i databasen.`,
+              "error"
+            );
+            setNumberError(true);
+            return false;
+          }
+          default: {
+            userMessage(
+              `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+              "error"
+            );
+            console.log("Fel från API: ", json.message);
+            return false;
+          }
+        }
+      }
+      default: {
+        userMessage(
+          `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+          "error"
+        );
+        console.log("Fel från API: ", json.message);
+        return false;
+      }
+    }
+  };
+  const isValidCert = async (intyg?: string | null) => {
+    const json = await post("/api/checkintyg", {
+      certificate: intyg,
+    });
+    switch (json.status) {
+      case "success": {
+        setIntygError(false);
+        return true;
+      }
+      case "error": {
+        userMessage(
+          `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
+          "error"
+        );
+        setIntygError(true);
+        return false;
+      }
+      default: {
+        userMessage(
+          `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
+          "error"
+        );
+        console.log("Fel från API: ", json.message);
+        return false;
+      }
+    }
+  };
   const onSaveIndividual = async (individual: Individual) => {
     let newIndividual = individual;
+    const isValidNumber = await isValidNum(individual?.number);
+    if (!isValidNumber) {
+      return;
+    }
+
+    const isValidIntyg = await isValidCert(individual?.certificate);
+    if (!isValidIntyg) {
+      return;
+    }
+
     const inputValid = validateUserInput(individual);
     if (!inputValid) {
       return;
@@ -761,7 +835,7 @@ export function IndividualAdd({
     <>
       <div className={style.inputWrapper}>
         <div className={style.inputBox}>
-          <h1>Registrera en ny kanin</h1>
+          <h1>Lägg till en ny kanin</h1>
           <div className={style.ancestorBox}>
             <h2>Lägg till härstamningen</h2>
             <div className={style.datum}>
@@ -937,6 +1011,7 @@ export function IndividualAdd({
             Tillbaka
           </Button>
           <Button
+            disabled={success}
             variant="contained"
             color="primary"
             onClick={() => onSaveIndividual(individual)}

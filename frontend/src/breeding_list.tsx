@@ -26,7 +26,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
   const [active, setActive] = React.useState(null as any);
   const [breedingsChanged, setBreedingsChanged] = React.useState(true);
   const { userMessage } = useMessageContext();
-  const { genebanks } = useDataContext();
+  const { genebanks, herdChangeListener } = useDataContext();
   const { user } = useUserContext();
 
   // Parent information from the genebank
@@ -89,7 +89,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
   ];
 
   React.useEffect(() => {
-    if (id && breedingsChanged) {
+    if ((id && breedingsChanged) || herdChangeListener) {
       get(`/api/breeding/${id}`)
         .then(
           (data: { breedings: Breeding[] }) => {
@@ -102,7 +102,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         )
         .then(() => setBreedingsChanged(false));
     }
-  }, [id, breedingsChanged]);
+  }, [id, breedingsChanged, herdChangeListener]);
 
   const handleBreedingsChanged = () => {
     setBreedingsChanged(true);
@@ -114,7 +114,6 @@ export function BreedingList({ id }: { id: string | undefined }) {
 
   return (
     <>
-      <Typography variant="h5">Kullar</Typography>
       <div className="breeding">
         <CollapsibleSortedTable
           columns={columns}
@@ -131,6 +130,7 @@ export function BreedingList({ id }: { id: string | undefined }) {
         />
         <div className="breedingListForm" style={{ width: active ? "40%" : 0 }}>
           <BreedingForm
+            key={active?.id}
             data={active}
             herdId={id}
             handleBreedingsChanged={handleBreedingsChanged}

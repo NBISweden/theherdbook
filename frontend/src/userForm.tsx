@@ -118,7 +118,10 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
         } else {
           unstable_batchedUpdates(() => {
             if (data.message) {
-              userMessage(data?.message, "error");
+              userMessage(
+                "Något gick fel kontakta Admin: " + data?.message,
+                "error"
+              );
             }
             setNew(true);
           });
@@ -178,7 +181,7 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               fullname: postData.fullname,
             });
             setUsers(newUsers);
-            userMessage("Changes saved", "success");
+            userMessage("Ändrat", "success");
             break; // updated user
           case "success":
           case "created":
@@ -192,12 +195,15 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
                 fullname: userToEdit.fullname,
               };
               setUsers([...users, new_user]);
-              userMessage("User saved", "success");
+              userMessage("Sparat", "success");
             });
             history.push(`/manage/user/${newUserId}`);
             break; // added user
           default:
-            userMessage("Error: " + data?.message, "error");
+            userMessage(
+              "Något gick fel kontakta Admin sänd följade: " + data?.message,
+              "error"
+            );
             console.warn("status:", data); // something went wrong
         }
       },
@@ -263,14 +269,17 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
               loadUser(+id);
             }
             loadData(["users"]);
-            userMessage("permissions updated", "success");
+            userMessage("Rättigheterna uppdaterat", "success");
             break; // updated user
           case "unchanged":
-            userMessage("User already has permission", "info");
+            userMessage("Användaren har redan denna rättighet", "info");
             break;
           default: {
             if (data.message) {
-              userMessage(data.message, "error");
+              userMessage(
+                "Något gick fel kontakta Admin: " + data.message,
+                "error"
+              );
             }
             console.error("error:", data); // "failed" or other error
           }

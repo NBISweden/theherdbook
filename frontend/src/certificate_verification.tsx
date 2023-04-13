@@ -135,7 +135,7 @@ export function CertificateVerification({
         setPreviewUrl(data);
       })
       .catch((error) => {
-        userMessage(error.message, "error");
+        userMessage("Något gick fel kontakta Admin: " + error.message, "error");
       });
   };
 

@@ -167,7 +167,10 @@ export const IndividualWeigthull = ({
           }
         })
         .catch((error) => {
-          userMessage("Vi har tekniska problem. Försök igen senare.", "error");
+          userMessage(
+            "Vi har tekniska problem. Försök igen senare. Eller kontakta Admin",
+            "error"
+          );
         });
     }
   };

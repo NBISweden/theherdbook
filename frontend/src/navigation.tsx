@@ -203,7 +203,11 @@ export function Navigation() {
       label: "Hjälp",
       path: "/help",
       exact: true,
-      component: <HelpStamboken />,
+      component: (
+        <Restricted>
+          <HelpStamboken />
+        </Restricted>
+      ),
       visible: is_logged_in,
       icon: <Help />,
     },

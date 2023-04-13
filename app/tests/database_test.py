@@ -27,6 +27,8 @@ class DatabaseTest(unittest.TestCase):
     # pylint: disable=too-many-instance-attributes
 
     TEST_DATABASE = "test_database.sqlite3"
+    # Uncomment this line to get get full diff
+    # maxDiff = None
 
     def setUp(self):
         """
@@ -52,8 +54,8 @@ class DatabaseTest(unittest.TestCase):
         This function saves all variables to be easily accessible later.
         """
         self.genebanks = [
-            db.Genebank.get_or_create(name="genebank1")[0],
-            db.Genebank.get_or_create(name="genebank2")[0],
+            db.Genebank.get_or_create(name="Gotland")[0],
+            db.Genebank.get_or_create(name="Mellerud")[0],
         ]
         for genebank in self.genebanks:
             genebank.save()
@@ -69,9 +71,9 @@ class DatabaseTest(unittest.TestCase):
         self.herds = [
             db.Herd.get_or_create(
                 genebank=self.genebanks[0],
-                herd="H1",
-                herd_name="herd1",
-                name="o1",
+                herd="G1",
+                herd_name="Gotlandsherd1",
+                name="owner1",
                 name_privacy="private",
                 email="o@h1",
                 email_privacy="authenticated",
@@ -80,9 +82,9 @@ class DatabaseTest(unittest.TestCase):
             )[0],
             db.Herd.get_or_create(
                 genebank=self.genebanks[0],
-                herd="H2",
-                herd_name="herd2",
-                name="o2",
+                herd="G2",
+                herd_name="Gotlandsherd2",
+                name="owner2",
                 name_privacy="authenticated",
                 email="o@h2",
                 email_privacy="public",
@@ -91,9 +93,9 @@ class DatabaseTest(unittest.TestCase):
             )[0],
             db.Herd.get_or_create(
                 genebank=self.genebanks[1],
-                herd="H3",
-                herd_name="herd3",
-                name="o3",
+                herd="M3",
+                herd_name="Mellerudherd3",
+                name="Owner3",
                 name_privacy="public",
                 email="o@h3",
                 email_privacy="private",
@@ -106,44 +108,94 @@ class DatabaseTest(unittest.TestCase):
 
         parent_breeding = db.Breeding.get_or_create(
             breed_date=datetime(2019, 1, 1),
+            birth_date=datetime(2019, 2, 1),
             litter_size=2,
             litter_size6w=2,
-            breeding_herd=self.herds[1],
+            breeding_herd_id=self.herds[0],
+        )[0]
+
+        parent_breeding2 = db.Breeding.get_or_create(
+            breed_date=datetime(2017, 1, 1),
+            birth_date=datetime(2017, 2, 1),
+            litter_size=2,
+            litter_size6w=2,
+            breeding_herd_id=self.herds[1],
+        )[0]
+
+        parent_breeding3 = db.Breeding.get_or_create(
+            breed_date=datetime(2019, 1, 1),
+            birth_date=datetime(2019, 2, 1),
+            litter_size=2,
+            litter_size6w=2,
+            breeding_herd_id=self.herds[2],
+        )[0]
+
+        parent_breeding4 = db.Breeding.get_or_create(
+            breed_date=datetime(2018, 1, 1),
+            birth_date=datetime(2018, 2, 1),
+            litter_size=2,
+            litter_size6w=2,
+            breeding_herd_id=self.herds[2],
         )[0]
 
         self.parents = [
             db.Individual.get_or_create(
-                origin_herd=self.herds[0], breeding=parent_breeding, number="P1-001"
+                origin_herd=self.herds[0], breeding=parent_breeding, number="G1-1911"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[0], breeding=parent_breeding, number="P2-001"
+                origin_herd=self.herds[1], breeding=parent_breeding2, number="G2-1711"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[1], breeding=parent_breeding, number="P3-001"
+                origin_herd=self.herds[2], breeding=parent_breeding3, number="M3-1911"
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[1], breeding=parent_breeding, number="P4-001"
+                origin_herd=self.herds[2], breeding=parent_breeding4, number="M3-1811"
             )[0],
         ]
         for parent in self.parents:
             parent.save()
 
+        parenttracking = db.HerdTracking.get_or_create(
+            herd=self.herds[0],
+            individual=self.parents[0],
+            herd_tracking_date=datetime(2019, 2, 1),
+        )[0]
+        parenttracking.save()
+
         self.breeding = [
             db.Breeding.get_or_create(
                 breed_date=datetime(2021, 1, 1),
+                birth_date=datetime(2021, 2, 1),
                 mother=self.parents[0],
                 father=self.parents[1],
                 litter_size=2,
                 litter_size6w=2,
-                breeding_herd=self.herds[0],
+                breeding_herd_id=self.herds[0],
             )[0],
             db.Breeding.get_or_create(
                 breed_date=datetime(2021, 1, 1),
+                birth_date=datetime(2021, 2, 1),
                 mother=self.parents[2],
                 father=self.parents[3],
-                litter_size=1,
-                litter_size6w=1,
-                breeding_herd=self.herds[1],
+                litter_size=2,
+                litter_size6w=2,
+                breeding_herd_id=self.herds[2],
+            )[0],
+            db.Breeding.get_or_create(
+                breed_date=datetime(2020, 1, 1),
+                birth_date=datetime(2020, 2, 1),
+                mother=self.parents[0],
+                father=self.parents[1],
+                litter_size=2,
+                litter_size6w=2,
+                breeding_herd_id=self.herds[1],
+            )[0],
+            db.Breeding.get_or_create(
+                breed_date=datetime(2022, 1, 1),
+                #       birth_date=datetime(2021, 2, 1),
+                mother=self.parents[2],
+                father=self.parents[3],
+                breeding_herd_id=self.herds[2],
             )[0],
         ]
         for breeding in self.breeding:
@@ -155,29 +207,29 @@ class DatabaseTest(unittest.TestCase):
                 breeding=self.breeding[0],
                 color=self.colors[0],
                 certificate="12",
-                number="H1-1",
+                number="G1-2111",
             )[0],
             db.Individual.get_or_create(
                 origin_herd=self.herds[1],
-                breeding=self.breeding[0],
+                breeding=self.breeding[2],
                 color=self.colors[0],
                 certificate="13",
-                number="H2-2",
+                number="G2-2011",
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[0], breeding=self.breeding[1], number="H3-3"
+                origin_herd=self.herds[2], breeding=self.breeding[1], number="M3-2122"
             )[0],
             db.Individual.get_or_create(
                 origin_herd=self.herds[0],
                 breeding=self.breeding[0],
                 color=self.colors[0],
-                number="H1-3",
+                number="G1-2112",
             )[0],
             db.Individual.get_or_create(
-                origin_herd=self.herds[1],
-                breeding=self.breeding[0],
+                origin_herd=self.herds[2],
+                breeding=self.breeding[1],
                 color=self.colors[0],
-                number="H2-3",
+                number="M3-2111",
             )[0],
         ]
         for individual in self.individuals:
@@ -191,7 +243,7 @@ class DatabaseTest(unittest.TestCase):
                 father=self.individuals[1],
                 litter_size=3,
                 litter_size6w=2,
-                breeding_herd=self.herds[0],
+                breeding_herd_id=self.herds[0],
             )[0],
         ]
         self.breeding[-1].save()
@@ -230,19 +282,31 @@ class DatabaseTest(unittest.TestCase):
                 herd=self.herds[0],
                 signature=self.manager,
                 individual=self.individuals[0],
-                herd_tracking_date=datetime(2020, 10, 10),
+                herd_tracking_date=datetime(2021, 2, 1),
             )[0],
             db.HerdTracking.get_or_create(
                 herd=self.herds[1],
                 signature=self.manager,
                 individual=self.individuals[1],
-                herd_tracking_date=datetime(2019, 1, 1),
+                herd_tracking_date=datetime(2021, 2, 1),
             )[0],
             db.HerdTracking.get_or_create(
                 herd=self.herds[0],
                 signature=self.manager,
                 individual=self.individuals[2],
-                herd_tracking_date=datetime(2019, 12, 31),
+                herd_tracking_date=datetime(2021, 2, 1),
+            )[0],
+            db.HerdTracking.get_or_create(
+                herd=self.herds[0],
+                signature=self.manager,
+                individual=self.individuals[3],
+                herd_tracking_date=datetime(2021, 2, 1),
+            )[0],
+            db.HerdTracking.get_or_create(
+                herd=self.herds[2],
+                signature=self.manager,
+                individual=self.individuals[4],
+                herd_tracking_date=datetime(2021, 2, 1),
             )[0],
             db.HerdTracking.get_or_create(
                 from_herd=self.herds[0],

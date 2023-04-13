@@ -41,6 +41,9 @@ class TestDatabase(DatabaseTest):
     intended.
     """
 
+    # Uncomment for Max diff
+    # maxDiff = None
+
     def test_genebank(self):
         """
         Checks the database.Genebank class.
@@ -165,12 +168,13 @@ class TestDatabase(DatabaseTest):
         Checks the database.Herd class.
         """
         # .individuals()
-        h0_expected = [self.individuals[0]]
-        h1_expected = [self.individuals[1]]
-        h2_expected = [self.individuals[2]]
-        self.assertListEqual(self.herds[0].individuals, h0_expected)
-        self.assertListEqual(self.herds[1].individuals, h1_expected)
-        self.assertListEqual(self.herds[2].individuals, h2_expected)
+        g1_expected = [self.parents[0], self.individuals[0], self.individuals[3]]
+        g2_expected = [self.individuals[1]]
+        m3_expected = [self.individuals[2], self.individuals[4]]
+
+        self.assertListEqual(self.herds[0].individuals, g1_expected)
+        self.assertListEqual(self.herds[1].individuals, g2_expected)
+        self.assertListEqual(self.herds[2].individuals, m3_expected)
 
         # .short_info()
         for herd in self.herds:
@@ -269,23 +273,25 @@ class TestDatabase(DatabaseTest):
         self.assertListEqual(
             self.parents[0].children,
             [
-                self.individuals[0],
                 self.individuals[1],
+                self.individuals[0],
                 self.individuals[3],
-                self.individuals[4],
             ],
         )
         self.assertListEqual(
             self.parents[1].children,
             [
                 self.individuals[0],
-                self.individuals[1],
                 self.individuals[3],
-                self.individuals[4],
+                self.individuals[1],
             ],
         )
-        self.assertListEqual(self.parents[2].children, [self.individuals[2]])
-        self.assertListEqual(self.parents[3].children, [self.individuals[2]])
+        self.assertListEqual(
+            self.parents[2].children, [self.individuals[2], self.individuals[4]]
+        )
+        self.assertListEqual(
+            self.parents[3].children, [self.individuals[2], self.individuals[4]]
+        )
 
         # .as_dict()
         mother = {
@@ -314,7 +320,7 @@ class TestDatabase(DatabaseTest):
             "herd_name": self.herds[0].herd_name,
         }
 
-        data["birth_date"] = self.breeding[0].birth_date
+        data["birth_date"] = self.breeding[0].birth_date.strftime("%Y-%m-%d")
         data["litter_size"] = self.breeding[0].litter_size
         data["litter_size6w"] = self.breeding[0].litter_size6w
 
@@ -702,41 +708,41 @@ class TestDatabase(DatabaseTest):
         """
         Tests the database.User.can_edit function.
         """
-        self.assertEqual(self.admin.can_edit("genebank1"), True)
-        self.assertEqual(self.admin.can_edit("genebank2"), True)
-        self.assertEqual(self.admin.can_edit("H1"), True)
-        self.assertEqual(self.admin.can_edit("H2"), True)
-        self.assertEqual(self.admin.can_edit("H3"), True)
-        self.assertEqual(self.admin.can_edit("H1-1"), True)
-        self.assertEqual(self.admin.can_edit("H2-2"), True)
-        self.assertEqual(self.admin.can_edit("H3-3"), True)
+        self.assertEqual(self.admin.can_edit("Gotland"), True)
+        self.assertEqual(self.admin.can_edit("Mellerud"), True)
+        self.assertEqual(self.admin.can_edit("G1"), True)
+        self.assertEqual(self.admin.can_edit("G2"), True)
+        self.assertEqual(self.admin.can_edit("M3"), True)
+        self.assertEqual(self.admin.can_edit("G1-1911"), True)
+        self.assertEqual(self.admin.can_edit("G2-1711"), True)
+        self.assertEqual(self.admin.can_edit("M3-1811"), True)
 
-        self.assertEqual(self.manager.can_edit("genebank1"), True)
-        self.assertEqual(self.manager.can_edit("genebank2"), False)
-        self.assertEqual(self.manager.can_edit("H1"), True)
-        self.assertEqual(self.manager.can_edit("H2"), True)
-        self.assertEqual(self.manager.can_edit("H3"), False)
-        self.assertEqual(self.manager.can_edit("H1-1"), True)
-        self.assertEqual(self.manager.can_edit("H2-2"), True)
-        self.assertEqual(self.manager.can_edit("H3-3"), False)
+        self.assertEqual(self.manager.can_edit("Gotland"), True)
+        self.assertEqual(self.manager.can_edit("Mellerud"), False)
+        self.assertEqual(self.manager.can_edit("G1"), True)
+        self.assertEqual(self.manager.can_edit("G2"), True)
+        self.assertEqual(self.manager.can_edit("M3"), False)
+        self.assertEqual(self.manager.can_edit("G1-1911"), True)
+        self.assertEqual(self.manager.can_edit("G2-1711"), True)
+        self.assertEqual(self.manager.can_edit("M3-1811"), False)
 
-        self.assertEqual(self.viewer.can_edit("genebank1"), False)
-        self.assertEqual(self.viewer.can_edit("genebank2"), False)
-        self.assertEqual(self.viewer.can_edit("H1"), False)
-        self.assertEqual(self.viewer.can_edit("H2"), False)
-        self.assertEqual(self.viewer.can_edit("H3"), False)
-        self.assertEqual(self.viewer.can_edit("H1-1"), False)
-        self.assertEqual(self.viewer.can_edit("H2-2"), False)
-        self.assertEqual(self.viewer.can_edit("H3-3"), False)
+        self.assertEqual(self.viewer.can_edit("Gotland"), False)
+        self.assertEqual(self.viewer.can_edit("Mellerud"), False)
+        self.assertEqual(self.viewer.can_edit("G1"), False)
+        self.assertEqual(self.viewer.can_edit("G2"), False)
+        self.assertEqual(self.viewer.can_edit("G3"), False)
+        self.assertEqual(self.viewer.can_edit("G1-1911"), False)
+        self.assertEqual(self.viewer.can_edit("G2-1711"), False)
+        self.assertEqual(self.viewer.can_edit("M3-1811"), False)
 
-        self.assertEqual(self.owner.can_edit("genebank1"), False)
-        self.assertEqual(self.owner.can_edit("genebank2"), False)
-        self.assertEqual(self.owner.can_edit("H1"), True)
-        self.assertEqual(self.owner.can_edit("H2"), False)
-        self.assertEqual(self.owner.can_edit("H3"), False)
-        self.assertEqual(self.owner.can_edit("H1-1"), True)
-        self.assertEqual(self.owner.can_edit("H2-2"), False)
-        self.assertEqual(self.owner.can_edit("H3-3"), False)
+        self.assertEqual(self.owner.can_edit("Gotland"), False)
+        self.assertEqual(self.owner.can_edit("Mellerud"), False)
+        self.assertEqual(self.owner.can_edit("G1"), True)
+        self.assertEqual(self.owner.can_edit("G2"), False)
+        self.assertEqual(self.owner.can_edit("M3"), False)
+        self.assertEqual(self.owner.can_edit("G1-1911"), True)
+        self.assertEqual(self.owner.can_edit("G2-1711"), False)
+        self.assertEqual(self.owner.can_edit("M3-1811"), False)
 
     def test_user_message(self):
         """

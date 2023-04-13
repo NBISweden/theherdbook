@@ -25,6 +25,9 @@ import {
   locale,
   Individual,
   LimitedIndividual,
+  herdLabel,
+  LimitedHerd,
+  OptionType,
 } from "@app/data_context_global";
 
 import {
@@ -33,6 +36,7 @@ import {
   Typography,
   Checkbox,
   FormControlLabel,
+  Tooltip,
 } from "@material-ui/core";
 import { useDataContext } from "./data_context";
 import { useMessageContext } from "@app/message_context";
@@ -87,7 +91,11 @@ export function BreedingForm({
   } = useBreedingContext();
   const { userMessage } = useMessageContext();
   const { user } = useUserContext();
-  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const canEditBreeding =
+    user?.canEdit(herdId) &&
+    !data?.individuals?.find((e) => e.is_registered)?.is_registered;
+  const canManage = !!(user?.is_manager || user?.is_admin);
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
@@ -110,6 +118,7 @@ export function BreedingForm({
 
   React.useEffect(() => {
     setFormState(!data || data == "new" ? emptyBreeding : data);
+    handleUpdateMother(data?.mother);
   }, [data]);
 
   React.useEffect(() => {
@@ -130,13 +139,7 @@ export function BreedingForm({
         herdId,
         showDead
       );
-      males = individualsFromDate(
-        genebank,
-        "male",
-        fromDate,
-        undefined,
-        showDead
-      );
+      males = individualsFromDate(genebank, "male", fromDate, herdId, showDead);
     }
     if (!!data && data !== "new") {
       const activeMother = females.find((i) => i.number === data.mother);
@@ -159,6 +162,37 @@ export function BreedingForm({
     setActiveFemalesLimited(limitedFemales);
     setActiveMalesLimited(limitedMales);
   }, [fromDate, genebank, data, showDead]);
+
+  const handleUpdateMother = async (value: LimitedIndividual) => {
+    let mother;
+
+    if (value) {
+      mother = await get(`/api/individual/${value}`);
+      if (!mother) {
+        return;
+      }
+
+      let herds = mother.herd_tracking;
+
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        //Filter unique herds from herd_tracking
+        let unique = [
+          ...new Map(herdOptions.map((item) => [item["label"], item])).values(),
+        ];
+
+        setHerdOptions(unique);
+        return;
+      } else {
+        return [];
+      }
+    }
+  };
 
   /**
    * Sets a single key `label` in the `herd` form to `value` (if herd isn't
@@ -210,7 +244,7 @@ export function BreedingForm({
       return false;
     }
     if (userInput === emptyBreeding) {
-      userMessage("Fyll i information om parningstillfället.", "warning");
+      userMessage("Fyll i information om parningen.", "warning");
       return false;
     }
 
@@ -234,6 +268,14 @@ export function BreedingForm({
       !(userInput.litter_size > 0)
     ) {
       userMessage("Ange en kullstorlek större än 0", "warning");
+      return false;
+    }
+
+    if (userInput?.litter_size6w > userInput?.litter_size) {
+      userMessage(
+        "Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.",
+        "warning"
+      );
       return false;
     }
 
@@ -270,10 +312,10 @@ export function BreedingForm({
       (json) => {
         switch (json.status) {
           case "success": {
-            if (herdListener == individual.herd) {
-              setHerdChangeListener(herdChangeListener + 1);
-            }
-            userMessage("Kaninen har lagts till i din besättning.", "success");
+            userMessage(
+              `Kaninen med nummer ${json.number} har lagts till i din besättning.`,
+              "success"
+            );
             return "success";
           }
           case "error": {
@@ -295,9 +337,26 @@ export function BreedingForm({
                 );
                 return "error";
               }
+              case "litter_size": {
+                userMessage(
+                  "Alla kaniner i denna kull finns redan i systemet.",
+                  "error"
+                );
+                return "error";
+              }
+              case "kull": {
+                userMessage(
+                  `En eller flera kaniner i kullen är inlagd med fel kullnummer: ${json.wrong}
+                  om du har lagt till alla kullar för detta år i rätt ordning ska denna kull ha nummer ${json.kull}
+                  Vänligen kontrollera individerna i denna kull. Kontakta Genbanksansvarig för hjälp! `,
+                  "error",
+                  true
+                );
+                break;
+              }
               default: {
                 userMessage(
-                  "Något gick fel. Det här borde inte hända.",
+                  `Något gick fel. Det här borde inte hända. Vänligen rapportera detta fel till admin: ${json.message}`,
                   "error"
                 );
                 return "error";
@@ -328,14 +387,18 @@ export function BreedingForm({
     );
     const updatedBreeding = await updateBreeding(modifiedBreedingUpdates);
     if (!!updatedBreeding) {
-      userMessage("Parningstillfället har uppdaterats.", "success");
-      handleBreedingsChanged();
-      setHerdChangeListener(herdChangeListener + 1);
-      loadData(["genebanks"]);
+      userMessage("Parningen har uppdaterats.", "success");
+
       if (newIndsNumber == 0) {
         return;
       }
-      createEmptyIndividual(breeding, modifiedBreedingUpdates, newIndsNumber);
+      if (breeding.createInds === true) {
+        await createEmptyIndividual(
+          breeding,
+          modifiedBreedingUpdates,
+          newIndsNumber
+        );
+      }
     } else {
       userMessage("Något gick fel. Parningen kunde inte uppdateras.", "error");
       return;
@@ -390,7 +453,7 @@ export function BreedingForm({
     };
     for (let i = 0; i < amount; i++) {
       await new Promise((r) => setTimeout(r, 2000));
-      let status = postEmptyIndividual(emptyIndividual);
+      let status = await postEmptyIndividual(emptyIndividual);
       if (!status || status == "error") {
         break;
       }
@@ -415,7 +478,6 @@ export function BreedingForm({
     //const [breedingMatch, status] = result;
     const breedingMatch = result[0];
     const status = result[1];
-
     switch (status) {
       case -1:
         // create new breeding event
@@ -433,35 +495,47 @@ export function BreedingForm({
         }
 
         if (breeding.birth_date === null) {
-          userMessage("Parningen har sparats.", "success");
-          handleBreedingsChanged();
+          userMessage("Kullen har sparats.", "success");
+
           return;
         }
 
         const newBirthData: Birth = {
           date: breeding.birth_date,
           litter_size: breeding.litter_size,
-          litter_size6w: breeding.litter_size,
+          litter_size6w: breeding.litter_size6w,
           notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
           id: newBreeding.breeding_id,
         };
 
         const newBirth = await createBirth(newBirthData);
         if (!!newBirth) {
-          userMessage("Sparat!", "success");
+          userMessage("Födseln är sparad!", "success");
+
+          if (breeding.createInds === true) {
+            await createEmptyIndividual(
+              breeding,
+              newBirthData,
+              Math.min(breeding.litter_size6w, 9)
+            );
+          }
+          await setHerdChangeListener(herdChangeListener + 1);
           handleBreedingsChanged();
-          createEmptyIndividual(breeding, newBirthData, breeding.litter_size);
         }
         break;
       case 1:
         // This breeding event already exists. No parents to update
         breeding.father = breedingMatch.father;
         breeding.mother = breedingMatch.mother;
-        handleEditableBreedingUpdates(breeding, breedingMatch);
+        await handleEditableBreedingUpdates(breeding, breedingMatch);
+        await setHerdChangeListener(herdChangeListener + 1);
+        handleBreedingsChanged();
         break;
       default:
         // update breeding event
-        handleEditableBreedingUpdates(breeding, breedingMatch);
+        await handleEditableBreedingUpdates(breeding, breedingMatch);
+        await setHerdChangeListener(herdChangeListener + 1);
+        handleBreedingsChanged();
         break;
     }
   };
@@ -471,11 +545,24 @@ export function BreedingForm({
       <form className="breedingForm">
         <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
           <Typography variant="h6">
-            {data == "new" && "Nytt "}Parningstillfälle
+            {data == "new" && "Ny "}Parning och Födsel
           </Typography>
           <div className="flexRow">
-            Här kan du uppdatera föräldarna för alla individer du ser listade.
-            Ändra här om hela kullen har fel föräldrar{" "}
+            {canEditBreeding ? (
+              <>
+                Här kan du uppdatera föräldarna för alla individer du ser
+                listade. Ändra här om hela kullen har fel föräldrar{" "}
+              </>
+            ) : (
+              <>
+                <Typography>
+                  Endast Genbanksansvarig får uppdatera föräldrar för en kull
+                  med registrerade kaniner. Men du kan uppdatera födelsedatum
+                  och kullstorlek. Tänk då på att också uppdatera intygen med
+                  rätt information.
+                </Typography>
+              </>
+            )}
           </div>
           <div className="simpleField">
             <Button
@@ -522,7 +609,51 @@ export function BreedingForm({
               setshowDead(e.target.checked);
             }}
           />
+
           <div className="formBox">
+            {canManage ? (
+              <>
+                <Tooltip
+                  arrow
+                  title={
+                    <React.Fragment>
+                      <Typography>
+                        Ursprungsbesättning är alltid den besättning som modern
+                        befinner sig i. Är detta fel måste modern först säljas
+                        till rätt besättning"
+                      </Typography>
+                    </React.Fragment>
+                  }
+                >
+                  <Autocomplete
+                    options={herdOptions}
+                    disabled={!canEditBreeding && !canManage}
+                    noOptionsText={"Välj härstamningen först"}
+                    getOptionLabel={(option: OptionType) => option.label}
+                    className="wideControl"
+                    value={
+                      herdOptions.find(
+                        (option) => option.value.herd == formState.breeding_herd
+                      ) ?? null
+                    }
+                    onChange={(event, value) =>
+                      value && setFormField("breeding_herd", value?.value.herd)
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Ursprungsbesättning "
+                        variant={inputVariant}
+                        margin="normal"
+                      />
+                    )}
+                  />
+                </Tooltip>
+              </>
+            ) : (
+              <></>
+            )}
+
             <KeyboardDatePicker
               autoOk
               disableFuture
@@ -563,6 +694,7 @@ export function BreedingForm({
                 <TextField
                   {...params}
                   label="Mor"
+                  disabled={!canEditBreeding && !canManage}
                   className="wideControl"
                   variant={inputVariant}
                   margin="normal"
@@ -595,6 +727,7 @@ export function BreedingForm({
               renderInput={(params) => (
                 <TextField
                   {...params}
+                  disabled={!canEditBreeding && !canManage}
                   label="Far"
                   className="wideControl"
                   variant={inputVariant}
@@ -614,7 +747,7 @@ export function BreedingForm({
               }}
             />
             <TextField
-              label="Anteckningar om parningstillfället"
+              label="Anteckningar om parningen"
               variant={inputVariant}
               className="wideControl"
               multiline
@@ -708,14 +841,42 @@ export function BreedingForm({
           ) : (
             <></>
           )}
-          <div>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => saveBreeding(formState)}
-            >
-              Spara
-            </Button>
+
+          <div className="formBox">
+            <div className="flexRow">
+              <Tooltip
+                title={
+                  <React.Fragment>
+                    <Typography>
+                      Om du klickar i denna ruta kommer systemet försöka skapa{" "}
+                      {Math.min(formState?.litter_size6w, 9)} st tomma kaniner.
+                      Du måste då lägga till kullarna i rätt ordning för att
+                      systemet ska kunna numrerar dem rätt! <p></p>
+                      <b>
+                        OBS max 9 kaniner från en kull Kommer läggas in i
+                        systemet!
+                      </b>
+                    </Typography>
+                  </React.Fragment>
+                }
+              >
+                <FormControlLabel
+                  control={<Checkbox />}
+                  label="Skapa tomma kaniner"
+                  value={formState.createInds ?? null}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setFormField("createInds", e.target.checked);
+                  }}
+                />
+              </Tooltip>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => saveBreeding(formState)}
+              >
+                Spara
+              </Button>
+            </div>
           </div>
         </MuiPickersUtilsProvider>
       </form>

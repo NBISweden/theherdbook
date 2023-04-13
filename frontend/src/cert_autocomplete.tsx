@@ -1,4 +1,4 @@
-import { TextField, Tooltip } from "@material-ui/core";
+import { TextField, Tooltip, Typography } from "@material-ui/core";
 import React from "react";
 import { OptionType } from "./data_context_global";
 import { Individual, inputVariant } from "@app/data_context_global";
@@ -87,7 +87,18 @@ export const CertAutocomplete = ({
         }}
       />
       {certType == "paper" ? (
-        <Tooltip title="Detta är nummret på ditt pappers intyg, dvs antingen de du skriver för hand med eller de du köper och skriver ut med din skrivare.">
+        <Tooltip
+          arrow
+          title={
+            <React.Fragment>
+              <Typography>
+                Detta är nummret på ditt pappers intyg, dvs antingen de du
+                skriver för hand med eller de du köper och skriver ut med din
+                skrivare.
+              </Typography>
+            </React.Fragment>
+          }
+        >
           <TextField
             disabled={!canManage && edit}
             label="Nummer på pappersintyg"
@@ -102,7 +113,16 @@ export const CertAutocomplete = ({
           />
         </Tooltip>
       ) : certType == "digital" ? (
-        <Tooltip title="För att utfärda ett Digitalt intyg välj 'Skapa nytt intyg' på kaninens profilsida.">
+        <Tooltip
+          title={
+            <React.Fragment>
+              <Typography>
+                För att utfärda ett Digitalt intyg välj 'Skapa nytt intyg' på
+                kaninens profilsida.
+              </Typography>
+            </React.Fragment>
+          }
+        >
           <TextField
             disabled={!canManage}
             label="Sätts automatiskt av systemet"
@@ -119,7 +139,19 @@ export const CertAutocomplete = ({
           />
         </Tooltip>
       ) : (
-        <Tooltip title="Väljer du 'Inget Intyg' kan du i ett senare steg utfärda ett Digitaltintyg för kaninen eller lägga till ett intygs nummer från ett pappersintyg. Du hittar kaninen om du klickar i 'Oregistrerade djur' under 'Min besättnning' ">
+        <Tooltip
+          arrow
+          title={
+            <React.Fragment>
+              <Typography>
+                Väljer du 'Inget Intyg' kan du i ett senare steg utfärda ett
+                Digitaltintyg för kaninen eller lägga till ett intygs nummer
+                från ett pappersintyg. Du hittar kaninen om du klickar i
+                'Oregistrerade djur' under 'Min besättnning'
+              </Typography>
+            </React.Fragment>
+          }
+        >
           <TextField
             label="Lägg till intyg senare"
             disabled

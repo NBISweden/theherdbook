@@ -3,7 +3,6 @@ import React from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import {
   Button,
@@ -99,7 +98,7 @@ export function IndividualCertificate({
   const { user } = useUserContext();
   const { popup } = useMessageContext();
   const { userMessage } = useMessageContext();
-  const { herdListener, herdChangeListener, setHerdChangeListener } =
+  const { herdListener, herdChangeListener, setHerdChangeListener, loadData } =
     useDataContext();
   const style = useStyles();
 
@@ -114,6 +113,7 @@ export function IndividualCertificate({
     name: individual?.name,
     litter_size: individual?.litter_size,
     litter_size6w: individual?.litter_size6w,
+    has_photo: individual?.has_photo,
     notes: individual?.notes,
     sex: individual?.sex,
     genebank: individual?.genebank,
@@ -131,11 +131,11 @@ export function IndividualCertificate({
             setShowForm(true);
           },
           (error) => {
-            userMessage(error, "error");
+            userMessage("Något gick fel kontakta Admin: " + error, "error");
           }
         )
       : userMessage(
-          "You do not have permission to edit this individual",
+          "Du har inte behörighet att editera denna individ.",
           "error"
         );
   }, [id, user]);
@@ -256,7 +256,7 @@ export function IndividualCertificate({
         setPreviewUrl(data);
       })
       .catch((error) => {
-        userMessage(error.message, "error");
+        userMessage("Något gick fel kontakta Admin: " + error.message, "error");
       });
   };
 
@@ -264,6 +264,8 @@ export function IndividualCertificate({
   async function authenticate(userInput: string) {
     if (userInput == individual.herd.herd) {
       setIsUserGood(true);
+    } else {
+      userMessage("Tyvärr fel besättningsnummer!", "error");
     }
   }
 
@@ -296,6 +298,7 @@ export function IndividualCertificate({
           setCertificateUrl(window.URL.createObjectURL(blob));
           setShowSummary(false);
           setShowComplete(true);
+          loadData(["genebanks"]);
           if (herdListener == individual?.herd.herd) {
             setHerdChangeListener(herdChangeListener + 1);
           }
@@ -305,11 +308,13 @@ export function IndividualCertificate({
       })
       .catch((error) => {
         {
-          userMessage(error.message, "error");
+          userMessage(
+            "Något gick fel kontakta Admin: " + error.message,
+            "error"
+          );
         }
       });
   };
-
   // Returns the updated certificate.
   // jscpd:ignore-start
   const updateCertificate = (id: string, content: any) => {
@@ -347,7 +352,10 @@ export function IndividualCertificate({
       })
       .catch((error) => {
         {
-          userMessage(error.message, "error");
+          userMessage(
+            "Något gick fel kontakta Admin: " + error.message,
+            "error"
+          );
         }
       });
   };
@@ -407,6 +415,7 @@ export function IndividualCertificate({
               pageNumber={pageNumber}
               renderAnnotationLayer={true}
               renderTextLayer={false}
+              renderInteractiveForms={false}
               scale={1.5}
             />
           </Document>

@@ -1,7 +1,5 @@
 name: Create packages
-on:
-  push:
-    branches:
+on: push
 
 jobs:
   main:

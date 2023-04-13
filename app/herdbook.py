@@ -59,7 +59,7 @@ APP.config.update(
     SESSION_COOKIE_SAMESITE="None",
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
-    CACHE_TYPE="filesystem",
+    CACHE_TYPE="FileSystemCache",
     CACHE_DIR="/tmp",
     CACHE_DEFAULT_TIMEOUT=300,
 )
@@ -72,8 +72,7 @@ file_handler = TimedRotatingFileHandler(
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(
     gblogging.RequestFormatter(
-        "[%(asctime)s] %(remote_addr)s requested %(url)s\n"
-        "%(levelname)s in %(module)s: %(message)s",
+        "[%(asctime)s] %(module)s.%(levelname)s: %(message)s, URL: %(url)s ",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 )
@@ -111,7 +110,6 @@ def after_request(response):
 
 @LOGIN.request_loader
 def load_user_from_request(request):
-
     # Try to login using Basic Auth
     api_key = request.headers.get("Authorization")
     if api_key:
@@ -122,12 +120,11 @@ def load_user_from_request(request):
             return None
 
         username = api_key[: api_key.find(b":")]
-        password = api_key[api_key.find(b":") + 1 :]  # noqa: E203
-
+        password = api_key[api_key.find(b":") + 1 :].decode()  # noqa: E203
         user = da.authenticate_user(username, password)
 
         if user:
-            if user.username != "rapiuser":
+            if user.username != "rapiuser" or user.username != "r-api-system-user":
                 APP.logger.info("User %s logged in from request header", user.username)
 
             session["user_id"] = user.uuid
@@ -717,8 +714,103 @@ def edit_individual():
         if request.method == "POST":
             retval = da.add_individual(form, session.get("user_id", None))
     except Exception as error:
-        return jsonify({"status": "error", "message": str(error)}), 500
+        APP.logger.error("Unexpected error when edit individual: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
+                }
+            ),
+            500,
+        )
     return jsonify(retval)
+
+
+@APP.route("/api/checkindnumber", methods=["POST"])
+@login_required
+def check_ind_number():
+    """
+    Check if indivdual number exists.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string,
+        }
+    """
+    form = request.json
+    try:
+        if (
+            db.Individual.select()
+            .where(db.Individual.number == form["number"])
+            .exists()
+        ):
+            return jsonify(
+                {"status": "error", "message": "Individual number already exists"}
+            )
+    except Exception as error:
+        APP.logger.error("Unexpected error when checking number: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
+                }
+            ),
+            500,
+        )
+    return jsonify(
+        {
+            "status": "success",
+            "message": "No duplicates",
+        }
+    )
+
+
+@APP.route("/api/checkintyg", methods=["POST"])
+@login_required
+def check_ind_intyg():
+    """
+    Check  if certificate/intyg  exists.
+
+    The return value from this function should be:
+        JSON: {
+            status: 'success' | 'error',
+            message?: string,
+        }
+    """
+    form = request.json
+    try:
+        if form.get("certificate", None) is not None:
+            if (
+                db.Individual.select()
+                .where(db.Individual.certificate == form["certificate"])
+                .exists()
+            ):
+                return jsonify(
+                    {
+                        "status": "error",
+                        "message": "Individual certificate already exists",
+                    }
+                )
+    except Exception as error:
+        APP.logger.error("Unexpected error when checking number: " + str(error))
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Be Admin kolla server loggarna ange {datetime.datetime.now()}",
+                }
+            ),
+            500,
+        )
+    return jsonify(
+        {
+            "status": "success",
+            "message": "No duplicates",
+        }
+    )
 
 
 def get_ind_inbreeding(i_number, g_id):
@@ -749,6 +841,7 @@ def get_inbreeding(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -775,6 +868,7 @@ def get_kinship(g_id):
     response = requests.get(
         "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
         params={"update_data": "TRUE"},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -812,6 +906,7 @@ def get_mean_kinship(g_id):
             settings.rapi.host, settings.rapi.port, g_id
         ),
         params={},
+        timeout=30,
     )
 
     if response.status_code == 200:
@@ -847,6 +942,7 @@ def testbreed():
                     settings.rapi.host, settings.rapi.port
                 ),
                 data=payload,
+                timeout=30,
             )
             offspring_coi = response.json()["calculated_coi"][0]
     except Exception as ex:  # pylint: disable=broad-except
@@ -1017,10 +1113,15 @@ def verify_certificate(i_number):
     try:
         checksum = hashlib.sha256(uploaded_bytes).hexdigest()
         signed = verify_signature(uploaded_bytes)
-        present = verify_certificate_checksum(ind["number"], checksum=checksum)
+        present = verify_certificate_checksum(i_number, checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
         APP.logger.info("Unexpected error while verifying certificate " + str(ex))
-        return jsonify({"response": "Error processing your request"}), 400
+        return (
+            jsonify(
+                {"response": "Oväntat fel vid verifiering av intyget kontakta Admin."}
+            ),
+            400,
+        )
 
     if present and signed:
         return jsonify({"response": "Certificate is valid"}), 200

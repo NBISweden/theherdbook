@@ -162,19 +162,28 @@ export function HerdView({ id }: { id: string | undefined }) {
                   label: "Visa aktiva djur",
                   logic: true,
                   active: true,
+                  tooltip:
+                    "Visar kaniner som är registrerade och årsrapporterade inom 13 månader.",
                 },
                 {
                   field: "is_active",
                   label: "Visa inaktiva djur",
                   logic: false,
                   active: false,
+                  tooltip: "Visar kaniner som inte är aktiva.",
                 },
-                { field: "alive", label: "Visa döda djur", logic: false },
+                {
+                  field: "alive",
+                  label: "Visa döda djur",
+                  logic: false,
+                  tooltip: "Visar inaktiva kaniner som också är döda.",
+                },
 
                 {
                   field: "is_registered",
                   label: "Visa oregistrerade djur",
                   logic: false,
+                  tooltip: "Visar kaniner som ej ännu har fått ett intyg.",
                 },
               ]}
               action={

@@ -10,6 +10,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  Typography,
 } from "@material-ui/core";
 import { ArrowForward } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
@@ -100,7 +101,9 @@ export function IndividualView({ id }: { id: string }) {
   // state to control the certificate menu button
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { userMessage, popup } = useMessageContext();
-
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const showEditbutton = !individual?.death_date || is_admin;
+  const isDead = individual?.death_date || individual?.death_note;
   // funtions to control the certificate menu button
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -134,13 +137,12 @@ export function IndividualView({ id }: { id: string }) {
         }
       })
       .catch((error) => {
-        userMessage(error.message, "error");
+        userMessage("Något gick fel kontakta Admin: " + error.message, "error");
       });
   };
 
   React.useEffect(() => {
     if (individual && certificateUrl) {
-      console.log("use effect", certificateUrl);
       popup(
         <CertificateDownload certUrl={certificateUrl} individual={individual} />
       );
@@ -166,14 +168,22 @@ export function IndividualView({ id }: { id: string }) {
       return [];
     }
     return (
-      genebank.individuals.filter(
-        (i) =>
-          (i.mother && i.mother.number == individual.number) ||
-          (i.father && i.father.number == individual.number)
-      ) ?? []
+      genebank.individuals
+        .filter(
+          (i) =>
+            (i.mother && i.mother.number == individual.number) ||
+            (i.father && i.father.number == individual.number)
+        )
+        .sort((a, b) => {
+          if (a.birth_date === b.birth_date) {
+            const [, aSubNum] = a.number.split("-");
+            const [, bSubNum] = b.number.split("-");
+            return parseInt(aSubNum) - parseInt(bSubNum);
+          }
+          return a.birth_date.localeCompare(b.birth_date);
+        }) ?? []
     );
   }, [individual, genebanks]);
-
   const activeIcon = "✅";
   const inactiveIcon = "❌";
   const deadIcon = "✞";
@@ -188,7 +198,7 @@ export function IndividualView({ id }: { id: string }) {
       },
       (error) => {
         console.error(error);
-        userMessage(error, "error");
+        userMessage("Något gick fel kontakta Admin: " + error, "error");
       }
     );
   }, [id]);
@@ -200,7 +210,12 @@ export function IndividualView({ id }: { id: string }) {
           <>
             <div className={style.flexColumn}>
               <div>
-                <h3>{individual?.name ?? individual.number}</h3>
+                <h3>
+                  {isDead ? "✞AVLIDEN" : ""}{" "}
+                  {individual?.name ?? individual.number}
+                  {isDead ? " ✞" : ""}
+                  {""}
+                </h3>
                 <dl className={style.sameLine}>
                   <dt>Namn:</dt>
                   <dd>{individual?.name}</dd>
@@ -219,13 +234,29 @@ export function IndividualView({ id }: { id: string }) {
                       : ""}
                   </dd>
                   <dt>
-                    <Tooltip title="Inavelskoefficient">
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>{"Inavelskoefficient"}</Typography>
+                        </React.Fragment>
+                      }
+                    >
                       <span>F:</span>
                     </Tooltip>
                   </dt>
                   <dd>{individual?.inbreeding}%</dd>
                   <dt>
-                    <Tooltip title="Genomsnittligt släktskap/ Mean Kinship">
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>
+                            {"Genomsnittligt släktskap/ Mean Kinship"}
+                          </Typography>
+                        </React.Fragment>
+                      }
+                    >
                       <span>MK:</span>
                     </Tooltip>
                   </dt>
@@ -271,6 +302,14 @@ export function IndividualView({ id }: { id: string }) {
                   </dd>
                   <dt>Anteckningar</dt>
                   <dd>{individual?.notes ?? "-"}</dd>
+                  {individual?.death_note ? (
+                    <span>
+                      <dt>Dödsnotering</dt>
+                      <dd>{individual?.death_note}</dd>
+                    </span>
+                  ) : (
+                    ""
+                  )}
                 </dl>
               </div>
               {user?.canEdit(individual.herd.herd) && (
@@ -382,6 +421,7 @@ export function IndividualView({ id }: { id: string }) {
                       if (herdTrack.herd) {
                         return (
                           <Link
+                            to={`/herd/${herdTrack.herd}`}
                             onClick={() =>
                               popup(
                                 <HerdView id={herdTrack.herd} />,
@@ -405,9 +445,18 @@ export function IndividualView({ id }: { id: string }) {
                 </ul>
                 {user?.canEdit(individual.herd.herd) && (
                   <>
-                    {!individual.death_date && !individual.death_note && (
+                    {showEditbutton && (
                       <div className={style.flexColumn}>
+                        {is_admin &&
+                          (individual.death_date || individual.death_note) && (
+                            <Typography variant="h6">
+                              Du är Manager och kaninen är död var försiktig med
+                              funktionerna nedan!
+                            </Typography>
+                          )}
+
                         <Button
+                          disabled={isDead && !is_admin}
                           className={style.editButton}
                           variant="outlined"
                           color="primary"
@@ -418,6 +467,7 @@ export function IndividualView({ id }: { id: string }) {
                           Sälj individ
                         </Button>
                         <Button
+                          disabled={isDead && !is_admin}
                           className={style.editButton}
                           variant="outlined"
                           color="primary"
@@ -447,7 +497,9 @@ export function IndividualView({ id }: { id: string }) {
                             popup(<IndividualDeath individual={individual} />)
                           }
                         >
-                          Rapportera som död
+                          {individual?.death_note && !individual?.death_date
+                            ? "Uppdatera dödsdatum"
+                            : "Rapportera som död"}
                         </Button>
                       </div>
                     )}
@@ -462,6 +514,7 @@ export function IndividualView({ id }: { id: string }) {
                       Mor:
                       {individual.mother ? (
                         <Link
+                          to={`/individual/${individual.mother.number}`}
                           onClick={() =>
                             popup(
                               <IndividualView id={individual.mother.number} />,
@@ -479,6 +532,7 @@ export function IndividualView({ id }: { id: string }) {
                       Far:
                       {individual.father ? (
                         <Link
+                          to={`/individual/${individual.father.number}`}
                           onClick={() =>
                             popup(
                               <IndividualView id={individual.father.number} />,
@@ -510,6 +564,7 @@ export function IndividualView({ id }: { id: string }) {
                           : deadIcon}
                       </span>
                       <Link
+                        to={`/individual/${child.number}`}
                         onClick={() =>
                           popup(
                             <IndividualView id={child.number} />,

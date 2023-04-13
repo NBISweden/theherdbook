@@ -223,7 +223,7 @@ export function HerdForm({
               genebank.herds.push(postData);
               unstable_batchedUpdates(() => {
                 setGenebanks(Object.assign([], genebanks));
-                userMessage("Herd saved", "success");
+                userMessage("Besättningen sparad", "success");
               });
 
               // navigate to new herd to allow continued editing
@@ -232,7 +232,7 @@ export function HerdForm({
             break;
           default:
             userMessage(
-              "Error:" + (data.message ?? "something went wrong"),
+              "Något gick fel kontakta Admin: " + data.message,
               "error"
             );
         }
@@ -251,14 +251,14 @@ export function HerdForm({
                 toUpdate.herd_name = postData.herd_name;
                 unstable_batchedUpdates(() => {
                   setGenebanks(Object.assign([], genebanks));
-                  userMessage("Changes saved", "success");
+                  userMessage("Ändringarna sparat", "success");
                 });
               }
             }
             break;
           default:
             userMessage(
-              "Error:" + (data.message ?? "something went wrong"),
+              "Något gick fel kontakta Admin: " + data.message,
               "error"
             );
         }
