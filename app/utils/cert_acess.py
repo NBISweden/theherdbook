@@ -113,7 +113,7 @@ def get_certificate_data(ind, user_id):
         "herd": herd,
         "fullname": fullname,
         "issue_date": date,
-        "photos": False,
+        "photos": "Ja" if ind["has_photo"] else "Nej",
     }
     ind["notes"] = ".\r\n ".join(
         [

@@ -64,7 +64,7 @@ export function Owner() {
       </Paper>
       {React.useMemo(
         () => (
-          <HerdView id={activeHerd} />
+          <HerdView id={activeHerd} key={activeHerd} />
         ),
         [activeHerd]
       )}

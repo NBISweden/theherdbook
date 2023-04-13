@@ -192,7 +192,6 @@ export function CollapsibleSortedTable({
     // return the unsorted data if the columnn isn't valid
     return tableData;
   }, [tableData, orderBy, order]);
-
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -203,7 +202,6 @@ export function CollapsibleSortedTable({
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: any
@@ -229,14 +227,17 @@ export function CollapsibleSortedTable({
 
     if (breedingDeleteResponse.status === "success") {
       userMessage(
-        "Parningstillfället med id: " + breedingId + " är nu borttaget",
+        "Kullen med id: " + breedingId + " är nu borttaget",
         "success"
       );
       handleBreedingsChanged();
       return;
     }
 
-    userMessage(breedingDeleteResponse.message, "error");
+    userMessage(
+      "Något gick fel kontakta Admin: " + breedingDeleteResponse.message,
+      "error"
+    );
     return;
   };
 
@@ -249,7 +250,7 @@ export function CollapsibleSortedTable({
         {data ? (
           <>
             <TableContainer>
-              <Table size={"medium"} aria-label="enhanced table">
+              <Table size={"small"} aria-label="enhanced table">
                 <TableHead>
                   <TableRow className={classes.root}>
                     <TableCell />
@@ -339,7 +340,7 @@ export function CollapsibleSortedTable({
                                   <>
                                     <Box margin={1}>
                                       <Typography
-                                        variant="h7"
+                                        variant="subtitle2"
                                         gutterBottom
                                         component="div"
                                       >
@@ -353,6 +354,7 @@ export function CollapsibleSortedTable({
                                         <TableHead>
                                           <TableRow>
                                             <TableCell>Nummer</TableCell>
+                                            <TableCell>Registrerad</TableCell>
                                             <TableCell>Namn</TableCell>
                                             <TableCell>Färg</TableCell>
                                             <TableCell>Kön</TableCell>
@@ -382,6 +384,11 @@ export function CollapsibleSortedTable({
                                                   {indi.number}
                                                 </a>
                                               </TableCell>
+                                              <TableCell>
+                                                {indi.is_registered
+                                                  ? "Ja"
+                                                  : "Nej"}
+                                              </TableCell>
                                               <TableCell>{indi.name}</TableCell>
                                               <TableCell>
                                                 {indi.color}
@@ -406,12 +413,12 @@ export function CollapsibleSortedTable({
                                   <>
                                     <Box margin={2}>
                                       <Typography
-                                        variant="h7"
+                                        variant="h6"
                                         gutterBottom
                                         component="div"
                                       >
-                                        Inga kaniner finns kopplade till detta
-                                        parningstillfälle med ID: {row.id}
+                                        Inga kaniner finns kopplade till denna
+                                        Kull med ID: {row.id}
                                       </Typography>
                                       <Button
                                         className="bottomButton"

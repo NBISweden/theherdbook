@@ -24,6 +24,7 @@ import { IndividualSell } from "./individual_sell";
 import { IndividualDeath } from "./individual_death";
 import { patch } from "./communication";
 import sv from "date-fns/locale/sv";
+import { useDataContext } from "./data_context";
 
 const useStyles = makeStyles({
   infoText: {
@@ -82,9 +83,16 @@ const useStyles = makeStyles({
 });
 
 export function IndividualReport({ individual }: { individual: Individual }) {
-  const [reportDate, setReportDate] = React.useState(null as Date | null);
+  const [reportDate, setReportDate] = React.useState(new Date() as Date | null);
   const [isStillOwner, setIsStillOwner] = React.useState(false);
   const [success, setSuccess] = React.useState(false as boolean);
+  const {
+    genebanks,
+    herdListener,
+    herdChangeListener,
+    setHerdChangeListener,
+    loadData,
+  } = useDataContext();
   const [error, setError] = React.useState(false);
   const { userMessage, popup } = useMessageContext();
   const style = useStyles();
@@ -118,6 +126,10 @@ export function IndividualReport({ individual }: { individual: Individual }) {
     };
     patch("/api/individual", limitedIndividual).then((json) => {
       if (json.status == "success") {
+        if (individual.herd_tracking[0].herd == herdListener) {
+          setHerdChangeListener(herdChangeListener + 1);
+        }
+        loadData(["genebanks"]);
         setSuccess(true);
         return;
       }

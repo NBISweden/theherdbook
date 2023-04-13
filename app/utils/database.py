@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 9
+CURRENT_SCHEMA_VERSION = 10
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -372,14 +372,14 @@ class Color(BaseModel):
 class Breeding(BaseModel):
     """
     Table for breeding and birth.
-    breeding_herd is the herd the mother existed in when she gave birth
+    breeding_herd_id is the herd the mother existed in when she gave birth
     litter_size6w is a field to store how many litter was alive 6 weeks after birth.
     If all litter of a breed exists as individuals in the herdbook we can calculate this
     but probably we need to store this for users that are only adding registered animals.
     """
 
     id = AutoField(primary_key=True, column_name="breeding_id")
-    breeding_herd = ForeignKeyField(Herd)
+    breeding_herd_id = ForeignKeyField(Herd)
     breed_date = DateField(null=True)
     breed_notes = TextField(null=True)
     father = DeferredForeignKey("Individual", null=True)
@@ -402,7 +402,9 @@ class Breeding(BaseModel):
         data["father"] = self.father.number if self.father else None
         data["mother_name"] = self.mother.name if self.mother else None
         data["father_name"] = self.father.name if self.father else None
-        data["breeding_herd"] = self.breeding_herd.herd if self.breeding_herd else None
+        data["breeding_herd"] = (
+            self.breeding_herd_id.herd if self.breeding_herd_id else None
+        )
         return data
 
     class Meta:  # pylint: disable=too-few-public-methods
@@ -415,7 +417,8 @@ class Breeding(BaseModel):
 
 def next_individual_number(herd, birth_date, breeding_event):
     """
-    Returns the number for the next individual in a litter for a given year and herd.
+    Returns the number for the next individual in a litter for a
+    given year and herd.
     """
     if isinstance(birth_date, str):
         birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
@@ -435,7 +438,7 @@ def next_individual_number(herd, birth_date, breeding_event):
             Breeding.select(
                 rank_expr.alias("litter_number"), Breeding.id, Breeding.litter_size
             )
-            .where(Breeding.breeding_herd == herd_id)
+            .where(Breeding.breeding_herd_id == herd_id)
             .where(
                 (
                     DATABASE.extract_date(
@@ -563,6 +566,7 @@ class Individual(BaseModel):
     belly_color = TextField(null=True)
     hair_notes = TextField(null=True)
     is_active = BooleanField(null=True, default=True)
+    has_photo = BooleanField(null=True, default=False)
     butchered = BooleanField(null=True, default=False)
     castration_date = DateField(null=True, default=None)
 
@@ -629,7 +633,7 @@ class Individual(BaseModel):
             and self.latest_herdtracking_entry
             and (
                 self.latest_herdtracking_entry.herd_tracking_date
-                > (datetime.now() - timedelta(days=366)).date()
+                > (datetime.now() - timedelta(days=365 + 30)).date()
             )
         )
 
@@ -1589,6 +1593,35 @@ def migrate_8_to_9():
             version=9,
             comment="Add breerding_litter_size6w to breeding",
             applied=datetime.now(),
+        ).execute()
+
+
+def migrate_9_to_10():
+    """
+    Migrate between schema version 9 and 10.
+    """
+    with DATABASE.atomic():
+        if "individual" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=10,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("individual")]
+
+        if "has_photo" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "individual",
+                    "has_photo",
+                    BooleanField(null=True, default=False),
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=10, comment="Add has_photo to individual", applied=datetime.now()
         ).execute()
 
 

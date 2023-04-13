@@ -7,7 +7,15 @@ RUN apt update \
   libpng-dev \
   libgl1-mesa-dev \
   zlib1g-dev \
+  libudunits2-dev \
+  libgdal-dev \
+  gdal-bin \
+  libgeos-dev \
+  libproj-dev \
+  libsqlite3-dev \
+  pandoc\
   make \
+  cmake \
   libicu-dev \
   libfreetype6-dev \
   libmagick++-dev \
@@ -21,7 +29,9 @@ RUN apt update \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-RUN MAKEFLAGS='-j4' Rscript -e 'install.packages(c("readr", "optiSel","plumber","rjson","nprcgenekeepr","dplyr"),repos=c("https://packagemanager.rstudio.com/all/2022-05-27+MToxMDUwNDg5NywyOjQ1MjYyMTU7QUQ2QkNDOT","https://ftp.acc.umu.se/mirror/CRAN/","https://cloud.r-project.org/"),clean=TRUE, Ncpus=8);'
+RUN install2.r -d TRUE --error --ncpus 6 --repos "https://packagemanager.rstudio.com/cran/__linux__/jammy/2023-02-24" --repos "https://ftp.acc.umu.se/mirror/CRAN/" --repos "https://cloud.r-project.org/" optiSel readr plumber rjson dplyr remotes
+RUN installGithub.r rmsharp/nprcgenekeepr
+
 
 FROM rocker/r-ver:4.2.0
 

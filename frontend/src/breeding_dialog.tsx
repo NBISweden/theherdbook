@@ -71,6 +71,7 @@ export const BreedingDialog = ({
       <div>
         <DialogContent>
           <IndividualBreedingForm
+            open={open}
             data={extendedBreeding}
             herdId={extendedBreeding?.breeding_herd}
             handleBreedingsChanged={handleBreedingsChanged}
