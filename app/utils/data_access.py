@@ -898,6 +898,9 @@ def form_to_individual(form, user=None):
                 try:
                     date_val = datetime.strptime(form[key], "%Y-%m-%d").date()
                     setattr(individual, key, date_val)
+                    update_logger.info(
+                        f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},"
+                    )
                 except TypeError:
                     setattr(individual, key, form[key])
             else:
@@ -1097,7 +1100,9 @@ def update_individual(form, user_uuid):
             return {"status": "error", "message": "Individual number already exists"}
         form["number"] = old_individual.number
 
-    if form.get("certificate", None) is not None:
+    if form.get(
+        "certificate", None
+    ) is not None and old_individual.certificate != form.get("certificate", None):
         if (
             Individual.select()
             .where(Individual.certificate == form["certificate"])
@@ -1112,6 +1117,27 @@ def update_individual(form, user_uuid):
                 "status": "error",
                 "message": "Individual certificate already exists",
             }
+
+    if form.get(
+        "digital_certificate", None
+    ) is not None and old_individual.digital_certificate != form.get(
+        "digital_certificate", None
+    ):
+        if (
+            Individual.select()
+            .where(Individual.digital_certificate == form["digital_certificate"])
+            .exists()
+        ):
+            logger.warning(
+                f"User: {user.username} trying to change "
+                f"{old_individual.id}:{old_individual.number} "
+                f"intyg number already exists {form.get('digital_certificate', None)}"
+            )
+            return {
+                "status": "error",
+                "message": "Individual certificate already exists",
+            }
+
     if form.get("origin_herd") and isinstance(form["origin_herd"], dict):
         try:
             with DATABASE.atomic():
