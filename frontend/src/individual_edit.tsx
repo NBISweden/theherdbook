@@ -372,7 +372,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
               }
               case "Individual certificate already exists": {
                 userMessage(
-                  `Det finns redan ett intyg med nummer ${individual.certificate} i systemet!`,
+                  `Det finns redan ett intyg med nummer ${
+                    individual?.certificate || individual?.digital_certificate
+                  } i systemet!`,
                   "error"
                 );
                 setIntygError(true);
