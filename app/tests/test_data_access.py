@@ -670,7 +670,10 @@ class TestDataAccess(DatabaseTest):
         )
         self.assertEqual(
             da.register_breeding(invalid_date, self.admin.uuid),
-            {"status": "error", "message": "Date must be formatted as yyyy-mm-dd."},
+            {
+                "status": "error",
+                "message": "Date must be formatted as yyyy-mm-dd or yyyy-mm-ddThh:mm:ss.sssZ.",
+            },
         )
         self.assertEqual(
             da.register_breeding(valid_form, self.admin.uuid),
@@ -721,7 +724,10 @@ class TestDataAccess(DatabaseTest):
         )
         self.assertEqual(
             da.register_birth(invalid_date, self.admin.uuid),
-            {"status": "error", "message": "Date must be formatted as yyyy-mm-dd."},
+            {
+                "status": "error",
+                "message": "Date must be formatted as yyyy-mm-dd or yyyy-mm-ddThh:mm:ss.sssZ.",
+            },
         )
         self.assertEqual(
             da.register_birth(missing_litter, self.admin.uuid),
@@ -791,7 +797,10 @@ class TestDataAccess(DatabaseTest):
         )
         self.assertEqual(
             da.update_breeding(invalid_date, self.admin.uuid),
-            {"status": "error", "message": "Date must be formatted as yyyy-mm-dd."},
+            {
+                "status": "error",
+                "message": "Date must be formatted as yyyy-mm-dd or yyyy-mm-ddThh:mm:ss.sssZ.",
+            },
         )
         self.assertEqual(
             da.update_breeding(unknown_litter, self.admin.uuid),

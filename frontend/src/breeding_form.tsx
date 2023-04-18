@@ -849,9 +849,10 @@ export function BreedingForm({
                   <React.Fragment>
                     <Typography>
                       Om du klickar i denna ruta kommer systemet försöka skapa{" "}
-                      {Math.min(formState?.litter_size6w, 9)} st tomma kaniner.
-                      Du måste då lägga till kullarna i rätt ordning för att
-                      systemet ska kunna numrerar dem rätt! <p></p>
+                      {Math.min(formState?.litter_size6w, 9)} st "tomma"
+                      oregistrerade kaniner. Du måste då lägga till kullarna i
+                      rätt ordning för att systemet ska kunna numrerar dem rätt!{" "}
+                      <p></p>
                       <b>
                         OBS max 9 kaniner från en kull Kommer läggas in i
                         systemet!
@@ -862,7 +863,7 @@ export function BreedingForm({
               >
                 <FormControlLabel
                   control={<Checkbox />}
-                  label="Skapa tomma kaniner"
+                  label="Skapa oregistrerade kaniner"
                   value={formState.createInds ?? null}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setFormField("createInds", e.target.checked);
