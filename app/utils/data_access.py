@@ -48,9 +48,16 @@ def validate_date(date_string):
     if not date_string:
         raise ValueError("Date missing")
     try:
-        return datetime.strptime(date_string, "%Y-%m-%d")
-    except ValueError as date_except:
-        raise ValueError("Date must be formatted as yyyy-mm-dd.") from date_except
+        return datetime.strptime(date_string, "%Y-%m-%d")  # Try the first format
+    except ValueError:
+        try:
+            return datetime.strptime(
+                date_string, "%Y-%m-%dT%H:%M:%S.%fZ"
+            )  # Try the second format
+        except ValueError as date_except:
+            raise ValueError(
+                "Date must be formatted as yyyy-mm-dd or yyyy-mm-ddThh:mm:ss.sssZ."
+            ) from date_except
 
 
 # User functions
