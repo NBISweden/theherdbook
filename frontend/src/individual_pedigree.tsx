@@ -38,8 +38,8 @@ export function IndividualPedigree({
       />
       <div
         style={{
-          minWidth: "110vh",
-          height: "85%",
+          minWidth: "70vw",
+          minHeight: "75vh",
           position: "relative",
         }}
       >
