@@ -46,19 +46,29 @@ export function GenebankView({ genebank }: { genebank: Genebank }) {
                 label: "Visa aktiva djur",
                 logic: true,
                 active: true,
+                tooltip:
+                  "Visar kaniner som är registrerade och årsrapporterade inom 13 månader, i aktiva besättningar.",
               },
               {
                 field: "is_active",
                 label: "Visa inaktiva djur",
                 logic: false,
                 active: false,
+                tooltip: "Visar kaniner som inte är aktiva.",
               },
               {
                 field: "herd_active",
-                label: "Visa inaktiva besättningar",
+                label: "Visa djur i inaktiva besättningar",
                 logic: false,
+                tooltip:
+                  "Visar djur från besättning som upphört, tillfälligt eller permanent och djur som sålt till externa dvs även tillhörande GX1/MX1.",
               },
-              { field: "alive", label: "Visa döda djur", logic: false },
+              {
+                field: "alive",
+                label: "Visa döda djur",
+                logic: false,
+                tooltip: "Visar inaktiva kaniner som också är döda.",
+              },
             ]}
           />
         ) : (

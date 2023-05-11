@@ -118,7 +118,10 @@ export function InbreedingRecommendation({
       },
       (error) => {
         console.error(error);
-        userMessage("Something went wrong", "error");
+        userMessage(
+          "Något gick fel i kontakt med R-api, vänligen kontakta Admin.",
+          "error"
+        );
       }
     );
   }, [chosenAncestors]);

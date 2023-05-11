@@ -48,9 +48,16 @@ def validate_date(date_string):
     if not date_string:
         raise ValueError("Date missing")
     try:
-        return datetime.strptime(date_string, "%Y-%m-%d")
-    except ValueError as date_except:
-        raise ValueError("Date must be formatted as yyyy-mm-dd.") from date_except
+        return datetime.strptime(date_string, "%Y-%m-%d")  # Try the first format
+    except ValueError:
+        try:
+            return datetime.strptime(
+                date_string, "%Y-%m-%dT%H:%M:%S.%fZ"
+            )  # Try the second format
+        except ValueError as date_except:
+            raise ValueError(
+                "Date must be formatted as yyyy-mm-dd or yyyy-mm-ddThh:mm:ss.sssZ."
+            ) from date_except
 
 
 # User functions
@@ -125,6 +132,7 @@ def register_user(
 
     # Update to make sure to get the correct id
     user = User.select().where((User.email == email)).get()
+    logger.info(f"Registered User {user.as_dict()}")
 
     # If no password is provided, don't create an authenticator
     if not password:
@@ -569,11 +577,22 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
 
     with DATABASE.atomic():
         if has_role and operation["action"] == "remove":
+            logger.info(
+                f"User:{user.username} UPDATE: Role remove on user: "
+                f"{target_user.username} removed: {operation['role']} "
+                f"target:{operation[target]}"
+            )
             target_user.remove_role(operation["role"], operation[target])
             updated = True
         elif not has_role and operation["action"] == "add":
+            logger.info(
+                f"User:{user.username} UPDATE: Role added on user: "
+                f"{target_user.username} added: {operation['role']} "
+                f"target:{operation[target]}"
+            )
             target_user.add_role(operation["role"], operation[target])
             updated = True
+
     return {"status": "updated" if updated else "unchanged"}
 
 
@@ -727,6 +746,37 @@ def update_herd(form, user_uuid):
 
 
 # Individual functions
+def update_origin_herd_ind(individual, new_herd, username):
+    """
+    Updates the origin_herd for the given indivudal,
+    and updates number to refelect the new origin herd
+    and also updates the birth herd tracking event for the individual
+    """
+    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
+    update_logger.info(
+        f"{username},{individual.number},"
+        "UPDATE origin_herd and number,"
+        f"{individual.origin_herd.herd},{new_herd.herd},"
+    )
+    with DATABASE.atomic():
+        individual.origin_herd = new_herd
+        individual.number = new_herd.herd + "-" + individual.number.split("-")[1]
+        individual.save()
+
+    try:
+        with DATABASE.atomic():
+            ht_birth = HerdTracking.get(
+                (HerdTracking.individual == individual)
+                & (
+                    HerdTracking.herd_tracking_date
+                    == individual.breeding.birth_date.strftime("%Y-%m-%d")
+                )
+            )
+            ht_birth.herd = new_herd
+            ht_birth.save()
+    except DoesNotExist:
+        logger.info(f"{individual.number} does not have birth_date herdtracking event")
+        raise ValueError("Individual does not have birth_date herdtracking event")
 
 
 def get_individual(individual_id, user_uuid=None):
@@ -855,6 +905,9 @@ def form_to_individual(form, user=None):
                 try:
                     date_val = datetime.strptime(form[key], "%Y-%m-%d").date()
                     setattr(individual, key, date_val)
+                    update_logger.info(
+                        f"{user.username},{individual.number},{key},{getattr(individual,key)},{form[key]},"
+                    )
                 except TypeError:
                     setattr(individual, key, form[key])
             else:
@@ -919,15 +972,12 @@ def add_individual(form, user_uuid):
             birth_date=form["birth_date"],
             breeding_event=form["breeding"],
         )
-        logger.error(f"nextind is ${nextind}")
+        logger.info(f"nextind is {nextind}")
         if nextind.get("status", None) == "success":
             form["number"] = nextind["number"]
         else:
-            logger.error(f"Next in is not successfull: ${nextind.get('message')}")
-            return {
-                "status": "error",
-                "message": f"kan inte hämta nästa individ nummer: ${nextind.get('message')}",
-            }
+            logger.error(f"Next in is not successfull: {nextind.get('message')}")
+            return nextind
 
     if Individual.select().where(Individual.number == form["number"]).exists():
         return {"status": "error", "message": "Individual number already exists"}
@@ -953,9 +1003,9 @@ def add_individual(form, user_uuid):
     except ValueError as exception:
         return {"status": "error", "message": f"{exception}"}
     if "weights" in form:
-        update_weights(individual, form["weights"])
+        update_weights(individual, form["weights"], user.username)
     if "bodyfat" in form:
-        update_bodyfat(individual, form["bodyfat"])
+        update_bodyfat(individual, form["bodyfat"], user.username)
 
     individual.save()
 
@@ -993,7 +1043,11 @@ def add_individual(form, user_uuid):
     logging.getLogger(f"{individual.current_herd.genebank.name}_create").info(
         f"{user.username},{individual.number},{individual.name},{new_herd.herd},{selling_date}"
     )
-    return {"status": "success", "message": "Individual Created"}
+    return {
+        "status": "success",
+        "message": "Individual Created",
+        "number": individual.number,
+    }
 
 
 def update_herdtracking_values(individual, new_herd, user_signature, tracking_date):
@@ -1015,7 +1069,6 @@ def update_herdtracking_values(individual, new_herd, user_signature, tracking_da
 
         if isinstance(new_herd, str):
             new_herd = Herd.get(Herd.herd == new_herd)
-
         HerdTracking(
             from_herd=current_herd,
             herd=new_herd,
@@ -1036,13 +1089,81 @@ def update_individual(form, user_uuid):
 
     if not user.can_edit(form["id"]):
         return {"status": "error", "message": "Forbidden"}
-
     new_number = None
     # Get the old individual if we are updating number
     old_individual = Individual.get(Individual.id == form["id"])
+    update_logger = logging.getLogger(
+        f"{old_individual.current_herd.genebank.name}_update"
+    )
     if old_individual.number != form["number"]:
         new_number = form["number"]
+        if Individual.select().where(Individual.number == form["number"]).exists():
+            logger.warning(
+                f"User: {user.username} "
+                f"trying to update {old_individual.id}:"
+                f"{old_individual.number} new number "
+                f"already exists {new_number}"
+            )
+            return {"status": "error", "message": "Individual number already exists"}
         form["number"] = old_individual.number
+
+    if form.get(
+        "certificate", None
+    ) is not None and old_individual.certificate != form.get("certificate", None):
+        if (
+            Individual.select()
+            .where(Individual.certificate == form["certificate"])
+            .exists()
+        ):
+            logger.warning(
+                f"User: {user.username} trying to change "
+                f"{old_individual.id}:{old_individual.number} "
+                f"intyg number already exists {form.get('certificate', None)}"
+            )
+            return {
+                "status": "error",
+                "message": "Individual certificate already exists",
+            }
+
+    if form.get(
+        "digital_certificate", None
+    ) is not None and old_individual.digital_certificate != form.get(
+        "digital_certificate", None
+    ):
+        if (
+            Individual.select()
+            .where(Individual.digital_certificate == form["digital_certificate"])
+            .exists()
+        ):
+            logger.warning(
+                f"User: {user.username} trying to change "
+                f"{old_individual.id}:{old_individual.number} "
+                f"intyg number already exists {form.get('digital_certificate', None)}"
+            )
+            return {
+                "status": "error",
+                "message": "Individual certificate already exists",
+            }
+
+    if form.get("origin_herd") and isinstance(form["origin_herd"], dict):
+        try:
+            with DATABASE.atomic():
+                origin_herd = Herd.get(Herd.herd == form["origin_herd"]["herd"])
+        except DoesNotExist as herd_except:
+            raise ValueError(
+                f"Unknown origin herd: '{form['origin_herd']['herd']}''"
+            ) from herd_except
+        if old_individual.origin_herd != origin_herd:
+            if (
+                Individual.select()
+                .where(Individual.breeding_id == form["breeding"])
+                .count()
+                != 1
+            ):
+                return {
+                    "status": "error",
+                    "message": "origin_herd more inds",
+                }
 
     if form["herd"] and isinstance(form["herd"], dict):
         form["herd"] = form["herd"].get("herd", None)
@@ -1064,11 +1185,14 @@ def update_individual(form, user_uuid):
                 return {"status": "error", "message": f"{exception}"}
             if new_number:
                 setattr(individual, "number", new_number)
+                update_logger.info(
+                    f"{user.username},{old_individual.number},new_number,{old_individual.number},{individual.number},"
+                )
 
             if "weights" in form:
-                update_weights(individual, form["weights"])
+                update_weights(individual, form["weights"], user.username)
             if "bodyfat" in form:
-                update_bodyfat(individual, form["bodyfat"])
+                update_bodyfat(individual, form["bodyfat"], user.username)
             if (
                 "yearly_report_date" in form or "selling_date" in form
             ) and "herd" in form:
@@ -1100,8 +1224,12 @@ def update_individual(form, user_uuid):
                     raise exception
 
             individual.save()
+
             # Move the certificate to the new number.
             if new_number and individual.digital_certificate:
+                logger.info(
+                    f"{user.username},{individual.number},moving intyg to new numeber"
+                )
                 s3.get_s3_client().copy_object(
                     old_object_name=f"{old_individual.number}/certificate.pdf",
                     object_name=f"{individual.number}/certificate.pdf",
@@ -1109,23 +1237,72 @@ def update_individual(form, user_uuid):
                 s3.get_s3_client().delete_object(
                     f"{old_individual.number}/certificate.pdf"
                 )
+            # if breeding changed and breeding birth_date is changed
+            # update birth_date herd_tracking_date
+            if (
+                old_individual.breeding.id != individual.breeding.id
+                and old_individual.breeding.birth_date.strftime("%Y-%m-%d")
+                != individual.breeding.birth_date.strftime("%Y-%m-%d")
+            ):
+                update_birth_date_herd_tracking(
+                    individual,
+                    user.username,
+                    new_date=individual.breeding.birth_date,
+                    old_date=old_individual.breeding.birth_date,
+                )
+
+            # if origin_herd has change update birth herd tracking.
+
+            if form.get("origin_herd") and old_individual.origin_herd != form.get(
+                "origin_herd"
+            ):
+                update_logger.info(
+                    f"{user.username},{old_individual.number},"
+                    f"new_origin_herd,{old_individual.origin_herd.herd},"
+                    f"{individual.origin_herd.herd},"
+                )
+                ht_birth = HerdTracking.get(
+                    (HerdTracking.individual == individual)
+                    & (
+                        HerdTracking.herd_tracking_date
+                        == individual.breeding.birth_date.strftime("%Y-%m-%d")
+                    )
+                )
+                ht_birth.herd = form["origin_herd"]
+                ht_birth.save()
+                # Update breeding breeding_herd_id if only one individual connected to herd.
+                if (
+                    Individual.select()
+                    .where(Individual.breeding_id == individual.breeding)
+                    .count()
+                    == 1
+                ):
+                    breeding = Breeding.get(Breeding.id == individual.breeding)
+                    breeding.breeding_herd_id = form["origin_herd"]
+                    breeding.save()
+                else:
+                    return
 
         return {
             "status": "success",
             "message": "Individual Updated",
             "digital_certificate": individual.digital_certificate,
         }
-    except DoesNotExist:
-        return {"status": "error", "message": "Unknown herd"}
+    except Exception as e:
+        logger.error(
+            f"Expetion in update individual {individual.id}:{individual.number}, user: {user.username} exception: {e}"
+        )
+        return {"status": "error", "message": "Kunde inte uppdatera individ."}
 
 
-def update_weights(individual, weights):
+def update_weights(individual, weights, username):
     """
     Updates the weight measurements of `individual` to match those in `weights`.
 
     `weights` should be a list formatted like:
     [{weight: <float>, date: 'yyyy-mm-dd'}, [...]]
     """
+    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
     with DATABASE.atomic():
         current_weights = Weight.select().where(Weight.individual == individual.id)
         current_list = [
@@ -1136,6 +1313,9 @@ def update_weights(individual, weights):
         # check for current measurements to delete
         for weight in current_list:
             if weight not in new_list:
+                update_logger.info(
+                    f"{username},{individual.number},removing weight,{weight[0]},{weight[1]},"
+                )
                 Weight.delete().where(
                     Weight.individual == individual,
                     Weight.weight_date == weight[0],
@@ -1145,18 +1325,22 @@ def update_weights(individual, weights):
         # check for new measurements to add
         for weight in new_list:
             if weight not in current_list:
+                update_logger.info(
+                    f"{username},{individual.number},adding weight,{weight[0]},{weight[1]},"
+                )
                 Weight(
                     individual=individual, weight_date=weight[0], weight=weight[1]
                 ).save()
 
 
-def update_bodyfat(individual, bodyfat):
+def update_bodyfat(individual, bodyfat, username):
     """
     Updates the bodufat measurements of `individual` to match those in `bodyfat`.
 
     `bodyfat` should be a list formatted like:
     [{bodyfat: 'low' | 'normal' | 'high', date: 'yyyy-mm-dd'}, [...]]
     """
+    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
     with DATABASE.atomic():
         logger.warning("bodyfat: %s", bodyfat)
         current_bodyfat = Bodyfat.select().where(Bodyfat.individual == individual.id)
@@ -1168,6 +1352,9 @@ def update_bodyfat(individual, bodyfat):
         # check for current measurements to delete
         for measure in current_list:
             if measure not in new_list:
+                update_logger.info(
+                    f"{username},{individual.number},removing hull,{measure[0]},{measure[1]},"
+                )
                 Bodyfat.delete().where(
                     Bodyfat.individual == individual,
                     Bodyfat.bodyfat_date == measure[0],
@@ -1180,6 +1367,9 @@ def update_bodyfat(individual, bodyfat):
                 if measure[1] not in ["low", "normal", "high"]:
                     logger.error("Unknown bodyfat level: %s", measure[1])
                 else:
+                    update_logger.info(
+                        f"{username},{individual.number},adding hull,{measure[0]},{measure[1]},"
+                    )
                     Bodyfat(
                         individual=individual,
                         bodyfat_date=measure[0],
@@ -1265,8 +1455,8 @@ def get_individuals(genebank_id, user_uuid=None):
         )
 
         # individuals are considered invalid if they don't have a herd tracking
-        # value newer than one year ago.
-        max_report_time = (datetime.now() - timedelta(days=366)).date()
+        # value newer than 13 months ago.
+        max_report_time = (datetime.now() - timedelta(days=365 + 30)).date()
 
         def as_date(value):
             """
@@ -1411,7 +1601,7 @@ def get_breeding_events(herd_id, user_uuid):
             return []
 
         with DATABASE.atomic():
-            query = Breeding.select().where(Breeding.breeding_herd == herd)
+            query = Breeding.select().where(Breeding.breeding_herd_id == herd)
             return [b.as_dict() for b in query.iterator()]
     except DoesNotExist:
         logger.warning("Unknown herd %s", herd_id)
@@ -1433,16 +1623,22 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
             return []
         breedings_dict = []
         with DATABASE.atomic():
-            for breedings in Breeding.select().where(Breeding.breeding_herd == herd):
+            for breedings in Breeding.select().where(Breeding.breeding_herd_id == herd):
                 individuals_dict = []
-                for data in Individual.select(
-                    Individual.number,
-                    Individual.name,
-                    Individual.color,
-                    Individual.sex,
-                    Individual.id,
-                    Individual.origin_herd,
-                ).where(Individual.breeding_id == breedings.id):
+                for data in (
+                    Individual.select(
+                        Individual.number,
+                        Individual.name,
+                        Individual.color,
+                        Individual.sex,
+                        Individual.id,
+                        Individual.origin_herd,
+                        Individual.certificate,
+                        Individual.digital_certificate,
+                    )
+                    .where(Individual.breeding_id == breedings.id)
+                    .order_by(Individual.number)
+                ):
                     ind = dict()
                     if data:
                         ind["number"] = data.number
@@ -1450,6 +1646,11 @@ def get_breeding_events_with_ind(herd_id, user_uuid):
                         ind["sex"] = data.sex
                         ind["color"] = data.color.name if data.color else None
                         ind["current_herd"] = data.current_herd.herd
+                        ind["is_registered"] = (
+                            True
+                            if data.certificate or data.digital_certificate
+                            else False
+                        )
                     individuals_dict.append(ind)
                 b = breedings.as_dict()
                 b["individuals"] = individuals_dict
@@ -1552,7 +1753,7 @@ def register_breeding(form, user_uuid):
             father=father,
             mother=mother,
             breed_date=breed_date,
-            breeding_herd=herd,
+            breeding_herd_id=herd,
             breed_notes=form.get("notes", None),
         )
         breeding.save()
@@ -1613,7 +1814,9 @@ def delete_breeding(id, user_uuid):
     try:
         with DATABASE.atomic():
             Breeding.delete().where(Breeding.id == id).execute()
-            logger.info(f"User:{user.username} deleted empty: {breeding.as_dict()}")
+            logger.info(
+                f"User:{user.username} deleted empty breeding: {breeding.as_dict()}"
+            )
             return {"status": "success"}
     except DoesNotExist:
         return {
@@ -1699,6 +1902,7 @@ def update_breeding(form, user_uuid):
     The form should be formatted like:
     {
         id: <breeding database id>
+        breeding_herd: <herdnumber>
         breed_date?: <date, as %Y-%m-%d>,
         breed_notes?: string,
         father?: <individual-number>,
@@ -1730,7 +1934,9 @@ def update_breeding(form, user_uuid):
         user.can_edit(breeding.mother.number) or user.can_edit(breeding.father.number)
     ):
         return {"status": "error", "message": "Forbidden"}
-
+    update_logger = logging.getLogger(
+        f"{breeding.mother.current_herd.genebank.name}_update"
+    )
     errors = []
     # Check if the parents are valid
     if "mother" in form:
@@ -1738,9 +1944,6 @@ def update_breeding(form, user_uuid):
             old_mother = breeding.mother.number
             breeding.mother = Individual.get(Individual.number == form["mother"])
             if old_mother != breeding.mother.number:
-                update_logger = logging.getLogger(
-                    f"{breeding.mother.current_herd.genebank.name}_update"
-                )
                 update_logger.info(
                     f"{user.username},breeding_id:{breeding.id},changed_mother,{old_mother},{breeding.mother.number}"  # noqa: E501
                 )
@@ -1751,9 +1954,6 @@ def update_breeding(form, user_uuid):
             old_father = breeding.father.number
             breeding.father = Individual.get(Individual.number == form["father"])
             if old_father != breeding.father.number:
-                update_logger = logging.getLogger(
-                    f"{breeding.mother.current_herd.genebank.name}_update"
-                )
                 update_logger.info(
                     f"{user.username},breeding_id:{breeding.id},changed_father,{old_father},{breeding.father.number}"  # noqa: E501
                 )
@@ -1763,7 +1963,26 @@ def update_breeding(form, user_uuid):
     for bdate in ["breed_date", "birth_date"]:
         if bdate in form:
             try:
-                setattr(breeding, bdate, validate_date(form[bdate]))
+                if getattr(breeding, bdate) != validate_date(form[bdate]).date():
+                    update_logger.info(
+                        f"{user.username},breeding_id:{breeding.id},changed_{bdate},{getattr(breeding,bdate)},{form[bdate]}"  # noqa: E501
+                    )
+                    setattr(breeding, bdate, validate_date(form[bdate]))
+                    # If birth_date changed update birth_date herd tracking date
+                    if bdate == "birth_date":
+                        for ind in Individual.select().where(
+                            Individual.breeding_id == breeding.id
+                        ):
+                            logger.info(
+                                f"Indi: {ind.number} birth: {ind.breeding.birth_date}"
+                            )
+                            update_birth_date_herd_tracking(
+                                ind,
+                                user.username,
+                                new_date=validate_date(form[bdate]),
+                                old_date=ind.breeding.birth_date,
+                            )
+
             except ValueError as error:
                 errors += [str(error)]
 
@@ -1779,9 +1998,67 @@ def update_breeding(form, user_uuid):
     if errors:
         return {"status": "error", "message": ", ".join(errors)}
 
+    # Check if breeding_herd has changed
+    # Update breeding_herd to new herd ID.
+    # Update all Indivuduals in breeding
+    if "breeding_herd" in form:
+        new_herd = Herd.get(Herd.herd == form["breeding_herd"])
+        if new_herd != breeding.breeding_herd_id:
+            update_logger.info(
+                f"{user.username},breeding_id:{breeding.id},new_breeding_herd,{breeding.breeding_herd_id.herd},{new_herd.herd}"  # noqa: E501
+            )
+            breeding.breeding_herd_id = new_herd
+            # Breeding herd id changed
+            for ind in Individual.select().where(Individual.breeding_id == breeding.id):
+                update_origin_herd_ind(ind, new_herd, user.username)
+
     with DATABASE.atomic():
-        breeding.birth_notes = form.get("birth_notes", None)
-        breeding.breed_notes = form.get("breed_notes", None)
-        breeding.litter_size6w = form.get("litter_size6w", None)
+        breeding.birth_notes = form.get("birth_notes", breeding.birth_notes)
+        breeding.breed_notes = form.get("breed_notes", breeding.breed_notes)
+        breeding.litter_size6w = form.get("litter_size6w", breeding.litter_size6w)
         breeding.save()
         return {"status": "success"}
+
+
+def update_birth_date_herd_tracking(individual, username, new_date, old_date):
+    """
+    Updates the birth_date herd_tracking_date
+    for the given indivudal
+    """
+
+    update_logger = logging.getLogger(f"{individual.current_herd.genebank.name}_update")
+    update_logger.info(
+        f"{username},{individual.id}:{individual.number},"
+        "UPDATE birth tracking date,"
+        f"{old_date},{new_date},"
+    )
+    if new_date.strftime("%y") != old_date.strftime("%y"):
+        update_logger.info(
+            f"{username},{individual.id},"
+            "UPDATE year in number,"
+            f"{old_date.strftime('%y')},{new_date.strftime('%y')},"
+        )
+        with DATABASE.atomic():
+            individual.number = (
+                individual.number.split("-")[0]
+                + "-"
+                + new_date.strftime("%y")
+                + individual.number.split("-")[1][2:]
+            )
+            logger.info(
+                f"New number Year change for id: {individual.id} is: {individual.number}"
+            )
+            individual.save()
+
+    try:
+        with DATABASE.atomic():
+            ht_birth = HerdTracking.get(
+                (HerdTracking.individual == individual)
+                & (HerdTracking.herd_tracking_date == old_date.strftime("%Y-%m-%d"))
+            )
+            ht_birth.herd_tracking_date = new_date
+            ht_birth.save()
+
+    except DoesNotExist:
+        logger.info(f"{individual.number} does not have birth_date herdtracking event")
+        raise ValueError("Individual does not have birth_date herdtracking event")

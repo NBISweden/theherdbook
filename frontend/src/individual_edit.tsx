@@ -18,7 +18,14 @@ import { get, patch } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
-import { Individual, inputVariant, OptionType } from "@app/data_context_global";
+import {
+  herdLabel,
+  Individual,
+  inputVariant,
+  LimitedHerd,
+  LimitedIndividual,
+  OptionType,
+} from "@app/data_context_global";
 import { CertificateDownload } from "./certificate_download";
 import { FormAction } from "@app/individual_form";
 
@@ -75,6 +82,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [individualLoaded, setIndividualLoaded] = React.useState(
     false as boolean
   );
+  const [herdOptions, setHerdOptions] = React.useState([] as OptionType[]);
   const [isSaveActive, setIsSaveActive] = React.useState(false);
   //States for conditional rendering
   const [showForm, setShowForm] = React.useState(false as boolean);
@@ -96,6 +104,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
   const [birthDateError, setBirthDateError] = React.useState(false as boolean);
   const [litterError, setLitterError] = React.useState(false as boolean);
   const [litterError6w, setLitterError6w] = React.useState(false as boolean);
+  const [intygError, setIntygError] = React.useState(false as boolean);
 
   const { user } = useUserContext();
   const { popup } = useMessageContext();
@@ -138,18 +147,58 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             setIndividual(data);
             setOldIndividual(data);
             setIndividualLoaded(true);
+            handleUpdateMother(data.mother);
           },
           (error) => {
-            userMessage(error, "error");
+            userMessage("Något gick fel kontakta Admin: " + error, "error");
           }
         )
       : userMessage("Något gick fel.", "error");
-  }, [id, herdChangeListener]);
+  }, [id]);
+
+  const handleUpdateMother = async (value: LimitedIndividual) => {
+    let mother;
+    if (value) {
+      mother = await get(`/api/individual/${value.number}`);
+      if (!mother) {
+        return;
+      }
+      let herds = mother.herd_tracking;
+
+      if (herds.length > 0) {
+        const herdOptions: OptionType[] = herds.map((h: LimitedHerd) => {
+          return { value: h, label: herdLabel(h) };
+        });
+        herdOptions.filter(
+          (item, index) => herdOptions.indexOf(item) === index
+        );
+        //Filter unique herds from herd_tracking
+        let unique = [
+          ...new Map(herdOptions.map((item) => [item["label"], item])).values(),
+        ];
+
+        setHerdOptions(unique);
+        return;
+      } else {
+        return [];
+      }
+    }
+  };
+  React.useEffect(() => {
+    if (individual?.number && oldIndividual?.origin_herd?.herd) {
+      let newNumber =
+        individual?.origin_herd?.herd + "-" + individual.number.split("-")[1];
+      handleUpdateIndividual("number", newNumber);
+    }
+  }, [individual?.origin_herd?.herd]);
 
   /**
    * The API sends the birth date in a format like this:
    * "Thu, 08 Jul 2021 00:00:00 GMT".
    * This function turns it into a format like this: "YYYY-MM-DD"
+   * If breeding birth date has changed the year part in the number
+   * needs to be updated the else if takes care of it to update the
+   * number in the form. Backend will also check and update this.
    */
   React.useEffect(() => {
     const formatDate = (fullDate: string) => {
@@ -164,6 +213,16 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
       individual.birth_date.length > 10
     ) {
       handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
+    } else if (
+      individual?.birth_date?.split("-")[0].slice(-2) !=
+      oldIndividual?.birth_date?.split("-")[0].slice(-2)
+    ) {
+      let newNumber =
+        individual?.number?.split("-")[0] +
+        "-" +
+        individual?.birth_date?.split("-")[0].slice(-2) +
+        individual?.number?.split("-")[1].substring(2);
+      handleUpdateIndividual("number", newNumber);
     }
   }, [individual?.birth_date]);
 
@@ -175,10 +234,13 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    */
   const handleUpdateIndividual = <T extends keyof Individual>(
     field: T,
-    value: Individual[T]
+    value: Individual[T],
+    field2?: T,
+    value2?: Individual[T]
   ) => {
     individual &&
-      (setIndividual({ ...individual, [field]: value }), setIsSaveActive(true));
+      (setIndividual({ ...individual, [field]: value, [field2]: value2 }),
+      setIsSaveActive(true));
   };
 
   /**
@@ -272,6 +334,8 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
    */
   const save = (data: Individual) => {
     if (isEqual(data, oldIndividual)) {
+      userMessage(`Inga ändringar gjorda, finns inget att spara.`, "info");
+      setIsSaveActive(false);
       return;
     }
     const postData = { ...data };
@@ -282,16 +346,56 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             if (postData.herd.herd == herdListener) {
               setHerdChangeListener(herdChangeListener + 1);
             }
-            userMessage(retval.message ?? "Individual updated", "success");
+            userMessage(
+              `${data.name} med nummer ${data.number} har uppdaterats`,
+              "success"
+            );
             loadData(["genebanks"]);
             handleCloseDialog();
             break;
+          case "error": {
+            switch (retval.message) {
+              case "origin_herd more inds": {
+                userMessage(
+                  "Går tyvärr inte att uppdatera ursprungsbesättningen, det finns andra kaniner i samma kull. Är ursprungsbesättningen fel för hela kullen vänligen ändra i kullen",
+                  "error"
+                );
+                break;
+              }
+              case "Individual number already exists": {
+                userMessage(
+                  "Det finns redan en kanin med detta nummer i databasen.",
+                  "error"
+                );
+                setNumberError(true);
+                break;
+              }
+              case "Individual certificate already exists": {
+                userMessage(
+                  `Det finns redan ett intyg med nummer ${
+                    individual?.certificate || individual?.digital_certificate
+                  } i systemet!`,
+                  "error"
+                );
+                setIntygError(true);
+                break;
+              }
+              default: {
+                userMessage(
+                  "Något gick fel kontakta Admin: " + retval.message,
+                  "error"
+                );
+                break;
+              }
+            }
+            break;
+          }
           default:
-            userMessage(retval.message ?? "something went wrong", "error");
+            userMessage("Något gick fel kontakta Admin.", "error");
         }
       },
       (error) => {
-        userMessage("" + error, "error");
+        userMessage("Något gick fel kontakta Admin: " + error, "error");
         console.error(error);
       }
     );
@@ -316,7 +420,9 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
             birthDateError={birthDateError}
             litterError={litterError}
             litterError6w={litterError6w}
+            intygError={intygError}
             genebank={individual.genebank_id}
+            herdOptions={herdOptions}
           />
           <div className={style.paneControls}>
             <Button

@@ -1,6 +1,12 @@
 import React from "react";
 
-import { Button, InputAdornment, TextField, Tooltip } from "@material-ui/core";
+import {
+  Button,
+  InputAdornment,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@material-ui/core";
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
@@ -44,7 +50,7 @@ export function IndividualForm({
   intygError,
   herdOptions,
 }: {
-  genebank: Genebank;
+  genebank?: Genebank;
   individual: Individual;
   onUpdateIndividual: any;
   formAction: FormAction;
@@ -78,12 +84,7 @@ export function IndividualForm({
   const colorOptions: OptionType[] = React.useMemo(() => {
     if (genebank && colors && Object.keys(colors).includes(genebank.name)) {
       return colors[genebank.name].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     } else if (
       individual &&
@@ -91,12 +92,7 @@ export function IndividualForm({
       Object.keys(colors).includes(individual?.genebank)
     ) {
       return colors[individual.genebank].map((c) => {
-        return {
-          id: c.id,
-          comment: c.comment,
-          value: c.name,
-          label: `${c.id} - ${c.name}`,
-        };
+        return returnColorData(c);
       });
     }
     return [];
@@ -109,10 +105,9 @@ export function IndividualForm({
   ];
 
   const photoOptions = [
-    { value: "no", label: "Nej" },
-    { value: "yes", label: "Ja" },
-  ]; //should be boolean but doesn't work together with the OptionType
-  // also decide how this should be stored in the backend
+    { value: false, label: "Nej" },
+    { value: true, label: "Ja" },
+  ];
 
   return (
     <>
@@ -138,27 +133,14 @@ export function IndividualForm({
                       ) : (
                         <></>
                       )}
-                      <TextField
-                        disabled={!canManage && individual?.is_registered}
-                        required
-                        error={numberError}
-                        label="Individnummer"
-                        className="control controlWidth"
-                        variant={inputVariant}
-                        value={individual.number ?? ""}
-                        inputProps={{ className: "data-hj-allow" }}
-                        onChange={(event) => {
-                          onUpdateIndividual(
-                            "number",
-                            event.currentTarget.value
-                          );
-                        }}
-                      />
+                      {originHerdForm(!canManage, "control controlWidth")}
+                      {indNumberForm(!canManage && individual?.is_registered)}
                     </div>
                     <div className="flexRow">
                       <CertAutocomplete
                         individual={individual}
                         canManage={canManage}
+                        intygError={intygError}
                         updateIndividual={onUpdateIndividual}
                         edit={individual?.is_registered}
                       />
@@ -178,20 +160,33 @@ export function IndividualForm({
                     ) : (
                       <></>
                     )}
-
-                    <TextField
-                      disabled={!canManage}
-                      required
-                      error={numberError}
-                      label="Individnummer"
-                      className="control"
-                      variant={inputVariant}
-                      value={individual.number ?? ""}
-                      inputProps={{ className: "data-hj-allow" }}
-                      onChange={(event) => {
-                        onUpdateIndividual("number", event.currentTarget.value);
-                      }}
-                    />
+                    <Tooltip
+                      arrow
+                      title={
+                        <React.Fragment>
+                          <Typography>
+                            Är nummret fel vänligen ändra i redigera individ.
+                          </Typography>
+                        </React.Fragment>
+                      }
+                    >
+                      <TextField
+                        disabled={true}
+                        required
+                        error={numberError}
+                        label="Individnummer"
+                        className="control"
+                        variant={inputVariant}
+                        value={individual.number ?? ""}
+                        inputProps={{ className: "data-hj-allow" }}
+                        onChange={(event) => {
+                          onUpdateIndividual(
+                            "number",
+                            event.currentTarget.value
+                          );
+                        }}
+                      />
+                    </Tooltip>
                   </div>
                   {individual.digital_certificate ? (
                     <p className="certNumber">
@@ -208,39 +203,7 @@ export function IndividualForm({
                 {formAction == FormAction.AddIndividual ? ( // jscpd:ignore-start
                   <>
                     <div className="flexRow">
-                      <Tooltip title="Ursprungsbesättning är alltid den besättning som modern befinner sig i. Är detta fel måste modern först säljas till rätt besättning">
-                        <Autocomplete
-                          options={herdOptions}
-                          disabled={!canManage}
-                          noOptionsText={"Välj härstamningen först"}
-                          getOptionLabel={(option: OptionType) => option.label}
-                          className="wideControlInd"
-                          value={
-                            herdOptions.find(
-                              (option) =>
-                                option.value.herd ==
-                                individual.origin_herd?.herd
-                            ) ?? null
-                          }
-                          onChange={(event, value) =>
-                            onUpdateIndividual("origin_herd", value?.value)
-                          }
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Ursprungsbesättning "
-                              variant={inputVariant}
-                              margin="normal"
-                              InputProps={{
-                                ...params.InputProps,
-                                classes: {
-                                  input: "data-hj-allow",
-                                },
-                              }}
-                            />
-                          )}
-                        />
-                      </Tooltip>
+                      {originHerdForm(!canManage, "wideControlInd")}
                     </div>
                     <div className="flexRow">
                       <KeyboardDatePicker
@@ -266,48 +229,20 @@ export function IndividualForm({
                             onUpdateIndividual("birth_date", value);
                         }}
                       />
-                      <Tooltip title="Du kommer här få ett förslag på kull- och individnummer. Nummret kommer bara vara korrekt om du registrerar alla kaniner och kullar i kronologisk ordning.">
-                        <TextField
-                          required
-                          error={numberError}
-                          disabled={individual?.number == null}
-                          label="Individnummer"
-                          className="control controlWidth"
-                          variant={inputVariant}
-                          value={
-                            (individual.number?.split(/-\d{0,2}/)[1] ??
-                              individual.number) ||
-                            ""
-                          }
-                          InputProps={{
-                            classes: {
-                              input: "data-hj-allow",
-                            },
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                {individual?.number
-                                  ? `${
-                                      individual.number?.match(
-                                        /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                      )[0]
-                                    }`
-                                  : `${
-                                      genebank ? genebank.name[0] : "X"
-                                    }XXX-XX`}
-                              </InputAdornment>
-                            ),
-                          }}
-                          onChange={(event) => {
-                            onUpdateIndividual(
-                              "number",
-                              `${
-                                individual.number?.match(
-                                  /([G-M]\d+|[G-M]X1)-\d{0,2}/
-                                )[0]
-                              }${event.currentTarget.value}`
-                            );
-                          }}
-                        />
+                      <Tooltip
+                        title={
+                          <React.Fragment>
+                            <Typography>
+                              Du kommer här få ett förslag på kull- och
+                              individnummer. Nummret kommer bara vara korrekt om
+                              du lagt till alla kaniner och kullar i kronologisk
+                              ordning.
+                            </Typography>
+                          </React.Fragment>
+                        }
+                        arrow
+                      >
+                        {indNumberForm(individual?.number == null)}
                       </Tooltip>
                     </div>{" "}
                     <div className="flexRow">
@@ -348,7 +283,14 @@ export function IndividualForm({
                     ) : (
                       <div className="flexRow">
                         <Tooltip
-                          title="Är datumet fel för hela kullen vänligen ändra i själva parningstillfället"
+                          title={
+                            <React.Fragment>
+                              <Typography>
+                                Är datumet fel för hela kullen vänligen ändra i
+                                "Kullar och parningar"
+                              </Typography>
+                            </React.Fragment>
+                          }
                           placement="right"
                           arrow
                         >
@@ -416,38 +358,62 @@ export function IndividualForm({
               </div>
               {formAction != FormAction.editIndividual ? ( // jscpd:ignore-start
                 <div className="flexRow">
-                  <TextField
-                    required
-                    error={litterError}
-                    label="Antal födda i kullen"
-                    className="control controlWidth"
-                    variant={inputVariant}
-                    value={individual.litter_size ?? ""}
-                    type="number"
-                    inputProps={{ className: "data-hj-allow" }}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "litter_size",
-                        +event.currentTarget.value
-                      );
-                    }}
-                  />
-                  <TextField
-                    required
-                    error={litterError6w}
-                    label="Levande i kullen efter 6v"
-                    className="control controlWidth"
-                    variant={inputVariant}
-                    value={individual.litter_size6w ?? ""}
-                    type="number"
-                    inputProps={{ className: "data-hj-allow" }}
-                    onChange={(event) => {
-                      onUpdateIndividual(
-                        "litter_size6w",
-                        +event.currentTarget.value
-                      );
-                    }}
-                  />
+                  <Tooltip
+                    arrow
+                    title={
+                      <React.Fragment>
+                        <Typography>
+                          OBS! Ändrar du här ändrar du detta för alla kaniner i
+                          kullen.
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  >
+                    <TextField
+                      required
+                      error={litterError}
+                      label="Antal födda i kullen"
+                      className="control controlWidth"
+                      variant={inputVariant}
+                      value={individual.litter_size ?? ""}
+                      type="number"
+                      inputProps={{ className: "data-hj-allow" }}
+                      onChange={(event) => {
+                        onUpdateIndividual(
+                          "litter_size",
+                          +event.currentTarget.value
+                        );
+                      }}
+                    />
+                  </Tooltip>
+                  <Tooltip
+                    arrow
+                    title={
+                      <React.Fragment>
+                        <Typography>
+                          OBS! Ändrar du här ändrar du detta för alla kaniner i
+                          kullen.
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  >
+                    <TextField
+                      required
+                      error={litterError6w}
+                      label="Levande i kullen efter 6v"
+                      className="control controlWidth"
+                      variant={inputVariant}
+                      value={individual.litter_size6w ?? ""}
+                      type="number"
+                      inputProps={{ className: "data-hj-allow" }}
+                      onChange={(event) => {
+                        onUpdateIndividual(
+                          "litter_size6w",
+                          +event.currentTarget.value
+                        );
+                      }}
+                    />
+                  </Tooltip>
                 </div>
               ) : (
                 <></>
@@ -553,6 +519,11 @@ export function IndividualForm({
                   options={photoOptions ?? []}
                   className="controlWidth"
                   getOptionLabel={(option: OptionType) => option.label}
+                  value={
+                    photoOptions.find(
+                      (option) => option.value == individual.has_photo
+                    ) ?? photoOptions[0] //"nej as defult pos 0 "
+                  }
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -568,6 +539,9 @@ export function IndividualForm({
                       }}
                     />
                   )}
+                  onChange={(event: any, newValue: OptionType | null) => {
+                    onUpdateIndividual("has_photo", newValue?.value ?? "");
+                  }}
                 />
               </div>
               <div className="flexRow">
@@ -604,4 +578,97 @@ export function IndividualForm({
       </div>
     </>
   );
+
+  function originHerdForm(_disabeld: boolean | undefined, _classname: string) {
+    return (
+      <Tooltip
+        arrow
+        title={
+          <React.Fragment>
+            <Typography>
+              Ursprungsbesättning är alltid den besättning som modern befinner
+              sig i. Är detta fel måste modern först säljas till rätt
+              besättning"
+            </Typography>
+          </React.Fragment>
+        }
+      >
+        <Autocomplete
+          options={herdOptions}
+          disabled={_disabeld}
+          noOptionsText={"Välj härstamningen först"}
+          getOptionLabel={(option: OptionType) => option.label}
+          className={_classname}
+          value={
+            herdOptions.find(
+              (option) => option.value.herd == individual.origin_herd?.herd
+            ) ?? null
+          }
+          onChange={(event, value) =>
+            onUpdateIndividual("origin_herd", value?.value)
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Ursprungsbesättning "
+              variant={inputVariant}
+              InputProps={{
+                ...params.InputProps,
+                classes: {
+                  input: "data-hj-allow",
+                },
+              }}
+            />
+          )}
+        />
+      </Tooltip>
+    );
+  }
+
+  function indNumberForm(_disabeld: boolean | undefined) {
+    return (
+      <TextField
+        required
+        error={numberError}
+        disabled={_disabeld}
+        label="Individnummer"
+        className="control controlWidth"
+        variant={inputVariant}
+        value={
+          (individual.number?.split(/-\d{0,2}/)[1] ?? individual.number) || ""
+        }
+        InputProps={{
+          classes: {
+            input: "data-hj-allow",
+          },
+          startAdornment: (
+            <InputAdornment position="start">
+              {individual?.number
+                ? `${
+                    individual?.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]
+                  }`
+                : `${genebank ? genebank.name[0] : "X"}XXX-XX`}
+            </InputAdornment>
+          ),
+        }}
+        onChange={(event) => {
+          onUpdateIndividual(
+            "number",
+            `${individual.number?.match(/([G-M]\d+|[G-M]X1)-\d{0,2}/)[0]}${
+              event.currentTarget.value
+            }`
+          );
+        }}
+      />
+    );
+  }
+
+  function returnColorData(c: any) {
+    return {
+      id: c.id,
+      comment: c.comment,
+      value: c.name,
+      label: `${c.id} - ${c.name}`,
+    };
+  }
 }
