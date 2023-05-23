@@ -39,5 +39,6 @@ s3.region = os.environ.get("S3_REGION", "us-east-1")
 s3.secret_key = os.environ.get("S3_SECRETKEY", "secretkeytest")
 s3.access_key = os.environ.get("S3_ACCESSKEY", "accesskeytest")
 s3.verify = json.loads(os.environ.get("S3_VERIFY", "True").lower())
+s3.use_ssl = json.loads(os.environ.get("S3_USESSL", "True").lower())
 s3.cert = None
 s3.private_key = None

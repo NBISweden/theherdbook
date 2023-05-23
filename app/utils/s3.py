@@ -22,6 +22,7 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         secret_key,
         access_key,
         verify,
+        use_ssl,
         cert,
         private_key,
     ):  # pylint: disable=too-many-arguments
@@ -40,6 +41,8 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
         self.secret_key = secret_key
         assert isinstance(verify, (bool, Path))
         self.verify = verify
+        assert isinstance(use_ssl, (bool, Path))
+        self.use_ssl = use_ssl
         assert isinstance(cert, (Path, type(None)))
         self.cert = cert
         assert isinstance(private_key, (Path, type(None)))
@@ -49,11 +52,8 @@ class S3Handler:  # pylint: disable=too-many-instance-attributes
             "connect_timeout": 40,
         }
 
-        use_ssl = False
-
         if cert and private_key:
             config_params["client_cert"] = (cert, private_key)
-            use_ssl = True
 
         config = botocore.client.Config(**config_params)
         self.s3_client = boto3.client(
@@ -148,6 +148,7 @@ def get_s3_client():
         secret_key=settings.s3.secret_key,
         access_key=settings.s3.access_key,
         verify=settings.s3.verify,
+        use_ssl=settings.s3.use_ssl,
         cert=settings.s3.cert,
         private_key=settings.s3.private_key,
     )
