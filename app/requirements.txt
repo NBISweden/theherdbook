@@ -1,6 +1,6 @@
 APScheduler==3.10.0
 boto3==1.26.79
-botocore==1.29.79
+botocore==1.29.138
 cryptography==39.0.1
 endesive==2.0.9
 Flask_Caching==2.0.2
