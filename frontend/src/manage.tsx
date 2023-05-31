@@ -25,6 +25,7 @@ import {
 } from "@material-ui/core";
 import { HerdForm } from "@app/herdForm";
 import { UserForm } from "@app/userForm";
+import { ActiveUsers } from "@app/activeUsers";
 import { Autocomplete } from "@material-ui/lab";
 
 const useStyles = makeStyles({
@@ -185,13 +186,17 @@ export function Manage() {
     }
     if (topicpath) {
       setTopic(topicpath);
-      if (topicpath != "user") {
+      console.log(topicpath);
+      if (topicpath != "user" && topicpath != "active_users") {
         setGenebank(topicpath);
       } else if (!genebank && genebanks.length > 0) {
         setGenebank(genebanks[0].name);
       }
       if (topicpath == "user") {
         setUserOptions();
+      } else if (topicpath == "active_users") {
+        // Handle the case where topicpath is "active_users"
+        // For example, you might want to call a function to fetch active users
       } else {
         setHerdOptions(topicpath);
       }
@@ -214,13 +219,22 @@ export function Manage() {
     }
   }, [genebanks, users, location]);
 
+  console.log("topic:", topic);
+  console.log("genebank:", genebank, "target:", target);
+
   return (
     <>
       <Paper className={styles.main}>
         <Paper className={styles.controls}>
           <div>
             <div className={styles.rightControls}>
-              <div className={topic == "user" ? styles.hidden : undefined}>
+              <div
+                className={
+                  topic == "user" || topic == "active_users"
+                    ? styles.hidden
+                    : undefined
+                }
+              >
                 <Autocomplete
                   options={
                     genebanks
@@ -254,7 +268,11 @@ export function Manage() {
             <div className={styles.leftControls}>
               <Button
                 variant="contained"
-                color={topic != "user" ? "primary" : "default"}
+                color={
+                  topic != "user" && topic != "active_users"
+                    ? "primary"
+                    : "default"
+                }
                 onClick={() =>
                   history.push(`/manage/${genebank}/${target ? target : ""}`)
                 }
@@ -270,45 +288,61 @@ export function Manage() {
               >
                 Användare
               </Button>
+              <Button
+                variant="contained"
+                color={topic == "active_users" ? "primary" : "default"}
+                onClick={() => history.push(`/manage/active_users`)}
+              >
+                Lista inloggade aktiva användare
+              </Button>
             </div>
           </div>
-
-          <Autocomplete
-            options={filtered(options) ?? []}
-            value={selected}
-            getOptionLabel={(option: OptionType) => option.label}
-            getOptionSelected={(o: OptionType, v: OptionType) =>
-              o.value == v.value
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={topic == "user" ? "Sök användare" : "Sök besättning"}
-                variant={inputVariant}
-                margin="normal"
-              />
-            )}
-            onChange={(event: any, newValue: OptionType | null) => {
-              newValue && history.push(`/manage/${topic}/${newValue.value}`);
-            }}
-          />
-          <FormControlLabel
-            disabled={topic == "user"}
-            control={
-              <Checkbox
-                checked={showInactive}
-                onChange={(event) =>
-                  setShowInactive(event.currentTarget.checked)
+          {topic !== "active_users" && (
+            <>
+              <Autocomplete
+                options={filtered(options) ?? []}
+                value={selected}
+                getOptionLabel={(option: OptionType) => option.label}
+                getOptionSelected={(o: OptionType, v: OptionType) =>
+                  o.value == v.value
                 }
-                color="primary"
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={topic == "user" ? "Sök användare" : "Sök besättning"}
+                    variant={inputVariant}
+                    margin="normal"
+                  />
+                )}
+                onChange={(event: any, newValue: OptionType | null) => {
+                  newValue &&
+                    history.push(`/manage/${topic}/${newValue.value}`);
+                }}
               />
-            }
-            label="Visa inaktiva"
-          />
+              <FormControlLabel
+                disabled={!topic == "user" || topic == "active_users"}
+                control={
+                  <Checkbox
+                    checked={showInactive}
+                    onChange={(event) =>
+                      setShowInactive(event.currentTarget.checked)
+                    }
+                    color="primary"
+                  />
+                }
+                label="Visa inaktiva"
+              />
+            </>
+          )}
         </Paper>
 
         {/* Only show the input form for the currently selected type */}
         <Switch>
+          <Route path="/manage/active_users">
+            <Paper className={styles.inputForm}>
+              <ActiveUsers />
+            </Paper>
+          </Route>
           <Route path="/manage/user">
             <Paper className={styles.inputForm}>
               <UserForm id={selected?.value} />
