@@ -401,6 +401,31 @@ def get_users(user_uuid=None):
         return None
 
 
+def get_active_users(minutes, user_uuid=None):
+    """
+    Returns a list of currently active users
+
+    """
+    user = fetch_user_info(user_uuid)
+    time_ago = datetime.now() - timedelta(minutes=minutes)
+    if user is None:
+        return {"status": "error", "message": "Not logged in"}
+    if not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Forbidden"}
+    try:
+        active_users = User.select().where(User.last_active >= time_ago)
+    except DoesNotExist:
+        return None
+    return [
+        {
+            "username": user.username,
+            "fullname": user.fullname,
+            "last_active": user.last_active,
+        }
+        for user in active_users
+    ]
+
+
 def get_user(user_id, user_uuid=None):
     """
     Returns the user with id `user_id`, if the user identified by
@@ -849,7 +874,6 @@ def form_to_individual(form, user=None):
         changed = False
         if individual.id and not can_manage:
             for admin_field in [field for field in admin_fields if field in form]:
-
                 if not form.get("issue_digital", False):
                     changed = (
                         f"{form[admin_field]}" != f"{getattr(individual, admin_field)}"
@@ -1052,7 +1076,6 @@ def add_individual(form, user_uuid):
 
 def update_herdtracking_values(individual, new_herd, user_signature, tracking_date):
     with DATABASE.atomic():
-
         ht_history = (
             HerdTracking.select()
             .where(HerdTracking.individual == individual)
@@ -1572,7 +1595,6 @@ def get_breeding_event(breed_id, user_uuid):
         return []
 
     try:
-
         with DATABASE.atomic():
             breed = Breeding.select().where(Breeding.id == breed_id).get().as_dict()
             herd = Herd.get(Herd.herd == breed["breeding_herd"])

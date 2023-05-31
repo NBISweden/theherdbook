@@ -396,7 +396,7 @@ export function Footer() {
               target={"_blank"}
               rel={"noopener noreferrer"}
               href={
-                "https://github.com/NBISweden/theherdbook/tree/" +
+                "https://github.com/NBISweden/theherdbook/releases/tag/" +
                 tags.gitBranch
               }
             >

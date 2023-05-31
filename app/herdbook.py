@@ -88,6 +88,19 @@ LOGIN.login_view = "/login"
 KINSHIP_LIFETIME = 300
 
 
+# Before_request
+# function that will update users last_active field in the database
+# this will be called before every request
+@APP.before_request
+def before_request():
+    """
+    Callback that triggers before each request. This is used to update the users last active.
+    """
+    # update last_active field in the database
+    if current_user.is_authenticated:
+        current_user.update_last_active()
+
+
 @APP.after_request
 def after_request(response):
     """
@@ -159,6 +172,14 @@ def get_user():
     """
     user = da.fetch_user_info(session.get("user_id", None))
     return jsonify(user.frontend_data() if user else None)
+
+
+@APP.route("/api/active_users", methods=["GET"])
+@login_required
+def get_active_users():
+    minutes = request.args.get("minutes", default=15, type=int)
+    active_users = da.get_active_users(minutes, session.get("user_id", None))
+    return jsonify(active_users)
 
 
 @APP.route("/api/manage/users")

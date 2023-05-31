@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 10
+CURRENT_SCHEMA_VERSION = 11
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -855,6 +855,11 @@ class User(BaseModel, UserMixin):
     uuid = UUIDField()
     validated = BooleanField(default=False)
     _privileges = TextField(column_name="privileges", default="[]")
+    last_active = DateTimeField(default=datetime.now)
+
+    def update_last_active(self):
+        self.last_active = datetime.now()
+        self.save()
 
     @property
     def privileges(self):
@@ -1370,7 +1375,6 @@ def migrate_1_to_2():
     """
 
     with DATABASE.atomic():
-
         cols = [x.name for x in DATABASE.get_columns("schemahistory")]
 
         if "applied" not in cols:
@@ -1405,7 +1409,6 @@ def migrate_3_to_4():
     """
 
     with DATABASE.atomic():
-
         if (
             "individual" not in DATABASE.get_tables()
             or "color" not in DATABASE.get_tables()
@@ -1622,6 +1625,36 @@ def migrate_9_to_10():
             )
         SchemaHistory.insert(  # pylint: disable=E1120
             version=10, comment="Add has_photo to individual", applied=datetime.now()
+        ).execute()
+
+
+def migrate_10_to_11():
+    """
+    Migrate between schema version 10 and 11.
+    """
+    with DATABASE.atomic():
+        if "hbuser" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(  # pylint: disable=E1120
+                version=11,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("hbuser")]
+
+        if "last_active" not in cols:
+            # Go through hbuser and add last_active
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "hbuser",
+                    "last_active",
+                    DateTimeField(default=datetime.now),
+                )
+            )
+        SchemaHistory.insert(  # pylint: disable=E1120
+            version=11, comment="Add last_active to hbuser", applied=datetime.now()
         ).execute()
 
 
