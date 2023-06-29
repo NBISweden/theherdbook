@@ -14,6 +14,7 @@ import {
   herdLabel,
   Individual,
   LimitedHerd,
+  inputVariant,
 } from "./data_context_global";
 
 const useStyles = makeStyles({
@@ -44,7 +45,7 @@ export function IndividualSellingForm({
         ? individual.herd_tracking[0].date.toString()
         : individual.birth_date
     );
-    minDate.setDate(minDate.getDate() + 1);
+    minDate.setDate(minDate.getDate() + 43);
     return minDate;
   };
   return (
@@ -60,7 +61,7 @@ export function IndividualSellingForm({
           <TextField
             {...params}
             label="Välj besättning"
-            variant="outlined"
+            variant={inputVariant}
             margin="normal"
             helperText={
               herdHelperText ??
@@ -76,16 +77,16 @@ export function IndividualSellingForm({
       <MuiPickersUtilsProvider utils={DateFnsUtils} locale={sv}>
         <KeyboardDatePicker
           autoOk
-          fullWidth={true}
-          className={style.inputField}
-          variant="inline"
+          disableFuture
+          maxDateMessage="Datumet får inte ligga i framtiden."
           minDate={getMinSellingDate()}
-          inputVariant="outlined"
+          inputVariant={inputVariant}
+          variant="inline"
           label="Köpdatum"
           format="yyyy-MM-dd"
           helperText={
             buyDateHelperText ??
-            "Tomt om kaninen är kvar i ursprungsbesättningen"
+            "Du får registrera en försäljning tidigast 43 dagar efter födseln. Du får inte registrera en försäljning i framtiden."
           }
           value={individual.selling_date ?? null}
           InputLabelProps={{

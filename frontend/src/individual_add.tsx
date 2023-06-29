@@ -936,21 +936,23 @@ export function IndividualAdd({
               herdOptions={herdOptions}
             />
           </div>
-          {!herdId && (
-            <>
-              <div className={style.ancestorBox}>
-                <h2 className={style.sellingTitle}>
-                  Fyll i bara om kaninen har sålts
-                </h2>
-                <IndividualSellingForm
-                  individual={individual}
-                  herdOptions={genebank ? genebank.herds : []}
-                  herdKey={herdKey}
-                  onUpdateIndividual={handleUpdateIndividual}
-                />
-              </div>
-            </>
-          )}
+          {!herdId &&
+            individual.birth_date &&
+            !isNaN(new Date(individual.birth_date)) && (
+              <>
+                <div className={style.ancestorBox}>
+                  <h2 className={style.sellingTitle}>
+                    Fyll i bara om kaninen har sålts
+                  </h2>
+                  <IndividualSellingForm
+                    individual={individual}
+                    herdOptions={genebank ? genebank.herds : []}
+                    herdKey={herdKey}
+                    onUpdateIndividual={handleUpdateIndividual}
+                  />
+                </div>
+              </>
+            )}
           {success && (
             <>
               <div className={style.bottomBox}>
