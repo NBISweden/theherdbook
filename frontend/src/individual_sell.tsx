@@ -172,9 +172,11 @@ export function IndividualSell({ individual }: { individual: Individual }) {
           <div className={style.textContainer}>
             <Typography variant="body1" className={style.infoText}>
               Ange besättningen som individen ska flyttas till, samt ett datum
-              för flytten. Individen kommer tas bort från din besättning och
-              läggas till i besättningen du anger.Har kaninen inget intyg kan du
-              bara sälja den externt till {defaultHerd}.
+              för flytten. En försäljning får tidigast registreras 43 dagar
+              efter födseln och inte i framtiden. Individen kommer tas bort från
+              din besättning och läggas till i besättningen du anger. Har
+              kaninen inget intyg kan du bara sälja den externt till{" "}
+              {defaultHerd}.
             </Typography>
             <Typography variant="body1" className={style.infoText}>
               Observera att du då inte längre kan ändra informationen om
@@ -185,7 +187,7 @@ export function IndividualSell({ individual }: { individual: Individual }) {
           <div className={style.formContainer}>
             <IndividualSellingForm
               herdHelperText={`Väl ${defaultHerd} om du har sålt kaninen till en person utanför genbanksystemet`}
-              buyDateHelperText="Vänligen ange datum för försäljningen"
+              buyDateHelperText="Vänligen ange datum för försäljningen, 43 dagar efter födseln ej i framtiden."
               individual={individualForSale}
               herdOptions={
                 individual.is_registered
