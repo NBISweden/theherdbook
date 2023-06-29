@@ -10,7 +10,7 @@ COPY --from=herdbook_frontend:latest --chown=node:node /home/node/node_modules/ 
 RUN npm run build
 
 FROM python:3.8-buster
-
+ENV TZ='Europe/Stockholm'
 RUN mkdir -p /code
 
 COPY app/ /code/
