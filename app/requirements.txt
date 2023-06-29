@@ -1,7 +1,7 @@
 APScheduler==3.10.0
 boto3==1.26.79
 botocore==1.29.138
-cryptography==39.0.1
+cryptography==41.0.0
 endesive==2.0.9
 Flask_Caching==2.0.2
 flask_dance==6.2.0
@@ -14,7 +14,7 @@ pdfrw2==0.5.0
 peewee==3.15.4
 psycopg2-binary==2.9.5
 PyMuPDF==1.21.1
-pyOpenSSL==23.0.0
+pyOpenSSL==23.2.0
 qrcode==7.4.2
 requests
 setuptools==65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
