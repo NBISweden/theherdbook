@@ -39,15 +39,25 @@ export function IndividualSellingForm({
   buyDateHelperText: string;
 }) {
   const style = useStyles();
+
   const getMinSellingDate = () => {
-    const minDate = new Date(
-      individual.herd_tracking
-        ? individual.herd_tracking[0].date.toString()
-        : individual.birth_date
-    );
-    minDate.setDate(minDate.getDate() + 43);
+    const herdDate = individual.herd_tracking
+      ? new Date(individual.herd_tracking[0].date.toString())
+      : null;
+    const birthDate = new Date(individual.birth_date);
+
+    let minDate = null;
+
+    if (herdDate && herdDate.getTime() === birthDate.getTime()) {
+      minDate = new Date(birthDate.setDate(birthDate.getDate() + 43));
+    } else if (herdDate) {
+      minDate = new Date(herdDate.setDate(herdDate.getDate() + 1));
+    } else {
+      minDate = new Date(birthDate.setDate(birthDate.getDate() + 43));
+    }
     return minDate;
   };
+
   return (
     <>
       <Autocomplete
