@@ -1,7 +1,7 @@
 APScheduler==3.10.0
 boto3==1.26.79
 botocore==1.29.138
-cryptography==41.0.0
+cryptography==41.0.4
 endesive==2.0.9
 Flask_Caching==2.0.2
 flask_dance==6.2.0
@@ -20,3 +20,4 @@ requests
 setuptools==65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 Werkzeug==2.3.4
 
+pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
