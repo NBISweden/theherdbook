@@ -214,6 +214,7 @@ export function IndividualEdit({ id }: { id: string | undefined }) {
     ) {
       handleUpdateIndividual("birth_date", formatDate(individual?.birth_date));
     } else if (
+      individual?.birth_date &&
       individual?.birth_date?.split("-")[0].slice(-2) !=
       oldIndividual?.birth_date?.split("-")[0].slice(-2)
     ) {
