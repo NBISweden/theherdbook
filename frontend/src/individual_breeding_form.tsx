@@ -381,7 +381,7 @@ export function IndividualBreedingForm({
           "breeding",
           newBreeding.breeding_id,
           "birth_date",
-          newBirth.birth_date
+          newBirthData.date
         );
         closeDialog();
       }
