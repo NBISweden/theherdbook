@@ -159,7 +159,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                 className={style.datePicker}
                 disableFuture
                 minDate={minDate}
-                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatum."
+                minDateMessage="Datumet måste ligga efter senaste rapporteringsdatum. Förmodligen har du redan årsrapporterad denna kanin idag"
                 variant="inline"
                 inputVariant="outlined"
                 label="Datum för årsrapporten"
@@ -180,7 +180,7 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             </MuiPickersUtilsProvider>
             <FormControl
               component="fieldset"
-              disabled={!reportDate}
+              disabled={reportDate <= minDate}
               error={error}
               className={style.checkContainer}
             >
@@ -228,7 +228,12 @@ export function IndividualReport({ individual }: { individual: Individual }) {
             </Button>
           </div>
           <div className={style.buttonContainer}>
-            <Button variant="contained" color="primary" onClick={onSave}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={onSave}
+              disabled={!isStillOwner || reportDate <= minDate}
+            >
               Skicka
             </Button>
           </div>{" "}
