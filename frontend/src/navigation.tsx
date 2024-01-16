@@ -268,7 +268,16 @@ export function Navigation() {
               <Typography variant="subtitle1">{user?.username}</Typography>
             </b>
           </Button>
-
+          <Button>
+            <b>
+              <Typography
+                variant="subtitle1"
+                style={{ color: "red", fontWeight: "bold", fontSize: "24px" }}
+              >
+                OBS DETTA ÄR TESTSYSTEMET!{" "}
+              </Typography>
+            </b>
+          </Button>
           <StyledMenu
             id="customized-menu"
             anchorEl={anchorEl}
