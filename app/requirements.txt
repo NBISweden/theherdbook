@@ -17,6 +17,6 @@ PyMuPDF==1.21.1
 pyOpenSSL==23.2.0
 qrcode==7.4.2
 requests
-setuptools==65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+setuptools==70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
 Werkzeug==2.3.4
 
