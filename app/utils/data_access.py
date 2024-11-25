@@ -527,7 +527,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
 
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | viewer,
+         role: owner | manager | viewer | admin,
          user: <id>,
          herd | genebank: <id>
         }
@@ -558,11 +558,11 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
     ):
         valid = False
     elif (
-        operation.get("role", {}) not in ["owner", "manager", "viewer"]
+        operation.get("role", {}) not in ["owner", "manager", "viewer", "admin"]
         or (
             operation["role"] in ["manager", "viewer"] and not operation.get("genebank")
         )
-        or (operation["role"] in ["owner"] and not operation.get("herd"))
+        or (operation["role"] == "owner" and not operation.get("herd"))
     ):
         valid = False
 
@@ -570,7 +570,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
     permitted = True
     if skip_role_check or user.is_manager:
         genebank = operation.get("genebank", None)
-        if genebank is None:
+        if genebank is None and operation["role"] != "admin":
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(operation["herd"])
@@ -597,7 +597,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
 
     # update roles if needed
     target = "herd" if operation["role"] == "owner" else "genebank"
-    has_role = target_user.has_role(operation["role"], operation[target])
+    has_role = target_user.has_role(operation["role"], operation.get(target))
     updated = False
 
     with DATABASE.atomic():
@@ -605,17 +605,17 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
             logger.info(
                 f"User:{user.username} UPDATE: Role remove on user: "
                 f"{target_user.username} removed: {operation['role']} "
-                f"target:{operation[target]}"
+                f"target:{operation.get(target)}"
             )
-            target_user.remove_role(operation["role"], operation[target])
+            target_user.remove_role(operation["role"], operation.get(target))
             updated = True
         elif not has_role and operation["action"] == "add":
             logger.info(
                 f"User:{user.username} UPDATE: Role added on user: "
                 f"{target_user.username} added: {operation['role']} "
-                f"target:{operation[target]}"
+                f"target:{operation.get(target)}"
             )
-            target_user.add_role(operation["role"], operation[target])
+            target_user.add_role(operation["role"], operation.get(target))
             updated = True
 
     return {"status": "updated" if updated else "unchanged"}
