@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 11
+CURRENT_SCHEMA_VERSION = 12
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -220,6 +220,10 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+    bank_account_number = TextField(null=True)
+    bank_account_number_privacy = CharField(15, null=True, default='private')
+    bank_name = TextField(null=True)
+    bank_name_privacy = CharField(15, null=True, default='private')
 
     @property
     def individuals(self):
@@ -1656,6 +1660,45 @@ def migrate_10_to_11():
         SchemaHistory.insert(  # pylint: disable=E1120
             version=11, comment="Add last_active to hbuser", applied=datetime.now()
         ).execute()
+
+def migrate_11_to_12():
+    """
+    Migrate between schema version <current_version> and <next_version>.
+    """
+    with DATABASE.atomic():
+        if "herd" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(
+                version=12,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("herd")]
+
+        if "bank_account_number" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "herd", "bank_account_number", TextField(null=True)
+                ),
+                DATABASE_MIGRATOR.add_column(
+                    "herd", "bank_account_number_privacy", CharField(15, null=True, default='private')
+                ),
+                DATABASE_MIGRATOR.add_column(
+                    "herd", "bank_name", TextField(null=True)
+                ),
+                DATABASE_MIGRATOR.add_column(
+                    "herd", "bank_name_privacy", CharField(15, null=True, default='private')
+                ),
+            )
+
+        SchemaHistory.insert(
+            version=12,
+            comment="Add bank account fields to herd",
+            applied=datetime.now(),
+        ).execute()
+
 
 
 def check_migrations():
