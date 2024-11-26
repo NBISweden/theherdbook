@@ -1,7 +1,8 @@
+// File: YearlyReportForm.tsx
+
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import {
-  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -10,43 +11,46 @@ import {
   Paper,
   FormGroup,
   Grid,
-  FormLabel,
-  FormControl,
-  RadioGroup,
-  Radio,
 } from "@material-ui/core";
-import * as Yup from "yup";
 import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
+import { useMessageContext } from "@app/message_context";
 
 interface YearlyReportFormProps {
   herdId: string;
+  existingReportData?: any;
 }
 
-const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
+const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
+  herdId,
+  existingReportData,
+}) => {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
-
-  const [loading, setLoading] = useState(true);
-  const [herdData, setHerdData] = useState<any>(null);
-  const [breedingEvents, setBreedingEvents] = useState<any[]>([]);
+  const { userMessage } = useMessageContext();
   const [prefilledValues, setPrefilledValues] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  const [herdResponse, setHerdResponse] = useState<any>(null);
+  const [herdName, setHerdName] = useState<string>("");
+  // Define default values
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch herd data
-        const herdResponse = await get(`/api/herd/${herdId}`);
-        setHerdData(herdResponse);
+        const herdResponseData = await get(`/api/herd/${herdId}`);
+        setHerdResponse(herdResponseData);
+        const herdNameData = herdResponseData.herd_name || "";
+        setHerdName(herdNameData);
 
         // Fetch breeding events
         const breedingResponse = await get(`/api/breeding/${herdId}`);
         const breedings = breedingResponse.breedings || [];
-        setBreedingEvents(breedings);
 
         // Get individuals from herdResponse
-        const individualsData = herdResponse.individuals || [];
+        const individualsData = herdResponseData.individuals || [];
 
         // Calculate prefilled values
         const currentYear = new Date().getFullYear();
@@ -165,12 +169,12 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
         const numberOfMalesWithCertificate = malesWithCertificate.length;
 
         // Determine breed based on genebank ID
-        const isGotlandskanin = herdResponse.genebank === 1;
-        const isMellerudskanin = herdResponse.genebank === 2;
+        const isGotlandskanin = herdResponseData.genebank === 1;
+        const isMellerudskanin = herdResponseData.genebank === 2;
 
         // Prefill form values
-        setPrefilledValues({
-          genebankNumber: herdResponse.herd,
+        const calculatedValues = {
+          genebankNumber: herdResponseData.herd,
           gotlandskanin: isGotlandskanin,
           mellerudskanin: isMellerudskanin,
           breedingYear: breedingYear,
@@ -185,7 +189,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
           allowPublication: [],
           notEligibleForSupport: false,
           eligibleForSupport: false,
-          supportAmount: 800,
           defectsMalformations: "",
           diseases: {
             myxomatosis: { numberOfAffectedRabbits: "", age: "" },
@@ -193,43 +196,121 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
             coccidiosis: { numberOfAffectedRabbits: "", age: "" },
             other: { diseaseName: "", numberOfAffectedRabbits: "", age: "" },
           },
-        });
+        };
 
+        // Merge existing report data if available
+        const initialValues = existingReportData
+          ? {
+              ...calculatedValues,
+              ...existingReportData,
+              allowPublication: existingReportData.allowPublication || [],
+            }
+          : {
+              ...calculatedValues,
+            };
+        setPrefilledValues(initialValues);
         setLoading(false);
       } catch (error) {
         console.error(error);
+        userMessage("Ett fel inträffade vid hämtning av data DEG", "error");
         setLoading(false);
       }
     };
     fetchData();
-  }, [herdId]);
+  }, [herdId, existingReportData]);
+
+  // Function to map allowPublication to publish settings
+  const mapAllowPublicationToPublishSettings = (allowPublication: string[]) => {
+    const publishSettings = {
+      publish: true,
+      publish_tel: true,
+      publish_email: true,
+      publish_address: true,
+    };
+
+    if (allowPublication.includes("noPublication")) {
+      publishSettings.publish = false;
+      publishSettings.publish_tel = false;
+      publishSettings.publish_email = false;
+      publishSettings.publish_address = false;
+      return publishSettings;
+    }
+
+    if (allowPublication.includes("all")) {
+      // All publish settings are true
+      return publishSettings;
+    }
+
+    // Adjust settings based on exclusions
+    if (allowPublication.includes("noPhone")) {
+      publishSettings.publish_tel = false;
+    }
+
+    if (allowPublication.includes("noEmail")) {
+      publishSettings.publish_email = false;
+    }
+
+    if (allowPublication.includes("noAddress")) {
+      publishSettings.publish_address = false;
+    }
+
+    return publishSettings;
+  };
 
   // Initialize formik with prefilled values when they are ready
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: prefilledValues,
     onSubmit: async (values) => {
-      // Handle form submission
-      console.log(values);
+      // Ensure herdResponse and herdName are available
+      if (!herdResponse || !herdName) {
+        userMessage("Kunde inte hämta herd data.", "error");
+        return;
+      }
+      // Prepare the payload
+      const publishSettings = mapAllowPublicationToPublishSettings(
+        values.allowPublication || []
+      );
+      const reportYear = values.breedingYear || new Date().getFullYear();
+      const reportName = `Årsrapport ${reportYear} ${herdResponse.herd} ${herdName}`;
+
+      const payload = {
+        data: values,
+        name: reportName,
+        version: "1.0",
+        ...publishSettings,
+      };
+
       try {
-        const response = await post(`/api/herd/${herdId}/yearlyreport`, values);
+        const response = await post(
+          `/api/herd/${herdId}/yearlyreport`,
+          payload
+        );
         if (response.status === "success") {
-          alert("Årsrapporten har sparats!");
+          userMessage("Årsrapporten har sparats!", "success");
         } else {
-          alert("Ett fel inträffade vid sparandet av årsrapporten.");
+          userMessage(
+            "Ett fel inträffade vid sparandet av årsrapporten.",
+            "error"
+          );
         }
       } catch (error) {
         console.error(error);
-        alert("Ett fel inträffade vid anslutningen till servern.");
+        userMessage(
+          "Ett fel inträffade vid anslutningen till servern.",
+          "error"
+        );
       }
     },
   });
 
-  if (loading) {
+  if (loading || Object.keys(prefilledValues).length === 0) {
     return <div>Laddar...</div>;
   }
+
   // Auto-validate conditions
   const meetsBreedingRequirement = prefilledValues.numberOfLitters >= 1;
+
   return (
     <Paper style={{ padding: "2em" }}>
       <Typography variant="h5" gutterBottom>
@@ -403,6 +484,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
               disabled
             />
           </Grid>
+
           {/* Allow publication */}
           <Grid item xs={12}>
             <Typography variant="h6">
@@ -516,167 +598,149 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({ herdId }) => {
             )}
           </Grid>
 
-          {/* Storlek på stöd */}
-          {formik.values.eligibleForSupport && (
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Storlek på stöd (kr)"
-                name="supportAmount"
-                type="number"
-                value={formik.values.supportAmount}
-                onChange={formik.handleChange}
-                fullWidth
-                margin="normal"
-                error={
-                  formik.touched.supportAmount &&
-                  Boolean(formik.errors.supportAmount)
-                }
-                helperText={
-                  formik.touched.supportAmount && formik.errors.supportAmount
-                }
-              />
-            </Grid>
-          )}
-        </Grid>
-        {/* Defekter/missbildningar */}
-        <Grid item xs={12}>
-          <TextField
-            label="Defekter/missbildningar som noterats under året (gärna dokumenterat genom foto)"
-            name="defectsMalformations"
-            value={formik.values.defectsMalformations}
-            onChange={formik.handleChange}
-            fullWidth
-            multiline
-            rows={4}
-            margin="normal"
-          />
-        </Grid>
-        {/* Sjukdomsfall */}
-        <Grid item xs={12}>
-          <Typography variant="h6">Sjukdomsfall</Typography>
-          {/* Table headers */}
-          <Grid container spacing={1} alignItems="center">
-            <Grid item xs={4}>
-              <Typography variant="subtitle1">Sjukdomsfall</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle1">
-                Antal drabbade kaniner
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle1">Ålder</Typography>
-            </Grid>
+          {/* Defekter/missbildningar */}
+          <Grid item xs={12}>
+            <TextField
+              label="Defekter/missbildningar som noterats under året (gärna dokumenterat genom foto)"
+              name="defectsMalformations"
+              value={formik.values.defectsMalformations}
+              onChange={formik.handleChange}
+              fullWidth
+              multiline
+              rows={4}
+              margin="normal"
+            />
+          </Grid>
 
-            {/* Myxomatos */}
-            <Grid item xs={4}>
-              <Typography>Myxomatos</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.myxomatosis.numberOfAffectedRabbits"
-                value={
-                  formik.values.diseases.myxomatosis.numberOfAffectedRabbits
-                }
-                onChange={formik.handleChange}
-                type="number"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.myxomatosis.age"
-                value={formik.values.diseases.myxomatosis.age}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
+          {/* Sjukdomsfall */}
+          <Grid item xs={12}>
+            <Typography variant="h6">Sjukdomsfall</Typography>
+            {/* Table headers */}
+            <Grid container spacing={1} alignItems="center">
+              <Grid item xs={4}>
+                <Typography variant="subtitle1">Sjukdomsfall</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="subtitle1">
+                  Antal drabbade kaniner
+                </Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="subtitle1">Ålder</Typography>
+              </Grid>
 
-            {/* RVHD typ 1 och 2 */}
-            <Grid item xs={4}>
-              <Typography>RVHD typ 1 och 2</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.rvhd.numberOfAffectedRabbits"
-                value={formik.values.diseases.rvhd.numberOfAffectedRabbits}
-                onChange={formik.handleChange}
-                type="number"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.rvhd.age"
-                value={formik.values.diseases.rvhd.age}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
+              {/* Myxomatos */}
+              <Grid item xs={4}>
+                <Typography>Myxomatos</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.myxomatosis.numberOfAffectedRabbits"
+                  value={
+                    formik.values.diseases.myxomatosis.numberOfAffectedRabbits
+                  }
+                  onChange={formik.handleChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.myxomatosis.age"
+                  value={formik.values.diseases.myxomatosis.age}
+                  onChange={formik.handleChange}
+                  fullWidth
+                />
+              </Grid>
 
-            {/* Koccidios */}
-            <Grid item xs={4}>
-              <Typography>Koccidios</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.coccidiosis.numberOfAffectedRabbits"
-                value={
-                  formik.values.diseases.coccidiosis.numberOfAffectedRabbits
-                }
-                onChange={formik.handleChange}
-                type="number"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.coccidiosis.age"
-                value={formik.values.diseases.coccidiosis.age}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
+              {/* RVHD typ 1 och 2 */}
+              <Grid item xs={4}>
+                <Typography>RVHD typ 1 och 2</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.rvhd.numberOfAffectedRabbits"
+                  value={formik.values.diseases.rvhd.numberOfAffectedRabbits}
+                  onChange={formik.handleChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.rvhd.age"
+                  value={formik.values.diseases.rvhd.age}
+                  onChange={formik.handleChange}
+                  fullWidth
+                />
+              </Grid>
 
-            {/* Annat */}
-            <Grid item xs={4}>
-              <TextField
-                label="Annat (Ange sjukdom)"
-                name="diseases.other.diseaseName"
-                value={formik.values.diseases.other.diseaseName}
-                onChange={formik.handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.other.numberOfAffectedRabbits"
-                value={formik.values.diseases.other.numberOfAffectedRabbits}
-                onChange={formik.handleChange}
-                type="number"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                name="diseases.other.age"
-                value={formik.values.diseases.other.age}
-                onChange={formik.handleChange}
-                fullWidth
-              />
+              {/* Koccidios */}
+              <Grid item xs={4}>
+                <Typography>Koccidios</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.coccidiosis.numberOfAffectedRabbits"
+                  value={
+                    formik.values.diseases.coccidiosis.numberOfAffectedRabbits
+                  }
+                  onChange={formik.handleChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.coccidiosis.age"
+                  value={formik.values.diseases.coccidiosis.age}
+                  onChange={formik.handleChange}
+                  fullWidth
+                />
+              </Grid>
+
+              {/* Annat */}
+              <Grid item xs={4}>
+                <TextField
+                  label="Annat (Ange sjukdom)"
+                  name="diseases.other.diseaseName"
+                  value={formik.values.diseases.other.diseaseName}
+                  onChange={formik.handleChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.other.numberOfAffectedRabbits"
+                  value={formik.values.diseases.other.numberOfAffectedRabbits}
+                  onChange={formik.handleChange}
+                  type="number"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  name="diseases.other.age"
+                  value={formik.values.diseases.other.age}
+                  onChange={formik.handleChange}
+                  fullWidth
+                />
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
 
-        {/* Submit button */}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          style={{ marginTop: "1em" }}
-        >
-          Skicka in årsrapport
-        </Button>
+          {/* Submit button */}
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              style={{ marginTop: "1em" }}
+            >
+              Skicka in årsrapport
+            </Button>
+          </Grid>
+        </Grid>
       </form>
     </Paper>
   );
