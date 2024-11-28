@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 12
+CURRENT_SCHEMA_VERSION = 13
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -1172,6 +1172,7 @@ class YearlyHerdReport(BaseModel):
     publish_tel = BooleanField()
     publish_email = BooleanField()
     publish_address = BooleanField()
+    version = CharField(null=True)
 
 
 class GenebankReport(BaseModel):
@@ -1663,7 +1664,22 @@ def migrate_10_to_11():
 
 def migrate_11_to_12():
     """
-    Migrate between schema version <current_version> and <next_version>.
+    Migrate the database schema from version 11 to version 12.
+
+    This migration performs the following steps:
+    1. Checks if the "herd" table exists in the database.
+    2. If the "herd" table does not exist, logs the migration as skipped.
+    3. If the "herd" table exists, checks if the columns "bank_account_number",
+       "bank_account_number_privacy", "bank_name", and "bank_name_privacy" are present.
+    4. If the columns are not present, adds them to the "herd" table with the specified
+       properties.
+    5. Logs the migration as applied with a comment.
+
+    The added columns are:
+    - bank_account_number: TextField, nullable
+    - bank_account_number_privacy: CharField with a max length of 15, nullable, default 'private'
+    - bank_name: TextField, nullable
+    - bank_name_privacy: CharField with a max length of 15, nullable, default 'private'
     """
     with DATABASE.atomic():
         if "herd" not in DATABASE.get_tables():
@@ -1698,6 +1714,44 @@ def migrate_11_to_12():
             comment="Add bank account fields to herd",
             applied=datetime.now(),
         ).execute()
+
+def migrate_12_to_13():
+    """
+    Migrate between schema version 12 and 13.
+    Adds a 'version' field to the 'yearlyherdreport' table.
+    """
+    with DATABASE.atomic():
+        if "yearlyherdreport" not in DATABASE.get_tables():
+            # Can't run migration if the table doesn't exist
+            SchemaHistory.insert(
+                version=13,
+                comment="YearlyHerdReport table does not exist; skipping migration.",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("yearlyherdreport")]
+
+        if "version" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "yearlyherdreport",
+                    "version",
+                    CharField(null=True),
+                )
+            )
+            SchemaHistory.insert(
+                version=13,
+                comment="Added 'version' field to 'yearlyherdreport' table",
+                applied=datetime.now(),
+            ).execute()
+        else:
+            # If the column already exists, update the schema history
+            SchemaHistory.insert(
+                version=13,
+                comment="'version' field already exists in 'yearlyherdreport'",
+                applied=datetime.now(),
+            ).execute()
 
 
 

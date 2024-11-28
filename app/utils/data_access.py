@@ -8,6 +8,7 @@ database.
 import logging
 import uuid
 from datetime import date, datetime, timedelta
+import json
 
 from peewee import (
     JOIN,
@@ -32,6 +33,7 @@ from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
 from utils.database import next_individual_number  # isort: skip
+from utils.database import YearlyHerdReport
 import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
@@ -743,6 +745,78 @@ def add_herd(form, user_uuid):
             return {"status": "error", "message": "missing data"}
         logger.info(f"User:{user.username} Added herd: {herd.short_info()}")
         return {"status": "success"}
+
+def get_latest_yearly_report(herd_id):
+    try:
+        report = (
+            YearlyHerdReport.select()
+            .where(YearlyHerdReport.herd == herd_id)
+            .order_by(YearlyHerdReport.report_date.desc())
+            .get()
+        )
+        report_data = report.as_dict()
+        # Parse the JSON data field
+        report_data['data'] = json.loads(report_data['data'])
+        return report_data
+    except YearlyHerdReport.DoesNotExist:
+        return None
+
+    
+def save_yearly_report(herd_id, form_data, user):
+    try:
+        # Prepare the data
+        print("form_data",form_data)
+        report_data_json = json.dumps(form_data.get('data', {}))
+        print("in save",report_data_json)
+        report_date = date.today()
+        report_name = form_data.get('name', f'Yearly Report {report_date.year}')
+        version = form_data.get('version', '1.0')  # Default version if not provided
+
+        # Check if a report already exists for this herd and year
+        existing_report = (
+            YearlyHerdReport.select()
+            .where(
+                (YearlyHerdReport.herd == herd_id) &
+                (fn.DATE_PART('year', YearlyHerdReport.report_date) == report_date.year)
+            )
+            .first()
+        )
+
+
+        if existing_report:
+            # Update the existing report
+            existing_report.data = report_data_json
+            existing_report.name = report_name
+            existing_report.generated_by = user.id
+            existing_report.version = version
+            existing_report.publish = form_data.get('publish', existing_report.publish)
+            existing_report.publish_tel = form_data.get('publish_tel', existing_report.publish_tel)
+            existing_report.publish_email = form_data.get('publish_email', existing_report.publish_email)
+            existing_report.publish_address = form_data.get('publish_address', existing_report.publish_address)
+            existing_report.save()
+            print("existingreport", existing_report.data)
+            return {"status": "success", "message": "Report updated"}
+        else:
+            # Create a new report
+            new_report = YearlyHerdReport.create(
+                herd=herd_id,
+                report_date=report_date,
+                generated_by=user.id,
+                name=report_name,
+                data=report_data_json,
+                version=version,
+                publish=form_data.get('publish', False),
+                publish_tel=form_data.get('publish_tel', False),
+                publish_email=form_data.get('publish_email', False),
+                publish_address=form_data.get('publish_address', False),
+            )
+            print("create new",new_report)
+            return {"status": "success", "message": "Report created"}
+    except Exception as e:
+        logger.error(f"Error saving yearly report: {e}")
+        return {"status": "error", "message": "Failed to save report"}
+
+
 
 
 def update_herd(form, user_uuid):

@@ -1154,6 +1154,43 @@ def verify_certificate(i_number):
         404,
     )
 
+@APP.route("/api/herd/<h_id>/yearlyreport", methods=["GET", "POST"])
+@login_required
+def herd_yearly_report(h_id):
+    user_id = session.get("user_id", None)
+    user = da.fetch_user_info(user_id)
+
+    # Fetch the herd data using the existing get_herd function
+    herd_data = da.get_herd(h_id, user_id)
+    if not herd_data:
+        return jsonify({"status": "error", "message": "Herd not found or access denied"}), 404
+
+    # Use user.can_edit with h_id (herd code)
+    if not user.can_edit(h_id):
+        return jsonify({"status": "error", "message": "Permission denied"}), 403
+
+    # Get the herd_id from the herd_data
+    herd_id = herd_data['id']
+
+    if request.method == "GET":
+        # Retrieve the latest yearly report for the herd
+        report = da.get_latest_yearly_report(herd_id)
+        if report:
+            return jsonify({"status": "success", "report": report})
+        else:
+            return jsonify({"status": "error", "message": "No report found"}), 404
+
+    elif request.method == "POST":
+        # Create or update the yearly report
+        form = request.json
+        print(form)
+        result = da.save_yearly_report(herd_id, form, user)
+        if result['status'] == 'success':
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+
+
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
