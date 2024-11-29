@@ -1191,6 +1191,51 @@ def herd_yearly_report(h_id):
             return jsonify(result), 400
 
 
+@APP.route("/api/manage/yearly_report_rounds", methods=["GET"])
+@login_required
+def get_yearly_report_rounds():
+    """
+    Retrieves all YearlyReportRounds.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    rounds = da.get_yearly_report_rounds(user_id)
+    if rounds is not None:
+        return jsonify({'status': 'success', 'rounds': rounds})
+    else:
+        return jsonify({'status': 'error', 'message': 'Permission denied'}), 403
+
+@APP.route("/api/manage/yearly_report_round", methods=["POST"])
+@login_required
+def create_yearly_report_round():
+    """
+    Creates a new YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    form = request.json
+    result = da.create_yearly_report_round(form, user_id)
+    if result['status'] == 'success':
+        return jsonify(result), 201
+    else:
+        return jsonify(result), 403
+
+@APP.route("/api/manage/yearly_report_round/<int:round_id>", methods=["PATCH"])
+@login_required
+def update_yearly_report_round(round_id):
+    """
+    Updates an existing YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    form = request.json
+    form['id'] = round_id
+    result = da.update_yearly_report_round(form, user_id)
+    if result['status'] == 'success':
+        return jsonify(result)
+    else:
+        return jsonify(result), 403
+
 
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing

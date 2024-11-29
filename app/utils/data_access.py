@@ -1335,7 +1335,7 @@ def update_individual(form, user_uuid):
                     f"{old_individual.number}/certificate.pdf"
                 )
             # if breeding changed and breeding birth_date is changed
-            # update birth_date herd_tracking_date
+            # update birth_date herd tracking date
             if (
                 old_individual.breeding.id != individual.breeding.id
                 and old_individual.breeding.birth_date.strftime("%Y-%m-%d")
@@ -2158,3 +2158,55 @@ def update_birth_date_herd_tracking(individual, username, new_date, old_date):
     except DoesNotExist:
         logger.info(f"{individual.number} does not have birth_date herdtracking event")
         raise ValueError("Individual does not have birth_date herdtracking event")
+
+
+def get_yearly_report_rounds(user_uuid=None):
+    """
+    Retrieves all YearlyReportRounds.
+    Only accessible to admin or manager users.
+    """
+    user = fetch_user_info(user_uuid)
+    if user and (user.is_admin() or user.is_manager()):
+        rounds = YearlyReportRound.select().dicts()
+        return list(rounds)
+    else:
+        return None
+
+def create_yearly_report_round(form, user_uuid=None):
+    """
+    Creates a new YearlyReportRound.
+    """
+    user = fetch_user_info(user_uuid)
+    if not user or not (user.is_admin() or user.is_manager()):
+        return {'status': 'error', 'message': 'Permission denied'}
+    try:
+        new_round = YearlyReportRound.create(
+            start_date=form.get('start_date'),
+            end_date=form.get('end_date'),
+            description=form.get('description')
+        )
+        return {'status': 'success', 'round': new_round.id}
+    except Exception as e:
+        logger.error("Error creating YearlyReportRound: %s", e)
+        return {'status': 'error', 'message': 'Could not create YearlyReportRound'}
+
+def update_yearly_report_round(form, user_uuid=None):
+    """
+    Updates an existing YearlyReportRound.
+    """
+    user = fetch_user_info(user_uuid)
+    if not user or not (user.is_admin() or user.is_manager()):
+        return {'status': 'error', 'message': 'Permission denied'}
+    try:
+        round_id = form.get('id')
+        round = YearlyReportRound.get_by_id(round_id)
+        round.start_date = form.get('start_date', round.start_date)
+        round.end_date = form.get('end_date', round.end_date)
+        round.description = form.get('description', round.description)
+        round.save()
+        return {'status': 'success'}
+    except YearlyReportRound.DoesNotExist:
+        return {'status': 'error', 'message': 'YearlyReportRound not found'}
+    except Exception as e:
+        logger.error("Error updating YearlyReportRound: %s", e)
+        return {'status': 'error', 'message': 'Could not update YearlyReportRound'}
