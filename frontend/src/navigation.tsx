@@ -22,6 +22,7 @@ import PersonAddIcon from "@material-ui/icons/PersonAdd";
 import PostAddIcon from "@material-ui/icons/PostAdd";
 import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
 import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
+import BallotIcon from "@material-ui/icons/Ballot";
 import EcoIcon from "@material-ui/icons/Eco";
 import { Help } from "@material-ui/icons";
 
@@ -58,6 +59,7 @@ import {
 import { MenuProps } from "@material-ui/core/Menu";
 
 import "./style.css";
+import YearlyReportMultiStepForm from "./YearlyReportMultiStepForm";
 
 const StyledMenu = withStyles({
   paper: {
@@ -166,6 +168,17 @@ export function Navigation() {
       ),
       visible: is_owner,
       icon: <NaturePeopleIcon />,
+    },
+    {
+      label: "Årsrapport",
+      path: "/yearly",
+      component: (
+        <Restricted>
+          <YearlyReportMultiStepForm />
+        </Restricted>
+      ),
+      visible: is_owner,
+      icon: <BallotIcon />,
     },
     {
       label: "Registrera",
