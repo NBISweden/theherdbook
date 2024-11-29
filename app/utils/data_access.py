@@ -2210,3 +2210,28 @@ def update_yearly_report_round(form, user_uuid=None):
     except Exception as e:
         logger.error("Error updating YearlyReportRound: %s", e)
         return {'status': 'error', 'message': 'Could not update YearlyReportRound'}
+
+def get_yearly_report_rounds_with_counts(user_uuid=None):
+    """
+    Retrieves all YearlyReportRounds along with the count of submitted YearlyHerdReports per round.
+    Only accessible to admin or manager users.
+    """
+    user = fetch_user_info(user_uuid)
+    if user and (user.is_admin() or user.is_manager()):
+        rounds = (
+            YearlyReportRound
+            .select(
+                YearlyReportRound,
+                fn.COUNT(YearlyHerdReport.id).alias('report_count')
+            )
+            .join(
+                YearlyHerdReport,
+                JOIN.LEFT_OUTER,
+                on=(YearlyHerdReport.round == YearlyReportRound.id)
+            )
+            .group_by(YearlyReportRound.id)
+            .dicts()
+        )
+        return list(rounds)
+    else:
+        return None

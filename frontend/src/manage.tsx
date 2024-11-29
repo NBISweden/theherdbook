@@ -27,6 +27,7 @@ import { HerdForm } from "@app/herdForm";
 import { UserForm } from "@app/userForm";
 import { ActiveUsers } from "@app/activeUsers";
 import { Autocomplete } from "@material-ui/lab";
+import YearlyReportRounds from "./YearlyReportRounds";
 
 const useStyles = makeStyles({
   main: {
@@ -222,6 +223,14 @@ export function Manage() {
   console.log("topic:", topic);
   console.log("genebank:", genebank, "target:", target);
 
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const [view, setView] = useState("");
+
+  const handleViewChange = (newView: string) => {
+    setView(newView);
+    history.push(`/manage/${newView}`);
+  };
+
   return (
     <>
       <Paper className={styles.main}>
@@ -268,30 +277,33 @@ export function Manage() {
             <div className={styles.leftControls}>
               <Button
                 variant="contained"
-                color={
-                  topic != "user" && topic != "active_users"
-                    ? "primary"
-                    : "default"
-                }
-                onClick={() =>
-                  history.push(`/manage/${genebank}/${target ? target : ""}`)
-                }
+                color={view === "herds" ? "primary" : "default"}
+                onClick={() => handleViewChange("herds")}
               >
                 Besättningar
               </Button>
               <Button
                 variant="contained"
-                color={topic == "user" ? "primary" : "default"}
-                onClick={() =>
-                  history.push(`/manage/user/${target ? target : ""}`)
-                }
+                color={view === "users" ? "primary" : "default"}
+                onClick={() => handleViewChange("users")}
               >
                 Användare
               </Button>
+              {is_admin && (
+                <Button
+                  variant="contained"
+                  color={
+                    view === "yearly_report_rounds" ? "primary" : "default"
+                  }
+                  onClick={() => handleViewChange("yearly_report_rounds")}
+                >
+                  Årsrapportomgångar
+                </Button>
+              )}
               <Button
                 variant="contained"
-                color={topic == "active_users" ? "primary" : "default"}
-                onClick={() => history.push(`/manage/active_users`)}
+                color={view === "active_users" ? "primary" : "default"}
+                onClick={() => handleViewChange("active_users")}
               >
                 Lista inloggade aktiva användare
               </Button>
@@ -338,17 +350,22 @@ export function Manage() {
 
         {/* Only show the input form for the currently selected type */}
         <Switch>
+          <Route path="/manage/yearly_report_rounds">
+            <Paper className={styles.inputForm}>
+              <YearlyReportRounds />
+            </Paper>
+          </Route>
           <Route path="/manage/active_users">
             <Paper className={styles.inputForm}>
               <ActiveUsers />
             </Paper>
           </Route>
-          <Route path="/manage/user">
+          <Route path="/manage/users">
             <Paper className={styles.inputForm}>
               <UserForm id={selected?.value} />
             </Paper>
           </Route>
-          <Route path="/manage/">
+          <Route path="/manage/herds">
             <Paper className={styles.inputForm}>
               <HerdForm
                 id={selected?.value}
