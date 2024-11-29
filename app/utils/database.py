@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 13
+CURRENT_SCHEMA_VERSION = 14
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -1154,6 +1154,22 @@ class UserMessage(BaseModel):
     recieve_time = DateTimeField()
 
 
+class YearlyReportRound(BaseModel):
+    """
+    Stores yearly report rounds. Managers or admins can create yearly rounds,
+    and activate them based on start and end dates or manually.
+    """
+
+    id = AutoField(primary_key=True, column_name="yearly_report_round_id")
+    report_year = IntegerField(unique=True)
+    start_date = DateField(null=True)
+    end_date = DateField(null=True)
+    manually_activated = BooleanField(default=False)
+    is_active = BooleanField(default=False)
+    created_by = ForeignKeyField(User)
+    creation_date = DateTimeField(default=datetime.now)
+
+
 class YearlyHerdReport(BaseModel):
     """
     Stores yearly reports for herds.
@@ -1173,21 +1189,7 @@ class YearlyHerdReport(BaseModel):
     publish_email = BooleanField()
     publish_address = BooleanField()
     version = CharField(null=True)
-
-
-class GenebankReport(BaseModel):
-    """
-    Stores yearly reports for genebanks.
-
-    The data field stores the report data in json format, but we refrained from
-    storing it in a JSONField so that we could still use sqlite for testing.
-    """
-
-    genebank = ForeignKeyField(Genebank)
-    generated_by = ForeignKeyField(User)
-    report_date = DateField()
-    name = CharField()
-    data = TextField()
+    round = ForeignKeyField(YearlyReportRound, null=True)
 
 
 class HerdTracking(BaseModel):
@@ -1234,7 +1236,6 @@ class SchemaHistory(BaseModel):
     comment = TextField()
     applied = DateTimeField(null=True)
 
-
 MODELS = [
     Genebank,
     Herd,
@@ -1248,8 +1249,8 @@ MODELS = [
     Bodyfat,
     User,
     UserMessage,
+    YearlyReportRound,
     YearlyHerdReport,
-    GenebankReport,
     HerdTracking,
     Authenticators,
     SchemaHistory,
@@ -1566,9 +1567,7 @@ def migrate_7_to_8():
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=8,
-            comment="Add breerding_herd_id to breeding",
-            applied=datetime.now(),
+            version=8, comment="Add breerding_herd_id to breeding", applied=datetime.now()
         ).execute()
 
 
@@ -1753,6 +1752,33 @@ def migrate_12_to_13():
                 applied=datetime.now(),
             ).execute()
 
+def migrate_13_to_14():
+    """
+    Migrate between schema version 13 and 14.
+    Add YearlyReportRound model, link YearlyHerdReport to it, and remove GenebankReport.
+    """
+    with DATABASE.atomic():
+        # Create YearlyReportRound table if it doesn't exist
+        if not YearlyReportRound.table_exists():
+            YearlyReportRound.create_table()
+
+        # Add 'round' field to YearlyHerdReport
+        cols = [x.name for x in DATABASE.get_columns('yearlyherdreport')]
+        if 'round_id' not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column('yearlyherdreport', 'round_id', IntegerField(null=True))
+            )
+            # Optionally, add foreign key constraint if supported
+
+        # Remove GenebankReport table if it exists
+        if 'genebankreport' in DATABASE.get_tables():
+            DATABASE.execute_sql('DROP TABLE IF EXISTS genebankreport;')
+
+        SchemaHistory.insert(
+            version=14,
+            comment="Added YearlyReportRound, linked YearlyHerdReport to it, removed GenebankReport",
+            applied=datetime.now(),
+        ).execute()
 
 
 def check_migrations():
