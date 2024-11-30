@@ -34,6 +34,7 @@ from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
 from utils.database import next_individual_number  # isort: skip
 from utils.database import YearlyHerdReport
+from utils.database import YearlyReportRound  # isort:skip
 import utils.s3 as s3  # isort:skip
 
 from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
@@ -2166,7 +2167,7 @@ def get_yearly_report_rounds(user_uuid=None):
     Only accessible to admin or manager users.
     """
     user = fetch_user_info(user_uuid)
-    if user and (user.is_admin() or user.is_manager()):
+    if user and (user.is_admin or user.is_manager):
         rounds = YearlyReportRound.select().dicts()
         return list(rounds)
     else:
@@ -2177,7 +2178,7 @@ def create_yearly_report_round(form, user_uuid=None):
     Creates a new YearlyReportRound.
     """
     user = fetch_user_info(user_uuid)
-    if not user or not (user.is_admin() or user.is_manager()):
+    if not user or not (user.is_admin or user.is_manager):
         return {'status': 'error', 'message': 'Permission denied'}
     try:
         new_round = YearlyReportRound.create(
@@ -2195,7 +2196,7 @@ def update_yearly_report_round(form, user_uuid=None):
     Updates an existing YearlyReportRound.
     """
     user = fetch_user_info(user_uuid)
-    if not user or not (user.is_admin() or user.is_manager()):
+    if not user or not (user.is_admin or user.is_manager):
         return {'status': 'error', 'message': 'Permission denied'}
     try:
         round_id = form.get('id')
@@ -2217,7 +2218,7 @@ def get_yearly_report_rounds_with_counts(user_uuid=None):
     Only accessible to admin or manager users.
     """
     user = fetch_user_info(user_uuid)
-    if user and (user.is_admin() or user.is_manager()):
+    if user and (user.is_admin or user.is_manager):
         rounds = (
             YearlyReportRound
             .select(
