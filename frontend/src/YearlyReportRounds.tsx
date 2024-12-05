@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { get, post } from "./communication";
+import {
+  Button,
+  Typography,
+  TextField,
+  Paper,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
 
 interface YearlyReportRound {
   id: number;
@@ -9,7 +20,20 @@ interface YearlyReportRound {
   report_count: number;
 }
 
+const useStyles = makeStyles({
+  manageSection: {
+    padding: "2em",
+  },
+  roundsList: {
+    // Add styles if needed
+  },
+  form: {
+    // Add styles if needed
+  },
+});
+
 const YearlyReportRounds: React.FC = () => {
+  const classes = useStyles();
   const [rounds, setRounds] = useState<YearlyReportRound[]>([]);
   const [newRound, setNewRound] = useState({
     start_date: "",
@@ -50,52 +74,74 @@ const YearlyReportRounds: React.FC = () => {
   };
 
   return (
-    <div className="manage-section">
-      <h2>Yearly Report Rounds</h2>
-      <ul className="rounds-list">
+    <Paper className={classes.manageSection}>
+      <Typography variant="h5" gutterBottom>
+        Yearly Report Rounds
+      </Typography>
+      <List className={classes.roundsList}>
         {rounds.map((round) => (
-          <li key={round.id}>
-            <strong>{round.start_date}</strong> to{" "}
-            <strong>{round.end_date}</strong> - {round.description} (
-            <strong>{round.report_count}</strong> reports)
-          </li>
+          <ListItem key={round.id}>
+            <ListItemText
+              primary={`${new Date(round.start_date).toLocaleDateString()} to ${new Date(
+                round.end_date
+              ).toLocaleDateString()} - ${round.description}`}
+              secondary={`${round.report_count} reports`}
+            />
+          </ListItem>
         ))}
-      </ul>
-      <h3>Create New Round</h3>
-      <form onSubmit={handleSubmit} className="round-form">
-        <label>
-          Start Date:
-          <input
-            type="date"
-            name="start_date"
-            value={newRound.start_date}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          End Date:
-          <input
-            type="date"
-            name="end_date"
-            value={newRound.end_date}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Description:
-          <input
-            type="text"
-            name="description"
-            value={newRound.description}
-            onChange={handleChange}
-          />
-        </label>
-        <button type="submit">Create Round</button>
+      </List>
+      <Typography variant="h6" gutterBottom>
+        Create New Round
+      </Typography>
+      <form onSubmit={handleSubmit} className={classes.form}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Start Date"
+              type="date"
+              name="start_date"
+              value={newRound.start_date}
+              onChange={handleChange}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="End Date"
+              type="date"
+              name="end_date"
+              value={newRound.end_date}
+              onChange={handleChange}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              fullWidth
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Description"
+              name="description"
+              value={newRound.description}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button type="submit" variant="contained" color="primary">
+              Create Round
+            </Button>
+          </Grid>
+        </Grid>
       </form>
-    </div>
+    </Paper>
   );
 };
 
 export default YearlyReportRounds;
+
