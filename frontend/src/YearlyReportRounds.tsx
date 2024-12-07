@@ -3,20 +3,25 @@ import { get, post } from "./communication";
 import {
   Button,
   Typography,
-  TextField,
   Paper,
   Grid,
   List,
   ListItem,
   ListItemText,
 } from "@material-ui/core";
+import {
+  KeyboardDatePicker,
+  MuiPickersUtilsProvider,
+} from "@material-ui/pickers";
+import DateFnsUtils from "@date-io/date-fns";
+import svLocale from "date-fns/locale/sv";
 import { makeStyles } from "@material-ui/core/styles";
+import "date-fns/locale/sv";
 
 interface YearlyReportRound {
   id: number;
   start_date: string;
   end_date: string;
-  description: string;
   report_count: number;
 }
 
@@ -36,9 +41,8 @@ const YearlyReportRounds: React.FC = () => {
   const classes = useStyles();
   const [rounds, setRounds] = useState<YearlyReportRound[]>([]);
   const [newRound, setNewRound] = useState({
-    start_date: "",
-    end_date: "",
-    description: "",
+    start_date: new Date(),
+    end_date: new Date(),
   });
 
   useEffect(() => {
@@ -56,92 +60,91 @@ const YearlyReportRounds: React.FC = () => {
     }
   };
 
+  const handleDateChange = (date: Date | null, name: string) => {
+    setNewRound({ ...newRound, [name]: date });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await post("/api/manage/yearly_report_round", newRound);
+      const payload = {
+        start_date: newRound.start_date.toISOString().split("T")[0],
+        end_date: newRound.end_date.toISOString().split("T")[0],
+      };
+      const response = await post("/api/manage/yearly_report_round", payload);
       if (response.status === "success") {
         fetchRounds();
-        setNewRound({ start_date: "", end_date: "", description: "" });
+        setNewRound({
+          start_date: new Date(),
+          end_date: new Date(),
+        });
       }
     } catch (error) {
       console.error("Error creating yearly report round:", error);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewRound({ ...newRound, [e.target.name]: e.target.value });
-  };
-
   return (
     <Paper className={classes.manageSection}>
       <Typography variant="h5" gutterBottom>
-        Yearly Report Rounds
+        Årliga Rapportperioder
       </Typography>
       <List className={classes.roundsList}>
         {rounds.map((round) => (
           <ListItem key={round.id}>
             <ListItemText
-              primary={`${new Date(round.start_date).toLocaleDateString()} to ${new Date(
-                round.end_date
-              ).toLocaleDateString()} - ${round.description}`}
-              secondary={`${round.report_count} reports`}
+              primary={`${new Date(round.start_date).toLocaleDateString(
+                "sv-SE"
+              )} till ${new Date(round.end_date).toLocaleDateString("sv-SE")}`}
+              secondary={`${round.report_count} rapporter`}
             />
           </ListItem>
         ))}
       </List>
       <Typography variant="h6" gutterBottom>
-        Create New Round
+        Skapa Ny Period
       </Typography>
       <form onSubmit={handleSubmit} className={classes.form}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Start Date"
-              type="date"
-              name="start_date"
-              value={newRound.start_date}
-              onChange={handleChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              fullWidth
-              required
-            />
+        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={svLocale}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <KeyboardDatePicker
+                label="Startdatum"
+                format="dd/MM/yyyy"
+                value={newRound.start_date}
+                onChange={(date) => handleDateChange(date, "start_date")}
+                fullWidth
+                required
+                KeyboardButtonProps={{
+                  "aria-label": "ändra datum",
+                }}
+                locale="sv"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <KeyboardDatePicker
+                label="Slutdatum"
+                format="dd/MM/yyyy"
+                value={newRound.end_date}
+                onChange={(date) => handleDateChange(date, "end_date")}
+                fullWidth
+                required
+                KeyboardButtonProps={{
+                  "aria-label": "ändra datum",
+                }}
+                locale="sv"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button type="submit" variant="contained" color="primary">
+                Skapa Period
+              </Button>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="End Date"
-              type="date"
-              name="end_date"
-              value={newRound.end_date}
-              onChange={handleChange}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              fullWidth
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Description"
-              name="description"
-              value={newRound.description}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
-              Create Round
-            </Button>
-          </Grid>
-        </Grid>
+        </MuiPickersUtilsProvider>
       </form>
     </Paper>
   );
 };
 
 export default YearlyReportRounds;
-
