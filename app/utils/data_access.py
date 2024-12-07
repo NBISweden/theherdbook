@@ -2184,6 +2184,7 @@ def create_yearly_report_round(form, user_uuid=None):
         new_round = YearlyReportRound.create(
             start_date=form.get('start_date'),
             end_date=form.get('end_date'),
+            report_year=form.get('report_year'),  # Include report_year if available
             description=form.get('description')
         )
         return {'status': 'success', 'round': new_round.id}
@@ -2203,7 +2204,6 @@ def update_yearly_report_round(form, user_uuid=None):
         round = YearlyReportRound.get_by_id(round_id)
         round.start_date = form.get('start_date', round.start_date)
         round.end_date = form.get('end_date', round.end_date)
-        round.description = form.get('description', round.description)
         round.save()
         return {'status': 'success'}
     except YearlyReportRound.DoesNotExist:
