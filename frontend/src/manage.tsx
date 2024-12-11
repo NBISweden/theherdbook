@@ -228,17 +228,22 @@ export function Manage() {
 
   const handleViewChange = (newView: string) => {
     setView(newView);
+    // Clear selection and options when switching views
+    setSelected(null);
+
     if (newView === "user") {
       setTopic("user");
       setUserOptions();
     } else if (newView === "herds" && genebanks.length > 0) {
-      // Set default genebank when switching to herds view
       const defaultGenebank = genebanks[0].name;
       setTopic(defaultGenebank);
       setGenebank(defaultGenebank);
       setHerdOptions(defaultGenebank);
       history.push(`/manage/${defaultGenebank}`);
       return;
+    } else {
+      // Clear options for other views
+      setOptions([]);
     }
     history.push(`/manage/${newView}`);
   };
