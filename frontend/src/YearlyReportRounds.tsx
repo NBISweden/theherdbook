@@ -166,6 +166,29 @@ const YearlyReportRounds: React.FC = () => {
     }
   };
 
+  const handleDelete = (roundId: number) => {
+    // Confirm deletion
+    if (window.confirm("Are you sure you want to delete this round?")) {
+      fetch(`/api/manage/yearly_report_round/${roundId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            // Update state to remove the deleted round
+            setRounds(rounds.filter((round) => round.id !== roundId));
+          } else {
+            alert(data.message || "Failed to delete the round");
+          }
+        })
+        .catch((error) => {
+          console.error("Error deleting round:", error);
+          alert("An error occurred while deleting the round");
+        });
+    }
+  };
+
   return (
     <Paper className={classes.manageSection}>
       <Typography variant="h5" gutterBottom>
@@ -183,6 +206,7 @@ const YearlyReportRounds: React.FC = () => {
               <TableCell>Slutdatum</TableCell>
               <TableCell>Skapad av</TableCell>
               <TableCell>Skapad den</TableCell>
+              <TableCell>Åtgärder</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -205,6 +229,15 @@ const YearlyReportRounds: React.FC = () => {
                 <TableCell>{round.created_by_username}</TableCell>
                 <TableCell>
                   {new Date(round.creation_date).toLocaleDateString("sv-SE")}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => handleDelete(round.id)}
+                  >
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

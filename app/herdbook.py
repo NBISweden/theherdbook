@@ -1234,6 +1234,21 @@ def update_yearly_report_round(round_id):
         return jsonify(result), 403
 
 
+@APP.route("/api/manage/yearly_report_round/<int:round_id>", methods=["DELETE"])
+@login_required
+def delete_yearly_report_round(round_id):
+    """
+    Deletes an existing YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    result = da.delete_yearly_report_round(round_id, user_id)
+    if result['status'] == 'success':
+        return jsonify(result)
+    else:
+        return jsonify(result), 403
+
+
 @APP.route("/", defaults={"path": ""})
 @APP.route("/<path:path>")  # catch-all to allow react routing
 def main(path):  # pylint: disable=unused-argument

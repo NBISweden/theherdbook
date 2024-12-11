@@ -2242,3 +2242,21 @@ def get_yearly_report_rounds_with_counts(user_uuid=None):
         return rounds
     else:
         return {"status": "error", "message": "Forbidden"}
+
+def delete_yearly_report_round(round_id, user_uuid=None):
+    """
+    Deletes a YearlyReportRound entry if the user has the required permissions.
+    """
+    user = fetch_user_info(user_uuid)
+    if not user or not (user.is_admin or user.is_manager):
+        return {'status': 'error', 'message': 'Unauthorized'}
+
+    try:
+        round_entry = YearlyReportRound.get_by_id(round_id)
+        round_entry.delete_instance()
+        return {'status': 'success', 'message': 'Yearly report round deleted'}
+    except YearlyReportRound.DoesNotExist:
+        return {'status': 'error', 'message': 'Yearly report round not found'}
+    except Exception as e:
+        logger.error(f"Error deleting yearly report round: {e}")
+        return {'status': 'error', 'message': 'An error occurred while deleting the round'}
