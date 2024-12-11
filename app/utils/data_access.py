@@ -2168,49 +2168,55 @@ def get_yearly_report_rounds(user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user and (user.is_admin or user.is_manager):
-        rounds = YearlyReportRound.select().dicts()
-        return list(rounds)
+        rounds = YearlyReportRound.select()
+        return [r.as_dict() for r in rounds]
     else:
-        return None
+        return {"status": "error", "message": "Forbidden"}
 
 def create_yearly_report_round(form, user_uuid=None):
     """
-    Creates a new YearlyReportRound.
+    Creates a new YearlyReportRound based on the form data.
+    Only accessible to admin or manager users.
     """
     user = fetch_user_info(user_uuid)
     if not user or not (user.is_admin or user.is_manager):
-        return {'status': 'error', 'message': 'Permission denied'}
+        return {"status": "error", "message": "Forbidden"}
     try:
         new_round = YearlyReportRound.create(
+            report_year=form.get('report_year'),
             start_date=form.get('start_date'),
             end_date=form.get('end_date'),
-            report_year=form.get('report_year'),  # Include report_year if available
-            description=form.get('description')
+            description=form.get('description'),
+            is_active=form.get('is_active', False),
+            created_by=user,
+            # creation_date is set automatically
         )
         return {'status': 'success', 'round': new_round.id}
     except Exception as e:
-        logger.error("Error creating YearlyReportRound: %s", e)
-        return {'status': 'error', 'message': 'Could not create YearlyReportRound'}
+        # ...existing error handling...
+        return {'status': 'error', 'message': str(e)}
 
-def update_yearly_report_round(form, user_uuid=None):
+def update_yearly_report_round(round_id, form, user):
     """
-    Updates an existing YearlyReportRound.
+    Updates an existing YearlyReportRound with data from the form.
+    Only accessible to admin or manager users.
     """
-    user = fetch_user_info(user_uuid)
-    if not user or not (user.is_admin or user.is_manager):
-        return {'status': 'error', 'message': 'Permission denied'}
+    if not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Forbidden"}
     try:
-        round_id = form.get('id')
-        round = YearlyReportRound.get_by_id(round_id)
-        round.start_date = form.get('start_date', round.start_date)
-        round.end_date = form.get('end_date', round.end_date)
-        round.save()
-        return {'status': 'success'}
+        yr_round = YearlyReportRound.get(YearlyReportRound.id == round_id)
+        yr_round.start_date = form.get('start_date', yr_round.start_date)
+        yr_round.end_date = form.get('end_date', yr_round.end_date)
+        yr_round.description = form.get('description', yr_round.description)
+        yr_round.is_active = form.get('is_active', yr_round.is_active)
+        # Do not update 'created_by' or 'creation_date'
+        yr_round.save()
+        return {'status': 'success', 'round': yr_round.id}
     except YearlyReportRound.DoesNotExist:
-        return {'status': 'error', 'message': 'YearlyReportRound not found'}
+        return {'status': 'error', 'message': 'YearlyReportRound not found.'}
     except Exception as e:
-        logger.error("Error updating YearlyReportRound: %s", e)
-        return {'status': 'error', 'message': 'Could not update YearlyReportRound'}
+        # ...existing error handling...
+        return {'status': 'error', 'message': str(e)}
 
 def get_yearly_report_rounds_with_counts(user_uuid=None):
     """
@@ -2219,20 +2225,12 @@ def get_yearly_report_rounds_with_counts(user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user and (user.is_admin or user.is_manager):
-        rounds = (
+        rounds_with_counts = (
             YearlyReportRound
-            .select(
-                YearlyReportRound,
-                fn.COUNT(YearlyHerdReport.id).alias('report_count')
-            )
-            .join(
-                YearlyHerdReport,
-                JOIN.LEFT_OUTER,
-                on=(YearlyHerdReport.round == YearlyReportRound.id)
-            )
+            .select(YearlyReportRound, fn.COUNT(YearlyHerdReport.id).alias('report_count'))
+            .join(YearlyHerdReport, JOIN.LEFT_OUTER)
             .group_by(YearlyReportRound.id)
-            .dicts()
         )
-        return list(rounds)
+        return [{'round': r.as_dict(), 'report_count': r.report_count} for r in rounds_with_counts]
     else:
-        return None
+        return {"status": "error", "message": "Forbidden"}
