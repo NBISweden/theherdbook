@@ -228,8 +228,34 @@ export function Manage() {
 
   const handleViewChange = (newView: string) => {
     setView(newView);
+    if (newView === "user") {
+      setTopic("user");
+      setUserOptions();
+    } else if (newView === "herds" && genebanks.length > 0) {
+      // Set default genebank when switching to herds view
+      const defaultGenebank = genebanks[0].name;
+      setTopic(defaultGenebank);
+      setGenebank(defaultGenebank);
+      setHerdOptions(defaultGenebank);
+      history.push(`/manage/${defaultGenebank}`);
+      return;
+    }
     history.push(`/manage/${newView}`);
   };
+
+  // Set initial view and topic on component mount
+  React.useEffect(() => {
+    if (genebanks.length > 0) {
+      const defaultGenebank = user.is_admin
+        ? genebanks[0].name
+        : genebanks[user.is_manager[0] - 1].name;
+      setTopic(defaultGenebank);
+      setGenebank(defaultGenebank);
+      setHerdOptions(defaultGenebank);
+      setView("herds");
+      history.push(`/manage/${defaultGenebank}`);
+    }
+  }, [genebanks]);
 
   return (
     <>
@@ -239,7 +265,9 @@ export function Manage() {
             <div className={styles.rightControls}>
               <div
                 className={
-                  topic == "user" || topic == "active_users"
+                  topic == "user" ||
+                  topic == "active_users" ||
+                  topic == "yearly_report_rounds"
                     ? styles.hidden
                     : undefined
                 }
@@ -284,8 +312,8 @@ export function Manage() {
               </Button>
               <Button
                 variant="contained"
-                color={view === "users" ? "primary" : "default"}
-                onClick={() => handleViewChange("users")}
+                color={view === "user" ? "primary" : "default"}
+                onClick={() => handleViewChange("user")}
               >
                 Användare
               </Button>
@@ -309,7 +337,7 @@ export function Manage() {
               </Button>
             </div>
           </div>
-          {topic !== "active_users" && (
+          {topic !== "active_users" && view !== "yearly_report_rounds" && (
             <>
               <Autocomplete
                 options={filtered(options) ?? []}
@@ -321,18 +349,25 @@ export function Manage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={topic == "user" ? "Sök användare" : "Sök besättning"}
+                    label={
+                      topic === "user" ? "Sök användare" : "Sök besättning"
+                    }
                     variant={inputVariant}
                     margin="normal"
                   />
                 )}
                 onChange={(event: any, newValue: OptionType | null) => {
-                  newValue &&
-                    history.push(`/manage/${topic}/${newValue.value}`);
+                  if (newValue) {
+                    const path =
+                      topic === "user"
+                        ? `/manage/user/${newValue.value}`
+                        : `/manage/${topic}/${newValue.value}`;
+                    history.push(path);
+                  }
                 }}
               />
               <FormControlLabel
-                disabled={!topic == "user" || topic == "active_users"}
+                disabled={view !== "herds"}
                 control={
                   <Checkbox
                     checked={showInactive}
@@ -360,12 +395,12 @@ export function Manage() {
               <ActiveUsers />
             </Paper>
           </Route>
-          <Route path="/manage/users">
+          <Route path="/manage/user">
             <Paper className={styles.inputForm}>
               <UserForm id={selected?.value} />
             </Paper>
           </Route>
-          <Route path="/manage/herds">
+          <Route path="/manage/:genebank">
             <Paper className={styles.inputForm}>
               <HerdForm
                 id={selected?.value}
