@@ -52,6 +52,9 @@ const useStyles = makeStyles({
   form: {
     // Add styles if needed
   },
+  formSection: {
+    marginTop: "2em",
+  },
 });
 
 const YearlyReportRounds: React.FC = () => {
@@ -244,93 +247,99 @@ const YearlyReportRounds: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Typography variant="h6" gutterBottom>
-        Skapa Ny Period
-      </Typography>
-      <form onSubmit={handleSubmit} className={classes.form}>
-        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={svLocale}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="Rapportår"
-                name="report_year"
-                value={newRound.report_year}
-                onChange={handleChange}
-                fullWidth
-                required
-              />
+
+      <div className={classes.formSection}>
+        <Typography variant="h6" gutterBottom>
+          {selectedRoundId ? "Redigera Period" : "Skapa Ny Period"}
+        </Typography>
+        <form onSubmit={handleSubmit} className={classes.form}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils} locale={svLocale}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Rapportår"
+                  name="report_year"
+                  value={newRound.report_year}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <KeyboardDatePicker
+                  label="Startdatum"
+                  format={dateFormat}
+                  variant="inline"
+                  value={newRound.start_date}
+                  onChange={(date) => handleDateChange(date, "start_date")}
+                  fullWidth
+                  required
+                  KeyboardButtonProps={{
+                    "aria-label": "ändra datum",
+                  }}
+                  locale="sv"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <KeyboardDatePicker
+                  label="Slutdatum"
+                  format={dateFormat}
+                  variant="inline"
+                  value={newRound.end_date}
+                  onChange={(date) => handleDateChange(date, "end_date")}
+                  fullWidth
+                  required
+                  KeyboardButtonProps={{
+                    "aria-label": "ändra datum",
+                  }}
+                  locale="sv"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={newRound.is_active}
+                      onChange={(e) =>
+                        setNewRound({
+                          ...newRound,
+                          is_active: e.target.checked,
+                        })
+                      }
+                      name="is_active"
+                      color="primary"
+                    />
+                  }
+                  label="Aktiv"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={newRound.manually_activated}
+                      onChange={(e) =>
+                        setNewRound({
+                          ...newRound,
+                          manually_activated: e.target.checked,
+                        })
+                      }
+                      name="manually_activated"
+                      color="primary"
+                    />
+                  }
+                  label="Manuellt aktiverad"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button type="submit" variant="contained" color="primary">
+                  {selectedRoundId ? "Uppdatera Period" : "Skapa Period"}
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <KeyboardDatePicker
-                label="Startdatum"
-                format={dateFormat}
-                variant="inline"
-                value={newRound.start_date}
-                onChange={(date) => handleDateChange(date, "start_date")}
-                fullWidth
-                required
-                KeyboardButtonProps={{
-                  "aria-label": "ändra datum",
-                }}
-                locale="sv"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <KeyboardDatePicker
-                label="Slutdatum"
-                format={dateFormat}
-                variant="inline"
-                value={newRound.end_date}
-                onChange={(date) => handleDateChange(date, "end_date")}
-                fullWidth
-                required
-                KeyboardButtonProps={{
-                  "aria-label": "ändra datum",
-                }}
-                locale="sv"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={newRound.is_active}
-                    onChange={(e) =>
-                      setNewRound({ ...newRound, is_active: e.target.checked })
-                    }
-                    name="is_active"
-                    color="primary"
-                  />
-                }
-                label="Aktiv"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={newRound.manually_activated}
-                    onChange={(e) =>
-                      setNewRound({
-                        ...newRound,
-                        manually_activated: e.target.checked,
-                      })
-                    }
-                    name="manually_activated"
-                    color="primary"
-                  />
-                }
-                label="Manuellt aktiverad"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary">
-                {selectedRoundId ? "Uppdatera Period" : "Skapa Period"}
-              </Button>
-            </Grid>
-          </Grid>
-        </MuiPickersUtilsProvider>
-      </form>
+          </MuiPickersUtilsProvider>
+        </form>
+      </div>
     </Paper>
   );
 };
