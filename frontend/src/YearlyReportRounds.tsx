@@ -11,6 +11,12 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@material-ui/core";
 import {
   KeyboardDatePicker,
@@ -28,6 +34,12 @@ interface YearlyReportRound {
   start_date: string;
   end_date: string;
   report_count: number;
+  created_by: number;
+  created_by_username: string;
+  creation_date: string;
+  is_active: boolean;
+  manually_activated: boolean;
+  report_year: number;
 }
 
 const useStyles = makeStyles({
@@ -45,6 +57,7 @@ const useStyles = makeStyles({
 const YearlyReportRounds: React.FC = () => {
   const classes = useStyles();
   const [rounds, setRounds] = useState<YearlyReportRound[]>([]);
+  const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
 
   const nextYear = new Date().getFullYear() + 1;
   const defaultStartDate = new Date(nextYear, 0, 1); // January 1st next year
@@ -55,6 +68,7 @@ const YearlyReportRounds: React.FC = () => {
     end_date: defaultEndDate,
     report_year: nextYear - 1,
     is_active: false,
+    manually_activated: false,
   });
 
   const { userMessage } = useMessageContext();
@@ -67,7 +81,8 @@ const YearlyReportRounds: React.FC = () => {
     try {
       const response = await get("/api/manage/yearly_report_rounds");
       if (response.status === "success") {
-        setRounds(response.rounds);
+        const roundsData = response.rounds as YearlyReportRound[];
+        setRounds(roundsData);
       }
     } catch (error) {
       console.error("Error fetching yearly report rounds:", error);
@@ -88,6 +103,17 @@ const YearlyReportRounds: React.FC = () => {
     setNewRound({ ...newRound, [e.target.name]: e.target.value });
   };
 
+  const handleRowClick = (round: YearlyReportRound) => {
+    setNewRound({
+      start_date: new Date(round.start_date),
+      end_date: new Date(round.end_date),
+      report_year: round.report_year,
+      is_active: round.is_active,
+      manually_activated: round.manually_activated,
+    });
+    setSelectedRoundId(round.id);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -96,25 +122,47 @@ const YearlyReportRounds: React.FC = () => {
         end_date: newRound.end_date.toISOString().split("T")[0],
         report_year: newRound.report_year,
         is_active: newRound.is_active,
+        manually_activated: newRound.manually_activated,
       };
-      const response = await post("/api/manage/yearly_report_round", payload);
+
+      let response;
+      if (selectedRoundId) {
+        // Update existing round
+        response = await post(
+          `/api/manage/yearly_report_round/${selectedRoundId}`,
+          payload
+        );
+      } else {
+        // Create new round
+        response = await post("/api/manage/yearly_report_round", payload);
+      }
+
       if (response.status === "success") {
-        userMessage("Årsrapportomgång skapad.", "success");
+        userMessage(
+          selectedRoundId
+            ? "Årsrapportomgång uppdaterad."
+            : "Årsrapportomgång skapad.",
+          "success"
+        );
         fetchRounds();
         setNewRound({
           start_date: defaultStartDate,
           end_date: defaultEndDate,
           report_year: nextYear - 1,
           is_active: false,
+          manually_activated: false,
         });
+        setSelectedRoundId(null);
       } else {
         userMessage(
-          "Kunde inte skapa årsrapportomgång: " + response.message,
+          `Kunde inte ${
+            selectedRoundId ? "uppdatera" : "skapa"
+          } årsrapportomgång: ${response.message}`,
           "error"
         );
       }
     } catch (error) {
-      userMessage("Något gick fel kontakta Admin: " + error, "error");
+      userMessage("Något gick fel, kontakta Admin: " + error, "error");
     }
   };
 
@@ -123,18 +171,46 @@ const YearlyReportRounds: React.FC = () => {
       <Typography variant="h5" gutterBottom>
         Årliga Rapportperioder
       </Typography>
-      <List className={classes.roundsList}>
-        {rounds.map((round) => (
-          <ListItem key={round.id}>
-            <ListItemText
-              primary={`${new Date(round.start_date).toLocaleDateString(
-                "sv-SE"
-              )} till ${new Date(round.end_date).toLocaleDateString("sv-SE")}`}
-              secondary={`${round.report_count} rapporter`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Rapportår</TableCell>
+              <TableCell>Rapportantal</TableCell>
+              <TableCell>Aktiv</TableCell>
+              <TableCell>Manuellt aktiverad</TableCell>
+              <TableCell>Startdatum</TableCell>
+              <TableCell>Slutdatum</TableCell>
+              <TableCell>Skapad av</TableCell>
+              <TableCell>Skapad den</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rounds.map((round) => (
+              <TableRow
+                key={round.id}
+                hover
+                onClick={() => handleRowClick(round)}
+              >
+                <TableCell>{round.report_year}</TableCell>
+                <TableCell>{round.report_count}</TableCell>
+                <TableCell>{round.is_active ? "Ja" : "Nej"}</TableCell>
+                <TableCell>{round.manually_activated ? "Ja" : "Nej"}</TableCell>
+                <TableCell>
+                  {new Date(round.start_date).toLocaleDateString("sv-SE")}
+                </TableCell>
+                <TableCell>
+                  {new Date(round.end_date).toLocaleDateString("sv-SE")}
+                </TableCell>
+                <TableCell>{round.created_by_username}</TableCell>
+                <TableCell>
+                  {new Date(round.creation_date).toLocaleDateString("sv-SE")}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Typography variant="h6" gutterBottom>
         Skapa Ny Period
       </Typography>
@@ -197,8 +273,26 @@ const YearlyReportRounds: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={newRound.manually_activated}
+                    onChange={(e) =>
+                      setNewRound({
+                        ...newRound,
+                        manually_activated: e.target.checked,
+                      })
+                    }
+                    name="manually_activated"
+                    color="primary"
+                  />
+                }
+                label="Manuellt aktiverad"
+              />
+            </Grid>
+            <Grid item xs={12}>
               <Button type="submit" variant="contained" color="primary">
-                Skapa Period
+                {selectedRoundId ? "Uppdatera Period" : "Skapa Period"}
               </Button>
             </Grid>
           </Grid>

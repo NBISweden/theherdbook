@@ -2225,12 +2225,20 @@ def get_yearly_report_rounds_with_counts(user_uuid=None):
     """
     user = fetch_user_info(user_uuid)
     if user and (user.is_admin or user.is_manager):
-        rounds_with_counts = (
+        rounds_query = (
             YearlyReportRound
-            .select(YearlyReportRound, fn.COUNT(YearlyHerdReport.id).alias('report_count'))
-            .join(YearlyHerdReport, JOIN.LEFT_OUTER)
-            .group_by(YearlyReportRound.id)
+            .select(
+                YearlyReportRound,
+                fn.COUNT(YearlyHerdReport.id).alias('report_count'),
+                User.username.alias('created_by_username')
+            )
+            .join(User, on=(YearlyReportRound.created_by == User.id))
+            .switch(YearlyReportRound)
+            .join(YearlyHerdReport, JOIN.LEFT_OUTER, on=(YearlyHerdReport.round == YearlyReportRound.id))
+            .group_by(YearlyReportRound, User.username)
+            .dicts()
         )
-        return [{'round': r.as_dict(), 'report_count': r.report_count} for r in rounds_with_counts]
+        rounds = list(rounds_query)
+        return rounds
     else:
         return {"status": "error", "message": "Forbidden"}

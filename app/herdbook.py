@@ -1194,16 +1194,13 @@ def herd_yearly_report(h_id):
 @APP.route("/api/manage/yearly_report_rounds", methods=["GET"])
 @login_required
 def get_yearly_report_rounds():
-    """
-    Retrieves all YearlyReportRounds along with the count of submitted YearlyHerdReports per round.
-    Only accessible to admin or manager users.
-    """
     user_id = session.get("user_id", None)
     rounds = da.get_yearly_report_rounds_with_counts(user_id)
     if rounds is not None:
-        return jsonify({'status': 'success', 'rounds': rounds})
+        return jsonify({"status": "success", "rounds": rounds})
     else:
-        return jsonify({'status': 'error', 'message': 'Permission denied'}), 403
+        return jsonify({"status": "error", "message": "Unauthorized"})
+
 
 @APP.route("/api/manage/yearly_report_round", methods=["POST"])
 @login_required
