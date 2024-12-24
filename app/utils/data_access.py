@@ -2221,10 +2221,10 @@ def update_yearly_report_round(round_id, form, user_uuid):
 def get_yearly_report_rounds_with_counts(user_uuid=None):
     """
     Retrieves all YearlyReportRounds along with the count of submitted YearlyHerdReports per round.
-    Only accessible to admin or manager users.
+    Accessible to all users.
     """
     user = fetch_user_info(user_uuid)
-    if user and (user.is_admin or user.is_manager):
+    try:
         rounds_query = (
             YearlyReportRound
             .select(
@@ -2240,8 +2240,9 @@ def get_yearly_report_rounds_with_counts(user_uuid=None):
         )
         rounds = list(rounds_query)
         return rounds
-    else:
-        return {"status": "error", "message": "Forbidden"}
+    except Exception as e:
+        logger.error(f"Error retrieving yearly report rounds: {e}")
+        return []  # Return an empty list in case of error
 
 def delete_yearly_report_round(round_id, user_uuid=None):
     """
