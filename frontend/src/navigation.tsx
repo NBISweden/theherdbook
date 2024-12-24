@@ -97,7 +97,7 @@ function Restricted(props: { children: React.ReactElement }) {
   /*
   If user reloads page we do not have any usercontext yet.
   User will always be null even if user is logged in in backend
-  This will check with backen if api/user returns data then the user is logged in
+  This will check with backend if api/user returns data then the user is logged in
   and we can proceed the user to the restricted component. If not then redirect to Google login.
   If user is clicking the link the usercontext is already loaded and we can assume the user is
   logged in.
@@ -143,6 +143,17 @@ export function Navigation() {
       fetchYearlyReportRounds();
     }
   }, [is_logged_in]);
+
+  // Determine active report rounds based on user role
+  const activeReportRounds = yearlyReportRounds.filter((round) => {
+    if (is_owner && round.is_active) {
+      return true;
+    }
+    if (user?.is_manager && round.manually_activated) {
+      return true;
+    }
+    return false;
+  });
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -194,13 +205,26 @@ export function Navigation() {
       path: "/yearly",
       component: (
         <Restricted>
-          <YearlyReportMultiStepForm />
+          <YearlyReportMultiStepForm
+            reportRoundId={
+              activeReportRounds.length > 0
+                ? activeReportRounds[0].id
+                : undefined
+            }
+            reportYear={
+              activeReportRounds.length > 0
+                ? activeReportRounds[0].report_year
+                : undefined
+            }
+          />
         </Restricted>
       ),
       visible:
         (is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
         (user?.is_manager &&
-          yearlyReportRounds.some((round) => round.manually_activated)),
+          yearlyReportRounds.some(
+            (round) => round.manually_activated === true
+          )),
       icon: <BallotIcon />,
     },
     {

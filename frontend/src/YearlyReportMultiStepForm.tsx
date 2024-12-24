@@ -21,7 +21,15 @@ import { HerdContactUpdateStep } from "./HerdContactUpdateStep";
 import { BatchRabbitUpdateStep } from "./BatchRabbitUpdateStep";
 import { YearlyReportStep } from "./YearlyReportStep";
 
-const YearlyReportMultiStepForm: React.FC = () => {
+interface YearlyReportMultiStepFormProps {
+  reportRoundId?: number;
+  reportYear?: number;
+}
+
+const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
+  reportRoundId,
+  reportYear,
+}) => {
   const { user } = useUserContext();
   const { userMessage } = useMessageContext();
   const { loadData, genebanks } = useDataContext();
