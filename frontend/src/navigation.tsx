@@ -60,6 +60,7 @@ import { MenuProps } from "@material-ui/core/Menu";
 
 import "./style.css";
 import YearlyReportMultiStepForm from "./YearlyReportMultiStepForm";
+import { useState, useEffect } from "react";
 
 const StyledMenu = withStyles({
   paper: {
@@ -123,6 +124,29 @@ export function Navigation() {
   const is_logged_in = !!user;
   const theme = createTheme({}, svSE);
   const history = useHistory();
+  const [activeYearlyReport, setActiveYearlyReport] = useState(false);
+
+  // Add effect to check for active yearly report rounds
+  useEffect(() => {
+    const checkActiveReports = async () => {
+      try {
+        const response = await get("/api/manage/yearly_report_rounds");
+        if (response.status === "success") {
+          const hasActiveRound = response.rounds.some(
+            (round: any) => round.is_active
+          );
+          console.log("hasActiveRound", hasActiveRound);
+          setActiveYearlyReport(hasActiveRound);
+        }
+      } catch (error) {
+        console.error("Error checking active yearly reports:", error);
+      }
+    };
+
+    if (is_logged_in) {
+      checkActiveReports();
+    }
+  }, [is_logged_in]);
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -177,7 +201,7 @@ export function Navigation() {
           <YearlyReportMultiStepForm />
         </Restricted>
       ),
-      visible: is_owner,
+      visible: is_owner && activeYearlyReport,
       icon: <BallotIcon />,
     },
     {

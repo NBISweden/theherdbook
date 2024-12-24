@@ -1227,7 +1227,7 @@ def update_yearly_report_round(round_id):
     user_id = session.get("user_id", None)
     form = request.json
     form['id'] = round_id
-    result = da.update_yearly_report_round(form, user_id)
+    result = da.update_yearly_report_round(round_id, form, user_id)
     if result['status'] == 'success':
         return jsonify(result)
     else:

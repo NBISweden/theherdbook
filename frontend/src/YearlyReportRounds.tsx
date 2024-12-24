@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { get, post } from "./communication";
+import { get, patch, post } from "./communication";
 import {
   Button,
   Typography,
@@ -131,7 +131,7 @@ const YearlyReportRounds: React.FC = () => {
       let response;
       if (selectedRoundId) {
         // Update existing round
-        response = await post(
+        response = await patch(
           `/api/manage/yearly_report_round/${selectedRoundId}`,
           payload
         );
