@@ -36,6 +36,51 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   const [herdName, setHerdName] = useState<string>("");
   // Define default values
 
+  // Function to determine if an individual was active on a given date
+  function isActiveOnDate(individual: any, date: Date): boolean {
+    // Assuming herd is active; adjust if necessary
+    const deathDate = individual.death_date
+      ? new Date(individual.death_date)
+      : null;
+
+    const deathNote = individual.death_note;
+
+    const castrationDate = individual.castration_date
+      ? new Date(individual.castration_date)
+      : null;
+
+    const hasCertificate =
+      individual.certificate || individual.digital_certificate;
+
+    const herdTrackingEntries = individual.herd_tracking || [];
+
+    // Find the latest herd tracking entry
+    const latestHerdTrackingEntry = herdTrackingEntries.reduce(
+      (latest: any, entry: any) => {
+        const entryDate = new Date(entry.date);
+        const latestDate = latest ? new Date(latest.date) : null;
+        return !latestDate || entryDate > latestDate ? entry : latest;
+      },
+      null
+    );
+    const herdTrackingDate = latestHerdTrackingEntry
+      ? new Date(latestHerdTrackingEntry.date)
+      : null;
+
+    // Check if the latest herd tracking date is equal to or after the date
+    const herdTrackingDateValid = herdTrackingDate && herdTrackingDate >= date;
+
+    const isActive =
+      (!deathDate || deathDate > date) &&
+      !deathNote &&
+      (!castrationDate || castrationDate > date) &&
+      hasCertificate &&
+      latestHerdTrackingEntry &&
+      herdTrackingDateValid;
+
+    return isActive;
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -105,52 +150,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
             .filter(Boolean)
         );
         const numberOfMalesUsedInBreeding = malesUsed.size;
-
-        // Function to determine if an individual was active on a given date
-        function isActiveOnDate(individual: any, date: Date): boolean {
-          // Assuming herd is active; adjust if necessary
-          const deathDate = individual.death_date
-            ? new Date(individual.death_date)
-            : null;
-
-          const deathNote = individual.death_note;
-
-          const castrationDate = individual.castration_date
-            ? new Date(individual.castration_date)
-            : null;
-
-          const hasCertificate =
-            individual.certificate || individual.digital_certificate;
-
-          const herdTrackingEntries = individual.herd_tracking || [];
-
-          // Find the latest herd tracking entry
-          const latestHerdTrackingEntry = herdTrackingEntries.reduce(
-            (latest: any, entry: any) => {
-              const entryDate = new Date(entry.date);
-              const latestDate = latest ? new Date(latest.date) : null;
-              return !latestDate || entryDate > latestDate ? entry : latest;
-            },
-            null
-          );
-          const herdTrackingDate = latestHerdTrackingEntry
-            ? new Date(latestHerdTrackingEntry.date)
-            : null;
-
-          // Check if the latest herd tracking date is equal to or after the date
-          const herdTrackingDateValid =
-            herdTrackingDate && herdTrackingDate >= date;
-
-          const isActive =
-            (!deathDate || deathDate > date) &&
-            !deathNote &&
-            (!castrationDate || castrationDate > date) &&
-            hasCertificate &&
-            latestHerdTrackingEntry &&
-            herdTrackingDateValid;
-
-          return isActive;
-        }
 
         // Number of females with certificate on Dec 31
         const femalesWithCertificate = individualsData.filter(
