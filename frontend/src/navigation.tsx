@@ -124,27 +124,23 @@ export function Navigation() {
   const is_logged_in = !!user;
   const theme = createTheme({}, svSE);
   const history = useHistory();
-  const [activeYearlyReport, setActiveYearlyReport] = useState(false);
+  const [yearlyReportRounds, setYearlyReportRounds] = useState<any[]>([]);
 
-  // Add effect to check for active yearly report rounds
+  // Fetch yearly report rounds
   useEffect(() => {
-    const checkActiveReports = async () => {
+    const fetchYearlyReportRounds = async () => {
       try {
         const response = await get("/api/manage/yearly_report_rounds");
         if (response.status === "success") {
-          const hasActiveRound = response.rounds.some(
-            (round: any) => round.is_active
-          );
-          console.log("hasActiveRound", hasActiveRound);
-          setActiveYearlyReport(hasActiveRound);
+          setYearlyReportRounds(response.rounds);
         }
       } catch (error) {
-        console.error("Error checking active yearly reports:", error);
+        console.error("Error fetching yearly report rounds:", error);
       }
     };
 
     if (is_logged_in) {
-      checkActiveReports();
+      fetchYearlyReportRounds();
     }
   }, [is_logged_in]);
 
@@ -201,7 +197,10 @@ export function Navigation() {
           <YearlyReportMultiStepForm />
         </Restricted>
       ),
-      visible: is_owner && activeYearlyReport,
+      visible:
+        (is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
+        (user?.is_manager &&
+          yearlyReportRounds.some((round) => round.manually_activated)),
       icon: <BallotIcon />,
     },
     {
