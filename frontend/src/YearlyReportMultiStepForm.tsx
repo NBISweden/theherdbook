@@ -133,6 +133,7 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               genebankName={genebankName}
               herdId={herdId}
               setHerdId={setHerdId}
+              reportYear={reportYear}
             />
           );
         case 2:
@@ -159,6 +160,7 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               genebankName={genebankName}
               herdId={herdId}
               setHerdId={setHerdId}
+              reportYear={reportYear}
             />
           );
         case 1:
