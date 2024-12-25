@@ -31,8 +31,13 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
         if (response.status === "success" && response.report) {
           setExistingReportData(response.report.data);
         }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
+      } catch (error: unknown) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "response" in error &&
+          (error.response as { status?: number })?.status === 404
+        ) {
           // No report found for this round
           setExistingReportData(null);
         } else {
