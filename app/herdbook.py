@@ -1173,17 +1173,21 @@ def herd_yearly_report(h_id):
     herd_id = herd_data['id']
 
     if request.method == "GET":
-        # Retrieve the latest yearly report for the herd
-        report = da.get_latest_yearly_report(herd_id)
+        # Get the round_id from query parameters
+        round_id = request.args.get('round_id', type=int)
+        if not round_id:
+            return jsonify({"status": "error", "message": "Report round ID is required"}), 400
+
+        # Get the report for the specific round
+        report = da.get_yearly_report_by_round(herd_id, round_id)
         if report:
             return jsonify({"status": "success", "report": report})
         else:
-            return jsonify({"status": "error", "message": "No report found"}), 404
+            return jsonify({"status": "error", "message": "No report found for this round"}), 404
 
     elif request.method == "POST":
         # Create or update the yearly report
         form = request.json
-        print(form)
         result = da.save_yearly_report(herd_id, form, user)
         if result['status'] == 'success':
             return jsonify(result)

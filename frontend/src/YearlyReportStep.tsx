@@ -22,16 +22,18 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
 
   useEffect(() => {
     const checkReport = async () => {
-      if (!herdId) return;
+      if (!herdId || !reportRoundId) return;
 
       try {
-        const response = await get(`/api/herd/${herdId}/yearlyreport`);
+        const response = await get(
+          `/api/herd/${herdId}/yearlyreport?round_id=${reportRoundId}`
+        );
         if (response.status === "success" && response.report) {
           setExistingReportData(response.report.data);
         }
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          // No report found
+          // No report found for this round
           setExistingReportData(null);
         } else {
           console.error(error);
@@ -40,13 +42,14 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
       }
     };
     checkReport();
-  }, [herdId]);
+  }, [herdId, reportRoundId]);
 
   return (
     <div>
       {existingReportData && (
         <Typography>
-          Årsrapporten har redan lämnats in. Du kan uppdatera den nedan.
+          Årsrapporten har redan lämnats in för denna rapporteringsomgång. Du
+          kan uppdatera den nedan.
         </Typography>
       )}
       <YearlyReportForm

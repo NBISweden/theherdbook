@@ -766,23 +766,35 @@ def get_latest_yearly_report(herd_id):
 def save_yearly_report(herd_id, form_data, user):
     try:
         # Prepare the data
-        print("form_data",form_data)
         report_data_json = json.dumps(form_data.get('data', {}))
-        print("in save",report_data_json)
         report_date = date.today()
         report_name = form_data.get('name', f'Yearly Report {report_date.year}')
-        version = form_data.get('version', '1.0')  # Default version if not provided
+        version = form_data.get('version', '1.0')
+        report_round_id = form_data.get('report_round_id')
+        report_year = form_data.get('report_year')
 
-        # Check if a report already exists for this herd and year
+        # Validate report round
+        if not report_round_id:
+            return {"status": "error", "message": "Missing report round ID"}
+        
+        try:
+            report_round = YearlyReportRound.get_by_id(report_round_id)
+            if not report_round.is_active:
+                return {"status": "error", "message": "Report round is not active"}
+            if report_round.report_year != report_year:
+                return {"status": "error", "message": "Report year does not match report round year"}
+        except YearlyReportRound.DoesNotExist:
+            return {"status": "error", "message": "Invalid report round ID"}
+
+        # Check if a report already exists for this herd and round
         existing_report = (
             YearlyHerdReport.select()
             .where(
                 (YearlyHerdReport.herd == herd_id) &
-                (fn.DATE_PART('year', YearlyHerdReport.report_date) == report_date.year)
+                (YearlyHerdReport.round == report_round_id)
             )
             .first()
         )
-
 
         if existing_report:
             # Update the existing report
@@ -790,12 +802,12 @@ def save_yearly_report(herd_id, form_data, user):
             existing_report.name = report_name
             existing_report.generated_by = user.id
             existing_report.version = version
+            existing_report.round = report_round_id  # Update the round
             existing_report.publish = form_data.get('publish', existing_report.publish)
             existing_report.publish_tel = form_data.get('publish_tel', existing_report.publish_tel)
             existing_report.publish_email = form_data.get('publish_email', existing_report.publish_email)
             existing_report.publish_address = form_data.get('publish_address', existing_report.publish_address)
             existing_report.save()
-            print("existingreport", existing_report.data)
             return {"status": "success", "message": "Report updated"}
         else:
             # Create a new report
@@ -806,12 +818,12 @@ def save_yearly_report(herd_id, form_data, user):
                 name=report_name,
                 data=report_data_json,
                 version=version,
+                round=report_round_id,  # Link to the report round
                 publish=form_data.get('publish', False),
                 publish_tel=form_data.get('publish_tel', False),
                 publish_email=form_data.get('publish_email', False),
                 publish_address=form_data.get('publish_address', False),
             )
-            print("create new",new_report)
             return {"status": "success", "message": "Report created"}
     except Exception as e:
         logger.error(f"Error saving yearly report: {e}")
@@ -2261,3 +2273,20 @@ def delete_yearly_report_round(round_id, user_uuid=None):
     except Exception as e:
         logger.error(f"Error deleting yearly report round: {e}")
         return {'status': 'error', 'message': 'An error occurred while deleting the round'}
+
+def get_yearly_report_by_round(herd_id, round_id):
+    try:
+        report = (
+            YearlyHerdReport.select()
+            .where(
+                (YearlyHerdReport.herd == herd_id) &
+                (YearlyHerdReport.round == round_id)
+            )
+            .get()
+        )
+        report_data = report.as_dict()
+        # Parse the JSON data field
+        report_data['data'] = json.loads(report_data['data'])
+        return report_data
+    except YearlyHerdReport.DoesNotExist:
+        return None

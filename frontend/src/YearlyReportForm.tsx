@@ -273,11 +273,16 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     enableReinitialize: true,
     initialValues: prefilledValues,
     onSubmit: async (values) => {
-      // Ensure herdResponse and herdName are available
+      // Ensure herdResponse, herdName and reportRoundId are available
       if (!herdResponse || !herdName) {
         userMessage("Kunde inte hämta herd data.", "error");
         return;
       }
+      if (!reportRoundId) {
+        userMessage("Ingen aktiv rapporteringsomgång hittad.", "error");
+        return;
+      }
+
       // Prepare the payload
       const publishSettings = mapAllowPublicationToPublishSettings(
         values.allowPublication || []
