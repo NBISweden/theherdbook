@@ -20,11 +20,15 @@ import { useMessageContext } from "@app/message_context";
 interface YearlyReportFormProps {
   herdId: string;
   existingReportData?: any;
+  reportRoundId?: number;
+  reportYear?: number;
 }
 
 const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   herdId,
   existingReportData,
+  reportRoundId,
+  reportYear,
 }) => {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
@@ -84,6 +88,16 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Validate that reportYear is provided
+        if (!reportYear) {
+          userMessage(
+            "Rapporteringsår saknas. Kontakta administratören.",
+            "error"
+          );
+          setLoading(false);
+          return;
+        }
+
         // Fetch herd data
         const herdResponseData = await get(`/api/herd/${herdId}`);
         setHerdResponse(herdResponseData);
@@ -97,9 +111,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
         // Get individuals from herdResponse
         const individualsData = herdResponseData.individuals || [];
 
-        // Calculate prefilled values
-        const currentYear = new Date().getFullYear();
-        const breedingYear = currentYear - 1; // Reporting for previous year
+        const breedingYear = reportYear;
         const breedingYearEndDate = new Date(`${breedingYear}-12-31`);
 
         // Filter breedings for the breedingYear with valid birth_date and litter_size > 0
@@ -270,13 +282,16 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
       const publishSettings = mapAllowPublicationToPublishSettings(
         values.allowPublication || []
       );
-      const reportYear = values.breedingYear || new Date().getFullYear();
-      const reportName = `Årsrapport ${reportYear} ${herdResponse.herd} ${herdName}`;
+      const reportName = `Årsrapport ${
+        reportYear || new Date().getFullYear()
+      } ${herdResponse.herd} ${herdName}`;
 
       const payload = {
         data: values,
         name: reportName,
         version: "1.0",
+        report_round_id: reportRoundId,
+        report_year: reportYear,
         ...publishSettings,
       };
 

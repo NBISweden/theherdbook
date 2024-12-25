@@ -8,10 +8,14 @@ import { useMessageContext } from "@app/message_context";
 
 interface YearlyReportStepProps {
   herdId: string | null;
+  reportRoundId?: number;
+  reportYear?: number;
 }
 
 export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
   herdId,
+  reportRoundId,
+  reportYear,
 }) => {
   const [existingReportData, setExistingReportData] = useState<any>(null);
   const { userMessage } = useMessageContext();
@@ -48,6 +52,8 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
       <YearlyReportForm
         herdId={herdId!}
         existingReportData={existingReportData}
+        reportRoundId={reportRoundId}
+        reportYear={reportYear}
       />
     </div>
   );
