@@ -18,7 +18,6 @@ import { SelectHerdStep } from "./SelectHerdStep";
 import { HerdContactUpdateStep } from "./HerdContactUpdateStep";
 import { BatchRabbitUpdateStep } from "./BatchRabbitUpdateStep";
 import { YearlyReportStep } from "./YearlyReportStep";
-import { ExtendedBreeding } from "./data_context_global";
 
 interface YearlyReportMultiStepFormProps {
   reportRoundId?: number;
@@ -38,9 +37,6 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
   const [herdId, setHerdId] = useState<string | null>(null);
   const [herdData, setHerdData] = useState<any>(null);
   const [reportSubmitted, setReportSubmitted] = useState(false);
-  const [extendedBreedings, setExtendedBreedings] = React.useState(
-    [] as ExtendedBreeding[]
-  );
 
   const isManagerOrAdmin =
     user?.is_admin || (user?.is_manager ? user.is_manager.length > 0 : false);
@@ -82,17 +78,6 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
         (error) => {
           console.error(error);
           userMessage("Kunde inte hämta besättningsdata.", "error");
-        }
-      );
-      get(`/api/breeding/${herdId}`).then(
-        (data: { breedings: ExtendedBreeding[] }) => {
-          if (data && data.breedings) {
-            setExtendedBreedings(data.breedings);
-          }
-        },
-        (error) => {
-          console.error(error);
-          userMessage(error, "error");
         }
       );
     }
@@ -199,29 +184,6 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
       <Typography variant="h5" gutterBottom>
         Årsrapportering för år {reportYear}
       </Typography>
-      <Typography variant="body1" gutterBottom>
-        Besättning G1832 är vald.
-      </Typography>
-
-      <Typography variant="body2" gutterBottom>
-        Årsrapportens autmatik bygger på att du har rapporterat alla kullar
-        redan under din besättning (url /owner) sedan tabben "Kullar och
-        Parningar" du behöver lägga till minst födelsedatum, Kullstorlek ,
-        levane efter 6 veckor . Du behöver inte skapa oregisterade kaniner om du
-        inte vill. Har du registrerat och skapat intyg från minst en kanin från
-        varje kull så behöver du inte göra något mera.
-      </Typography>
-      {extendedBreedings && extendedBreedings.length > 0 && (
-        <Typography variant="body2" gutterBottom>
-          {extendedBreedings.map((breeding) => (
-            <div key={breeding.id}>
-              {breeding.birth_date} - {breeding.mother_name} -{" "}
-              {breeding.father_name} - {breeding.litter_size} -{" "}
-              {breeding.litter_size6w}
-            </div>
-          ))}
-        </Typography>
-      )}
       <Stepper activeStep={activeStep}>
         {steps.map((label, index) => {
           const stepProps: { completed?: boolean } = {};
