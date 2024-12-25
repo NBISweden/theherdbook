@@ -52,7 +52,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
 
   // Fetch breedings for the selected herdId
   useEffect(() => {
-    console.log("Fetching breedings for reportYear:", reportYear);
     if (herdId) {
       // Fetch breedings for the selected herd
       get(`/api/breeding/${herdId}`).then(
@@ -74,23 +73,27 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
                 individuals: breeding.individuals || [],
               })
             );
-            const filteredBreedings = reportYear
-              ? numberedBreedings.filter(
-                  (breeding) =>
-                    breeding.birth_date &&
-                    new Date(breeding.birth_date).getFullYear() === reportYear
-                )
-              : numberedBreedings;
+            let filteredBreedings = numberedBreedings;
+            if (reportYear) {
+              filteredBreedings = numberedBreedings.filter((breeding) => {
+                if (!breeding.birth_date) {
+                  return false;
+                }
+                const birthYear = new Date(breeding.birth_date).getFullYear();
+                return birthYear === reportYear;
+              });
+            }
             setSelectedHerdBreedings(filteredBreedings);
           }
         },
         (error) => {
-          console.error(error);
+          console.error("Error fetching breedings:", error);
           // Assuming userMessage is available, otherwise remove
           userMessage("Kunde inte hämta kullar.", "error");
         }
       );
     } else {
+      console.log("No herdId, clearing breedings");
       setSelectedHerdBreedings([]);
     }
   }, [herdId, reportYear, userMessage]);
@@ -120,157 +123,177 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     return herdName.includes(search) || herdIdLower.includes(search);
   });
 
+  // Helper function to render the info card
+  const renderInfoCard = (selectedHerdId: string) => (
+    <div
+      className="formCard formInfoCard"
+      style={{
+        marginTop: "2em",
+        padding: "1em",
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+      }}
+    >
+      <Typography variant="body1" gutterBottom>
+        Besättning {selectedHerdId} är vald.
+      </Typography>
+
+      <Typography variant="body2" gutterBottom>
+        För att årsrapporten ska uppdateras automatiskt behöver du:
+      </Typography>
+
+      <Typography variant="body2" gutterBottom component="div">
+        <ul>
+          <li>
+            Rapportera alla kullar i fliken{" "}
+            <strong>"Kullar och parningar"</strong>
+            under din besättning (<Link href="/owner">Här</Link>).
+          </li>
+          <li>
+            Ange minst födelsedatum, kullstorlek och antal ungar som lever efter
+            sex veckor.
+          </li>
+          <li>Du behöver inte skapa oregistrerade kaniner om du inte vill.</li>
+        </ul>
+        Om du redan har skapat intyg för minst en kanin i varje kull behöver du
+        inte göra något mer.
+      </Typography>
+    </div>
+  );
+
+  // Helper function to render the breeding list table
+  const renderBreedingTable = () => {
+    return (
+      <div>
+        {selectedHerdBreedings.length === 0 && reportYear && (
+          <div
+            className="formCard"
+            style={{
+              marginTop: "2em",
+              padding: "1em",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              backgroundColor: "#fff3e0",
+            }}
+          >
+            <Typography variant="body1" color="textSecondary">
+              Inga kullar registrerade för år: {reportYear}. Vänlig lägg till
+              rapportårets alla kullar, det är dock OK att gå vidare om du inte
+              har tagit några kullar iår.
+            </Typography>
+          </div>
+        )}
+        {selectedHerdBreedings.length > 0 && (
+          <div
+            className="formCard"
+            style={{
+              marginTop: "2em",
+              padding: "1em",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Registrerade kullar för år: {reportYear}
+            </Typography>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Nr
+                  </th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Födelsedatum
+                  </th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Moder
+                  </th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Fader
+                  </th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Antal Ungar
+                  </th>
+                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    Levande efter 6 Veckor
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedHerdBreedings.map((breeding) => (
+                  <tr key={breeding.id}>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.number}
+                    </td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.birth_date}
+                    </td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.mother_name}
+                    </td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.father_name}
+                    </td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.litter_size}
+                    </td>
+                    <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                      {breeding.litter_size6w}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
-      {/* Conditional Rendering for Single Herd Users */}
-      {!genebankName &&
+      {/* Display info card if user has only one herd OR has selected a herd */}
+      {(!genebankName &&
         user?.is_owner &&
         user.is_owner.length === 1 &&
         !user.is_admin &&
-        (!user.is_manager || user.is_manager.length === 0) && (
-          <>
-            {/* Info Card */}
-            <div
-              className="formCard formInfoCard"
-              style={{
-                marginTop: "2em",
-                padding: "1em",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-              }}
-            >
-              <Typography variant="body1" gutterBottom>
-                Besättning {user.is_owner[0]} är vald.
-              </Typography>
-
-              <Typography variant="body2" gutterBottom>
-                För att årsrapporten ska uppdateras automatiskt behöver du:
-              </Typography>
-
-              <Typography variant="body2" gutterBottom component="div">
-                <ul>
-                  <li>
-                    Rapportera alla kullar i fliken{" "}
-                    <strong>"Kullar och parningar"</strong>
-                    under din besättning (<Link href="/owner">Här</Link>).
-                  </li>
-                  <li>
-                    Ange minst födelsedatum, kullstorlek och antal ungar som
-                    lever efter sex veckor.
-                  </li>
-                  <li>
-                    Du behöver inte skapa oregistrerade kaniner om du inte vill.
-                  </li>
-                </ul>
-                Om du redan har skapat intyg för minst en kanin i varje kull
-                behöver du inte göra något mer.
-              </Typography>
-            </div>
-
-            {/* Breeding List Table */}
-            {selectedHerdBreedings.length > 0 && (
-              <div
-                className="formCard"
-                style={{
-                  marginTop: "2em",
-                  padding: "1em",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  Registrerade kullar för år: {reportYear}
-                </Typography>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Nr
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Födelsedatum
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Moder
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Fader
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Antal Ungar
-                      </th>
-                      <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                        Levande efter 6 Veckor
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedHerdBreedings.map((breeding) => (
-                      <tr key={breeding.id}>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.number}
-                        </td>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.birth_date}
-                        </td>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.mother_name}
-                        </td>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.father_name}
-                        </td>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.litter_size}
-                        </td>
-                        <td
-                          style={{ border: "1px solid #ddd", padding: "8px" }}
-                        >
-                          {breeding.litter_size6w}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-
-      {/* Conditional Rendering for Multiple Herds or Genebank Users */}
-      {(genebankName || (user?.is_owner && user.is_owner.length > 1)) && (
+        (!user.is_manager || user.is_manager.length === 0)) ||
+      herdId ? (
         <>
-          <Typography variant="h6">Välj besättning för årsrapport:</Typography>
-          <TextField
-            label="Sök besättning"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-            {filteredHerds.map((herd: any) => (
-              <Button
-                key={herd.herd}
-                variant={herd.herd === herdId ? "contained" : "outlined"}
-                color={herd.herd === herdId ? "primary" : "default"}
-                onClick={() => setHerdId(herd.herd)}
-                style={{ margin: "0.5em" }}
-              >
-                {herd.herd_name || herd.herd}
-              </Button>
-            ))}
-          </div>
+          {herdId
+            ? renderInfoCard(herdId)
+            : user?.is_owner && renderInfoCard(user.is_owner[0])}
+          {renderBreedingTable()}
         </>
+      ) : (
+        /* Multiple Herds or Genebank Users - Selection UI */
+        (genebankName || (user?.is_owner && user.is_owner.length > 1)) && (
+          <>
+            <Typography variant="h6">
+              Välj besättning för årsrapport:
+            </Typography>
+            <TextField
+              label="Sök besättning"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+              {filteredHerds.map((herd: any) => (
+                <Button
+                  key={herd.herd}
+                  variant={herd.herd === herdId ? "contained" : "outlined"}
+                  color={herd.herd === herdId ? "primary" : "default"}
+                  onClick={() => setHerdId(herd.herd)}
+                  style={{ margin: "0.5em" }}
+                >
+                  {herd.herd_name || herd.herd}
+                </Button>
+              ))}
+            </div>
+          </>
+        )
       )}
     </div>
   );
