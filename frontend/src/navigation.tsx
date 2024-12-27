@@ -22,6 +22,7 @@ import PersonAddIcon from "@material-ui/icons/PersonAdd";
 import PostAddIcon from "@material-ui/icons/PostAdd";
 import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
 import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
+import BallotIcon from "@material-ui/icons/Ballot";
 import EcoIcon from "@material-ui/icons/Eco";
 import { Help } from "@material-ui/icons";
 
@@ -38,6 +39,7 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
+import { YearlyReportViewer } from "@app/YearlyReportViewer";
 import {
   About,
   Medlem,
@@ -59,6 +61,8 @@ import { MenuProps } from "@material-ui/core/Menu";
 import hotjar from "react-hotjar";
 
 import "./style.css";
+import YearlyReportMultiStepForm from "./YearlyReportMultiStepForm";
+import { useState, useEffect } from "react";
 
 const StyledMenu = withStyles({
   paper: {
@@ -95,7 +99,7 @@ function Restricted(props: { children: React.ReactElement }) {
   /*
   If user reloads page we do not have any usercontext yet.
   User will always be null even if user is logged in in backend
-  This will check with backen if api/user returns data then the user is logged in
+  This will check with backend if api/user returns data then the user is logged in
   and we can proceed the user to the restricted component. If not then redirect to Google login.
   If user is clicking the link the usercontext is already loaded and we can assume the user is
   logged in.
@@ -122,6 +126,36 @@ export function Navigation() {
   const is_logged_in = !!user;
   const theme = createTheme({}, svSE);
   const history = useHistory();
+  const [yearlyReportRounds, setYearlyReportRounds] = useState<any[]>([]);
+
+  // Fetch yearly report rounds
+  useEffect(() => {
+    const fetchYearlyReportRounds = async () => {
+      try {
+        const response = await get("/api/manage/yearly_report_rounds");
+        if (response.status === "success") {
+          setYearlyReportRounds(response.rounds);
+        }
+      } catch (error) {
+        console.error("Error fetching yearly report rounds:", error);
+      }
+    };
+
+    if (is_logged_in) {
+      fetchYearlyReportRounds();
+    }
+  }, [is_logged_in]);
+
+  // Determine active report rounds based on user role
+  const activeReportRounds = yearlyReportRounds.filter((round) => {
+    if (is_owner && round.is_active) {
+      return true;
+    }
+    if (user?.is_manager && round.manually_activated) {
+      return true;
+    }
+    return false;
+  });
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -167,6 +201,33 @@ export function Navigation() {
       ),
       visible: is_owner,
       icon: <NaturePeopleIcon />,
+    },
+    {
+      label: "Årsrapport",
+      path: "/yearly",
+      component: (
+        <Restricted>
+          <YearlyReportMultiStepForm
+            reportRoundId={
+              activeReportRounds.length > 0
+                ? activeReportRounds[0].id
+                : undefined
+            }
+            reportYear={
+              activeReportRounds.length > 0
+                ? activeReportRounds[0].report_year
+                : undefined
+            }
+          />
+        </Restricted>
+      ),
+      visible:
+        (is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
+        (user?.is_manager &&
+          yearlyReportRounds.some(
+            (round) => round.manually_activated === true
+          )),
+      icon: <BallotIcon />,
     },
     {
       label: "Registrera",
@@ -352,6 +413,13 @@ export function Navigation() {
                 Du måste logga in med ditt Gotlandskaninkonto{" "}
                 <a href="/api/login/google">Logga in</a>{" "}
               </Route>
+              <ui.Routed path="/yearly-reports-view/:roundId">
+                {() => (
+                  <Restricted>
+                    <YearlyReportViewer />
+                  </Restricted>
+                )}
+              </ui.Routed>
             </Switch>
           </Paper>
         </div>

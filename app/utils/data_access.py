@@ -8,6 +8,8 @@ database.
 import logging
 import uuid
 from datetime import date, datetime, timedelta
+import json
+from typing import List, Dict, Optional, Union
 
 from peewee import (
     JOIN,
@@ -32,9 +34,14 @@ from utils.database import Individual  # isort: skip
 from utils.database import User  # isort: skip
 from utils.database import Weight  # isort: skip
 from utils.database import next_individual_number  # isort: skip
+from utils.database import YearlyHerdReport
+from utils.database import YearlyReportRound  # isort:skip
 import utils.s3 as s3  # isort:skip
 
-from werkzeug.security import check_password_hash, generate_password_hash  # isort:skip
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)  # isort:skip
 
 logger = logging.getLogger("herdbook.da")
 
@@ -105,7 +112,12 @@ def add_user(form, user_uuid=None):
 
 
 def register_user(
-    email, password, username=None, validated=False, privileges=None, fullname=None
+    email,
+    password,
+    username=None,
+    validated=False,
+    privileges=None,
+    fullname=None,
 ):
     """
     Creates a new user from an e-mail and password, returning the new user
@@ -150,7 +162,9 @@ def register_user(
         authenticator.auth_data = generate_password_hash(password)
     except DoesNotExist:
         authenticator = Authenticators(
-            user=user.id, auth="password", auth_data=generate_password_hash(password)
+            user=user.id,
+            auth="password",
+            auth_data=generate_password_hash(password),
         )
     with DATABASE.atomic():
         authenticator.save()
@@ -394,7 +408,12 @@ def get_users(user_uuid=None):
             users = [user for user in users if not user.is_admin]
 
         return [
-            {"email": u.email, "name": u.username, "id": u.id, "fullname": u.fullname}
+            {
+                "email": u.email,
+                "name": u.username,
+                "id": u.id,
+                "fullname": u.fullname,
+            }
             for u in users
         ]
     except DoesNotExist:
@@ -527,7 +546,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
 
     The input data should be formatted like:
         {action: add | remove,
-         role: owner | manager | viewer,
+         role: owner | manager | viewer | admin,
          user: <id>,
          herd | genebank: <id>
         }
@@ -558,11 +577,11 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
     ):
         valid = False
     elif (
-        operation.get("role", {}) not in ["owner", "manager", "viewer"]
+        operation.get("role", {}) not in ["owner", "manager", "viewer", "admin"]
         or (
             operation["role"] in ["manager", "viewer"] and not operation.get("genebank")
         )
-        or (operation["role"] in ["owner"] and not operation.get("herd"))
+        or (operation["role"] == "owner" and not operation.get("herd"))
     ):
         valid = False
 
@@ -570,7 +589,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
     permitted = True
     if skip_role_check or user.is_manager:
         genebank = operation.get("genebank", None)
-        if genebank is None:
+        if genebank is None and operation["role"] != "admin":
             try:
                 with DATABASE.atomic():
                     herd = Herd.get(operation["herd"])
@@ -597,7 +616,7 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
 
     # update roles if needed
     target = "herd" if operation["role"] == "owner" else "genebank"
-    has_role = target_user.has_role(operation["role"], operation[target])
+    has_role = target_user.has_role(operation["role"], operation.get(target))
     updated = False
 
     with DATABASE.atomic():
@@ -605,17 +624,17 @@ def update_role(operation, user_uuid=None, skip_role_check=False):
             logger.info(
                 f"User:{user.username} UPDATE: Role remove on user: "
                 f"{target_user.username} removed: {operation['role']} "
-                f"target:{operation[target]}"
+                f"target:{operation.get(target)}"
             )
-            target_user.remove_role(operation["role"], operation[target])
+            target_user.remove_role(operation["role"], operation.get(target))
             updated = True
         elif not has_role and operation["action"] == "add":
             logger.info(
                 f"User:{user.username} UPDATE: Role added on user: "
                 f"{target_user.username} added: {operation['role']} "
-                f"target:{operation[target]}"
+                f"target:{operation.get(target)}"
             )
-            target_user.add_role(operation["role"], operation[target])
+            target_user.add_role(operation["role"], operation.get(target))
             updated = True
 
     return {"status": "updated" if updated else "unchanged"}
@@ -743,6 +762,112 @@ def add_herd(form, user_uuid):
             return {"status": "error", "message": "missing data"}
         logger.info(f"User:{user.username} Added herd: {herd.short_info()}")
         return {"status": "success"}
+
+
+def get_latest_yearly_report(herd_id):
+    try:
+        report = (
+            YearlyHerdReport.select()
+            .where(YearlyHerdReport.herd == herd_id)
+            .order_by(YearlyHerdReport.report_date.desc())
+            .get()
+        )
+        report_data = report.as_dict()
+        # Parse the JSON data field
+        report_data["data"] = json.loads(report_data["data"])
+        return report_data
+    except YearlyHerdReport.DoesNotExist:
+        return None
+
+
+def save_yearly_report(herd_id, form_data, user):
+    try:
+        # Validate herd exists and user has permission
+        try:
+            herd = Herd.get_by_id(herd_id)
+            if not user.can_edit(herd.herd):
+                return {
+                    "status": "error",
+                    "message": "You don't have permission to modify this herd",
+                }
+        except DoesNotExist:
+            return {"status": "error", "message": "Invalid herd ID"}
+
+        # Prepare the data
+        report_data_json = json.dumps(form_data.get("data", {}))
+        report_date = date.today()
+        report_name = form_data.get("name", f"Yearly Report {report_date.year}")
+        version = form_data.get("version", "1.0")
+        report_round_id = form_data.get("report_round_id")
+        report_year = form_data.get("report_year")
+
+        # Validate report round
+        if not report_round_id:
+            return {"status": "error", "message": "Missing report round ID"}
+
+        try:
+            report_round = YearlyReportRound.get_by_id(report_round_id)
+            if not report_round.is_active:
+                return {
+                    "status": "error",
+                    "message": "Report round is not active",
+                }
+            if report_round.report_year != report_year:
+                return {
+                    "status": "error",
+                    "message": "Report year does not match report round year",
+                }
+        except YearlyReportRound.DoesNotExist:
+            return {"status": "error", "message": "Invalid report round ID"}
+
+        # Check if a report already exists for this herd and round
+        existing_report = (
+            YearlyHerdReport.select()
+            .where(
+                (YearlyHerdReport.herd == herd_id)
+                & (YearlyHerdReport.round == report_round_id)
+            )
+            .first()
+        )
+
+        if existing_report:
+            # Update the existing report
+            existing_report.data = report_data_json
+            existing_report.name = report_name
+            existing_report.generated_by = user.id
+            existing_report.version = version
+            existing_report.round = report_round_id  # Update the round
+            existing_report.publish = form_data.get("publish", existing_report.publish)
+            existing_report.publish_tel = form_data.get(
+                "publish_tel", existing_report.publish_tel
+            )
+            existing_report.publish_email = form_data.get(
+                "publish_email", existing_report.publish_email
+            )
+            existing_report.publish_address = form_data.get(
+                "publish_address", existing_report.publish_address
+            )
+            existing_report.save()
+            return {"status": "success", "message": "Report updated"}
+        else:
+            # Create a new report
+            new_report = YearlyHerdReport.create(
+                herd=herd_id,
+                report_date=report_date,
+                generated_by=user.id,
+                name=report_name,
+                data=report_data_json,
+                version=version,
+                round=report_round_id,  # Link to the report round
+                publish=form_data.get("publish", False),
+                publish_tel=form_data.get("publish_tel", False),
+                publish_email=form_data.get("publish_email", False),
+                publish_address=form_data.get("publish_address", False),
+            )
+            return {"status": "success", "message": "Report created"}
+    except Exception as e:
+        logger.error(f"Error saving yearly report: {e}")
+        return {"status": "error", "message": "Failed to save report"}
 
 
 def update_herd(form, user_uuid):
@@ -985,7 +1110,10 @@ def add_individual(form, user_uuid):
         with DATABASE.atomic():
             herd = Herd.get(Herd.herd == form["herd"])
     except DoesNotExist:
-        return {"status": "error", "message": "Individual must have a valid herd"}
+        return {
+            "status": "error",
+            "message": "Individual must have a valid herd",
+        }
 
     if not user.can_edit(herd.herd):
         return {"status": "error", "message": "Forbidden"}
@@ -1004,7 +1132,10 @@ def add_individual(form, user_uuid):
             return nextind
 
     if Individual.select().where(Individual.number == form["number"]).exists():
-        return {"status": "error", "message": "Individual number already exists"}
+        return {
+            "status": "error",
+            "message": "Individual number already exists",
+        }
     if form.get("certificate", None) is not None:
         if (
             Individual.select()
@@ -1127,7 +1258,10 @@ def update_individual(form, user_uuid):
                 f"{old_individual.number} new number "
                 f"already exists {new_number}"
             )
-            return {"status": "error", "message": "Individual number already exists"}
+            return {
+                "status": "error",
+                "message": "Individual number already exists",
+            }
         form["number"] = old_individual.number
 
     if form.get(
@@ -1191,7 +1325,10 @@ def update_individual(form, user_uuid):
     if form["herd"] and isinstance(form["herd"], dict):
         form["herd"] = form["herd"].get("herd", None)
         if not Herd.select().where(Herd.herd == form["herd"]).exists():
-            return {"status": "error", "message": "Individual must have a valid herd"}
+            return {
+                "status": "error",
+                "message": "Individual must have a valid herd",
+            }
     if form.get("issue_digital", False):
         nextval = 100000
         max = Individual.select(  # pylint: disable=E1120
@@ -1239,9 +1376,9 @@ def update_individual(form, user_uuid):
                         individual=individual,
                         new_herd=form["herd"],
                         user_signature=user,
-                        tracking_date=datetime.utcnow()
-                        if not update_date
-                        else update_date,
+                        tracking_date=(
+                            datetime.utcnow() if not update_date else update_date
+                        ),
                     )
                 except ValueError as exception:
                     raise exception
@@ -1261,7 +1398,7 @@ def update_individual(form, user_uuid):
                     f"{old_individual.number}/certificate.pdf"
                 )
             # if breeding changed and breeding birth_date is changed
-            # update birth_date herd_tracking_date
+            # update birth_date herd tracking date
             if (
                 old_individual.breeding.id != individual.breeding.id
                 and old_individual.breeding.birth_date.strftime("%Y-%m-%d")
@@ -1352,7 +1489,9 @@ def update_weights(individual, weights, username):
                     f"{username},{individual.number},adding weight,{weight[0]},{weight[1]},"
                 )
                 Weight(
-                    individual=individual, weight_date=weight[0], weight=weight[1]
+                    individual=individual,
+                    weight_date=weight[0],
+                    weight=weight[1],
                 ).save()
 
 
@@ -1496,18 +1635,24 @@ def get_individuals(genebank_id, user_uuid=None):
                 {
                     "id": i["id"],
                     "name": i["name"],
-                    "certificate": i["digital_certificate"]
-                    if i["certificate"] is None
-                    else i["certificate"],
+                    "certificate": (
+                        i["digital_certificate"]
+                        if i["certificate"] is None
+                        else i["certificate"]
+                    ),
                     "digital_certificate": i["digital_certificate"],
                     "number": i["number"],
                     "sex": i["sex"],
-                    "birth_date": i["birth_date"].strftime("%Y-%m-%d")
-                    if i["birth_date"]
-                    else None,
-                    "death_date": i["death_date"].strftime("%Y-%m-%d")
-                    if i["death_date"]
-                    else None,
+                    "birth_date": (
+                        i["birth_date"].strftime("%Y-%m-%d")
+                        if i["birth_date"]
+                        else None
+                    ),
+                    "death_date": (
+                        i["death_date"].strftime("%Y-%m-%d")
+                        if i["death_date"]
+                        else None
+                    ),
                     "death_note": i["death_note"],
                     "castration_date": i["castration_date"],
                     "litter_size": i["litter_size"],
@@ -2084,3 +2229,328 @@ def update_birth_date_herd_tracking(individual, username, new_date, old_date):
     except DoesNotExist:
         logger.info(f"{individual.number} does not have birth_date herdtracking event")
         raise ValueError("Individual does not have birth_date herdtracking event")
+
+
+def get_yearly_report_rounds(user_uuid=None):
+    """
+    Retrieves all YearlyReportRounds.
+    Only accessible to admin or manager users.
+    """
+    user = fetch_user_info(user_uuid)
+    if user and (user.is_admin or user.is_manager):
+        rounds = YearlyReportRound.select()
+        return [r.as_dict() for r in rounds]
+    else:
+        return {"status": "error", "message": "Forbidden"}
+
+
+def create_yearly_report_round(form, user_uuid=None):
+    """
+    Creates a new YearlyReportRound based on the form data.
+    Only accessible to admin or manager users.
+    """
+    user = fetch_user_info(user_uuid)
+    if not user or not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Forbidden"}
+    try:
+        new_round = YearlyReportRound.create(
+            report_year=form.get("report_year"),
+            start_date=form.get("start_date"),
+            end_date=form.get("end_date"),
+            is_active=form.get("is_active", False),
+            created_by=user,
+            # creation_date is set automatically
+        )
+        return {"status": "success", "round": new_round.id}
+    except Exception as e:
+        # ...existing error handling...
+        return {"status": "error", "message": str(e)}
+
+
+def update_yearly_report_round(round_id, form, user_uuid):
+    """
+    Updates an existing YearlyReportRound with data from the form.
+    Only accessible to admin or manager users.
+    """
+    user = fetch_user_info(user_uuid)
+    if not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Forbidden"}
+    try:
+        yr_round = YearlyReportRound.get(YearlyReportRound.id == round_id)
+        yr_round.start_date = form.get("start_date", yr_round.start_date)
+        yr_round.end_date = form.get("end_date", yr_round.end_date)
+        yr_round.is_active = form.get("is_active", yr_round.is_active)
+        yr_round.manually_activated = form.get(
+            "manually_activated", yr_round.manually_activated
+        )
+        # Do not update 'created_by' or 'creation_date'
+        yr_round.save()
+        return {"status": "success", "round": yr_round.id}
+    except YearlyReportRound.DoesNotExist:
+        return {"status": "error", "message": "YearlyReportRound not found."}
+    except Exception as e:
+        # ...existing error handling...
+        return {"status": "error", "message": str(e)}
+
+
+def get_yearly_report_rounds_with_counts(user_uuid=None):
+    """
+    Retrieves all YearlyReportRounds along with the count of submitted YearlyHerdReports per round.
+    Accessible to all users.
+    """
+    user = fetch_user_info(user_uuid)
+    try:
+        rounds_query = (
+            YearlyReportRound.select(
+                YearlyReportRound,
+                fn.COUNT(YearlyHerdReport.id).alias("report_count"),
+                User.username.alias("created_by_username"),
+            )
+            .join(User, on=(YearlyReportRound.created_by == User.id))
+            .switch(YearlyReportRound)
+            .join(
+                YearlyHerdReport,
+                JOIN.LEFT_OUTER,
+                on=(YearlyHerdReport.round == YearlyReportRound.id),
+            )
+            .group_by(YearlyReportRound, User.username)
+            .dicts()
+        )
+        rounds = list(rounds_query)
+        return rounds
+    except Exception as e:
+        logger.error(f"Error retrieving yearly report rounds: {e}")
+        return []  # Return an empty list in case of error
+
+
+def delete_yearly_report_round(round_id, user_uuid=None):
+    """
+    Deletes a YearlyReportRound entry if the user has the required permissions.
+    """
+    user = fetch_user_info(user_uuid)
+    if not user or not (user.is_admin or user.is_manager):
+        return {"status": "error", "message": "Unauthorized"}
+
+    try:
+        round_entry = YearlyReportRound.get_by_id(round_id)
+        round_entry.delete_instance()
+        return {"status": "success", "message": "Yearly report round deleted"}
+    except YearlyReportRound.DoesNotExist:
+        return {"status": "error", "message": "Yearly report round not found"}
+    except Exception as e:
+        logger.error(f"Error deleting yearly report round: {e}")
+        return {
+            "status": "error",
+            "message": "An error occurred while deleting the round",
+        }
+
+
+def get_yearly_report_by_round(herd_id, round_id):
+    try:
+        report = (
+            YearlyHerdReport.select()
+            .where(
+                (YearlyHerdReport.herd == herd_id)
+                & (YearlyHerdReport.round == round_id)
+            )
+            .get()
+        )
+        report_data = report.as_dict()
+        # Parse the JSON data field
+        report_data["data"] = json.loads(report_data["data"])
+        return report_data
+    except YearlyHerdReport.DoesNotExist:
+        return None
+
+
+def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
+    """Get all yearly reports for a specific round and genebank."""
+    try:
+        with DATABASE.atomic():
+            reports = (
+                YearlyHerdReport.select(YearlyHerdReport, Herd)
+                .join(Herd)
+                .where(
+                    (YearlyHerdReport.round == round_id)
+                    & (Herd.genebank == genebank_id)
+                )
+            )
+
+            formatted_reports = []
+            for r in reports:
+                # Parse the JSON data field
+                form_data = json.loads(r.data) if r.data else {}
+
+                # Determine status based on the report data
+                status = "Aktiv genbank"  # Default status
+                if form_data.get("endingGenbank", False):
+                    status = "Vill avsluta genbank"
+                elif (
+                    form_data.get("numberOfMalesWithCertificate", 0) == 0
+                    or form_data.get("numberOfFemalesWithCertificate", 0) == 0
+                ):
+                    status = "Avslutad, men kvar som medlem"
+
+                # Format publish information based on allowPublication array
+                publish_info = "Nej, ingen publicering"
+                allow_publication = form_data.get("allowPublication", [])
+
+                if "all" in allow_publication:
+                    excluded = []
+                    if "noPhone" in allow_publication:
+                        excluded.append("telefonnummer")
+                    if "noEmail" in allow_publication:
+                        excluded.append("e-postadress")
+                    if "noAddress" in allow_publication:
+                        excluded.append("postnummer och ort")
+
+                    if not excluded:
+                        publish_info = "Ja för publicering i Koharen"
+                    else:
+                        publish_info = f"Ja, men inte {' och '.join(excluded)}"
+
+                report = {
+                    "herd": r.herd.herd,  # Changed from genebank_number to herd
+                    "name": r.herd.herd_name,
+                    "status": status,
+                    # Form data fields
+                    "litter_count": form_data.get("numberOfLitters", 0),
+                    "total_kits_born": form_data.get("totalBorn", 0),
+                    "living_kits_6weeks": form_data.get("totalAliveAfterSixWeeks", 0),
+                    "registered_females_yearend": form_data.get(
+                        "numberOfFemalesWithCertificate", 0
+                    ),
+                    "registered_males_yearend": form_data.get(
+                        "numberOfMalesWithCertificate", 0
+                    ),
+                    "breeding_females_used": form_data.get(
+                        "numberOfFemalesUsedInBreeding", 0
+                    ),
+                    "breeding_males_used": form_data.get(
+                        "numberOfMalesUsedInBreeding", 0
+                    ),
+                    # Privacy settings
+                    "publish": publish_info,
+                    # Contact and bank info - access through the joined Herd model
+                    "email": (
+                        r.herd.email if "noEmail" not in allow_publication else None
+                    ),
+                    "phone": (
+                        r.herd.mobile_phone
+                        if "noPhone" not in allow_publication
+                        else None
+                    ),
+                    "address": (
+                        r.herd.physical_address
+                        if "noAddress" not in allow_publication
+                        else None
+                    ),
+                    "bank_account": r.herd.bank_account_number,
+                    "bank_name": r.herd.bank_name,
+                    # Additional fields
+                    "eligible_for_support": form_data.get("eligibleForSupport", False),
+                    "defects_malformations": form_data.get("defectsMalformations", ""),
+                    # Disease cases from form data
+                    "disease_cases": format_disease_cases(
+                        form_data.get("diseases", {})
+                    ),
+                    "submission_date": (
+                        r.report_date.strftime("%Y-%m-%d") if r.report_date else None
+                    ),
+                }
+                formatted_reports.append(report)
+
+            return formatted_reports
+    except Exception as e:
+        logger.error(f"Failed to get yearly reports: {str(e)}")
+        raise
+
+
+def format_disease_cases(diseases: Dict) -> str:
+    """Format disease cases into a readable string."""
+    cases = []
+    for disease, data in diseases.items():
+        if data.get("numberOfAffectedRabbits"):
+            if disease == "other" and data.get("diseaseName"):
+                cases.append(
+                    f"{data['diseaseName']}: {data['numberOfAffectedRabbits']} ({data.get('age', '')})"
+                )
+            else:
+                cases.append(
+                    f"{disease}: {data['numberOfAffectedRabbits']} ({data.get('age', '')})"
+                )
+    return "; ".join(cases) if cases else "Inga rapporterade sjukdomsfall"
+
+
+def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
+    """Export yearly reports as CSV data."""
+    try:
+        reports = get_yearly_reports(round_id, genebank_id)
+
+        # CSV Headers in Swedish - exactly matching the table view
+        headers = [
+            "Besättningsnummer",
+            "Namn",
+            "Status",
+            "Antal kullar under året",
+            "Totalt antal födda ungar under året",
+            "Totalt antal levande ungar efter 6 veckor",
+            "Registrerade honor vid årsskiftet i genbanken, antal",
+            "Registrerade hanar vid årsskiftet i genbanken, antal",
+            "Använda honor i avel under året, antal",
+            "Använda hanar i avel under året, antal",
+            "Publicering i Koharen",
+            "E-post",
+            "Uppfyller kraven för stöd",
+            "Bankkontonr",
+            "Bank",
+            "Defekter/missbildningar",
+            "Sjukdomsfall under året",
+            "Datum för ifyllnad",
+        ]
+
+        # Create output lines
+        output_lines = []
+        output_lines.append(";".join(headers))
+
+        # Write data rows
+        for report in reports:
+            row = [
+                str(report["herd"]),  # Changed from genebank_number to herd
+                report["name"] or "",
+                report["status"],
+                str(report["litter_count"]),
+                str(report["total_kits_born"]),
+                str(report["living_kits_6weeks"]),
+                str(report["registered_females_yearend"]),
+                str(report["registered_males_yearend"]),
+                str(report["breeding_females_used"]),
+                str(report["breeding_males_used"]),
+                report["publish"],
+                report["email"] or "",
+                "Ja" if report["eligible_for_support"] else "Nej",
+                report["bank_account"] or "",
+                report["bank_name"] or "",
+                report["defects_malformations"] or "",
+                report["disease_cases"] or "Inga rapporterade sjukdomsfall",
+                report["submission_date"] or "",
+            ]
+            # Escape semicolons in fields and wrap in quotes if needed
+            escaped_row = [
+                (
+                    f'"{field}"'
+                    if ";" in str(field)
+                    or "," in str(field)
+                    or "\n" in str(field)
+                    or '"' in str(field)
+                    else str(field)
+                )
+                for field in row
+            ]
+            output_lines.append(";".join(escaped_row))
+
+        # Add BOM for Excel to properly detect UTF-8
+        return "\ufeff" + "\n".join(output_lines)
+    except Exception as e:
+        logger.error(f"Failed to export yearly reports as CSV: {str(e)}")
+        raise

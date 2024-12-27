@@ -13,6 +13,7 @@ ENV/
 env.bak/
 venv.bak/
 .vscode
+*.code-workspace
 .tox/
 .docker/database-variables.env
 .docker/r-api-variables.env
@@ -37,6 +38,7 @@ __pycache__/
 # database files
 postgres-data/
 db_dumps/
+db-dump*
 
 # config files
 config.ini
@@ -51,3 +53,6 @@ s3data/*
 *.csv
 *.dump
 *.xlsx
+
+# Logs
+logs/*

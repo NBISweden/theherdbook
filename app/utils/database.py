@@ -35,7 +35,7 @@ from peewee import (
 )
 from playhouse.migrate import PostgresqlMigrator, SqliteMigrator, migrate
 
-CURRENT_SCHEMA_VERSION = 11
+CURRENT_SCHEMA_VERSION = 14
 DB_PROXY = Proxy()
 DATABASE = None
 DATABASE_MIGRATOR = None
@@ -220,6 +220,10 @@ class Herd(BaseModel):
     latitude = FloatField(null=True)
     longitude = FloatField(null=True)
     coordinates_privacy = CharField(15, null=True)
+    bank_account_number = TextField(null=True)
+    bank_account_number_privacy = CharField(15, null=True, default="private")
+    bank_name = TextField(null=True)
+    bank_name_privacy = CharField(15, null=True, default="private")
 
     @property
     def individuals(self):
@@ -343,13 +347,15 @@ def remove_fields_by_privacy(data, access_level):
         field_level = data[field] or "private"
         if levels.index(access_level) < levels.index(field_level):
             if field == "coordinates_privacy":
-                del data["latitude"]
-                del data["longitude"]
+                if "latitude" in data:
+                    del data["latitude"]
+                if "longitude" in data:
+                    del data["longitude"]
             else:
                 target_field = field[: -len("_privacy")]
-                del data[target_field]
-        # remove the access level value if the user doesn't have private
-        # access
+                if target_field in data:
+                    del data[target_field]
+        # remove the access level value if the user doesn't have private access
         if access_level != "private":
             del data[field]
 
@@ -436,13 +442,16 @@ def next_individual_number(herd, birth_date, breeding_event):
         )
         events = (
             Breeding.select(
-                rank_expr.alias("litter_number"), Breeding.id, Breeding.litter_size
+                rank_expr.alias("litter_number"),
+                Breeding.id,
+                Breeding.litter_size,
             )
             .where(Breeding.breeding_herd_id == herd_id)
             .where(
                 (
                     DATABASE.extract_date(
-                        "year", fn.COALESCE(Breeding.birth_date, Breeding.breed_date)
+                        "year",
+                        fn.COALESCE(Breeding.birth_date, Breeding.breed_date),
                     )
                     == birth_date.year
                 )
@@ -483,7 +492,11 @@ def next_individual_number(herd, birth_date, breeding_event):
                             "number": None,
                         }
                     elif litter_size == 9:
-                        return {"status": "error", "message": "NINE", "number": None}
+                        return {
+                            "status": "error",
+                            "message": "NINE",
+                            "number": None,
+                        }
                     else:
                         litter_number_list = list()
                         for ind in individuals:
@@ -724,9 +737,11 @@ class Individual(BaseModel):
                     "herd_id": h.herd.id,
                     "herd": h.herd.herd,
                     "herd_name": h.herd.herd_name,
-                    "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                    if h.herd_tracking_date
-                    else None,
+                    "date": (
+                        h.herd_tracking_date.strftime("%Y-%m-%d")
+                        if h.herd_tracking_date
+                        else None
+                    ),
                 }
                 for h in ht_history
             ]
@@ -756,12 +771,18 @@ class Individual(BaseModel):
             - mother
         """
         father = (
-            {"id": self.breeding.father.id, "number": self.breeding.father.number}
+            {
+                "id": self.breeding.father.id,
+                "number": self.breeding.father.number,
+            }
             if self.breeding and self.breeding.father
             else None
         )
         mother = (
-            {"id": self.breeding.mother.id, "number": self.breeding.mother.number}
+            {
+                "id": self.breeding.mother.id,
+                "number": self.breeding.mother.number,
+            }
             if self.breeding and self.breeding.mother
             else None
         )
@@ -1150,6 +1171,22 @@ class UserMessage(BaseModel):
     recieve_time = DateTimeField()
 
 
+class YearlyReportRound(BaseModel):
+    """
+    Stores yearly report rounds. Managers or admins can create yearly rounds,
+    and activate them based on start and end dates or manually.
+    """
+
+    id = AutoField(primary_key=True, column_name="yearly_report_round_id")
+    report_year = IntegerField(unique=True)
+    start_date = DateField(null=True)
+    end_date = DateField(null=True)
+    manually_activated = BooleanField(default=False)
+    is_active = BooleanField(default=False)
+    created_by = ForeignKeyField(User)
+    creation_date = DateTimeField(default=datetime.now)
+
+
 class YearlyHerdReport(BaseModel):
     """
     Stores yearly reports for herds.
@@ -1168,21 +1205,8 @@ class YearlyHerdReport(BaseModel):
     publish_tel = BooleanField()
     publish_email = BooleanField()
     publish_address = BooleanField()
-
-
-class GenebankReport(BaseModel):
-    """
-    Stores yearly reports for genebanks.
-
-    The data field stores the report data in json format, but we refrained from
-    storing it in a JSONField so that we could still use sqlite for testing.
-    """
-
-    genebank = ForeignKeyField(Genebank)
-    generated_by = ForeignKeyField(User)
-    report_date = DateField()
-    name = CharField()
-    data = TextField()
+    version = CharField(null=True)
+    round = ForeignKeyField(YearlyReportRound, null=True)
 
 
 class HerdTracking(BaseModel):
@@ -1243,8 +1267,8 @@ MODELS = [
     Bodyfat,
     User,
     UserMessage,
+    YearlyReportRound,
     YearlyHerdReport,
-    GenebankReport,
     HerdTracking,
     Authenticators,
     SchemaHistory,
@@ -1384,7 +1408,9 @@ def migrate_1_to_2():
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=2, comment="Fix schema history table", applied=datetime.now()
+            version=2,
+            comment="Fix schema history table",
+            applied=datetime.now(),
         ).execute()
 
 
@@ -1440,7 +1466,9 @@ def migrate_3_to_4():
             migrate(DATABASE_MIGRATOR.rename_column("color", "colour_id", "color_id"))
 
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=4, comment="colour to color in fields", applied=datetime.now()
+            version=4,
+            comment="colour to color in fields",
+            applied=datetime.now(),
         ).execute()
 
 
@@ -1469,7 +1497,9 @@ def migrate_4_to_5():
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=5, comment="Set up digital certificate ids", applied=datetime.now()
+            version=5,
+            comment="Set up digital certificate ids",
+            applied=datetime.now(),
         ).execute()
 
 
@@ -1624,7 +1654,9 @@ def migrate_9_to_10():
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=10, comment="Add has_photo to individual", applied=datetime.now()
+            version=10,
+            comment="Add has_photo to individual",
+            applied=datetime.now(),
         ).execute()
 
 
@@ -1654,7 +1686,135 @@ def migrate_10_to_11():
                 )
             )
         SchemaHistory.insert(  # pylint: disable=E1120
-            version=11, comment="Add last_active to hbuser", applied=datetime.now()
+            version=11,
+            comment="Add last_active to hbuser",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_11_to_12():
+    """
+    Migrate the database schema from version 11 to version 12.
+
+    This migration performs the following steps:
+    1. Checks if the "herd" table exists in the database.
+    2. If the "herd" table does not exist, logs the migration as skipped.
+    3. If the "herd" table exists, checks if the columns "bank_account_number",
+       "bank_account_number_privacy", "bank_name", and "bank_name_privacy" are present.
+    4. If the columns are not present, adds them to the "herd" table with the specified
+       properties.
+    5. Logs the migration as applied with a comment.
+
+    The added columns are:
+    - bank_account_number: TextField, nullable
+    - bank_account_number_privacy: CharField with a max length of 15, nullable, default 'private'
+    - bank_name: TextField, nullable
+    - bank_name_privacy: CharField with a max length of 15, nullable, default 'private'
+    """
+    with DATABASE.atomic():
+        if "herd" not in DATABASE.get_tables():
+            # Can't run migration
+            SchemaHistory.insert(
+                version=12,
+                comment="not yet bootstrapped, skipping",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("herd")]
+
+        if "bank_account_number" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "herd", "bank_account_number", TextField(null=True)
+                ),
+                DATABASE_MIGRATOR.add_column(
+                    "herd",
+                    "bank_account_number_privacy",
+                    CharField(15, null=True, default="private"),
+                ),
+                DATABASE_MIGRATOR.add_column("herd", "bank_name", TextField(null=True)),
+                DATABASE_MIGRATOR.add_column(
+                    "herd",
+                    "bank_name_privacy",
+                    CharField(15, null=True, default="private"),
+                ),
+            )
+
+        SchemaHistory.insert(
+            version=12,
+            comment="Add bank account fields to herd",
+            applied=datetime.now(),
+        ).execute()
+
+
+def migrate_12_to_13():
+    """
+    Migrate between schema version 12 and 13.
+    Adds a 'version' field to the 'yearlyherdreport' table.
+    """
+    with DATABASE.atomic():
+        if "yearlyherdreport" not in DATABASE.get_tables():
+            # Can't run migration if the table doesn't exist
+            SchemaHistory.insert(
+                version=13,
+                comment="YearlyHerdReport table does not exist; skipping migration.",
+                applied=datetime.now(),
+            ).execute()
+            return
+
+        cols = [x.name for x in DATABASE.get_columns("yearlyherdreport")]
+
+        if "version" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "yearlyherdreport",
+                    "version",
+                    CharField(null=True),
+                )
+            )
+            SchemaHistory.insert(
+                version=13,
+                comment="Added 'version' field to 'yearlyherdreport' table",
+                applied=datetime.now(),
+            ).execute()
+        else:
+            # If the column already exists, update the schema history
+            SchemaHistory.insert(
+                version=13,
+                comment="'version' field already exists in 'yearlyherdreport'",
+                applied=datetime.now(),
+            ).execute()
+
+
+def migrate_13_to_14():
+    """
+    Migrate between schema version 13 and 14.
+    Add YearlyReportRound model, link YearlyHerdReport to it, and remove GenebankReport.
+    """
+    with DATABASE.atomic():
+        # Create YearlyReportRound table if it doesn't exist
+        if not YearlyReportRound.table_exists():
+            YearlyReportRound.create_table()
+
+        # Add 'round' field to YearlyHerdReport
+        cols = [x.name for x in DATABASE.get_columns("yearlyherdreport")]
+        if "round_id" not in cols:
+            migrate(
+                DATABASE_MIGRATOR.add_column(
+                    "yearlyherdreport", "round_id", IntegerField(null=True)
+                )
+            )
+            # Optionally, add foreign key constraint if supported
+
+        # Remove GenebankReport table if it exists
+        if "genebankreport" in DATABASE.get_tables():
+            DATABASE.execute_sql("DROP TABLE IF EXISTS genebankreport;")
+
+        SchemaHistory.insert(
+            version=14,
+            comment="Added YearlyReportRound, linked YearlyHerdReport to it, removed GenebankReport",
+            applied=datetime.now(),
         ).execute()
 
 
@@ -1680,7 +1840,10 @@ def check_migrations():
         next_version = (current_version if current_version else 0) + 1
         call = ("migrate_%s_to_%s" % (current_version, next_version)).lower()
         logger.info(
-            "Calling %s to migrate from %s to %s", call, current_version, next_version
+            "Calling %s to migrate from %s to %s",
+            call,
+            current_version,
+            next_version,
         )
 
         globals()[call]()
