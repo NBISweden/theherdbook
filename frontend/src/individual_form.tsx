@@ -178,6 +178,7 @@ export function IndividualForm({
                         className="control"
                         variant={inputVariant}
                         value={individual.number ?? ""}
+                        inputProps={{ className: "data-hj-allow" }}
                         onChange={(event) => {
                           onUpdateIndividual(
                             "number",
@@ -215,6 +216,11 @@ export function IndividualForm({
                         label="Födelsedatum"
                         format={dateFormat}
                         value={individual.birth_date ?? null}
+                        InputProps={{
+                          classes: {
+                            input: "data-hj-allow",
+                          },
+                        }}
                         InputLabelProps={{
                           shrink: true,
                         }}
@@ -260,6 +266,7 @@ export function IndividualForm({
                       className="control controlWidth"
                       label="Födelsedatum"
                       value={individual.birth_date ?? null}
+                      inputProps={{ className: "data-hj-allow" }}
                     />
 
                     <BreedingDialog
@@ -313,6 +320,7 @@ export function IndividualForm({
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.name ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("name", event.currentTarget.value);
                   }}
@@ -335,6 +343,12 @@ export function IndividualForm({
                       margin="normal"
                       required
                       error={sexError}
+                      InputProps={{
+                        ...params.InputProps,
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
@@ -363,6 +377,7 @@ export function IndividualForm({
                       variant={inputVariant}
                       value={individual.litter_size ?? ""}
                       type="number"
+                      inputProps={{ className: "data-hj-allow" }}
                       onChange={(event) => {
                         onUpdateIndividual(
                           "litter_size",
@@ -390,6 +405,7 @@ export function IndividualForm({
                       variant={inputVariant}
                       value={individual.litter_size6w ?? ""}
                       type="number"
+                      inputProps={{ className: "data-hj-allow" }}
                       onChange={(event) => {
                         onUpdateIndividual(
                           "litter_size6w",
@@ -430,6 +446,12 @@ export function IndividualForm({
                       margin="normal"
                       required
                       error={colorError}
+                      InputProps={{
+                        ...params.InputProps,
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
@@ -441,6 +463,7 @@ export function IndividualForm({
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.color_note ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("color_note", event.currentTarget.value);
                   }}
@@ -450,6 +473,7 @@ export function IndividualForm({
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.belly_color ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual(
                       "belly_color",
@@ -476,6 +500,7 @@ export function IndividualForm({
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.eye_color ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("eye_color", event.currentTarget.value);
                   }}
@@ -485,6 +510,7 @@ export function IndividualForm({
                   className="control controlWidth"
                   variant={inputVariant}
                   value={individual.claw_color ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("claw_color", event.currentTarget.value);
                   }}
@@ -505,6 +531,12 @@ export function IndividualForm({
                       className="control"
                       variant={inputVariant}
                       margin="normal"
+                      InputProps={{
+                        ...params.InputProps,
+                        classes: {
+                          input: "data-hj-allow",
+                        },
+                      }}
                     />
                   )}
                   onChange={(event: any, newValue: OptionType | null) => {
@@ -520,6 +552,7 @@ export function IndividualForm({
                   multiline
                   minRows={1}
                   value={individual.hair_notes ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("hair_notes", event.currentTarget.value);
                   }}
@@ -533,6 +566,7 @@ export function IndividualForm({
                   multiline
                   minRows={4}
                   value={individual.notes ?? ""}
+                  inputProps={{ className: "data-hj-allow" }}
                   onChange={(event) => {
                     onUpdateIndividual("notes", event.currentTarget.value);
                   }}
@@ -578,6 +612,12 @@ export function IndividualForm({
               {...params}
               label="Ursprungsbesättning "
               variant={inputVariant}
+              InputProps={{
+                ...params.InputProps,
+                classes: {
+                  input: "data-hj-allow",
+                },
+              }}
             />
           )}
         />
@@ -598,6 +638,9 @@ export function IndividualForm({
           (individual.number?.split(/-\d{0,2}/)[1] ?? individual.number) || ""
         }
         InputProps={{
+          classes: {
+            input: "data-hj-allow",
+          },
           startAdornment: (
             <InputAdornment position="start">
               {individual?.number
