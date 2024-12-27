@@ -200,14 +200,11 @@ list-item {
   align-items: center;
 }
 
-
 .react-pdf__Page__annotations {
-  --scale-factor: 1.5 ! important;
-  left:5px;
-  top:2px;
+  --scale-factor: 1.5 !important;
+  left: 5px;
+  top: 2px;
 }
-
-
 
 /* Used in filter_table.tsx */
 .functionLink {
@@ -287,6 +284,14 @@ list-item {
   max-width: 475px;
   border: 1px solid grey;
   border-radius: 5px;
+}
+
+.yearlyReportCard {
+  padding: 15px;
+  margin: 10px;
+  border: 1px solid grey;
+  border-radius: 5px;
+  width: calc(100% - 20px); /* Account for margins */
 }
 
 /* Used in herdForm.tsx */
