@@ -807,7 +807,7 @@ def save_yearly_report(herd_id, form_data, user):
 
         try:
             report_round = YearlyReportRound.get_by_id(report_round_id)
-            if not report_round.is_active:
+            if not (report_round.is_active or report_round.manually_activated):
                 return {
                     "status": "error",
                     "message": "Report round is not active",
