@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Stepper,
   Step,
@@ -7,7 +7,7 @@ import {
   Paper,
   Typography,
 } from "@material-ui/core";
-import { useUserContext } from "@app/user_context";
+import { useUserContext, UserState } from "@app/user_context";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "@app/data_context";
 import { get } from "@app/communication";
@@ -19,69 +19,102 @@ import { HerdContactUpdateStep } from "./HerdContactUpdateStep";
 import { BatchRabbitUpdateStep } from "./BatchRabbitUpdateStep";
 import { YearlyReportStep } from "./YearlyReportStep";
 
-interface YearlyReportMultiStepFormProps {
-  reportRoundId?: number;
-  reportYear?: number;
+interface StepStatus {
+  genebank: string;
+  herd: string;
+  herdContact: string;
+  batchUpdate: string;
+  yearlyReport: string;
 }
 
-const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
+interface Props {
+  reportRoundId?: number;
+  reportYear?: number;
+  onComplete?: () => void;
+}
+
+const YearlyReportMultiStepForm: React.FC<Props> = ({
   reportRoundId,
   reportYear,
+  onComplete,
 }) => {
   const { user } = useUserContext();
   const { userMessage } = useMessageContext();
-  const { loadData, genebanks } = useDataContext();
+  const { loadData } = useDataContext();
 
   const [activeStep, setActiveStep] = useState(0);
   const [genebankName, setGenebankName] = useState<string | null>(null);
   const [herdId, setHerdId] = useState<string | null>(null);
   const [herdData, setHerdData] = useState<any>(null);
-  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [selectedHerd, setSelectedHerd] = useState<string | null>(null);
+  const [selectedGenebank, setSelectedGenebank] = useState<number | null>(null);
+  const [canProceed, setCanProceed] = useState(true);
+  const formRef = useRef<{ submitForm: () => Promise<boolean> }>(null);
+  const yearlyReportRef = useRef<{ submitForm: () => Promise<boolean> }>(null);
 
-  const isManagerOrAdmin =
-    user?.is_admin || (user?.is_manager ? user.is_manager.length > 0 : false);
+  const [stepStatus, setStepStatus] = useState<StepStatus>({
+    genebank: "not_started",
+    herd: "not_started",
+    herdContact: "not_started",
+    batchUpdate: "not_started",
+    yearlyReport: "not_started",
+  });
 
-  const steps = isManagerOrAdmin
-    ? [
-        "Välj Genbank",
-        "Välj Besättning",
-        "Uppdatera Kontaktinformation",
-        "Uppdatera Kaniner",
-        "Årsrapport",
-      ]
-    : [
-        "Välj Besättning",
-        "Uppdatera Kontaktinformation",
-        "Uppdatera Kaniner",
-        "Årsrapport",
-      ];
+  const { isManagerOrAdmin, isHerdContactUpdateStep } = useMemo(() => {
+    const isAdmin =
+      user?.is_admin || (user?.is_manager ? user.is_manager.length > 0 : false);
+    return {
+      isManagerOrAdmin: isAdmin,
+      isHerdContactUpdateStep: isAdmin ? activeStep === 2 : activeStep === 1,
+    };
+  }, [user, activeStep]);
+
+  const steps = useMemo(
+    () =>
+      isManagerOrAdmin
+        ? [
+            "Välj Genbank",
+            "Välj Besättning",
+            "Uppdatera Kontaktinformation",
+            "Uppdatera Kaniner",
+            "Årsrapport",
+          ]
+        : [
+            "Välj Besättning",
+            "Uppdatera Kontaktinformation",
+            "Uppdatera Kaniner",
+            "Årsrapport",
+          ],
+    [isManagerOrAdmin]
+  );
 
   useEffect(() => {
-    // For regular users with one herd
-    if (!isManagerOrAdmin && user?.is_owner && user.is_owner.length === 1) {
-      setHerdId(user.is_owner[0]);
+    // Update canProceed based on step status
+    const currentStep = isManagerOrAdmin ? activeStep : activeStep + 1;
+    switch (currentStep) {
+      case 0:
+        setCanProceed(stepStatus.genebank === "completed" || !isManagerOrAdmin);
+        break;
+      case 1:
+        setCanProceed(stepStatus.herd === "completed");
+        break;
+      case 2:
+        setCanProceed(
+          stepStatus.herdContact === "completed" ||
+            stepStatus.herdContact === "skipped"
+        );
+        break;
+      case 3:
+        setCanProceed(stepStatus.batchUpdate === "completed");
+        break;
+      case 4:
+        // For the final step, we should allow proceeding if we've reached this step
+        setCanProceed(true);
+        break;
+      default:
+        setCanProceed(true);
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (herdId) {
-      get(`/api/herd/${herdId}`).then(
-        (data) => {
-          setHerdData(data);
-          // Check if the yearly report has already been submitted
-          if (data.yearlyReportSubmitted) {
-            setReportSubmitted(true);
-          } else {
-            setReportSubmitted(false);
-          }
-        },
-        (error) => {
-          console.error(error);
-          userMessage("Kunde inte hämta besättningsdata.", "error");
-        }
-      );
-    }
-  }, [herdId]);
+  }, [activeStep, stepStatus, isManagerOrAdmin]);
 
   const handleNext = () => {
     // Validation before moving to next step
@@ -104,7 +137,78 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
   };
 
   const handleBack = () => {
+    // If going back to herd selection step, reset herd-related state
+    if (
+      (isManagerOrAdmin && activeStep === 2) ||
+      (!isManagerOrAdmin && activeStep === 1)
+    ) {
+      setHerdId(null);
+      setHerdData(null);
+      // Reset step status for steps that depend on herd
+      setStepStatus((prev) => ({
+        ...prev,
+        herdContact: "not_started",
+        batchUpdate: "not_started",
+        yearlyReport: "not_started",
+      }));
+      // Force reload of herd data
+      loadData(["herds"]);
+    }
+    // If going back to genebank selection (for admin/manager), reset genebank-related state
+    if (isManagerOrAdmin && activeStep === 1) {
+      setGenebankName(null);
+      setHerdId(null);
+      setHerdData(null);
+      // Reset step status as we're starting over
+      setStepStatus((prev) => ({
+        ...prev,
+        herdContact: "not_started",
+        batchUpdate: "not_started",
+        yearlyReport: "not_started",
+      }));
+      // Force reload of genebank data
+      loadData(["genebanks"]);
+    }
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  const handleStepStatus = (step: keyof StepStatus, status: string) => {
+    setStepStatus((prev) => ({
+      ...prev,
+      [step]: status,
+    }));
+  };
+
+  const handleSubmitReport = async () => {
+    if (yearlyReportRef.current) {
+      try {
+        const success = await yearlyReportRef.current.submitForm();
+        if (success) {
+          // Update step status first
+          handleStepStatus("yearlyReport", "completed");
+          // Show success message
+          userMessage("Årsrapporten har skickats in", "success");
+          // Move to completion step
+          setActiveStep(steps.length);
+          // Call onComplete callback if provided
+          if (onComplete) {
+            onComplete();
+          }
+          return true;
+        } else {
+          userMessage("Kunde inte skicka in årsrapporten", "error");
+          return false;
+        }
+      } catch (error) {
+        console.error("Error submitting report:", error);
+        userMessage(
+          "Ett fel uppstod när årsrapporten skulle skickas in",
+          "error"
+        );
+        return false;
+      }
+    }
+    return false;
   };
 
   const handleReset = () => {
@@ -112,7 +216,15 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
     setGenebankName(null);
     setHerdId(null);
     setHerdData(null);
-    setReportSubmitted(false);
+    setSelectedHerd(null);
+    setSelectedGenebank(null);
+    setStepStatus({
+      genebank: "not_started",
+      herd: "not_started",
+      herdContact: "not_started",
+      batchUpdate: "not_started",
+      yearlyReport: "not_started",
+    });
   };
 
   const getStepContent = (step: number) => {
@@ -124,6 +236,7 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               user={user}
               genebankName={genebankName}
               setGenebankName={setGenebankName}
+              onUpdateStatus={(status) => handleStepStatus("genebank", status)}
             />
           );
         case 1:
@@ -134,6 +247,7 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               setHerdId={setHerdId}
               reportYear={reportYear}
+              onUpdateStatus={(status) => handleStepStatus("herd", status)}
             />
           );
         case 2:
@@ -142,6 +256,9 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdData={herdData}
               herdId={herdId}
               loadData={loadData}
+              onUpdateStatus={(status) =>
+                handleStepStatus("herdContact", status)
+              }
             />
           );
         case 3:
@@ -150,6 +267,9 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               reportYear={reportYear}
               reportRoundId={reportRoundId}
+              onUpdateStatus={(status) =>
+                handleStepStatus("batchUpdate", status)
+              }
             />
           );
         case 4:
@@ -158,10 +278,14 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               reportRoundId={reportRoundId}
               reportYear={reportYear}
+              onUpdateStatus={(status) =>
+                handleStepStatus("yearlyReport", status)
+              }
+              formRef={yearlyReportRef}
             />
           );
         default:
-          return "Okänt steg";
+          return <div>Okänt steg</div>;
       }
     } else {
       switch (step) {
@@ -173,6 +297,7 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               setHerdId={setHerdId}
               reportYear={reportYear}
+              onUpdateStatus={(status) => handleStepStatus("herd", status)}
             />
           );
         case 1:
@@ -181,6 +306,9 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdData={herdData}
               herdId={herdId}
               loadData={loadData}
+              onUpdateStatus={(status) =>
+                handleStepStatus("herdContact", status)
+              }
             />
           );
         case 2:
@@ -189,6 +317,9 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               reportYear={reportYear}
               reportRoundId={reportRoundId}
+              onUpdateStatus={(status) =>
+                handleStepStatus("batchUpdate", status)
+              }
             />
           );
         case 3:
@@ -197,10 +328,14 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
               herdId={herdId}
               reportRoundId={reportRoundId}
               reportYear={reportYear}
+              onUpdateStatus={(status) =>
+                handleStepStatus("yearlyReport", status)
+              }
+              formRef={yearlyReportRef}
             />
           );
         default:
-          return "Okänt steg";
+          return <div>Okänt steg</div>;
       }
     }
   };
@@ -210,44 +345,69 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
       <Typography variant="h5" gutterBottom>
         Årsrapportering för år {reportYear}
       </Typography>
-      <Stepper activeStep={activeStep}>
-        {steps.map((label, index) => {
-          const stepProps: { completed?: boolean } = {};
-          if (reportSubmitted && index < steps.length - 1) {
-            stepProps.completed = true;
-          }
-          return (
-            <Step key={label} {...stepProps}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          );
-        })}
+      <Stepper activeStep={activeStep} alternativeLabel>
+        {steps.map((label, index) => (
+          <Step key={label}>
+            <StepLabel>{activeStep === steps.length ? "" : label}</StepLabel>
+          </Step>
+        ))}
       </Stepper>
-      <div>
-        {activeStep === steps.length ? (
-          <div>
-            <Typography>Årsrapporten är klar!</Typography>
-            <Button onClick={handleReset}>Börja om</Button>
-          </div>
-        ) : (
-          <div>
-            {getStepContent(activeStep)}
-            <div style={{ marginTop: "1em" }}>
-              {activeStep !== 0 && (
-                <Button onClick={handleBack}>Tillbaka</Button>
-              )}
+      {activeStep === steps.length ? (
+        // Completion step
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <Typography variant="h5" gutterBottom>
+            Årsrapporten har skickats in
+          </Typography>
+          <Typography variant="body1" paragraph>
+            Tack för din årsrapport. Du kan nu stänga denna sida eller starta en
+            ny rapport.
+          </Typography>
+          <Button variant="contained" color="primary" onClick={handleReset}>
+            Starta ny rapport
+          </Button>
+        </div>
+      ) : (
+        // Regular steps
+        <div>
+          {getStepContent(activeStep)}
+          <div
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
+            <Button disabled={activeStep === 0} onClick={handleBack}>
+              Tillbaka
+            </Button>
+            {isHerdContactUpdateStep && (
+              <Button variant="outlined" onClick={handleNext}>
+                Hoppa över
+              </Button>
+            )}
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmitReport}
+                disabled={!canProceed}
+              >
+                Skicka in årsrapport
+              </Button>
+            ) : (
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleNext}
-                style={{ marginLeft: "1em" }}
+                disabled={!canProceed}
               >
-                {activeStep === steps.length - 1 ? "Slutför" : "Nästa"}
+                Nästa
               </Button>
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Paper>
   );
 };
