@@ -724,7 +724,92 @@ def get_herd(herd_id, user_uuid=None):
             if data["genebank"] not in user.accessible_genebanks:
                 return None
 
-            data["individuals"] = [i.as_dict() for i in herd.individuals]
+            # Get the latest herd tracking entries for each individual
+            latest_tracking_subq = (
+                HerdTracking
+                .select(
+                    HerdTracking.individual,
+                    fn.MAX(HerdTracking.herd_tracking_date).alias('max_date')
+                )
+                .group_by(HerdTracking.individual)
+                .alias('latest_tracking')
+            )
+
+            # Join with the actual tracking entries to get the herd information
+            latest_herd = (
+                HerdTracking
+                .select(
+                    HerdTracking.individual,
+                    HerdTracking.herd,
+                    HerdTracking.herd_tracking_date
+                )
+                .join(
+                    latest_tracking_subq,
+                    on=(
+                        (HerdTracking.individual == latest_tracking_subq.c.individual_id) &
+                        (HerdTracking.herd_tracking_date == latest_tracking_subq.c.max_date)
+                    )
+                )
+                .alias('latest_herd')
+            )
+
+            # Get individuals with all required data
+            individuals = (Individual
+                         .select(Individual)
+                         .join(latest_herd, on=(Individual.id == latest_herd.c.individual_id))
+                         .where(latest_herd.c.herd_id == herd.id)
+                         .distinct())
+
+            # Create a mapping of individual numbers to their data to deduplicate
+            individual_map = {}
+            for individual in individuals:
+                if individual.number not in individual_map:
+                    individual_map[individual.number] = individual
+
+            # Convert to list and sort by number
+            unique_individuals = sorted(individual_map.values(), key=lambda x: x.number)
+
+            # Prefetch related data
+            weights = Weight.select().where(Weight.individual.in_([i.id for i in unique_individuals]))
+            bodyfats = Bodyfat.select().where(Bodyfat.individual.in_([i.id for i in unique_individuals]))
+            
+            # Create a mapping of individual IDs to their weights and bodyfats
+            weight_map = {}
+            bodyfat_map = {}
+            
+            for weight in weights:
+                if weight.individual_id not in weight_map:
+                    weight_map[weight.individual_id] = []
+                weight_map[weight.individual_id].append(weight)
+                
+            for bodyfat in bodyfats:
+                if bodyfat.individual_id not in bodyfat_map:
+                    bodyfat_map[bodyfat.individual_id] = []
+                bodyfat_map[bodyfat.individual_id].append(bodyfat)
+
+            # Get all herd tracking entries for each individual
+            tracking_map = {}
+            for tracking in (HerdTracking
+                           .select(HerdTracking, Herd)
+                           .join(Herd)
+                           .where(HerdTracking.individual.in_([i.id for i in unique_individuals]))
+                           .order_by(HerdTracking.herd_tracking_date.desc())):
+                if tracking.individual_id not in tracking_map:
+                    tracking_map[tracking.individual_id] = []
+                tracking_map[tracking.individual_id].append({
+                    'herd_id': tracking.herd.id,
+                    'herd': tracking.herd.herd,
+                    'herd_name': tracking.herd.herd_name,
+                    'date': tracking.herd_tracking_date.strftime("%Y-%m-%d") if tracking.herd_tracking_date else None
+                })
+            
+            # Attach the data to each individual
+            for individual in unique_individuals:
+                individual.weight_set = weight_map.get(individual.id, [])
+                individual.bodyfat_set = bodyfat_map.get(individual.id, [])
+                individual.herd_tracking_set = tracking_map.get(individual.id, [])
+
+            data["individuals"] = [i.as_dict() for i in unique_individuals]
             return data
     except DoesNotExist:
         return data
@@ -807,7 +892,7 @@ def save_yearly_report(herd_id, form_data, user):
 
         try:
             report_round = YearlyReportRound.get_by_id(report_round_id)
-            if not report_round.is_active:
+            if not (report_round.is_active or report_round.manually_activated):
                 return {
                     "status": "error",
                     "message": "Report round is not active",

@@ -77,18 +77,27 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
       try {
         // Fetch herd data
         const response = await get(`/api/herd/${herdId}`);
-        setHerdResponse(response);
+
+        // Fetch breeding data
+        const breedingResponse = await get(`/api/breeding/${herdId}`);
+
+        // Combine the data
+        const combinedData = {
+          ...response,
+          births: breedingResponse.breedings,
+        };
+
+        setHerdResponse(combinedData);
         setHerdName(response.herd_name || response.herd);
 
         // Calculate initial values
         const initialValues = calculateInitialValues(
-          response,
+          combinedData,
           existingReportData
         );
         setPrefilledValues(initialValues);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         userMessage("Kunde inte hämta besättningsdata.", "error");
         setLoading(false);
       }
@@ -145,8 +154,12 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
 
     // Calculate values based on current herd data
     const yearEndDate = new Date(`${reportYear}-12-31`);
+
     const activeRabbits = (herdData.individuals || []).filter(
-      (individual: any) => isActiveOnDate(individual, yearEndDate)
+      (individual: any) => {
+        const isActive = isActiveOnDate(individual, yearEndDate);
+        return isActive;
+      }
     );
 
     // Calculate breeding statistics
@@ -156,8 +169,8 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     // Calculate number of litters and births
     const births = herdData.births || [];
     const littersThisYear = births.filter((birth: any) => {
-      const birthDate = new Date(birth.date);
-      return birthDate.getFullYear() === reportYear;
+      const birthDate = new Date(birth.birth_date || "9999-12-31");
+      return birthDate && birthDate.getFullYear() === reportYear;
     });
 
     // Get unique mothers and fathers used in breeding
@@ -232,14 +245,11 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           payload
         );
         if (response.status === "success") {
-          userMessage("Årsrapporten har sparats!", "success");
-          onSubmitSuccess?.();
           return true;
         } else {
           throw new Error(response.message || "Failed to save report");
         }
       } catch (error) {
-        console.error("Error submitting report:", error);
         userMessage(
           "Ett fel inträffade vid sparandet av årsrapporten.",
           "error"
@@ -253,21 +263,16 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   React.useImperativeHandle(formRef, () => ({
     submitForm: async () => {
       try {
-        // Submit the form
-        await formik.submitForm();
-        // Wait for validation and submission to complete
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Submit the form and wait for the actual submission to complete
+        const success = await formik.submitForm();
 
-        // Check if there are any errors
-        if (Object.keys(formik.errors).length > 0) {
-          console.error("Form validation errors:", formik.errors);
-          return false;
+        // If submission was successful, call onSubmitSuccess
+        if (success) {
+          onSubmitSuccess?.();
         }
 
-        // Return true if the form was submitted successfully
-        return formik.submitCount > 0 && !formik.isSubmitting;
+        return success;
       } catch (error) {
-        console.error("Error submitting form:", error);
         return false;
       }
     },
@@ -275,47 +280,56 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
 
   // Function to determine if an individual was active on a given date
   function isActiveOnDate(individual: any, date: Date): boolean {
-    // Assuming herd is active; adjust if necessary
+    // Check if the rabbit has a death date and if it's before or on the check date
     const deathDate = individual.death_date
       ? new Date(individual.death_date)
       : null;
+    if (deathDate && deathDate <= date) {
+      return false;
+    }
 
-    const deathNote = individual.death_note;
+    // Check if the rabbit has a death note (but ignore if there's a future death date)
+    if (individual.death_note && (!deathDate || deathDate <= date)) {
+      return false;
+    }
 
+    // Check if the rabbit has a castration date before or on the check date
     const castrationDate = individual.castration_date
       ? new Date(individual.castration_date)
       : null;
+    if (castrationDate && castrationDate <= date) {
+      return false;
+    }
 
+    // Check if the rabbit has a certificate
     const hasCertificate =
       individual.certificate || individual.digital_certificate;
+    if (!hasCertificate) {
+      return false;
+    }
 
+    // Check herd tracking - the rabbit must be in the herd on the check date
     const herdTrackingEntries = individual.herd_tracking || [];
+    if (herdTrackingEntries.length === 0) {
+      return false;
+    }
 
-    // Find the latest herd tracking entry
-    const latestHerdTrackingEntry = herdTrackingEntries.reduce(
-      (latest: any, entry: any) => {
-        const entryDate = new Date(entry.date);
-        const latestDate = latest ? new Date(latest.date) : null;
-        return !latestDate || entryDate > latestDate ? entry : latest;
-      },
-      null
+    // Sort entries by date in descending order
+    const sortedEntries = [...herdTrackingEntries].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    const herdTrackingDate = latestHerdTrackingEntry
-      ? new Date(latestHerdTrackingEntry.date)
-      : null;
 
-    // Check if the latest herd tracking date is equal to or after the date
-    const herdTrackingDateValid = herdTrackingDate && herdTrackingDate >= date;
+    // Get the latest entry before or on the check date
+    const relevantEntry = sortedEntries.find(
+      (entry) => new Date(entry.date) <= date
+    );
 
-    const isActive =
-      (!deathDate || deathDate > date) &&
-      !deathNote &&
-      (!castrationDate || castrationDate > date) &&
-      hasCertificate &&
-      latestHerdTrackingEntry &&
-      herdTrackingDateValid;
+    // If no relevant entry found, or the latest entry shows the rabbit left the herd
+    if (!relevantEntry || relevantEntry.origin_herd_id !== individual.herd_id) {
+      return false;
+    }
 
-    return isActive;
+    return true;
   }
 
   // Function to map allowPublication to publish settings
@@ -484,7 +498,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           {/* Antal honor använda i avel */}
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Antal honor anv��nda i avel"
+              label="Antal honor använda i avel"
               name="numberOfFemalesUsedInBreeding"
               type="number"
               value={formik.values.numberOfFemalesUsedInBreeding}

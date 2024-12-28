@@ -240,8 +240,9 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
           </li>
           <li>Du behöver inte skapa oregistrerade kaniner om du inte vill.</li>
           <li>
-            Har du inte årsrapporterat dina kaniner med intyg så kan du göra det
-            i bulk i ett steg längre fram.
+            Om du inte redan har årsrapporterat dina kaniner med intyg, kan du
+            göra det för alla kaniner vid ett senare tillfälle – allt i ett enda
+            steg.
           </li>
         </ul>
         Om du redan har skapat intyg för minst en kanin i varje kull behöver du
