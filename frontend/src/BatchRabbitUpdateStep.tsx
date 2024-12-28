@@ -66,7 +66,15 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
         const yearEndDate = new Date(`${reportYear}-12-31`);
 
         const herdResponse = await get(`/api/herd/${herdId}`);
-        const individualsData = herdResponse.individuals || [];
+        // Remove duplicate individuals by number
+        const individualsData = Array.from(
+          new Map(
+            (herdResponse.individuals || []).map((item: any) => [
+              item.number,
+              item,
+            ])
+          ).values()
+        );
 
         const isValidMeasurementDate = (date: string) => {
           const measurementDate = new Date(date);
@@ -98,11 +106,51 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
               const hasCertificate =
                 individual.certificate || individual.digital_certificate;
 
-              // Check if rabbit was alive at year end
+              // Get death date if it exists
               const deathDate = individual.death_date
                 ? new Date(individual.death_date)
                 : null;
-              const wasAliveAtYearEnd = !deathDate || deathDate > yearEndDate;
+
+              // Convert dates to start of day for comparison
+              const yearEndStart = new Date(yearEndDate);
+              yearEndStart.setHours(0, 0, 0, 0);
+              const deathStart = deathDate
+                ? new Date(deathDate.setHours(0, 0, 0, 0))
+                : null;
+
+              // For rabbits with no death date but with death note (old imported data),
+              // check their last herd tracking date
+              if (!deathStart && individual.death_note) {
+                // Remove duplicate tracking entries and sort
+                const uniqueTrackings = Array.from(
+                  new Map(
+                    individual.herd_tracking.map((track: any) => [
+                      track.date,
+                      track,
+                    ])
+                  ).values()
+                );
+                const sortedTrackings = [...uniqueTrackings].sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                );
+                const lastTracking = sortedTrackings[0];
+
+                // If there's no tracking or last tracking is before report year, consider the rabbit dead
+                if (
+                  !lastTracking ||
+                  new Date(lastTracking.date) < new Date(`${reportYear}-01-01`)
+                ) {
+                  return false;
+                }
+              }
+
+              // A rabbit was alive at year end if:
+              // 1. It has no death date AND no death note, or
+              // 2. Its death date is after year end
+              const wasAliveAtYearEnd =
+                (!deathStart && !individual.death_note) ||
+                (deathStart && deathStart > yearEndStart);
 
               return hasCertificate && wasAliveAtYearEnd;
             }
@@ -111,30 +159,26 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
           // Then check tracking and measurements
           return rabbitsWithStatus.reduce(
             (acc: RabbitFilterResult, rabbit: any) => {
-              const sortedTrackings = [...(rabbit.herd_tracking || [])].sort(
+              // Remove duplicate tracking entries and sort
+              const uniqueTrackings = Array.from(
+                new Map(
+                  rabbit.herd_tracking.map((track: any) => [track.date, track])
+                ).values()
+              );
+              const sortedTrackings = [...uniqueTrackings].sort(
                 (a, b) =>
                   new Date(b.date).getTime() - new Date(a.date).getTime()
               );
 
-              const latestTracking = sortedTrackings[0];
-              const latestTrackingDate = latestTracking
-                ? new Date(latestTracking.date)
-                : null;
+              // Check if rabbit has valid measurements during the report period
+              const hasValidMeasurements = hasValidWeightAndBodyfat(rabbit);
 
-              // Convert dates to start of day for comparison
-              const trackingDateStart = latestTrackingDate
-                ? new Date(latestTrackingDate.setHours(0, 0, 0, 0))
-                : null;
-              const yearEndStart = new Date(yearEndDate);
-              yearEndStart.setHours(0, 0, 0, 0);
-
-              // Skip if has tracking on year end or later AND has valid measurements
-              if (
-                trackingDateStart && // Check if tracking date exists
-                trackingDateStart >= yearEndStart &&
-                hasValidWeightAndBodyfat(rabbit)
-              ) {
-                acc.canSkip.push({ ...rabbit, herd_tracking: sortedTrackings });
+              // A rabbit can be skipped if it has valid measurements
+              if (hasValidMeasurements) {
+                acc.canSkip.push({
+                  ...rabbit,
+                  herd_tracking: sortedTrackings,
+                });
               } else {
                 acc.needUpdate.push(rabbit);
               }
