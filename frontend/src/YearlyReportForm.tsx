@@ -77,11 +77,9 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
       try {
         // Fetch herd data
         const response = await get(`/api/herd/${herdId}`);
-        console.log("in reportform", response);
 
         // Fetch breeding data
         const breedingResponse = await get(`/api/breeding/${herdId}`);
-        console.log("breeding data", breedingResponse);
 
         // Combine the data
         const combinedData = {
@@ -100,7 +98,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
         setPrefilledValues(initialValues);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         userMessage("Kunde inte hämta besättningsdata.", "error");
         setLoading(false);
       }
@@ -115,9 +112,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     herdData: any,
     existingData: any
   ): ReportValues => {
-    console.log("Calculating values for year:", reportYear);
-    console.log("Herd data:", herdData);
-
     // Start with default values
     const values: ReportValues = {
       genebankNumber: herdData.herd || "",
@@ -160,40 +154,24 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
 
     // Calculate values based on current herd data
     const yearEndDate = new Date(`${reportYear}-12-31`);
-    console.log("Year end date:", yearEndDate);
 
     const activeRabbits = (herdData.individuals || []).filter(
       (individual: any) => {
         const isActive = isActiveOnDate(individual, yearEndDate);
-        console.log("Checking rabbit:", individual.number, "Active:", isActive);
-        if (!isActive) {
-          console.log("Rabbit not active because:", {
-            deathDate: individual.death_date,
-            deathNote: individual.death_note,
-            castrationDate: individual.castration_date,
-            hasCertificate:
-              individual.certificate || individual.digital_certificate,
-            herdTracking: individual.herd_tracking,
-          });
-        }
         return isActive;
       }
     );
-    console.log("Active rabbits:", activeRabbits.length);
 
     // Calculate breeding statistics
     const femaleRabbits = activeRabbits.filter((r: any) => r.sex === "female");
     const maleRabbits = activeRabbits.filter((r: any) => r.sex === "male");
-    console.log("Female rabbits:", femaleRabbits.length);
-    console.log("Male rabbits:", maleRabbits.length);
 
     // Calculate number of litters and births
     const births = herdData.births || [];
     const littersThisYear = births.filter((birth: any) => {
-      const birthDate = new Date(birth.birth_date);
+      const birthDate = new Date(birth.birth_date || "9999-12-31");
       return birthDate && birthDate.getFullYear() === reportYear;
     });
-    console.log("Litters this year:", littersThisYear);
 
     // Get unique mothers and fathers used in breeding
     const uniqueMothers = new Set(
@@ -202,8 +180,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     const uniqueFathers = new Set(
       littersThisYear.map((birth: any) => birth.father).filter(Boolean)
     );
-    console.log("Unique mothers:", Array.from(uniqueMothers));
-    console.log("Unique fathers:", Array.from(uniqueFathers));
 
     // Update calculated values
     values.numberOfLitters = littersThisYear.length;
@@ -220,7 +196,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     values.numberOfFemalesWithCertificate = femaleRabbits.length;
     values.numberOfMalesWithCertificate = maleRabbits.length;
 
-    console.log("Final calculated values:", values);
     return values;
   };
 
@@ -277,7 +252,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           throw new Error(response.message || "Failed to save report");
         }
       } catch (error) {
-        console.error("Error submitting report:", error);
         userMessage(
           "Ett fel inträffade vid sparandet av årsrapporten.",
           "error"
@@ -298,14 +272,12 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
 
         // Check if there are any errors
         if (Object.keys(formik.errors).length > 0) {
-          console.error("Form validation errors:", formik.errors);
           return false;
         }
 
         // Return true if the form was submitted successfully
         return formik.submitCount > 0 && !formik.isSubmitting;
       } catch (error) {
-        console.error("Error submitting form:", error);
         return false;
       }
     },
