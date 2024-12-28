@@ -79,10 +79,69 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     onUpdateStatus?.("completed");
   };
 
-  // Fetch breedings for the selected herdId
+  const filterBreedingsForYear = (breedings: any[], year: number) => {
+    console.log(
+      "Filtering breedings:",
+      breedings.map((b) => ({
+        id: b.id,
+        birth_date: b.birth_date,
+        breed_date: b.breed_date,
+      }))
+    );
+
+    const filtered = breedings.filter((breeding) => {
+      console.log("Checking breeding:", breeding.id, {
+        birth_date: breeding.birth_date,
+        breed_date: breeding.breed_date,
+      });
+
+      // If we have a birth_date in the report year, include it
+      if (breeding.birth_date) {
+        const birthYear = new Date(breeding.birth_date).getFullYear();
+        if (birthYear === year) {
+          console.log("Including due to birth_date:", breeding.id);
+          return true;
+        }
+      }
+
+      // Check breed_date regardless of whether we have a birth_date
+      if (breeding.breed_date) {
+        const breedDate = new Date(breeding.breed_date);
+        const breedYear = breedDate.getFullYear();
+
+        if (breedYear === year) {
+          // Exclude if it's in the last 30 days of the year
+          const yearEnd = new Date(year, 11, 31); // December 31st
+          const daysBefore = Math.floor(
+            (yearEnd.getTime() - breedDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          const include = daysBefore >= 30;
+          console.log("Checking breed_date:", breeding.id, {
+            breedYear,
+            daysBefore,
+            include,
+          });
+          return include;
+        }
+      }
+
+      return false;
+    });
+
+    console.log(
+      "Filtered breedings:",
+      filtered.map((b) => ({
+        id: b.id,
+        birth_date: b.birth_date,
+        breed_date: b.breed_date,
+      }))
+    );
+
+    return filtered;
+  };
+
   useEffect(() => {
     if (herdId) {
-      // Fetch breedings for the selected herd
       get(`/api/breeding/${herdId}`).then(
         (data: { breedings: any[] }) => {
           if (data && data.breedings) {
@@ -106,16 +165,14 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
                 individuals: breeding.individuals || [],
               })
             );
+
             let filteredBreedings = numberedBreedings;
             if (reportYear) {
-              filteredBreedings = numberedBreedings.filter((breeding) => {
-                if (!breeding.birth_date) {
-                  return false;
-                }
-                const birthYear = new Date(breeding.birth_date).getFullYear();
-                return birthYear === reportYear;
-              });
-              // Renumber the filtered breedings starting from 1
+              filteredBreedings = filterBreedingsForYear(
+                numberedBreedings,
+                reportYear
+              );
+              // Renumber the filtered breedings
               filteredBreedings = filteredBreedings.map((breeding, index) => ({
                 ...breeding,
                 number: index + 1,
@@ -130,10 +187,46 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
         }
       );
     } else {
-      console.log("No herdId, clearing breedings");
       setSelectedHerdBreedings([]);
     }
   }, [herdId, reportYear, userMessage]);
+
+  const handleBreedingsChanged = () => {
+    // Refresh the breedings data
+    if (herdId) {
+      get(`/api/breeding/${herdId}`).then((data: { breedings: any[] }) => {
+        if (data && data.breedings) {
+          const sortedBreedings = data.breedings.sort((a, b) => {
+            const dateA = new Date(a.birth_date || "9999-12-31");
+            const dateB = new Date(b.birth_date || "9999-12-31");
+            if (dateA < dateB) return -1;
+            if (dateA > dateB) return 1;
+            return a.id - b.id;
+          });
+          const numberedBreedings = sortedBreedings.map((breeding, index) => ({
+            ...breeding,
+            number: index + 1,
+            mother_name: breeding.mother_name || breeding.mother || "",
+            father_name: breeding.father_name || breeding.father || "",
+            individuals: breeding.individuals || [],
+          }));
+
+          let filteredBreedings = numberedBreedings;
+          if (reportYear) {
+            filteredBreedings = filterBreedingsForYear(
+              numberedBreedings,
+              reportYear
+            );
+            filteredBreedings = filteredBreedings.map((breeding, index) => ({
+              ...breeding,
+              number: index + 1,
+            }));
+          }
+          setSelectedHerdBreedings(filteredBreedings);
+        }
+      });
+    }
+  };
 
   const handleBreedingClick = (breeding: any) => {
     setSelectedBreeding(breeding);
@@ -150,48 +243,15 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     setIsBreedingDialogOpen(false);
   };
 
-  const handleBreedingsChanged = () => {
-    // Refresh the breedings data
-    if (herdId) {
-      get(`/api/breeding/${herdId}`).then((data: { breedings: any[] }) => {
-        if (data && data.breedings) {
-          // Reuse existing sorting and filtering logic
-          const sortedBreedings = data.breedings.sort((a, b) => {
-            const dateA = new Date(a.birth_date || "9999-12-31");
-            const dateB = new Date(b.birth_date || "9999-12-31");
-            if (dateA < dateB) return -1;
-            if (dateA > dateB) return 1;
-            return a.id - b.id;
-          });
-          const numberedBreedings = sortedBreedings.map((breeding, index) => ({
-            ...breeding,
-            number: index + 1,
-            mother_name: breeding.mother_name || breeding.mother || "",
-            father_name: breeding.father_name || breeding.father || "",
-            individuals: breeding.individuals || [],
-          }));
-          let filteredBreedings = numberedBreedings;
-          if (reportYear) {
-            filteredBreedings = numberedBreedings.filter((breeding) => {
-              if (!breeding.birth_date) return false;
-              const birthYear = new Date(breeding.birth_date).getFullYear();
-              return birthYear === reportYear;
-            });
-            filteredBreedings = filteredBreedings.map((breeding, index) => ({
-              ...breeding,
-              number: index + 1,
-            }));
-          }
-          setSelectedHerdBreedings(filteredBreedings);
-        }
-      });
-    }
-  };
-
   // Helper function to determine if a row should be highlighted
   const getRowStyle = (breeding: any) => {
-    if (!breeding.litter_size6w && breeding.birth_date) {
+    // Red background for missing birth date or missing litter size at 6 weeks
+    if (!breeding.birth_date || breeding.litter_size6w === undefined) {
       return { backgroundColor: "#ffebee" }; // Light red background
+    }
+    // Yellow background when litter size at 6 weeks is 0 (for verification)
+    if (breeding.litter_size6w === 0) {
+      return { backgroundColor: "#fff3e0" }; // Light yellow background
     }
     return {};
   };
