@@ -724,7 +724,54 @@ def get_herd(herd_id, user_uuid=None):
             if data["genebank"] not in user.accessible_genebanks:
                 return None
 
-            data["individuals"] = [i.as_dict() for i in herd.individuals]
+            # Get the latest herd tracking entries for each individual
+            latest_herd_tracking = (
+                HerdTracking.select(
+                    HerdTracking.individual,
+                    HerdTracking.herd,
+                    fn.RANK()
+                    .over(
+                        order_by=[HerdTracking.herd_tracking_date.desc()],
+                        partition_by=[HerdTracking.individual],
+                    )
+                    .alias("rank"),
+                )
+                .alias("latest_ht")
+            )
+
+            # Get individuals with all required data
+            individuals = (Individual
+                         .select(Individual)
+                         .join(latest_herd_tracking, on=(Individual.id == latest_herd_tracking.c.individual_id))
+                         .where(
+                             (latest_herd_tracking.c.rank == 1) &
+                             (latest_herd_tracking.c.herd_id == herd.id)
+                         ))
+
+            # Prefetch related data
+            weights = Weight.select().where(Weight.individual.in_([i.id for i in individuals]))
+            bodyfats = Bodyfat.select().where(Bodyfat.individual.in_([i.id for i in individuals]))
+            
+            # Create a mapping of individual IDs to their weights and bodyfats
+            weight_map = {}
+            bodyfat_map = {}
+            
+            for weight in weights:
+                if weight.individual_id not in weight_map:
+                    weight_map[weight.individual_id] = []
+                weight_map[weight.individual_id].append(weight)
+                
+            for bodyfat in bodyfats:
+                if bodyfat.individual_id not in bodyfat_map:
+                    bodyfat_map[bodyfat.individual_id] = []
+                bodyfat_map[bodyfat.individual_id].append(bodyfat)
+            
+            # Attach the weights and bodyfats to each individual
+            for individual in individuals:
+                individual.weight_set = weight_map.get(individual.id, [])
+                individual.bodyfat_set = bodyfat_map.get(individual.id, [])
+
+            data["individuals"] = [i.as_dict() for i in individuals]
             return data
     except DoesNotExist:
         return data
