@@ -245,8 +245,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           payload
         );
         if (response.status === "success") {
-          userMessage("Årsrapporten har sparats!", "success");
-          onSubmitSuccess?.();
           return true;
         } else {
           throw new Error(response.message || "Failed to save report");
@@ -265,18 +263,15 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   React.useImperativeHandle(formRef, () => ({
     submitForm: async () => {
       try {
-        // Submit the form
-        await formik.submitForm();
-        // Wait for validation and submission to complete
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Submit the form and wait for the actual submission to complete
+        const success = await formik.submitForm();
 
-        // Check if there are any errors
-        if (Object.keys(formik.errors).length > 0) {
-          return false;
+        // If submission was successful, call onSubmitSuccess
+        if (success) {
+          onSubmitSuccess?.();
         }
 
-        // Return true if the form was submitted successfully
-        return formik.submitCount > 0 && !formik.isSubmitting;
+        return success;
       } catch (error) {
         return false;
       }
