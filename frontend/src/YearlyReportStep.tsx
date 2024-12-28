@@ -1,6 +1,6 @@
 // File: YearlyReportStep.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Typography } from "@material-ui/core";
 import YearlyReportForm from "./YearlyReportForm";
 import { get } from "@app/communication";
@@ -10,15 +10,22 @@ interface YearlyReportStepProps {
   herdId: string | null;
   reportRoundId?: number;
   reportYear?: number;
+  onUpdateStatus?: (status: string) => void;
+  formRef?: React.RefObject<{ submitForm: () => Promise<boolean> }>;
 }
 
 export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
   herdId,
   reportRoundId,
   reportYear,
+  onUpdateStatus,
+  formRef,
 }) => {
   const [existingReportData, setExistingReportData] = useState<any>(null);
   const { userMessage } = useMessageContext();
+  const internalFormRef = React.useRef<{ submitForm: () => Promise<boolean> }>(
+    null
+  );
 
   useEffect(() => {
     const checkReport = async () => {
@@ -49,6 +56,34 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
     checkReport();
   }, [herdId, reportRoundId]);
 
+  useEffect(() => {
+    onUpdateStatus?.("pending");
+  }, []);
+
+  const handleFormSubmitSuccess = () => {
+    onUpdateStatus?.("completed");
+  };
+
+  // Expose submit function to parent through ref
+  React.useImperativeHandle(formRef, () => ({
+    submitForm: async () => {
+      if (internalFormRef.current) {
+        try {
+          const success = await internalFormRef.current.submitForm();
+          if (success) {
+            onUpdateStatus?.("completed");
+          }
+          return success;
+        } catch (error) {
+          console.error("Error submitting form:", error);
+          onUpdateStatus?.("error");
+          return false;
+        }
+      }
+      return false;
+    },
+  }));
+
   return (
     <div>
       {existingReportData && (
@@ -62,6 +97,8 @@ export const YearlyReportStep: React.FC<YearlyReportStepProps> = ({
         existingReportData={existingReportData}
         reportRoundId={reportRoundId}
         reportYear={reportYear}
+        onSubmitSuccess={handleFormSubmitSuccess}
+        formRef={internalFormRef}
       />
     </div>
   );

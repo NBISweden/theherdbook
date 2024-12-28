@@ -26,9 +26,10 @@ interface ExtendedHerd extends Herd {
 }
 
 interface HerdContactUpdateStepProps {
-  herdData: ExtendedHerd | null;
+  herdData: any;
   herdId: string | null;
   loadData: (args: any) => void;
+  onUpdateStatus?: (status: string) => void;
 }
 
 type ContactField = {
@@ -49,6 +50,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   herdData,
   herdId,
   loadData,
+  onUpdateStatus,
 }) => {
   const classes = useStyles();
   const { user } = useUserContext();
@@ -93,6 +95,10 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     }
   }, [herdData, herdId]);
 
+  useEffect(() => {
+    onUpdateStatus?.("pending");
+  }, []);
+
   const setInitialHerdData = (data: ExtendedHerd) => {
     let postalcode = "";
     let postalcity = "";
@@ -103,10 +109,18 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
       postalcode = postcode;
       postalcity = postcity;
     }
-    setHerd({
+    // Force all privacy levels to "authenticated" (Endast inloggade)
+    const updatedData: ExtendedHerd = {
       ...data,
       physical_address: physical_address,
-    });
+      name_privacy: "authenticated" as PrivacyLevel,
+      email_privacy: "authenticated" as PrivacyLevel,
+      mobile_phone_privacy: "authenticated" as PrivacyLevel,
+      wire_phone_privacy: "authenticated" as PrivacyLevel,
+      www_privacy: "authenticated" as PrivacyLevel,
+      physical_address_privacy: "authenticated" as PrivacyLevel,
+    };
+    setHerd(updatedData);
     setPostalcode(postalcode);
     setPostalcity(postalcity);
   };
@@ -169,6 +183,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     } finally {
       setLoading(false);
     }
+    onUpdateStatus?.("completed");
   };
 
   if (loading || !herd) {
@@ -248,13 +263,24 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
               </Grid>
               {bankFields.map((field) => (
                 <Grid item xs={12} key={field.field}>
-                  <FieldWithPermission
-                    field={field.field}
+                  <TextField
                     label={field.label}
                     value={String(herd[field.field] ?? "")}
-                    permission="private"
-                    setValue={setFormField}
-                    fieldType={field.type ?? "text"}
+                    onChange={(e) => setFormField(field.field, e.target.value)}
+                    fullWidth
+                    margin="normal"
+                    variant={inputVariant}
+                    type={field.type ?? "text"}
+                    style={{
+                      backgroundColor: !herd[field.field]
+                        ? "#fff3e0"
+                        : "transparent",
+                    }}
+                    helperText={
+                      !herd[field.field]
+                        ? "Detta fält behöver fyllas i för att få stöd"
+                        : ""
+                    }
                   />
                 </Grid>
               ))}

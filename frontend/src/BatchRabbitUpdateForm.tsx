@@ -67,16 +67,19 @@ interface BatchRabbitUpdateFormProps {
   herdId: string;
   reportYear?: number;
   reportRoundId?: number;
+  onUpdateStatus?: (status: string) => void;
 }
 
 const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
   herdId,
   reportYear,
   reportRoundId,
-}) => {
+  onUpdateStatus,
+}): React.ReactElement => {
   const classes = useStyles();
   const [rabbits, setRabbits] = useState<RabbitData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
   const { userMessage } = useMessageContext();
   const { loadData } = useDataContext();
 
@@ -169,93 +172,99 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
       return;
     }
 
-    // Update each rabbit individually
-    for (const rabbit of rabbits) {
-      const {
-        individual,
-        isAlive,
-        reportDate,
-        weight,
-        weightDate,
-        bodyFat,
-        bodyFatDate,
-        deathDate,
-        butchered,
-        deathNote,
-      } = rabbit;
-      const updateData: any = {
-        id: individual.id,
-        number: individual.number,
-        herd: individual.herd,
-      };
+    try {
+      // Update each rabbit individually
+      for (const rabbit of rabbits) {
+        const updateData: any = {
+          id: rabbit.individual.id,
+          number: rabbit.individual.number,
+          herd: rabbit.individual.herd,
+        };
 
-      if (isAlive) {
-        // Update herd tracking (yearly report date)
-        if (reportDate) {
-          updateData.yearly_report_date = reportDate
-            .toISOString()
-            .split("T")[0];
+        if (rabbit.isAlive) {
+          // Update herd tracking (yearly report date)
+          if (rabbit.reportDate) {
+            updateData.yearly_report_date = rabbit.reportDate
+              .toISOString()
+              .split("T")[0];
+          } else {
+            continue; // If report date is missing, skip this rabbit
+          }
+
+          // Update weight if provided
+          if (rabbit.weight && rabbit.weightDate) {
+            updateData.weights = [
+              ...(rabbit.individual.weights || []),
+              {
+                date: rabbit.weightDate.toISOString().split("T")[0],
+                weight: parseFloat(rabbit.weight.replace(",", ".")),
+              },
+            ];
+          }
+
+          // Update body fat if provided
+          if (rabbit.bodyFat && rabbit.bodyFatDate) {
+            updateData.bodyfat = [
+              ...(rabbit.individual.bodyfat || []),
+              {
+                date: rabbit.bodyFatDate.toISOString().split("T")[0],
+                bodyfat: rabbit.bodyFat as BodyFat,
+              },
+            ];
+          }
         } else {
-          continue; // If report date is missing, skip this rabbit
+          // Mark the rabbit as dead
+          if (rabbit.deathDate) {
+            updateData.death_date = rabbit.deathDate
+              .toISOString()
+              .split("T")[0];
+          } else {
+            continue; // If death date is missing, skip this rabbit
+          }
+          updateData.butchered = rabbit.butchered;
+          updateData.death_note = rabbit.deathNote;
         }
 
-        // Update weight if provided
-        if (weight && weightDate) {
-          updateData.weights = [
-            ...(individual.weights || []),
-            {
-              date: weightDate.toISOString().split("T")[0],
-              weight: parseFloat(weight.replace(",", ".")),
-            },
-          ];
-        }
-
-        // Update body fat if provided
-        if (bodyFat && bodyFatDate) {
-          updateData.bodyfat = [
-            ...(individual.bodyfat || []),
-            {
-              date: bodyFatDate.toISOString().split("T")[0],
-              bodyfat: bodyFat as BodyFat,
-            },
-          ];
-        }
-      } else {
-        // Mark the rabbit as dead
-        if (deathDate) {
-          updateData.death_date = deathDate.toISOString().split("T")[0];
-        } else {
-          continue; // If death date is missing, skip this rabbit
-        }
-        updateData.butchered = butchered;
-        updateData.death_note = deathNote;
-      }
-
-      try {
         const response = await patch("/api/individual", updateData);
-        if (response.status === "success") {
-          // Successful update for this rabbit
-        } else {
-          userMessage(
-            `Misslyckades med att uppdatera kaninen ${individual.name} ${individual.number}.`,
-            "error"
+        if (response.status !== "success") {
+          throw new Error(
+            `Failed to update rabbit ${rabbit.individual.number}`
           );
         }
-      } catch (error) {
-        console.error(error);
-        userMessage(
-          `Ett fel inträffade vid uppdatering av kaninen ${individual.name} ${individual.number}.`,
-          "error"
-        );
       }
-    }
 
-    userMessage("Kaniner uppdaterades framgångsrikt.", "success");
-    loadData(["genebanks"]); // Reload data if needed
+      userMessage("Kaniner uppdaterades framgångsrikt.", "success");
+      loadData(["genebanks"]); // Reload data if needed
+      setIsCompleted(true);
+      onUpdateStatus?.("completed");
+    } catch (error) {
+      console.error(error);
+      userMessage("Ett fel inträffade vid uppdatering av kaninerna.", "error");
+      onUpdateStatus?.("error");
+    }
   };
 
   if (loading) {
     return <div>Laddar...</div>;
+  }
+
+  if (isCompleted) {
+    return (
+      <div>
+        <Typography>Alla kaniner har uppdaterad information.</Typography>
+        <Typography variant="h6" style={{ marginTop: "1em" }}>
+          Följande kaniner kommer att inkluderas i årsrapporten:
+        </Typography>
+        <ul>
+          {rabbits.map((rabbit) => (
+            <li key={rabbit.individual.id}>
+              {rabbit.individual.name} {rabbit.individual.number} - Senaste
+              uppdatering: {rabbit.reportDate?.toLocaleDateString("sv-SE")}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   return (

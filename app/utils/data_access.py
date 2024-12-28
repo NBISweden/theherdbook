@@ -2283,6 +2283,7 @@ def update_yearly_report_round(round_id, form, user_uuid):
         yr_round.manually_activated = form.get(
             "manually_activated", yr_round.manually_activated
         )
+        yr_round.report_year = form.get("report_year", yr_round.report_year)
         # Do not update 'created_by' or 'creation_date'
         yr_round.save()
         return {"status": "success", "round": yr_round.id}

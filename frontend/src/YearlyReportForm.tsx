@@ -19,9 +19,41 @@ import { useMessageContext } from "@app/message_context";
 
 interface YearlyReportFormProps {
   herdId: string;
-  existingReportData?: any;
+  existingReportData: any;
   reportRoundId?: number;
   reportYear?: number;
+  onSubmitSuccess?: () => void;
+  formRef?: React.RefObject<{ submitForm: () => Promise<boolean> }>;
+}
+
+interface ReportValues {
+  genebankNumber: string;
+  breed: string;
+  gotlandskanin: boolean;
+  mellerudskanin: boolean;
+  breedingYear: number;
+  endingGenbank: boolean;
+  numberOfLitters: number;
+  totalBorn: number;
+  totalAliveAfterSixWeeks: number;
+  numberOfFemalesUsedInBreeding: number;
+  numberOfMalesUsedInBreeding: number;
+  numberOfFemalesWithCertificate: number;
+  numberOfMalesWithCertificate: number;
+  allowPublication: string[];
+  eligibleForSupport: boolean;
+  notEligibleForSupport: boolean;
+  defectsMalformations: string;
+  diseases: {
+    myxomatosis: { numberOfAffectedRabbits: string; age: string };
+    rvhd: { numberOfAffectedRabbits: string; age: string };
+    coccidiosis: { numberOfAffectedRabbits: string; age: string };
+    other: {
+      diseaseName: string;
+      numberOfAffectedRabbits: string;
+      age: string;
+    };
+  };
 }
 
 const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
@@ -29,16 +61,217 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   existingReportData,
   reportRoundId,
   reportYear,
+  onSubmitSuccess,
+  formRef,
 }) => {
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const { userMessage } = useMessageContext();
   const [prefilledValues, setPrefilledValues] = useState<any>({});
   const [loading, setLoading] = useState(true);
-
   const [herdResponse, setHerdResponse] = useState<any>(null);
   const [herdName, setHerdName] = useState<string>("");
-  // Define default values
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch herd data
+        const response = await get(`/api/herd/${herdId}`);
+        setHerdResponse(response);
+        setHerdName(response.herd_name || response.herd);
+
+        // Calculate initial values
+        const initialValues = calculateInitialValues(
+          response,
+          existingReportData
+        );
+        setPrefilledValues(initialValues);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        userMessage("Kunde inte hämta besättningsdata.", "error");
+        setLoading(false);
+      }
+    };
+
+    if (herdId) {
+      fetchData();
+    }
+  }, [herdId, existingReportData]);
+
+  const calculateInitialValues = (
+    herdData: any,
+    existingData: any
+  ): ReportValues => {
+    // Start with default values
+    const values: ReportValues = {
+      genebankNumber: herdData.herd || "",
+      breed: herdData.breed || "",
+      gotlandskanin: herdData.genebank === 1,
+      mellerudskanin: herdData.genebank === 2,
+      breedingYear: reportYear || new Date().getFullYear(),
+      endingGenbank: existingData?.endingGenbank || false,
+      numberOfLitters: 0,
+      totalBorn: 0,
+      totalAliveAfterSixWeeks: 0,
+      numberOfFemalesUsedInBreeding: 0,
+      numberOfMalesUsedInBreeding: 0,
+      numberOfFemalesWithCertificate: 0,
+      numberOfMalesWithCertificate: 0,
+      allowPublication: existingData?.allowPublication || [],
+      eligibleForSupport: existingData?.eligibleForSupport || false,
+      notEligibleForSupport: existingData?.notEligibleForSupport || false,
+      defectsMalformations: existingData?.defectsMalformations || "",
+      diseases: {
+        myxomatosis: existingData?.diseases?.myxomatosis || {
+          numberOfAffectedRabbits: "",
+          age: "",
+        },
+        rvhd: existingData?.diseases?.rvhd || {
+          numberOfAffectedRabbits: "",
+          age: "",
+        },
+        coccidiosis: existingData?.diseases?.coccidiosis || {
+          numberOfAffectedRabbits: "",
+          age: "",
+        },
+        other: existingData?.diseases?.other || {
+          diseaseName: "",
+          numberOfAffectedRabbits: "",
+          age: "",
+        },
+      },
+    };
+
+    // Calculate values based on current herd data
+    const yearEndDate = new Date(`${reportYear}-12-31`);
+    const activeRabbits = (herdData.individuals || []).filter(
+      (individual: any) => isActiveOnDate(individual, yearEndDate)
+    );
+
+    // Calculate breeding statistics
+    const femaleRabbits = activeRabbits.filter((r: any) => r.sex === "female");
+    const maleRabbits = activeRabbits.filter((r: any) => r.sex === "male");
+
+    // Calculate number of litters and births
+    const births = herdData.births || [];
+    const littersThisYear = births.filter((birth: any) => {
+      const birthDate = new Date(birth.date);
+      return birthDate.getFullYear() === reportYear;
+    });
+
+    // Get unique mothers and fathers used in breeding
+    const uniqueMothers = new Set(
+      littersThisYear.map((birth: any) => birth.mother).filter(Boolean)
+    );
+    const uniqueFathers = new Set(
+      littersThisYear.map((birth: any) => birth.father).filter(Boolean)
+    );
+
+    // Update calculated values
+    values.numberOfLitters = littersThisYear.length;
+    values.totalBorn = littersThisYear.reduce(
+      (sum: number, birth: any) => sum + (birth.litter_size || 0),
+      0
+    );
+    values.totalAliveAfterSixWeeks = littersThisYear.reduce(
+      (sum: number, birth: any) => sum + (birth.litter_size6w || 0),
+      0
+    );
+    values.numberOfFemalesUsedInBreeding = uniqueMothers.size;
+    values.numberOfMalesUsedInBreeding = uniqueFathers.size;
+    values.numberOfFemalesWithCertificate = femaleRabbits.length;
+    values.numberOfMalesWithCertificate = maleRabbits.length;
+
+    return values;
+  };
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: prefilledValues,
+    onSubmit: async (values) => {
+      if (!herdResponse || !herdName) {
+        userMessage("Kunde inte hämta besättningsdata.", "error");
+        return false;
+      }
+      if (!reportRoundId) {
+        userMessage("Ingen aktiv rapporteringsomgång hittad.", "error");
+        return false;
+      }
+
+      try {
+        const publishSettings = mapAllowPublicationToPublishSettings(
+          values.allowPublication || []
+        );
+        const reportName = `Årsrapport ${
+          reportYear || new Date().getFullYear()
+        } ${herdResponse.herd} ${herdName}`;
+
+        // Recalculate all computed values before submitting
+        const computedValues = calculateInitialValues(herdResponse, null);
+        const payload = {
+          data: {
+            ...values,
+            ...computedValues,
+            // Only include user-editable fields from values
+            allowPublication: values.allowPublication,
+            diseases: values.diseases,
+            defectsMalformations: values.defectsMalformations,
+            endingGenbank: values.endingGenbank,
+            eligibleForSupport: values.eligibleForSupport,
+          },
+          name: reportName,
+          version: "1.0",
+          report_round_id: reportRoundId,
+          report_year: reportYear,
+          ...publishSettings,
+        };
+
+        const response = await post(
+          `/api/herd/${herdId}/yearlyreport`,
+          payload
+        );
+        if (response.status === "success") {
+          userMessage("Årsrapporten har sparats!", "success");
+          onSubmitSuccess?.();
+          return true;
+        } else {
+          throw new Error(response.message || "Failed to save report");
+        }
+      } catch (error) {
+        console.error("Error submitting report:", error);
+        userMessage(
+          "Ett fel inträffade vid sparandet av årsrapporten.",
+          "error"
+        );
+        return false;
+      }
+    },
+  });
+
+  // Expose submit function to parent through ref
+  React.useImperativeHandle(formRef, () => ({
+    submitForm: async () => {
+      try {
+        // Submit the form
+        await formik.submitForm();
+        // Wait for validation and submission to complete
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Check if there are any errors
+        if (Object.keys(formik.errors).length > 0) {
+          console.error("Form validation errors:", formik.errors);
+          return false;
+        }
+
+        // Return true if the form was submitted successfully
+        return formik.submitCount > 0 && !formik.isSubmitting;
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        return false;
+      }
+    },
+  }));
 
   // Function to determine if an individual was active on a given date
   function isActiveOnDate(individual: any, date: Date): boolean {
@@ -85,151 +318,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     return isActive;
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Validate that reportYear is provided
-        if (!reportYear) {
-          userMessage(
-            "Rapporteringsår saknas. Kontakta administratören.",
-            "error"
-          );
-          setLoading(false);
-          return;
-        }
-
-        // Fetch herd data
-        const herdResponseData = await get(`/api/herd/${herdId}`);
-        setHerdResponse(herdResponseData);
-        const herdNameData = herdResponseData.herd_name || "";
-        setHerdName(herdNameData);
-
-        // Fetch breeding events
-        const breedingResponse = await get(`/api/breeding/${herdId}`);
-        const breedings = breedingResponse.breedings || [];
-
-        // Get individuals from herdResponse
-        const individualsData = herdResponseData.individuals || [];
-
-        const breedingYear = reportYear;
-        const breedingYearEndDate = new Date(`${breedingYear}-12-31`);
-
-        // Filter breedings for the breedingYear with valid birth_date and litter_size > 0
-        const breedingsThisYear = breedings.filter((breeding: any) => {
-          const birthDateStr = breeding.birth_date;
-          if (!birthDateStr) {
-            return false; // Exclude breeding events without a birth_date
-          }
-          const birthDate = new Date(birthDateStr);
-          if (isNaN(birthDate.getTime())) {
-            return false; // Exclude invalid dates
-          }
-          const includeBreeding =
-            birthDate.getFullYear() === breedingYear &&
-            birthDate <= breedingYearEndDate && // Exclude future dates
-            (breeding.litter_size || 0) > 0;
-
-          return includeBreeding;
-        });
-
-        // Number of litters (each valid breeding event is a litter)
-        const numberOfLitters = breedingsThisYear.length;
-
-        // Total born (sum of litter sizes)
-        const totalBorn = breedingsThisYear.reduce(
-          (sum: number, breeding: any) => sum + (breeding.litter_size || 0),
-          0
-        );
-
-        // Total alive after six weeks (sum of litter_size6w)
-        const totalAliveAfterSixWeeks = breedingsThisYear.reduce(
-          (sum: number, breeding: any) => sum + (breeding.litter_size6w || 0),
-          0
-        );
-
-        // Number of females used in breeding (unique mothers)
-        const femalesUsed = new Set(
-          breedingsThisYear
-            .map((breeding: any) => breeding.mother)
-            .filter(Boolean)
-        );
-        const numberOfFemalesUsedInBreeding = femalesUsed.size;
-
-        // Number of males used in breeding (unique fathers)
-        const malesUsed = new Set(
-          breedingsThisYear
-            .map((breeding: any) => breeding.father)
-            .filter(Boolean)
-        );
-        const numberOfMalesUsedInBreeding = malesUsed.size;
-
-        // Number of females with certificate on Dec 31
-        const femalesWithCertificate = individualsData.filter(
-          (individual: any) =>
-            individual.sex === "female" &&
-            isActiveOnDate(individual, breedingYearEndDate)
-        );
-        const numberOfFemalesWithCertificate = femalesWithCertificate.length;
-
-        // Number of males with certificate on Dec 31
-        const malesWithCertificate = individualsData.filter(
-          (individual: any) =>
-            individual.sex === "male" &&
-            isActiveOnDate(individual, breedingYearEndDate)
-        );
-        const numberOfMalesWithCertificate = malesWithCertificate.length;
-
-        // Determine breed based on genebank ID
-        const isGotlandskanin = herdResponseData.genebank === 1;
-        const isMellerudskanin = herdResponseData.genebank === 2;
-
-        // Prefill form values
-        const calculatedValues = {
-          genebankNumber: herdResponseData.herd,
-          gotlandskanin: isGotlandskanin,
-          mellerudskanin: isMellerudskanin,
-          breedingYear: breedingYear,
-          endingGenbank: false,
-          numberOfLitters: numberOfLitters,
-          totalBorn: totalBorn,
-          totalAliveAfterSixWeeks: totalAliveAfterSixWeeks,
-          numberOfFemalesUsedInBreeding: numberOfFemalesUsedInBreeding,
-          numberOfMalesUsedInBreeding: numberOfMalesUsedInBreeding,
-          numberOfFemalesWithCertificate: numberOfFemalesWithCertificate,
-          numberOfMalesWithCertificate: numberOfMalesWithCertificate,
-          allowPublication: [],
-          notEligibleForSupport: false,
-          eligibleForSupport: false,
-          defectsMalformations: "",
-          diseases: {
-            myxomatosis: { numberOfAffectedRabbits: "", age: "" },
-            rvhd: { numberOfAffectedRabbits: "", age: "" },
-            coccidiosis: { numberOfAffectedRabbits: "", age: "" },
-            other: { diseaseName: "", numberOfAffectedRabbits: "", age: "" },
-          },
-        };
-
-        // Merge existing report data if available
-        const initialValues = existingReportData
-          ? {
-              ...calculatedValues,
-              ...existingReportData,
-              allowPublication: existingReportData.allowPublication || [],
-            }
-          : {
-              ...calculatedValues,
-            };
-        setPrefilledValues(initialValues);
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-        userMessage("Ett fel inträffade vid hämtning av data DEG", "error");
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [herdId, existingReportData]);
-
   // Function to map allowPublication to publish settings
   const mapAllowPublicationToPublishSettings = (allowPublication: string[]) => {
     const publishSettings = {
@@ -268,61 +356,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     return publishSettings;
   };
 
-  // Initialize formik with prefilled values when they are ready
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: prefilledValues,
-    onSubmit: async (values) => {
-      // Ensure herdResponse, herdName and reportRoundId are available
-      if (!herdResponse || !herdName) {
-        userMessage("Kunde inte hämta herd data.", "error");
-        return;
-      }
-      if (!reportRoundId) {
-        userMessage("Ingen aktiv rapporteringsomgång hittad.", "error");
-        return;
-      }
-
-      // Prepare the payload
-      const publishSettings = mapAllowPublicationToPublishSettings(
-        values.allowPublication || []
-      );
-      const reportName = `Årsrapport ${
-        reportYear || new Date().getFullYear()
-      } ${herdResponse.herd} ${herdName}`;
-
-      const payload = {
-        data: values,
-        name: reportName,
-        version: "1.0",
-        report_round_id: reportRoundId,
-        report_year: reportYear,
-        ...publishSettings,
-      };
-
-      try {
-        const response = await post(
-          `/api/herd/${herdId}/yearlyreport`,
-          payload
-        );
-        if (response.status === "success") {
-          userMessage("Årsrapporten har sparats!", "success");
-        } else {
-          userMessage(
-            "Ett fel inträffade vid sparandet av årsrapporten.",
-            "error"
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        userMessage(
-          "Ett fel inträffade vid anslutningen till servern.",
-          "error"
-        );
-      }
-    },
-  });
-
   if (loading || Object.keys(prefilledValues).length === 0) {
     return <div>Laddar...</div>;
   }
@@ -333,7 +366,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   return (
     <Paper style={{ padding: "2em" }}>
       <Typography variant="h5" gutterBottom>
-        Årsrapport för genbanksanslutna kaniner
+        Årsrapport för {reportYear}
       </Typography>
       <form onSubmit={formik.handleSubmit}>
         <Grid container spacing={2}>
@@ -451,7 +484,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           {/* Antal honor använda i avel */}
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Antal honor använda i avel"
+              label="Antal honor anv��nda i avel"
               name="numberOfFemalesUsedInBreeding"
               type="number"
               value={formik.values.numberOfFemalesUsedInBreeding}
@@ -746,18 +779,6 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
                 />
               </Grid>
             </Grid>
-          </Grid>
-
-          {/* Submit button */}
-          <Grid item xs={12}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              style={{ marginTop: "1em" }}
-            >
-              Skicka in årsrapport
-            </Button>
           </Grid>
         </Grid>
       </form>

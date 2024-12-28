@@ -222,11 +222,12 @@ export function Navigation() {
         </Restricted>
       ),
       visible:
-        (is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
-        (user?.is_manager &&
-          yearlyReportRounds.some(
-            (round) => round.manually_activated === true
-          )),
+        yearlyReportRounds.length > 0 &&
+        ((is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
+          (user?.is_manager &&
+            yearlyReportRounds.some(
+              (round) => round.manually_activated === true
+            ))),
       icon: <BallotIcon />,
     },
     {
