@@ -231,29 +231,95 @@ class Herd(BaseModel):
         Returns a list of all individuals in the herd.
         """
 
-        # Rank all herdtracking values by individual and date
-        current_herd = HerdTracking.select(
-            HerdTracking.herd.alias("herd"),
-            HerdTracking.individual.alias("i_id"),
-            fn.RANK()
-            .over(
-                order_by=[HerdTracking.herd_tracking_date.desc()],
-                partition_by=[HerdTracking.individual],
+        # Get the latest herd tracking entries for each individual
+        latest_tracking_subq = (
+            HerdTracking
+            .select(
+                HerdTracking.individual,
+                fn.MAX(HerdTracking.herd_tracking_date).alias('max_date')
             )
-            .alias("rank"),
+            .group_by(HerdTracking.individual)
+            .alias('latest_tracking')
         )
 
-        # Select all the individuals in the current herd
-        i_query = (
-            Individual.select()
-            .join(current_herd, on=(Individual.id == current_herd.c.i_id))
-            .where(current_herd.c.rank == 1)
-            .where(current_herd.c.herd == self.id)
+        # Join with the actual tracking entries to get the herd information
+        latest_herd = (
+            HerdTracking
+            .select(
+                HerdTracking.individual,
+                HerdTracking.herd,
+                HerdTracking.herd_tracking_date
+            )
+            .join(
+                latest_tracking_subq,
+                on=(
+                    (HerdTracking.individual == latest_tracking_subq.c.individual_id) &
+                    (HerdTracking.herd_tracking_date == latest_tracking_subq.c.max_date)
+                )
+            )
+            .alias('latest_herd')
         )
 
-        # return as a list
-        # pylint: disable=unnecessary-comprehension
-        return [i for i in i_query]
+        # Get all herd tracking entries for each individual
+        all_tracking = (
+            HerdTracking
+            .select(
+                HerdTracking.individual,
+                HerdTracking.herd,
+                HerdTracking.herd_tracking_date
+            )
+            .order_by(HerdTracking.herd_tracking_date.desc())
+            .alias('all_tracking')
+        )
+
+        # Get individuals with all required data
+        individuals = (Individual
+                     .select(Individual, latest_herd.c.herd_tracking_date)
+                     .join(latest_herd, on=(Individual.id == latest_herd.c.individual_id))
+                     .where(latest_herd.c.herd_id == self.id)
+                     .distinct())
+
+        # Prefetch related data
+        weights = Weight.select().where(Weight.individual.in_([i.id for i in individuals]))
+        bodyfats = Bodyfat.select().where(Bodyfat.individual.in_([i.id for i in individuals]))
+        
+        # Create a mapping of individual IDs to their weights and bodyfats
+        weight_map = {}
+        bodyfat_map = {}
+        
+        for weight in weights:
+            if weight.individual_id not in weight_map:
+                weight_map[weight.individual_id] = []
+            weight_map[weight.individual_id].append(weight)
+            
+        for bodyfat in bodyfats:
+            if bodyfat.individual_id not in bodyfat_map:
+                bodyfat_map[bodyfat.individual_id] = []
+            bodyfat_map[bodyfat.individual_id].append(bodyfat)
+
+        # Get all herd tracking entries for each individual
+        tracking_map = {}
+        for tracking in (HerdTracking
+                        .select(HerdTracking, Herd)
+                        .join(Herd)
+                        .where(HerdTracking.individual.in_([i.id for i in individuals]))
+                        .order_by(HerdTracking.herd_tracking_date.desc())):
+            if tracking.individual_id not in tracking_map:
+                tracking_map[tracking.individual_id] = []
+            tracking_map[tracking.individual_id].append({
+                'herd_id': tracking.herd.id,
+                'herd': tracking.herd.herd,
+                'herd_name': tracking.herd.herd_name,
+                'date': tracking.herd_tracking_date.strftime("%Y-%m-%d") if tracking.herd_tracking_date else None
+            })
+        
+        # Attach the data to each individual
+        for individual in individuals:
+            individual.weight_set = weight_map.get(individual.id, [])
+            individual.bodyfat_set = bodyfat_map.get(individual.id, [])
+            individual.herd_tracking_set = tracking_map.get(individual.id, [])
+
+        return [i for i in individuals]
 
     def short_info(self):
         """
@@ -725,28 +791,32 @@ class Individual(BaseModel):
             for b in self.bodyfat_set
         ]
 
-        ht_history = (
-            HerdTracking.select()
-            .where(HerdTracking.individual == self.id)
-            .order_by(HerdTracking.herd_tracking_date.desc())
-        )
+        # Use prefetched herd tracking data if available, otherwise query it
+        if hasattr(self, 'herd_tracking_set'):
+            data["herd_tracking"] = self.herd_tracking_set
+        else:
+            ht_history = (
+                HerdTracking.select()
+                .where(HerdTracking.individual == self.id)
+                .order_by(HerdTracking.herd_tracking_date.desc())
+            )
 
-        try:
-            data["herd_tracking"] = [
-                {
-                    "herd_id": h.herd.id,
-                    "herd": h.herd.herd,
-                    "herd_name": h.herd.herd_name,
-                    "date": (
-                        h.herd_tracking_date.strftime("%Y-%m-%d")
-                        if h.herd_tracking_date
-                        else None
-                    ),
-                }
-                for h in ht_history
-            ]
-        except DoesNotExist:
-            data["herd_tracking"] = []
+            try:
+                data["herd_tracking"] = [
+                    {
+                        "herd_id": h.herd.id,
+                        "herd": h.herd.herd,
+                        "herd_name": h.herd.herd_name,
+                        "date": (
+                            h.herd_tracking_date.strftime("%Y-%m-%d")
+                            if h.herd_tracking_date
+                            else None
+                        ),
+                    }
+                    for h in ht_history
+                ]
+            except DoesNotExist:
+                data["herd_tracking"] = []
 
         return data
 

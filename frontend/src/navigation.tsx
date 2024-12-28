@@ -151,11 +151,16 @@ export function Navigation() {
     if (is_owner && round.is_active) {
       return true;
     }
-    if (user?.is_manager && round.manually_activated) {
+    if (is_admin && (round.is_active || round.manually_activated)) {
       return true;
     }
     return false;
   });
+
+  // Sort active rounds by report year in descending order
+  const sortedActiveReportRounds = [...activeReportRounds].sort(
+    (a, b) => b.report_year - a.report_year
+  );
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -209,24 +214,25 @@ export function Navigation() {
         <Restricted>
           <YearlyReportMultiStepForm
             reportRoundId={
-              activeReportRounds.length > 0
-                ? activeReportRounds[0].id
+              sortedActiveReportRounds.length > 0
+                ? sortedActiveReportRounds[0].id
                 : undefined
             }
             reportYear={
-              activeReportRounds.length > 0
-                ? activeReportRounds[0].report_year
+              sortedActiveReportRounds.length > 0
+                ? sortedActiveReportRounds[0].report_year
                 : undefined
             }
           />
         </Restricted>
       ),
       visible:
-        yearlyReportRounds.length > 0 &&
-        ((is_owner && yearlyReportRounds.some((round) => round.is_active)) ||
-          (user?.is_manager &&
-            yearlyReportRounds.some(
-              (round) => round.manually_activated === true
+        sortedActiveReportRounds.length > 0 &&
+        ((is_owner &&
+          sortedActiveReportRounds.some((round) => round.is_active)) ||
+          (is_admin &&
+            sortedActiveReportRounds.some(
+              (round) => round.is_active || round.manually_activated
             ))),
       icon: <BallotIcon />,
     },

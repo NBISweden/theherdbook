@@ -95,56 +95,103 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         const individualsData: Individual[] = herdResponse.individuals || [];
         const yearEndDate = new Date(`${reportYear}-12-31`);
         const decemberFirst = new Date(`${reportYear}-12-01`);
+        const januaryLast = new Date(`${reportYear + 1}-01-31`);
 
-        // Filter individuals who have a certificate and are alive
-        const rabbitsWithCertificates = individualsData.filter(
-          (individual) =>
-            (individual.certificate || individual.digital_certificate) &&
-            individual.alive === true
-        );
+        // Filter individuals who have a certificate and were alive at year end
+        const rabbitsWithCertificates = individualsData.filter((individual) => {
+          const hasCertificate =
+            individual.certificate || individual.digital_certificate;
 
-        // Initialize rabbit data
+          // Get death date if it exists
+          const deathDate = individual.death_date
+            ? new Date(individual.death_date)
+            : null;
+
+          // Convert dates to start of day for comparison
+          const yearEndStart = new Date(yearEndDate);
+          yearEndStart.setHours(0, 0, 0, 0);
+          const deathStart = deathDate
+            ? new Date(deathDate.setHours(0, 0, 0, 0))
+            : null;
+
+          // For rabbits with no death date but with death note (old imported data),
+          // check their last herd tracking date
+          if (!deathStart && individual.death_note) {
+            const sortedTrackings = [...(individual.herd_tracking || [])].sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+            const lastTracking = sortedTrackings[0];
+
+            // If there's no tracking or last tracking is before 2023, consider the rabbit dead
+            if (
+              !lastTracking ||
+              new Date(lastTracking.date) < new Date(`${reportYear}-01-01`)
+            ) {
+              return false;
+            }
+          }
+
+          // A rabbit was alive at year end if:
+          // 1. It has no death date AND no death note, or
+          // 2. Its death date is after year end
+          const wasAliveAtYearEnd =
+            (!deathStart && !individual.death_note) ||
+            (deathStart && deathStart > yearEndStart);
+
+          return hasCertificate && wasAliveAtYearEnd;
+        });
+
+        // Check if a measurement date is within the reporting period
+        const isInReportingPeriod = (date: string) => {
+          const measurementDate = new Date(date);
+          return (
+            measurementDate >= decemberFirst && measurementDate <= januaryLast
+          );
+        };
+
+        // Check if rabbit needs weight/hull update
+        const needsWeightHullUpdate = (rabbit: Individual) => {
+          const hasValidWeight = (rabbit.weights || []).some((w) =>
+            isInReportingPeriod(w.date)
+          );
+          const hasValidBodyfat = (rabbit.bodyfat || []).some((bf) =>
+            isInReportingPeriod(bf.date)
+          );
+          return !hasValidWeight || !hasValidBodyfat;
+        };
+
+        // Initialize rabbit data only for those needing updates
         const rabbitDataList: RabbitData[] = await Promise.all(
-          rabbitsWithCertificates.map(async (individual) => {
-            // Find latest weight entry after Dec 1st
-            const latestWeight = individual.weights
-              ?.filter((w) => new Date(w.date) >= decemberFirst)
-              .sort(
+          rabbitsWithCertificates
+            .filter(needsWeightHullUpdate)
+            .map(async (individual) => {
+              // Find latest tracking date
+              const sortedTrackings = [
+                ...(individual.herd_tracking || []),
+              ].sort(
                 (a, b) =>
                   new Date(b.date).getTime() - new Date(a.date).getTime()
-              )[0];
+              );
+              const latestTracking = sortedTrackings[0];
 
-            // Find latest body fat entry after Dec 1st
-            const latestBodyFat = individual.bodyfat
-              ?.filter((bf) => new Date(bf.date) >= decemberFirst)
-              .sort(
-                (a, b) =>
-                  new Date(b.date).getTime() - new Date(a.date).getTime()
-              )[0];
-
-            return {
-              individual,
-              isAlive: true,
-              reportDate: yearEndDate,
-              weight: latestWeight?.weight.toString() || "",
-              weightDate: latestWeight
-                ? new Date(latestWeight.date)
-                : yearEndDate,
-              bodyFat: latestBodyFat?.bodyfat || "normal",
-              bodyFatDate: latestBodyFat
-                ? new Date(latestBodyFat.date)
-                : yearEndDate,
-              deathDate: null,
-              butchered: false,
-              deathNote: "",
-            };
-          })
+              return {
+                individual,
+                isAlive: true,
+                reportDate: yearEndDate,
+                weight: "",
+                weightDate: yearEndDate,
+                bodyFat: "normal",
+                bodyFatDate: yearEndDate,
+                deathDate: null,
+                butchered: false,
+                deathNote: "",
+              };
+            })
         );
 
         setRabbits(rabbitDataList);
         setLoading(false);
       } catch (error) {
-        console.error(error);
         userMessage("Kunde inte ladda kanindata.", "error");
         setLoading(false);
       }
@@ -182,13 +229,17 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         };
 
         if (rabbit.isAlive) {
-          // Update herd tracking (yearly report date)
-          if (rabbit.reportDate) {
+          // Check if we have tracking on or after report date
+          const latestTracking = rabbit.individual.herd_tracking?.[0];
+          const hasValidTracking =
+            latestTracking &&
+            new Date(latestTracking.date) >= new Date(rabbit.reportDate || "");
+
+          // Only include yearly_report_date if no valid tracking exists
+          if (rabbit.reportDate && !hasValidTracking) {
             updateData.yearly_report_date = rabbit.reportDate
               .toISOString()
               .split("T")[0];
-          } else {
-            continue; // If report date is missing, skip this rabbit
           }
 
           // Update weight if provided
