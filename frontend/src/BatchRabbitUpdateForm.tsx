@@ -27,6 +27,7 @@ import {
   filterRabbitsForYearlyReport,
   Individual,
 } from "./utils/rabbit_filters";
+import { RabbitList } from "./BatchRabbitUpdateStep";
 
 const useStyles = makeStyles({
   container: {
@@ -52,6 +53,16 @@ const useStyles = makeStyles({
     paddingRight: "5px",
   },
 });
+
+interface Weight {
+  date: string;
+  weight: number;
+}
+
+interface Bodyfat {
+  date: string;
+  bodyfat: string;
+}
 
 interface RabbitData {
   individual: Individual;
@@ -116,7 +127,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
           setLoading(false);
           return;
         }
-        const startDate = new Date(reportRound.start_date);
+        const startDate = new Date(`${reportYear}-12-01`);
         const endDate = new Date(reportRound.end_date);
 
         const herdResponse = await get(`/api/herd/${herdId}`);
@@ -130,20 +141,43 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         );
 
         // Initialize rabbit data for those needing updates
-        const rabbitDataList: RabbitData[] = needUpdate.map(
-          (individual: Individual) => ({
+        const rabbitDataList: RabbitData[] = needUpdate.map((individual) => {
+          const hasValidTracking = individual.herd_tracking?.some(
+            (tracking: { date: string }) =>
+              new Date(tracking.date) >= new Date(`${reportYear}-12-31`)
+          );
+
+          // Check for existing weight/bodyfat in the period
+          const periodWeight = individual.weights?.find((w) => {
+            const wDate = new Date(w.date);
+            return wDate >= startDate && wDate <= endDate;
+          }) as Weight | undefined;
+
+          const periodBodyfat = individual.bodyfat?.find((bf) => {
+            const bfDate = new Date(bf.date);
+            return bfDate >= startDate && bfDate <= endDate;
+          }) as Bodyfat | undefined;
+
+          // Default date for new measurements
+          const defaultDate = new Date(`${reportYear}-12-31`);
+
+          return {
             individual,
             isAlive: true,
-            reportDate: new Date(`${reportYear}-12-31`),
-            weight: "",
-            weightDate: new Date(`${reportYear}-12-31`),
-            bodyFat: "normal",
-            bodyFatDate: new Date(`${reportYear}-12-31`),
+            reportDate: defaultDate,
+            weight: periodWeight ? String(periodWeight.weight) : "",
+            weightDate: periodWeight
+              ? new Date(periodWeight.date)
+              : defaultDate,
+            bodyFat: periodBodyfat ? periodBodyfat.bodyfat : "normal",
+            bodyFatDate: periodBodyfat
+              ? new Date(periodBodyfat.date)
+              : defaultDate,
             deathDate: null,
             butchered: false,
             deathNote: "",
-          })
-        );
+          };
+        });
 
         setRabbits(rabbitDataList);
         setLoading(false);
@@ -169,6 +203,18 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         errors.push(
           `Ange ett dödsdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
         );
+      }
+      if (rabbit.isAlive) {
+        if (!rabbit.weight || !rabbit.weightDate) {
+          errors.push(
+            `Ange vikt och viktdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+          );
+        }
+        if (!rabbit.bodyFat || !rabbit.bodyFatDate) {
+          errors.push(
+            `Ange hull och hulldatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+          );
+        }
       }
     }
     if (errors.length > 0) {
@@ -199,7 +245,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
               .split("T")[0];
           }
 
-          // Update weight if provided
+          // Always include weight and bodyfat if provided
           if (rabbit.weight && rabbit.weightDate) {
             updateData.weights = [
               ...(rabbit.individual.weights || []),
@@ -210,7 +256,6 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             ];
           }
 
-          // Update body fat if provided
           if (rabbit.bodyFat && rabbit.bodyFatDate) {
             updateData.bodyfat = [
               ...(rabbit.individual.bodyfat || []),
@@ -257,22 +302,12 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
     return <div>Laddar...</div>;
   }
 
-  if (isCompleted) {
+  if (isCompleted && reportYear) {
     return (
-      <div>
-        <Typography>Alla kaniner har uppdaterad information.</Typography>
-        <Typography variant="h6" style={{ marginTop: "1em" }}>
-          Följande kaniner kommer att inkluderas i årsrapporten:
-        </Typography>
-        <ul>
-          {rabbits.map((rabbit) => (
-            <li key={rabbit.individual.id}>
-              {rabbit.individual.name} {rabbit.individual.number} - Senaste
-              uppdatering: {rabbit.reportDate?.toLocaleDateString("sv-SE")}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <RabbitList
+        rabbits={rabbits.map((r) => r.individual)}
+        reportYear={reportYear}
+      />
     );
   }
 

@@ -177,58 +177,49 @@ export const isRabbitBornBeforeYearEnd = (
   return birthDate <= yearEndDate;
 };
 
-export const filterRabbitsForYearlyReport = (
-  individualsData: Individual[],
+export function filterRabbitsForYearlyReport(
+  individuals: Individual[],
   reportYear: number,
   startDate: Date,
   endDate: Date
-): RabbitFilterResult => {
-  // First filter rabbits with certificates that were alive during report period
-  const rabbitsWithStatus = individualsData.filter((individual) => {
-    const hasCertificate =
-      individual.certificate || individual.digital_certificate;
+): { needUpdate: Individual[]; canSkip: Individual[] } {
+  const needUpdate: Individual[] = [];
+  const canSkip: Individual[] = [];
 
-    const bornBeforeYearEnd = isRabbitBornBeforeYearEnd(individual, reportYear);
-    const hasValidTracking = hasValidTrackingInPeriod(individual, reportYear);
-    const wasAliveAtYearEnd = isRabbitAliveAtYearEnd(individual, reportYear);
+  for (const individual of individuals) {
+    // Skip rabbits without certificates
+    if (!individual.certificate) {
+      continue;
+    }
 
-    // Debug logging
-    console.log(`Filtering ${individual.number}:`, {
-      hasCertificate,
-      bornBeforeYearEnd,
-      hasValidTracking,
-      wasAliveAtYearEnd,
-      birth_date: individual.birth_date,
-      reportYear,
-    });
+    // Skip rabbits that died before the report year end
+    const deathDate = individual.death_date
+      ? new Date(individual.death_date)
+      : null;
+    const yearEndDate = new Date(`${reportYear}-12-31`);
+    if (deathDate && deathDate <= yearEndDate) {
+      continue;
+    }
 
-    // Must have certificate, valid tracking, be alive at year end, and born before year end
-    return (
-      hasCertificate &&
-      hasValidTracking &&
-      wasAliveAtYearEnd &&
-      bornBeforeYearEnd
+    // Skip rabbits with death note but no death date (considered dead)
+    if (individual.death_note && !individual.death_date) {
+      continue;
+    }
+
+    // Check if rabbit has valid measurements in the period
+    const hasValidMeasurements = hasValidMeasurementsInPeriod(
+      individual,
+      startDate,
+      endDate
     );
-  });
 
-  // Then check measurements
-  return rabbitsWithStatus.reduce(
-    (acc: RabbitFilterResult, rabbit: Individual) => {
-      // Check if rabbit has valid measurements during the report period
-      const hasValidMeasurements = hasValidMeasurementsInPeriod(
-        rabbit,
-        startDate,
-        endDate
-      );
+    // If the rabbit has valid measurements, add to canSkip
+    if (hasValidMeasurements) {
+      canSkip.push(individual);
+    } else {
+      needUpdate.push(individual);
+    }
+  }
 
-      // A rabbit can be skipped if it has valid measurements
-      if (hasValidMeasurements) {
-        acc.canSkip.push(rabbit);
-      } else {
-        acc.needUpdate.push(rabbit);
-      }
-      return acc;
-    },
-    { canSkip: [], needUpdate: [] }
-  );
-};
+  return { needUpdate, canSkip };
+}

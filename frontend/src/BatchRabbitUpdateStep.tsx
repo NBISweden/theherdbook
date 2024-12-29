@@ -8,11 +8,93 @@ import { Typography } from "@material-ui/core";
 import {
   filterRabbitsForYearlyReport,
   Individual,
-  isRabbitBornBeforeYearEnd,
-  hasValidTrackingInPeriod,
-  hasValidMeasurementsInPeriod,
-  isRabbitAliveAtYearEnd,
 } from "./utils/rabbit_filters";
+
+interface Weight {
+  date: string;
+  weight: number;
+}
+
+interface Bodyfat {
+  date: string;
+  bodyfat: string;
+}
+
+// Component to render the list of rabbits with their measurements
+export const RabbitList: React.FC<{
+  rabbits: Individual[];
+  reportYear: number;
+}> = ({ rabbits, reportYear }) => {
+  const startDate = new Date(`${reportYear}-12-01`);
+  const endDate = new Date(`${reportYear}-12-31`);
+
+  return (
+    <div>
+      <Typography>
+        Alla kaniner har redan uppdaterad information. Detta steg kan hoppas
+        över.
+      </Typography>
+      <Typography variant="h6" style={{ marginTop: "1em" }}>
+        Följande kaniner kommer att inkluderas i årsrapporten:
+      </Typography>
+      <ul>
+        {rabbits.map((rabbit) => {
+          // Get the most recent tracking date that's not in the future
+          const latestTracking = rabbit.herd_tracking
+            .filter((tracking) => new Date(tracking.date) <= new Date())
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            )[0];
+
+          // Get measurements for the report year
+          const periodWeight = rabbit.weights?.find((w) => {
+            const wDate = new Date(w.date);
+            return wDate >= startDate && wDate <= endDate;
+          }) as Weight | undefined;
+
+          const periodBodyfat = rabbit.bodyfat?.find((bf) => {
+            const bfDate = new Date(bf.date);
+            return bfDate >= startDate && bfDate <= endDate;
+          }) as Bodyfat | undefined;
+
+          const measurements = [];
+          if (periodWeight) {
+            measurements.push(
+              `Vikt: ${periodWeight.weight}kg (${new Date(
+                periodWeight.date
+              ).toLocaleDateString("sv-SE")})`
+            );
+          }
+          if (periodBodyfat) {
+            measurements.push(
+              `Hull: ${periodBodyfat.bodyfat} (${new Date(
+                periodBodyfat.date
+              ).toLocaleDateString("sv-SE")})`
+            );
+          }
+
+          return (
+            <li key={rabbit.id}>
+              {rabbit.name} {rabbit.number} - Levande i besättningen:{" "}
+              {new Date(latestTracking.date).toLocaleDateString("sv-SE")}
+              {measurements.length > 0 && (
+                <div
+                  style={{
+                    marginLeft: "1em",
+                    fontSize: "0.9em",
+                    color: "#666",
+                  }}
+                >
+                  {measurements.join(", ")}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
 
 interface BatchRabbitUpdateStepProps {
   herdId: string | null;
@@ -102,29 +184,8 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
     return <div>Laddar...</div>;
   }
 
-  if (skipStep) {
-    return (
-      <div>
-        <Typography>
-          Alla kaniner har redan uppdaterad information. Detta steg kan hoppas
-          över.
-        </Typography>
-        <Typography variant="h6" style={{ marginTop: "1em" }}>
-          Följande kaniner kommer att inkluderas i årsrapporten:
-        </Typography>
-        <ul>
-          {skippedRabbits.map((rabbit) => {
-            const latestTracking = rabbit.herd_tracking[0]; // Already sorted in descending order
-            return (
-              <li key={rabbit.id}>
-                {rabbit.name} {rabbit.number} - Senaste uppdatering:{" "}
-                {new Date(latestTracking.date).toLocaleDateString("sv-SE")}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
+  if (skipStep && reportYear) {
+    return <RabbitList rabbits={skippedRabbits} reportYear={reportYear} />;
   }
 
   return (
