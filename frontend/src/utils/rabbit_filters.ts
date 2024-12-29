@@ -183,7 +183,7 @@ export function filterRabbitsForYearlyReport(
 
   for (const individual of individuals) {
     // Skip rabbits without certificates
-    if (!individual.certificate) {
+    if (!individual.certificate && !individual.digital_certificate) {
       continue;
     }
 
@@ -212,7 +212,6 @@ export function filterRabbitsForYearlyReport(
       endDate
     );
 
-    // If the rabbit has valid measurements, add to canSkip
     if (hasValidMeasurements) {
       canSkip.push(individual);
     } else {
