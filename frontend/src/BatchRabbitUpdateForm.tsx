@@ -137,7 +137,8 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
           individualsData as Individual[],
           reportYear,
           startDate,
-          endDate
+          endDate,
+          herdId
         );
 
         // Initialize rabbit data for those needing updates
