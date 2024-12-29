@@ -22,7 +22,8 @@ type PrivacyLevel = "public" | "private" | null;
 interface ExtendedHerd extends Herd {
   bank_account_number?: string;
   bank_name?: string;
-  genebank_id?: string;
+  genebank_id: string;
+  [key: string]: any;
 }
 
 interface HerdContactUpdateStepProps {
@@ -80,6 +81,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     if (!herdData && herdId) {
       get(`/api/herd/${herdId}`).then(
         (data) => {
+          console.log("Fetched herd data:", data);
           setInitialHerdData(data);
           setLoading(false);
         },
@@ -90,6 +92,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
         }
       );
     } else if (herdData) {
+      console.log("Using provided herd data:", herdData);
       setInitialHerdData(herdData);
       setLoading(false);
     }
@@ -112,6 +115,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     // Force all privacy levels to "authenticated" (Endast inloggade)
     const updatedData: ExtendedHerd = {
       ...data,
+      genebank_id: data.genebank_id,
       physical_address: physical_address,
       name_privacy: "authenticated" as PrivacyLevel,
       email_privacy: "authenticated" as PrivacyLevel,
@@ -120,6 +124,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
       www_privacy: "authenticated" as PrivacyLevel,
       physical_address_privacy: "authenticated" as PrivacyLevel,
     };
+    console.log("Setting initial herd data:", updatedData);
     setHerd(updatedData);
     setPostalcode(postalcode);
     setPostalcity(postalcity);
@@ -132,12 +137,34 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   const hasPermissionForBankDetails = () => {
     if (!user || !herd) return false;
     if (user.is_admin) return true;
+
+    // Find the genebank for this herd
+    const genebank = genebanks?.find((gb) =>
+      gb.herds.some((h) => h.herd === herd.herd)
+    );
+
+    console.log("Checking bank details permission:", {
+      user,
+      herd,
+      isManager: Array.isArray(user?.is_manager),
+      foundGenebank: genebank?.id,
+      managerIncludes: user?.is_manager?.includes(genebank?.id),
+      isOwner: user?.is_owner?.includes(herd?.herd),
+    });
+
+    // Check if user is a manager of this genebank
     if (
-      user.is_manager &&
-      user.is_manager.includes(Number(herd.genebank_id || "0"))
-    )
+      genebank?.id &&
+      Array.isArray(user.is_manager) &&
+      user.is_manager.includes(genebank.id)
+    ) {
+      console.log("Manager permission granted for genebank:", genebank.id);
       return true;
+    }
+
+    // Check if user is owner of this herd
     if (user.is_owner && user.is_owner.includes(herd.herd)) return true;
+
     return false;
   };
 
