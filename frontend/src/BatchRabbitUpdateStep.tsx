@@ -5,17 +5,20 @@ import BatchRabbitUpdateForm from "./BatchRabbitUpdateForm";
 import { get } from "@app/communication";
 import { useMessageContext } from "@app/message_context";
 import { Typography } from "@material-ui/core";
+import {
+  filterRabbitsForYearlyReport,
+  Individual,
+  isRabbitBornBeforeYearEnd,
+  hasValidTrackingInPeriod,
+  hasValidMeasurementsInPeriod,
+  isRabbitAliveAtYearEnd,
+} from "./utils/rabbit_filters";
 
 interface BatchRabbitUpdateStepProps {
   herdId: string | null;
   reportRoundId?: number;
   reportYear?: number;
   onUpdateStatus?: (status: string) => void;
-}
-
-interface RabbitFilterResult {
-  needUpdate: any[];
-  canSkip: any[];
 }
 
 export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
@@ -26,7 +29,7 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
 }) => {
   const [skipStep, setSkipStep] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [skippedRabbits, setSkippedRabbits] = useState<any[]>([]);
+  const [skippedRabbits, setSkippedRabbits] = useState<Individual[]>([]);
   const { userMessage } = useMessageContext();
 
   useEffect(() => {
@@ -61,136 +64,25 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
           setLoading(false);
           return;
         }
-        const startDate = new Date(reportRound.start_date);
+        const startDate = new Date(`${reportYear}-12-01`);
         const endDate = new Date(reportRound.end_date);
-        const yearEndDate = new Date(`${reportYear}-12-31`);
+
+        // Debug logging for report period
+        console.log("Report period:", {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          reportRound,
+        });
 
         const herdResponse = await get(`/api/herd/${herdId}`);
-        // Remove duplicate individuals by number
-        const individualsData = Array.from(
-          new Map(
-            (herdResponse.individuals || []).map((item: any) => [
-              item.number,
-              item,
-            ])
-          ).values()
-        );
+        const individualsData = herdResponse.individuals || [];
 
-        const isValidMeasurementDate = (date: string) => {
-          const measurementDate = new Date(date);
-          return measurementDate >= startDate && measurementDate <= endDate;
-        };
-
-        const hasValidWeightAndBodyfat = (rabbit: any) => {
-          // Check if rabbit has weight in valid range
-          const hasValidWeight = (rabbit.weights || []).some((w: any) =>
-            isValidMeasurementDate(w.date)
-          );
-
-          // Check if rabbit has bodyfat in valid range
-          const hasValidBodyfat = (rabbit.bodyfat || []).some((bf: any) =>
-            isValidMeasurementDate(bf.date)
-          );
-
-          return hasValidWeight && hasValidBodyfat;
-        };
-
-        // Filter rabbits that need updates
-        const filterRabbits = (
-          individualsData: any[],
-          reportDate: Date
-        ): RabbitFilterResult => {
-          // First filter rabbits with certificates that were alive during report period
-          const rabbitsWithStatus = individualsData.filter(
-            (individual: any) => {
-              const hasCertificate =
-                individual.certificate || individual.digital_certificate;
-
-              // Get death date if it exists
-              const deathDate = individual.death_date
-                ? new Date(individual.death_date)
-                : null;
-
-              // Convert dates to start of day for comparison
-              const yearEndStart = new Date(yearEndDate);
-              yearEndStart.setHours(0, 0, 0, 0);
-              const deathStart = deathDate
-                ? new Date(deathDate.setHours(0, 0, 0, 0))
-                : null;
-
-              // For rabbits with no death date but with death note (old imported data),
-              // check their last herd tracking date
-              if (!deathStart && individual.death_note) {
-                // Remove duplicate tracking entries and sort
-                const uniqueTrackings = Array.from(
-                  new Map(
-                    individual.herd_tracking.map((track: any) => [
-                      track.date,
-                      track,
-                    ])
-                  ).values()
-                );
-                const sortedTrackings = [...uniqueTrackings].sort(
-                  (a, b) =>
-                    new Date(b.date).getTime() - new Date(a.date).getTime()
-                );
-                const lastTracking = sortedTrackings[0];
-
-                // If there's no tracking or last tracking is before report year, consider the rabbit dead
-                if (
-                  !lastTracking ||
-                  new Date(lastTracking.date) < new Date(`${reportYear}-01-01`)
-                ) {
-                  return false;
-                }
-              }
-
-              // A rabbit was alive at year end if:
-              // 1. It has no death date AND no death note, or
-              // 2. Its death date is after year end
-              const wasAliveAtYearEnd =
-                (!deathStart && !individual.death_note) ||
-                (deathStart && deathStart > yearEndStart);
-
-              return hasCertificate && wasAliveAtYearEnd;
-            }
-          );
-
-          // Then check tracking and measurements
-          return rabbitsWithStatus.reduce(
-            (acc: RabbitFilterResult, rabbit: any) => {
-              // Remove duplicate tracking entries and sort
-              const uniqueTrackings = Array.from(
-                new Map(
-                  rabbit.herd_tracking.map((track: any) => [track.date, track])
-                ).values()
-              );
-              const sortedTrackings = [...uniqueTrackings].sort(
-                (a, b) =>
-                  new Date(b.date).getTime() - new Date(a.date).getTime()
-              );
-
-              // Check if rabbit has valid measurements during the report period
-              const hasValidMeasurements = hasValidWeightAndBodyfat(rabbit);
-
-              // A rabbit can be skipped if it has valid measurements
-              if (hasValidMeasurements) {
-                acc.canSkip.push({
-                  ...rabbit,
-                  herd_tracking: sortedTrackings,
-                });
-              } else {
-                acc.needUpdate.push(rabbit);
-              }
-              return acc;
-            },
-            { canSkip: [], needUpdate: [] }
-          );
-        };
-
-        const { needUpdate, canSkip } = filterRabbits(
+        // Filter rabbits using the shared filtering logic
+        const { needUpdate, canSkip } = filterRabbitsForYearlyReport(
           individualsData,
-          yearEndDate
+          reportYear,
+          startDate,
+          endDate
         );
 
         setSkippedRabbits(canSkip);
@@ -225,7 +117,7 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
           Följande kaniner kommer att inkluderas i årsrapporten:
         </Typography>
         <ul>
-          {skippedRabbits.map((rabbit: any) => {
+          {skippedRabbits.map((rabbit) => {
             const latestTracking = rabbit.herd_tracking[0]; // Already sorted in descending order
             return (
               <li key={rabbit.id}>

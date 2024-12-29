@@ -20,10 +20,13 @@ import {
 import { get, patch } from "./communication"; // Adjust import paths as necessary
 import { useMessageContext } from "./message_context";
 import { useDataContext } from "./data_context";
-import { Individual } from "@app/data_context_global";
 import DateFnsUtils from "@date-io/date-fns";
 import svLocale from "date-fns/locale/sv"; // Swedish locale
 import { dateFormat, inputVariant, BodyFat } from "@app/data_context_global";
+import {
+  filterRabbitsForYearlyReport,
+  Individual,
+} from "./utils/rabbit_filters";
 
 const useStyles = makeStyles({
   container: {
@@ -85,119 +88,71 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!reportYear) {
-        userMessage("Rapporteringsår saknas.", "error");
+      if (!herdId || !reportYear || !reportRoundId) {
+        setLoading(false);
         return;
       }
 
       try {
+        // Get report round dates
+        const roundsResponse = await get("/api/manage/yearly_report_rounds");
+
+        // Check if response is in the expected format
+        const rounds = Array.isArray(roundsResponse)
+          ? roundsResponse
+          : roundsResponse.rounds || [];
+        const reportRound = rounds.find(
+          (round: any) =>
+            round.id === reportRoundId || round.year === reportYear
+        );
+
+        if (!reportRound) {
+          userMessage(
+            `Kunde inte hitta rapporteringsomgång för år ${reportYear}`,
+            "error"
+          );
+          setLoading(false);
+          return;
+        }
+        const startDate = new Date(reportRound.start_date);
+        const endDate = new Date(reportRound.end_date);
+
         const herdResponse = await get(`/api/herd/${herdId}`);
-        const individualsData: Individual[] = herdResponse.individuals || [];
-        const yearEndDate = new Date(`${reportYear}-12-31`);
-        const decemberFirst = new Date(`${reportYear}-12-01`);
-        const januaryLast = new Date(`${reportYear + 1}-01-31`);
+        const individualsData = herdResponse.individuals || [];
 
-        // Filter individuals who have a certificate and were alive at year end
-        const rabbitsWithCertificates = individualsData.filter((individual) => {
-          const hasCertificate =
-            individual.certificate || individual.digital_certificate;
+        const { needUpdate } = filterRabbitsForYearlyReport(
+          individualsData as Individual[],
+          reportYear,
+          startDate,
+          endDate
+        );
 
-          // Get death date if it exists
-          const deathDate = individual.death_date
-            ? new Date(individual.death_date)
-            : null;
-
-          // Convert dates to start of day for comparison
-          const yearEndStart = new Date(yearEndDate);
-          yearEndStart.setHours(0, 0, 0, 0);
-          const deathStart = deathDate
-            ? new Date(deathDate.setHours(0, 0, 0, 0))
-            : null;
-
-          // For rabbits with no death date but with death note (old imported data),
-          // check their last herd tracking date
-          if (!deathStart && individual.death_note) {
-            const sortedTrackings = [...(individual.herd_tracking || [])].sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            const lastTracking = sortedTrackings[0];
-
-            // If there's no tracking or last tracking is before 2023, consider the rabbit dead
-            if (
-              !lastTracking ||
-              new Date(lastTracking.date) < new Date(`${reportYear}-01-01`)
-            ) {
-              return false;
-            }
-          }
-
-          // A rabbit was alive at year end if:
-          // 1. It has no death date AND no death note, or
-          // 2. Its death date is after year end
-          const wasAliveAtYearEnd =
-            (!deathStart && !individual.death_note) ||
-            (deathStart && deathStart > yearEndStart);
-
-          return hasCertificate && wasAliveAtYearEnd;
-        });
-
-        // Check if a measurement date is within the reporting period
-        const isInReportingPeriod = (date: string) => {
-          const measurementDate = new Date(date);
-          return (
-            measurementDate >= decemberFirst && measurementDate <= januaryLast
-          );
-        };
-
-        // Check if rabbit needs weight/hull update
-        const needsWeightHullUpdate = (rabbit: Individual) => {
-          const hasValidWeight = (rabbit.weights || []).some((w) =>
-            isInReportingPeriod(w.date)
-          );
-          const hasValidBodyfat = (rabbit.bodyfat || []).some((bf) =>
-            isInReportingPeriod(bf.date)
-          );
-          return !hasValidWeight || !hasValidBodyfat;
-        };
-
-        // Initialize rabbit data only for those needing updates
-        const rabbitDataList: RabbitData[] = await Promise.all(
-          rabbitsWithCertificates
-            .filter(needsWeightHullUpdate)
-            .map(async (individual) => {
-              // Find latest tracking date
-              const sortedTrackings = [
-                ...(individual.herd_tracking || []),
-              ].sort(
-                (a, b) =>
-                  new Date(b.date).getTime() - new Date(a.date).getTime()
-              );
-              const latestTracking = sortedTrackings[0];
-
-              return {
-                individual,
-                isAlive: true,
-                reportDate: yearEndDate,
-                weight: "",
-                weightDate: yearEndDate,
-                bodyFat: "normal",
-                bodyFatDate: yearEndDate,
-                deathDate: null,
-                butchered: false,
-                deathNote: "",
-              };
-            })
+        // Initialize rabbit data for those needing updates
+        const rabbitDataList: RabbitData[] = needUpdate.map(
+          (individual: Individual) => ({
+            individual,
+            isAlive: true,
+            reportDate: new Date(`${reportYear}-12-31`),
+            weight: "",
+            weightDate: new Date(`${reportYear}-12-31`),
+            bodyFat: "normal",
+            bodyFatDate: new Date(`${reportYear}-12-31`),
+            deathDate: null,
+            butchered: false,
+            deathNote: "",
+          })
         );
 
         setRabbits(rabbitDataList);
         setLoading(false);
       } catch (error) {
-        userMessage("Kunde inte ladda kanindata.", "error");
+        console.error(error);
+        userMessage("Kunde inte hämta kanindata.", "error");
         setLoading(false);
       }
     };
     fetchData();
-  }, [herdId, reportYear]);
+  }, [herdId, reportYear, reportRoundId]);
 
   const handleSubmit = async () => {
     // Validation
