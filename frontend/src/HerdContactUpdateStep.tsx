@@ -81,18 +81,15 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     if (!herdData && herdId) {
       get(`/api/herd/${herdId}`).then(
         (data) => {
-          console.log("Fetched herd data:", data);
           setInitialHerdData(data);
           setLoading(false);
         },
         (error) => {
-          console.error(error);
           userMessage("Kunde inte hämta besättningsdata.", "error");
           setLoading(false);
         }
       );
     } else if (herdData) {
-      console.log("Using provided herd data:", herdData);
       setInitialHerdData(herdData);
       setLoading(false);
     }
@@ -124,7 +121,6 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
       www_privacy: "authenticated" as PrivacyLevel,
       physical_address_privacy: "authenticated" as PrivacyLevel,
     };
-    console.log("Setting initial herd data:", updatedData);
     setHerd(updatedData);
     setPostalcode(postalcode);
     setPostalcity(postalcity);
@@ -143,22 +139,12 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
       gb.herds.some((h) => h.herd === herd.herd)
     );
 
-    console.log("Checking bank details permission:", {
-      user,
-      herd,
-      isManager: Array.isArray(user?.is_manager),
-      foundGenebank: genebank?.id,
-      managerIncludes: user?.is_manager?.includes(genebank?.id),
-      isOwner: user?.is_owner?.includes(herd?.herd),
-    });
-
     // Check if user is a manager of this genebank
     if (
       genebank?.id &&
       Array.isArray(user.is_manager) &&
       user.is_manager.includes(genebank.id)
     ) {
-      console.log("Manager permission granted for genebank:", genebank.id);
       return true;
     }
 
@@ -202,7 +188,6 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
         userMessage("Kunde inte uppdatera kontaktinformationen.", "error");
       }
     } catch (error) {
-      console.error(error);
       userMessage(
         "Ett fel inträffade vid uppdatering av kontaktinformationen.",
         "error"

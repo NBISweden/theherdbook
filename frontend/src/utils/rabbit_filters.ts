@@ -90,19 +90,6 @@ export const hasValidTrackingInPeriod = (
   const trackingDate = new Date(relevantTracking.date);
   trackingDate.setHours(0, 0, 0, 0);
 
-  // Debug logging
-  console.log(`Rabbit ${individual.number} tracking check:`, {
-    trackingDate: trackingDate.toISOString(),
-    cutOffDate: cutOffDate.toISOString(),
-    yearEnd: yearEnd.toISOString(),
-    isValid: trackingDate >= cutOffDate && trackingDate <= yearEnd,
-    death_note: individual.death_note,
-    death_date: individual.death_date,
-    birth_date: individual.birth_date,
-    herd: individual.herd,
-    allTrackings: sortedTrackings.map((t) => ({ date: t.date })),
-  });
-
   // If rabbit has a death note but no death date, it must have tracking after the death note
   if (individual.death_note && !individual.death_date) {
     return false; // Consider these rabbits inactive
@@ -139,17 +126,6 @@ export const hasValidMeasurementsInPeriod = (
     isValidMeasurementDate(bf.date)
   );
 
-  // Debug logging
-  console.log(`Measurement check for ${rabbit.number}:`, {
-    periodStart: periodStart.toISOString(),
-    periodEnd: periodEnd.toISOString(),
-    weights: rabbit.weights?.map((w) => ({ date: w.date })),
-    bodyfat: rabbit.bodyfat?.map((bf) => ({ date: bf.date })),
-    hasValidWeight,
-    hasValidBodyfat,
-    isValid: hasValidWeight && hasValidBodyfat,
-  });
-
   return hasValidWeight && hasValidBodyfat;
 };
 
@@ -164,15 +140,6 @@ export const isRabbitBornBeforeYearEnd = (
   // Set both dates to start of day for comparison
   birthDate.setHours(0, 0, 0, 0);
   yearEndDate.setHours(0, 0, 0, 0);
-
-  // Debug logging
-  console.log(`Birth date check for ${individual.number}:`, {
-    birthDate: birthDate.toISOString(),
-    yearEndDate: yearEndDate.toISOString(),
-    isValid: birthDate <= yearEndDate,
-    birth_date: individual.birth_date,
-    reportYear,
-  });
 
   return birthDate <= yearEndDate;
 };

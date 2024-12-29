@@ -80,26 +80,11 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
   };
 
   const filterBreedingsForYear = (breedings: any[], year: number) => {
-    console.log(
-      "Filtering breedings:",
-      breedings.map((b) => ({
-        id: b.id,
-        birth_date: b.birth_date,
-        breed_date: b.breed_date,
-      }))
-    );
-
     const filtered = breedings.filter((breeding) => {
-      console.log("Checking breeding:", breeding.id, {
-        birth_date: breeding.birth_date,
-        breed_date: breeding.breed_date,
-      });
-
       // If we have a birth_date in the report year, include it
       if (breeding.birth_date) {
         const birthYear = new Date(breeding.birth_date).getFullYear();
         if (birthYear === year) {
-          console.log("Including due to birth_date:", breeding.id);
           return true;
         }
       }
@@ -115,27 +100,12 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
           const daysBefore = Math.floor(
             (yearEnd.getTime() - breedDate.getTime()) / (1000 * 60 * 60 * 24)
           );
-          const include = daysBefore >= 30;
-          console.log("Checking breed_date:", breeding.id, {
-            breedYear,
-            daysBefore,
-            include,
-          });
-          return include;
+          return daysBefore >= 30;
         }
       }
 
       return false;
     });
-
-    console.log(
-      "Filtered breedings:",
-      filtered.map((b) => ({
-        id: b.id,
-        birth_date: b.birth_date,
-        breed_date: b.breed_date,
-      }))
-    );
 
     return filtered;
   };
@@ -182,7 +152,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
           }
         },
         (error) => {
-          console.error("Error fetching breedings:", error);
           userMessage("Kunde inte hämta kullar.", "error");
         }
       );
