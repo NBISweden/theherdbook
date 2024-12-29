@@ -22,7 +22,8 @@ type PrivacyLevel = "public" | "private" | null;
 interface ExtendedHerd extends Herd {
   bank_account_number?: string;
   bank_name?: string;
-  genebank_id?: string;
+  genebank_id: string;
+  [key: string]: any;
 }
 
 interface HerdContactUpdateStepProps {
@@ -84,7 +85,6 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
           setLoading(false);
         },
         (error) => {
-          console.error(error);
           userMessage("Kunde inte hämta besättningsdata.", "error");
           setLoading(false);
         }
@@ -112,6 +112,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     // Force all privacy levels to "authenticated" (Endast inloggade)
     const updatedData: ExtendedHerd = {
       ...data,
+      genebank_id: data.genebank_id,
       physical_address: physical_address,
       name_privacy: "authenticated" as PrivacyLevel,
       email_privacy: "authenticated" as PrivacyLevel,
@@ -132,12 +133,24 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   const hasPermissionForBankDetails = () => {
     if (!user || !herd) return false;
     if (user.is_admin) return true;
+
+    // Find the genebank for this herd
+    const genebank = genebanks?.find((gb) =>
+      gb.herds.some((h) => h.herd === herd.herd)
+    );
+
+    // Check if user is a manager of this genebank
     if (
-      user.is_manager &&
-      user.is_manager.includes(Number(herd.genebank_id || "0"))
-    )
+      genebank?.id &&
+      Array.isArray(user.is_manager) &&
+      user.is_manager.includes(genebank.id)
+    ) {
       return true;
+    }
+
+    // Check if user is owner of this herd
     if (user.is_owner && user.is_owner.includes(herd.herd)) return true;
+
     return false;
   };
 
@@ -175,7 +188,6 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
         userMessage("Kunde inte uppdatera kontaktinformationen.", "error");
       }
     } catch (error) {
-      console.error(error);
       userMessage(
         "Ett fel inträffade vid uppdatering av kontaktinformationen.",
         "error"
