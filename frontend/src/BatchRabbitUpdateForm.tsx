@@ -316,6 +316,23 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
       <Typography variant="h5" gutterBottom>
         Årsuppdatering av Kaniner
       </Typography>
+      <div
+        style={{
+          backgroundColor: "#fff3cd",
+          border: "1px solid #ffeeba",
+          borderRadius: "4px",
+          padding: "16px",
+          marginBottom: "16px",
+        }}
+      >
+        <Typography>
+          Dessa kaniner finns i din besättning och har intyg men saknar vikt
+          eller hull mätning eller så är de inaktiva. Vänligen gå igenom denna
+          lista och döda kaniner som är avlidna eller slaktade. Är någon kanin
+          såld måste du sälja kaninen till rätt besättning via kaninens
+          individuella sida (klicka på kaninens nummer i listan nedan).
+        </Typography>
+      </div>
       <MuiPickersUtilsProvider utils={DateFnsUtils} locale={svLocale}>
         <div className={classes.formContainer}>
           {rabbits.map((rabbit, index) => (
@@ -327,7 +344,15 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             >
               <Grid item xs={12}>
                 <Typography variant="h6">
-                  {rabbit.individual.name} {rabbit.individual.number}
+                  {rabbit.individual.name}{" "}
+                  <a
+                    href={`/individual/${rabbit.individual.number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "inherit", textDecoration: "underline" }}
+                  >
+                    {rabbit.individual.number}
+                  </a>
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
