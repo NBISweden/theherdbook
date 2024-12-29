@@ -24,9 +24,10 @@ interface Bodyfat {
 export const RabbitList: React.FC<{
   rabbits: Individual[];
   reportYear: number;
-}> = ({ rabbits, reportYear }) => {
+  reportRoundEndDate: string;
+}> = ({ rabbits, reportYear, reportRoundEndDate }) => {
   const startDate = new Date(`${reportYear}-12-01`);
-  const endDate = new Date(`${reportYear}-12-31`);
+  const endDate = new Date(reportRoundEndDate);
 
   return (
     <div>
@@ -112,6 +113,7 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
   const [skipStep, setSkipStep] = useState(false);
   const [loading, setLoading] = useState(true);
   const [skippedRabbits, setSkippedRabbits] = useState<Individual[]>([]);
+  const [reportRound, setReportRound] = useState<any>(null);
   const { userMessage } = useMessageContext();
 
   // Add a function to fetch all rabbits with valid measurements
@@ -125,11 +127,11 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
       const rounds = Array.isArray(roundsResponse)
         ? roundsResponse
         : roundsResponse.rounds || [];
-      const reportRound = rounds.find(
+      const foundReportRound = rounds.find(
         (round: any) => round.id === reportRoundId || round.year === reportYear
       );
 
-      if (!reportRound) {
+      if (!foundReportRound) {
         userMessage(
           `Kunde inte hitta rapporteringsomgång för år ${reportYear}`,
           "error"
@@ -137,8 +139,10 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
         return;
       }
 
+      setReportRound(foundReportRound);
+
       const startDate = new Date(`${reportYear}-12-01`);
-      const endDate = new Date(reportRound.end_date);
+      const endDate = new Date(foundReportRound.end_date);
 
       const herdResponse = await get(`/api/herd/${herdId}`);
       const individualsData = herdResponse.individuals || [];
@@ -148,7 +152,8 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
         individualsData,
         reportYear,
         startDate,
-        endDate
+        endDate,
+        herdId
       );
 
       setSkippedRabbits(canSkip);
@@ -184,8 +189,14 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
     return <div>Laddar...</div>;
   }
 
-  if (skipStep && reportYear) {
-    return <RabbitList rabbits={skippedRabbits} reportYear={reportYear} />;
+  if (skipStep && reportYear && reportRound) {
+    return (
+      <RabbitList
+        rabbits={skippedRabbits}
+        reportYear={reportYear}
+        reportRoundEndDate={reportRound.end_date}
+      />
+    );
   }
 
   return (
