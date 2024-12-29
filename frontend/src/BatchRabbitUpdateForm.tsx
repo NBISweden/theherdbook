@@ -20,10 +20,14 @@ import {
 import { get, patch } from "./communication"; // Adjust import paths as necessary
 import { useMessageContext } from "./message_context";
 import { useDataContext } from "./data_context";
-import { Individual } from "@app/data_context_global";
 import DateFnsUtils from "@date-io/date-fns";
 import svLocale from "date-fns/locale/sv"; // Swedish locale
 import { dateFormat, inputVariant, BodyFat } from "@app/data_context_global";
+import {
+  filterRabbitsForYearlyReport,
+  Individual,
+} from "./utils/rabbit_filters";
+import { RabbitList } from "./BatchRabbitUpdateStep";
 
 const useStyles = makeStyles({
   container: {
@@ -50,6 +54,16 @@ const useStyles = makeStyles({
   },
 });
 
+interface Weight {
+  date: string;
+  weight: number;
+}
+
+interface Bodyfat {
+  date: string;
+  bodyfat: string;
+}
+
 interface RabbitData {
   individual: Individual;
   isAlive: boolean;
@@ -68,6 +82,7 @@ interface BatchRabbitUpdateFormProps {
   reportYear?: number;
   reportRoundId?: number;
   onUpdateStatus?: (status: string) => void;
+  onUpdateComplete?: () => void;
 }
 
 const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
@@ -75,6 +90,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
   reportYear,
   reportRoundId,
   onUpdateStatus,
+  onUpdateComplete,
 }): React.ReactElement => {
   const classes = useStyles();
   const [rabbits, setRabbits] = useState<RabbitData[]>([]);
@@ -85,119 +101,94 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!reportYear) {
-        userMessage("Rapporteringsår saknas.", "error");
+      if (!herdId || !reportYear || !reportRoundId) {
+        setLoading(false);
         return;
       }
 
       try {
-        const herdResponse = await get(`/api/herd/${herdId}`);
-        const individualsData: Individual[] = herdResponse.individuals || [];
-        const yearEndDate = new Date(`${reportYear}-12-31`);
-        const decemberFirst = new Date(`${reportYear}-12-01`);
-        const januaryLast = new Date(`${reportYear + 1}-01-31`);
+        // Get report round dates
+        const roundsResponse = await get("/api/manage/yearly_report_rounds");
 
-        // Filter individuals who have a certificate and were alive at year end
-        const rabbitsWithCertificates = individualsData.filter((individual) => {
-          const hasCertificate =
-            individual.certificate || individual.digital_certificate;
-
-          // Get death date if it exists
-          const deathDate = individual.death_date
-            ? new Date(individual.death_date)
-            : null;
-
-          // Convert dates to start of day for comparison
-          const yearEndStart = new Date(yearEndDate);
-          yearEndStart.setHours(0, 0, 0, 0);
-          const deathStart = deathDate
-            ? new Date(deathDate.setHours(0, 0, 0, 0))
-            : null;
-
-          // For rabbits with no death date but with death note (old imported data),
-          // check their last herd tracking date
-          if (!deathStart && individual.death_note) {
-            const sortedTrackings = [...(individual.herd_tracking || [])].sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            const lastTracking = sortedTrackings[0];
-
-            // If there's no tracking or last tracking is before 2023, consider the rabbit dead
-            if (
-              !lastTracking ||
-              new Date(lastTracking.date) < new Date(`${reportYear}-01-01`)
-            ) {
-              return false;
-            }
-          }
-
-          // A rabbit was alive at year end if:
-          // 1. It has no death date AND no death note, or
-          // 2. Its death date is after year end
-          const wasAliveAtYearEnd =
-            (!deathStart && !individual.death_note) ||
-            (deathStart && deathStart > yearEndStart);
-
-          return hasCertificate && wasAliveAtYearEnd;
-        });
-
-        // Check if a measurement date is within the reporting period
-        const isInReportingPeriod = (date: string) => {
-          const measurementDate = new Date(date);
-          return (
-            measurementDate >= decemberFirst && measurementDate <= januaryLast
-          );
-        };
-
-        // Check if rabbit needs weight/hull update
-        const needsWeightHullUpdate = (rabbit: Individual) => {
-          const hasValidWeight = (rabbit.weights || []).some((w) =>
-            isInReportingPeriod(w.date)
-          );
-          const hasValidBodyfat = (rabbit.bodyfat || []).some((bf) =>
-            isInReportingPeriod(bf.date)
-          );
-          return !hasValidWeight || !hasValidBodyfat;
-        };
-
-        // Initialize rabbit data only for those needing updates
-        const rabbitDataList: RabbitData[] = await Promise.all(
-          rabbitsWithCertificates
-            .filter(needsWeightHullUpdate)
-            .map(async (individual) => {
-              // Find latest tracking date
-              const sortedTrackings = [
-                ...(individual.herd_tracking || []),
-              ].sort(
-                (a, b) =>
-                  new Date(b.date).getTime() - new Date(a.date).getTime()
-              );
-              const latestTracking = sortedTrackings[0];
-
-              return {
-                individual,
-                isAlive: true,
-                reportDate: yearEndDate,
-                weight: "",
-                weightDate: yearEndDate,
-                bodyFat: "normal",
-                bodyFatDate: yearEndDate,
-                deathDate: null,
-                butchered: false,
-                deathNote: "",
-              };
-            })
+        // Check if response is in the expected format
+        const rounds = Array.isArray(roundsResponse)
+          ? roundsResponse
+          : roundsResponse.rounds || [];
+        const reportRound = rounds.find(
+          (round: any) =>
+            round.id === reportRoundId || round.year === reportYear
         );
+
+        if (!reportRound) {
+          userMessage(
+            `Kunde inte hitta rapporteringsomgång för år ${reportYear}`,
+            "error"
+          );
+          setLoading(false);
+          return;
+        }
+        const startDate = new Date(`${reportYear}-12-01`);
+        const endDate = new Date(reportRound.end_date);
+
+        const herdResponse = await get(`/api/herd/${herdId}`);
+        const individualsData = herdResponse.individuals || [];
+
+        const { needUpdate } = filterRabbitsForYearlyReport(
+          individualsData as Individual[],
+          reportYear,
+          startDate,
+          endDate
+        );
+
+        // Initialize rabbit data for those needing updates
+        const rabbitDataList: RabbitData[] = needUpdate.map((individual) => {
+          const hasValidTracking = individual.herd_tracking?.some(
+            (tracking: { date: string }) =>
+              new Date(tracking.date) >= new Date(`${reportYear}-12-31`)
+          );
+
+          // Check for existing weight/bodyfat in the period
+          const periodWeight = individual.weights?.find((w) => {
+            const wDate = new Date(w.date);
+            return wDate >= startDate && wDate <= endDate;
+          }) as Weight | undefined;
+
+          const periodBodyfat = individual.bodyfat?.find((bf) => {
+            const bfDate = new Date(bf.date);
+            return bfDate >= startDate && bfDate <= endDate;
+          }) as Bodyfat | undefined;
+
+          // Default date for new measurements
+          const defaultDate = new Date(`${reportYear}-12-31`);
+
+          return {
+            individual,
+            isAlive: true,
+            reportDate: defaultDate,
+            weight: periodWeight ? String(periodWeight.weight) : "",
+            weightDate: periodWeight
+              ? new Date(periodWeight.date)
+              : defaultDate,
+            bodyFat: periodBodyfat ? periodBodyfat.bodyfat : "normal",
+            bodyFatDate: periodBodyfat
+              ? new Date(periodBodyfat.date)
+              : defaultDate,
+            deathDate: null,
+            butchered: false,
+            deathNote: "",
+          };
+        });
 
         setRabbits(rabbitDataList);
         setLoading(false);
       } catch (error) {
-        userMessage("Kunde inte ladda kanindata.", "error");
+        console.error(error);
+        userMessage("Kunde inte hämta kanindata.", "error");
         setLoading(false);
       }
     };
     fetchData();
-  }, [herdId, reportYear]);
+  }, [herdId, reportYear, reportRoundId]);
 
   const handleSubmit = async () => {
     // Validation
@@ -212,6 +203,18 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         errors.push(
           `Ange ett dödsdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
         );
+      }
+      if (rabbit.isAlive) {
+        if (!rabbit.weight || !rabbit.weightDate) {
+          errors.push(
+            `Ange vikt och viktdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+          );
+        }
+        if (!rabbit.bodyFat || !rabbit.bodyFatDate) {
+          errors.push(
+            `Ange hull och hulldatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+          );
+        }
       }
     }
     if (errors.length > 0) {
@@ -242,7 +245,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
               .split("T")[0];
           }
 
-          // Update weight if provided
+          // Always include weight and bodyfat if provided
           if (rabbit.weight && rabbit.weightDate) {
             updateData.weights = [
               ...(rabbit.individual.weights || []),
@@ -253,7 +256,6 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             ];
           }
 
-          // Update body fat if provided
           if (rabbit.bodyFat && rabbit.bodyFatDate) {
             updateData.bodyfat = [
               ...(rabbit.individual.bodyfat || []),
@@ -288,6 +290,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
       loadData(["genebanks"]); // Reload data if needed
       setIsCompleted(true);
       onUpdateStatus?.("completed");
+      onUpdateComplete?.();
     } catch (error) {
       console.error(error);
       userMessage("Ett fel inträffade vid uppdatering av kaninerna.", "error");
@@ -299,22 +302,12 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
     return <div>Laddar...</div>;
   }
 
-  if (isCompleted) {
+  if (isCompleted && reportYear) {
     return (
-      <div>
-        <Typography>Alla kaniner har uppdaterad information.</Typography>
-        <Typography variant="h6" style={{ marginTop: "1em" }}>
-          Följande kaniner kommer att inkluderas i årsrapporten:
-        </Typography>
-        <ul>
-          {rabbits.map((rabbit) => (
-            <li key={rabbit.individual.id}>
-              {rabbit.individual.name} {rabbit.individual.number} - Senaste
-              uppdatering: {rabbit.reportDate?.toLocaleDateString("sv-SE")}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <RabbitList
+        rabbits={rabbits.map((r) => r.individual)}
+        reportYear={reportYear}
+      />
     );
   }
 
@@ -323,6 +316,23 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
       <Typography variant="h5" gutterBottom>
         Årsuppdatering av Kaniner
       </Typography>
+      <div
+        style={{
+          backgroundColor: "#fff3cd",
+          border: "1px solid #ffeeba",
+          borderRadius: "4px",
+          padding: "16px",
+          marginBottom: "16px",
+        }}
+      >
+        <Typography>
+          Dessa kaniner finns i din besättning och har intyg men saknar vikt
+          eller hull mätning eller så är de inaktiva. Vänligen gå igenom denna
+          lista och döda kaniner som är avlidna eller slaktade. Är någon kanin
+          såld måste du sälja kaninen till rätt besättning via kaninens
+          individuella sida (klicka på kaninens nummer i listan nedan).
+        </Typography>
+      </div>
       <MuiPickersUtilsProvider utils={DateFnsUtils} locale={svLocale}>
         <div className={classes.formContainer}>
           {rabbits.map((rabbit, index) => (
@@ -334,7 +344,15 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             >
               <Grid item xs={12}>
                 <Typography variant="h6">
-                  {rabbit.individual.name} {rabbit.individual.number}
+                  {rabbit.individual.name}{" "}
+                  <a
+                    href={`/individual/${rabbit.individual.number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "inherit", textDecoration: "underline" }}
+                  >
+                    {rabbit.individual.number}
+                  </a>
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
