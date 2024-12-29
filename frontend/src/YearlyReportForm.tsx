@@ -16,6 +16,7 @@ import { get, post } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useDataContext } from "@app/data_context";
 import { useMessageContext } from "@app/message_context";
+import { belongedToHerdOnDate } from "./utils/rabbit_filters";
 
 interface YearlyReportFormProps {
   herdId: string;
@@ -67,7 +68,9 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   const { user } = useUserContext();
   const { genebanks } = useDataContext();
   const { userMessage } = useMessageContext();
-  const [prefilledValues, setPrefilledValues] = useState<any>({});
+  const [prefilledValues, setPrefilledValues] = useState<ReportValues>(
+    {} as ReportValues
+  );
   const [loading, setLoading] = useState(true);
   const [herdResponse, setHerdResponse] = useState<any>(null);
   const [herdName, setHerdName] = useState<string>("");
@@ -76,37 +79,34 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     const fetchData = async () => {
       try {
         // Fetch herd data
-        const response = await get(`/api/herd/${herdId}`);
+        const herdData = await get(`/api/herd/${herdId}`);
+        setHerdResponse(herdData);
+        setHerdName(herdData.herd_name || herdData.herd);
 
-        // Fetch breeding data
+        // Fetch breedings data
         const breedingResponse = await get(`/api/breeding/${herdId}`);
 
         // Combine the data
         const combinedData = {
-          ...response,
+          ...herdData,
           births: breedingResponse.breedings,
         };
 
-        setHerdResponse(combinedData);
-        setHerdName(response.herd_name || response.herd);
-
-        // Calculate initial values
-        const initialValues = calculateInitialValues(
-          combinedData,
-          existingReportData
-        );
-        setPrefilledValues(initialValues);
+        // Process data and set prefilled values
+        const values = calculateInitialValues(combinedData, existingReportData);
+        setPrefilledValues(values);
         setLoading(false);
       } catch (error) {
+        console.error(error);
         userMessage("Kunde inte hämta besättningsdata.", "error");
         setLoading(false);
       }
     };
 
-    if (herdId) {
+    if (herdId && reportYear) {
       fetchData();
     }
-  }, [herdId, existingReportData]);
+  }, [herdId, reportYear, existingReportData]);
 
   const calculateInitialValues = (
     herdData: any,
@@ -309,27 +309,7 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     }
 
     // Check herd tracking - the rabbit must be in the herd on the check date
-    const herdTrackingEntries = individual.herd_tracking || [];
-    if (herdTrackingEntries.length === 0) {
-      return false;
-    }
-
-    // Sort entries by date in descending order
-    const sortedEntries = [...herdTrackingEntries].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    // Get the latest entry before or on the check date
-    const relevantEntry = sortedEntries.find(
-      (entry) => new Date(entry.date) <= date
-    );
-
-    // If no relevant entry found, or the latest entry shows the rabbit left the herd
-    if (!relevantEntry || relevantEntry.origin_herd_id !== individual.herd_id) {
-      return false;
-    }
-
-    return true;
+    return belongedToHerdOnDate(individual, herdId, date);
   }
 
   // Function to map allowPublication to publish settings

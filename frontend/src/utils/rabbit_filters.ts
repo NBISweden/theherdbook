@@ -144,14 +144,42 @@ export const isRabbitBornBeforeYearEnd = (
   return birthDate <= yearEndDate;
 };
 
+export const belongedToHerdOnDate = (
+  individual: Individual,
+  herdId: string,
+  date: Date
+): boolean => {
+  const herdTrackingEntries = individual.herd_tracking || [];
+  if (herdTrackingEntries.length === 0) return false;
+
+  // Sort entries by date in descending order
+  const sortedEntries = [...herdTrackingEntries].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // Get the latest entry before or on the check date
+  const relevantEntry = sortedEntries.find(
+    (entry) => new Date(entry.date) <= date
+  );
+
+  // If no relevant entry found, or the latest entry shows a different herd
+  if (!relevantEntry || relevantEntry.herd !== herdId) {
+    return false;
+  }
+
+  return true;
+};
+
 export function filterRabbitsForYearlyReport(
   individuals: Individual[],
   reportYear: number,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  currentHerdId: string
 ): { needUpdate: Individual[]; canSkip: Individual[] } {
   const needUpdate: Individual[] = [];
   const canSkip: Individual[] = [];
+  const yearEndDate = new Date(`${reportYear}-12-31`);
 
   for (const individual of individuals) {
     // Skip rabbits without certificates
@@ -163,13 +191,17 @@ export function filterRabbitsForYearlyReport(
     const deathDate = individual.death_date
       ? new Date(individual.death_date)
       : null;
-    const yearEndDate = new Date(`${reportYear}-12-31`);
     if (deathDate && deathDate <= yearEndDate) {
       continue;
     }
 
     // Skip rabbits with death note but no death date (considered dead)
     if (individual.death_note && !individual.death_date) {
+      continue;
+    }
+
+    // Skip rabbits that didn't belong to this herd at year end
+    if (!belongedToHerdOnDate(individual, currentHerdId, yearEndDate)) {
       continue;
     }
 
