@@ -71,6 +71,7 @@ interface BatchRabbitUpdateFormProps {
   reportYear?: number;
   reportRoundId?: number;
   onUpdateStatus?: (status: string) => void;
+  onUpdateComplete?: () => void;
 }
 
 const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
@@ -78,6 +79,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
   reportYear,
   reportRoundId,
   onUpdateStatus,
+  onUpdateComplete,
 }): React.ReactElement => {
   const classes = useStyles();
   const [rabbits, setRabbits] = useState<RabbitData[]>([]);
@@ -243,6 +245,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
       loadData(["genebanks"]); // Reload data if needed
       setIsCompleted(true);
       onUpdateStatus?.("completed");
+      onUpdateComplete?.();
     } catch (error) {
       console.error(error);
       userMessage("Ett fel inträffade vid uppdatering av kaninerna.", "error");
