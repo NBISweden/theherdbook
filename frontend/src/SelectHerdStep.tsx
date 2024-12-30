@@ -154,6 +154,10 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
             sex veckor.
           </li>
           <li>Du behöver inte skapa oregistrerade kaniner om du inte vill.</li>
+          <li>
+            Har du inte årsrapporterat dina kaniner med intyg så kan du göra det
+            i bulk i ett steg längre fram.
+          </li>
         </ul>
         Om du redan har skapat intyg för minst en kanin i varje kull behöver du
         inte göra något mer.
@@ -195,6 +199,21 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
           >
             <Typography variant="h6" gutterBottom>
               Registrerade kullar för år: {reportYear}
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              style={{
+                marginBottom: "1em",
+                padding: "1em",
+                backgroundColor: "#fff3e0", // Light orange background
+                border: "1px solid #ffb74d", // Orange border
+                borderRadius: "4px",
+              }}
+            >
+              OBS! Kontrollera noga att alla kullar för {reportYear} är korrekt
+              registrerade. Detta är viktigt för årsrapportens kvalitet. Om
+              någon kull saknas eller är felaktig, vänligen korrigera detta
+              innan du fortsätter med årsrapporten.
             </Typography>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
