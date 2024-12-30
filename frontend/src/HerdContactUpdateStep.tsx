@@ -11,19 +11,30 @@ import { get, updateHerd } from "@app/communication";
 import { useUserContext } from "@app/user_context";
 import { useMessageContext } from "@app/message_context";
 import { useDataContext } from "@app/data_context";
-import { Herd, inputVariant, LimitedInputType } from "@app/data_context_global";
+import { Herd, inputVariant } from "@app/data_context_global";
 import { FieldWithPermission } from "@app/field_with_permission";
 
+// Define missing types
+type InputType = "text" | "tel" | "email" | "url";
+type PrivacyLevel = "public" | "private" | null;
+
+// Extended Herd type to include bank details
+interface ExtendedHerd extends Herd {
+  bank_account_number?: string;
+  bank_name?: string;
+  genebank_id?: string;
+}
+
 interface HerdContactUpdateStepProps {
-  herdData: Herd | null;
+  herdData: ExtendedHerd | null;
   herdId: string | null;
   loadData: (args: any) => void;
 }
 
 type ContactField = {
-  field: keyof Herd;
+  field: keyof ExtendedHerd;
   label: string;
-  type?: LimitedInputType;
+  type?: InputType;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -43,14 +54,14 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   const { user } = useUserContext();
   const { userMessage } = useMessageContext();
   const { genebanks } = useDataContext();
-  const [herd, setHerd] = useState<Herd | null>(null);
+  const [herd, setHerd] = useState<ExtendedHerd | null>(null);
   const [loading, setLoading] = useState(true);
   const [postalcode, setPostalcode] = useState("");
   const [postalcity, setPostalcity] = useState("");
 
   const contactFields: ContactField[] = [
     { field: "name", label: "Namn" },
-    { field: "email", label: "E-mail" },
+    { field: "email", label: "E-mail", type: "email" },
     { field: "mobile_phone", label: "Mobiltelefon", type: "tel" },
     { field: "wire_phone", label: "Fast telefon", type: "tel" },
     { field: "www", label: "Hemsida", type: "url" },
@@ -82,7 +93,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     }
   }, [herdData, herdId]);
 
-  const setInitialHerdData = (data: Herd) => {
+  const setInitialHerdData = (data: ExtendedHerd) => {
     let postalcode = "";
     let postalcity = "";
     let physical_address = data.physical_address || "";
@@ -100,14 +111,14 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     setPostalcity(postalcity);
   };
 
-  const setFormField = <K extends keyof Herd>(label: K, value: Herd[K]) => {
-    herd && setHerd({ ...herd, [label]: value });
+  const setFormField = (field: keyof ExtendedHerd, value: string) => {
+    herd && setHerd({ ...herd, [field]: value });
   };
 
   const hasPermissionForBankDetails = () => {
     if (!user || !herd) return false;
     if (user.is_admin) return true;
-    if (user.is_manager && user.is_manager.includes(herd.genebank_id))
+    if (user.is_manager && user.is_manager.includes(herd.genebank_id || ""))
       return true;
     if (user.is_owner && user.is_owner.includes(herd.herd)) return true;
     return false;
@@ -117,8 +128,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     if (!herd) return;
     setLoading(true);
     try {
-      // Prepare data to send, excluding non-updatable attributes
-      const updatedData: Partial<Herd> = {
+      const updatedData: Partial<ExtendedHerd> = {
         id: herd.id,
         name: herd.name,
         email: herd.email,
@@ -132,19 +142,18 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
         wire_phone_privacy: herd.wire_phone_privacy,
         www_privacy: herd.www_privacy,
         physical_address_privacy: herd.physical_address_privacy,
-        // Include bank account fields if user has permission
+        has_details: true, // Add this to satisfy the type checker
         ...(hasPermissionForBankDetails() && {
           bank_account_number: herd.bank_account_number,
           bank_name: herd.bank_name,
         }),
       };
 
-      // Send the update to the server using updateHerd
-      const response = await updateHerd(updatedData);
+      const response = await updateHerd(updatedData as Herd);
 
       if (response.status === "success" || response.status === "updated") {
         userMessage("Kontaktinformationen uppdaterad.", "success");
-        loadData(["herds"]); // Reload herds data
+        loadData(["herds"]);
       } else {
         userMessage("Kunde inte uppdatera kontaktinformationen.", "error");
       }
@@ -165,6 +174,22 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
 
   return (
     <Paper className={classes.formContainer}>
+      <Typography
+        variant="subtitle1"
+        style={{
+          marginBottom: "2em",
+          padding: "1em",
+          backgroundColor: "#e3f2fd", // Light blue background
+          border: "1px solid #90caf9", // Blue border
+          borderRadius: "4px",
+        }}
+      >
+        <strong>Viktigt!</strong> Vänligen kontrollera och uppdatera noggrant
+        alla dina kontaktuppgifter. Glöm inte att fylla i korrekta bankuppgifter
+        - dessa krävs för att stödet ska kunna betalas ut. Bankuppgifterna är
+        endast synliga för behörig personal.
+      </Typography>
+
       <Typography variant="h5" gutterBottom>
         {herd.herd}
         {herd.herd_name && ` - ${herd.herd_name}`}
@@ -181,7 +206,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
                 label={field.label}
                 value={herd[field.field]}
                 permission={
-                  herd[`${field.field}_privacy` as keyof Herd] ?? null
+                  herd[`${field.field}_privacy` as keyof ExtendedHerd] ?? null
                 }
                 setValue={setFormField}
                 fieldType={field.type ?? "text"}
