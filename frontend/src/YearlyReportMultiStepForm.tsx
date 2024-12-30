@@ -145,7 +145,13 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
             />
           );
         case 3:
-          return <BatchRabbitUpdateStep herdId={herdId} />;
+          return (
+            <BatchRabbitUpdateStep
+              herdId={herdId}
+              reportYear={reportYear}
+              reportRoundId={reportRoundId}
+            />
+          );
         case 4:
           return (
             <YearlyReportStep
@@ -178,7 +184,13 @@ const YearlyReportMultiStepForm: React.FC<YearlyReportMultiStepFormProps> = ({
             />
           );
         case 2:
-          return <BatchRabbitUpdateStep herdId={herdId} />;
+          return (
+            <BatchRabbitUpdateStep
+              herdId={herdId}
+              reportYear={reportYear}
+              reportRoundId={reportRoundId}
+            />
+          );
         case 3:
           return (
             <YearlyReportStep

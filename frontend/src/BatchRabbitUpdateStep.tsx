@@ -8,79 +8,71 @@ import { Typography } from "@material-ui/core";
 
 interface BatchRabbitUpdateStepProps {
   herdId: string | null;
+  reportRoundId?: number;
+  reportYear?: number;
 }
 
 export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
   herdId,
+  reportRoundId,
+  reportYear,
 }) => {
   const [skipStep, setSkipStep] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [skippedRabbits, setSkippedRabbits] = useState<any[]>([]);
   const { userMessage } = useMessageContext();
 
   useEffect(() => {
-    // Fetch rabbit data and determine if we need to skip this step
     const fetchData = async () => {
-      if (!herdId) {
+      if (!herdId || !reportYear) {
         setLoading(false);
         return;
       }
+
       try {
         const herdResponse = await get(`/api/herd/${herdId}`);
         const individualsData = herdResponse.individuals || [];
+        const yearEndDate = `${reportYear}-12-31`;
 
-        const rabbitsNeedingUpdate = individualsData.filter(
-          (individual: any) => {
-            const isAlive = individual.alive === true;
+        const rabbitsWithStatus = individualsData.filter((individual: any) => {
+          const isAlive = individual.alive === true;
+          const hasCertificate =
+            individual.certificate || individual.digital_certificate;
+          return isAlive && hasCertificate;
+        });
 
-            const hasCertificate =
-              individual.certificate || individual.digital_certificate;
+        // Separate rabbits into those needing update and those that can be skipped
+        const { needUpdate, canSkip } = rabbitsWithStatus.reduce(
+          (acc: { needUpdate: any[]; canSkip: any[] }, rabbit: any) => {
+            // Sort herd_tracking entries by date in descending order
+            const sortedTrackings = [...(rabbit.herd_tracking || [])].sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
 
-            const currentYear = new Date().getFullYear();
+            // Get the latest tracking date
+            const latestTracking = sortedTrackings[0];
+            const latestTrackingDate = latestTracking
+              ? new Date(latestTracking.date)
+              : null;
+            const endDate = new Date(yearEndDate);
 
-            // Check if there is a herd_tracking entry for the current year
-            const herdTrackingThisYear =
-              individual.herd_tracking?.some((entry: any) => {
-                if (entry.date) {
-                  const trackingDate = new Date(entry.date);
-                  return trackingDate.getFullYear() === currentYear;
-                }
-                return false;
-              }) || false;
-
-            // Check if there's a weight entry this year
-            const weightThisYear =
-              individual.weights?.some((weightEntry: any) => {
-                if (weightEntry.date) {
-                  const weightDate = new Date(weightEntry.date);
-                  return weightDate.getFullYear() === currentYear;
-                }
-                return false;
-              }) || false;
-
-            // Check if there's a body fat entry this year
-            const bodyFatThisYear =
-              individual.bodyfat?.some((bodyFatEntry: any) => {
-                if (bodyFatEntry.date) {
-                  const bodyFatDate = new Date(bodyFatEntry.date);
-                  return bodyFatDate.getFullYear() === currentYear;
-                }
-                return false;
-              }) || false;
-
-            // Determine if the rabbit needs an update
-            const needsUpdate =
-              isAlive &&
-              hasCertificate &&
-              (!herdTrackingThisYear || !weightThisYear || !bodyFatThisYear);
-
-            return needsUpdate;
-          }
+            if (latestTrackingDate && latestTrackingDate >= endDate) {
+              // Add the sorted tracking dates to the rabbit object for display
+              acc.canSkip.push({
+                ...rabbit,
+                herd_tracking: sortedTrackings,
+              });
+            } else {
+              acc.needUpdate.push(rabbit);
+            }
+            return acc;
+          },
+          { needUpdate: [], canSkip: [] }
         );
 
-        console.log("needs", rabbitsNeedingUpdate);
+        setSkippedRabbits(canSkip);
 
-        if (rabbitsNeedingUpdate.length === 0) {
-          // All rabbits are recently updated, skip this step
+        if (needUpdate.length === 0) {
           setSkipStep(true);
         }
       } catch (error) {
@@ -91,7 +83,7 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
       }
     };
     fetchData();
-  }, [herdId]);
+  }, [herdId, reportYear]);
 
   if (loading) {
     return <div>Laddar...</div>;
@@ -99,12 +91,34 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
 
   if (skipStep) {
     return (
-      <Typography>
-        Alla kaniner har redan uppdaterad information. Detta steg kan hoppas
-        över.
-      </Typography>
+      <div>
+        <Typography>
+          Alla kaniner har redan uppdaterad information. Detta steg kan hoppas
+          över.
+        </Typography>
+        <Typography variant="h6" style={{ marginTop: "1em" }}>
+          Följande kaniner kommer att inkluderas i årsrapporten:
+        </Typography>
+        <ul>
+          {skippedRabbits.map((rabbit: any) => {
+            const latestTracking = rabbit.herd_tracking[0]; // Already sorted in descending order
+            return (
+              <li key={rabbit.id}>
+                {rabbit.name} {rabbit.number} - Senaste uppdatering:{" "}
+                {new Date(latestTracking.date).toLocaleDateString("sv-SE")}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     );
   }
 
-  return <BatchRabbitUpdateForm herdId={herdId!} />;
+  return (
+    <BatchRabbitUpdateForm
+      herdId={herdId!}
+      reportYear={reportYear}
+      reportRoundId={reportRoundId}
+    />
+  );
 };

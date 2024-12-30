@@ -63,7 +63,17 @@ interface RabbitData {
   deathNote: string;
 }
 
-const BatchRabbitUpdateForm: React.FC<{ herdId: string }> = ({ herdId }) => {
+interface BatchRabbitUpdateFormProps {
+  herdId: string;
+  reportYear?: number;
+  reportRoundId?: number;
+}
+
+const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
+  herdId,
+  reportYear,
+  reportRoundId,
+}) => {
   const classes = useStyles();
   const [rabbits, setRabbits] = useState<RabbitData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,10 +82,16 @@ const BatchRabbitUpdateForm: React.FC<{ herdId: string }> = ({ herdId }) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!reportYear) {
+        userMessage("Rapporteringsår saknas.", "error");
+        return;
+      }
+
       try {
-        // Fetch herd data
         const herdResponse = await get(`/api/herd/${herdId}`);
         const individualsData: Individual[] = herdResponse.individuals || [];
+        const yearEndDate = new Date(`${reportYear}-12-31`);
+        const decemberFirst = new Date(`${reportYear}-12-01`);
 
         // Filter individuals who have a certificate and are alive
         const rabbitsWithCertificates = individualsData.filter(
@@ -85,21 +101,42 @@ const BatchRabbitUpdateForm: React.FC<{ herdId: string }> = ({ herdId }) => {
         );
 
         // Initialize rabbit data
-        const rabbitDataList: RabbitData[] = rabbitsWithCertificates.map(
-          (individual) => ({
-            individual,
-            isAlive: true, // default to true
-            reportDate: new Date(), // default to today's date
-            weight: "",
-            weightDate: new Date(), // default to today's date
-            bodyFat: "normal", // default value
-            bodyFatDate: new Date(), // default to today's date
-            deathDate: null,
-            butchered: false,
-            deathNote: "",
+        const rabbitDataList: RabbitData[] = await Promise.all(
+          rabbitsWithCertificates.map(async (individual) => {
+            // Find latest weight entry after Dec 1st
+            const latestWeight = individual.weights
+              ?.filter((w) => new Date(w.date) >= decemberFirst)
+              .sort(
+                (a, b) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              )[0];
+
+            // Find latest body fat entry after Dec 1st
+            const latestBodyFat = individual.bodyfat
+              ?.filter((bf) => new Date(bf.date) >= decemberFirst)
+              .sort(
+                (a, b) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+              )[0];
+
+            return {
+              individual,
+              isAlive: true,
+              reportDate: yearEndDate,
+              weight: latestWeight?.weight.toString() || "",
+              weightDate: latestWeight
+                ? new Date(latestWeight.date)
+                : yearEndDate,
+              bodyFat: latestBodyFat?.bodyfat || "normal",
+              bodyFatDate: latestBodyFat
+                ? new Date(latestBodyFat.date)
+                : yearEndDate,
+              deathDate: null,
+              butchered: false,
+              deathNote: "",
+            };
           })
         );
-        console.log(rabbitDataList);
 
         setRabbits(rabbitDataList);
         setLoading(false);
@@ -110,7 +147,7 @@ const BatchRabbitUpdateForm: React.FC<{ herdId: string }> = ({ herdId }) => {
       }
     };
     fetchData();
-  }, [herdId]);
+  }, [herdId, reportYear]);
 
   const handleSubmit = async () => {
     // Validation
