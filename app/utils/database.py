@@ -347,13 +347,15 @@ def remove_fields_by_privacy(data, access_level):
         field_level = data[field] or "private"
         if levels.index(access_level) < levels.index(field_level):
             if field == "coordinates_privacy":
-                del data["latitude"]
-                del data["longitude"]
+                if "latitude" in data:
+                    del data["latitude"]
+                if "longitude" in data:
+                    del data["longitude"]
             else:
                 target_field = field[: -len("_privacy")]
-                del data[target_field]
-        # remove the access level value if the user doesn't have private
-        # access
+                if target_field in data:
+                    del data[target_field]
+        # remove the access level value if the user doesn't have private access
         if access_level != "private":
             del data[field]
 
