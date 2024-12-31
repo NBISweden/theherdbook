@@ -118,7 +118,10 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   const hasPermissionForBankDetails = () => {
     if (!user || !herd) return false;
     if (user.is_admin) return true;
-    if (user.is_manager && user.is_manager.includes(herd.genebank_id || ""))
+    if (
+      user.is_manager &&
+      user.is_manager.includes(Number(herd.genebank_id || "0"))
+    )
       return true;
     if (user.is_owner && user.is_owner.includes(herd.herd)) return true;
     return false;
@@ -204,9 +207,11 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
               <FieldWithPermission
                 field={field.field}
                 label={field.label}
-                value={herd[field.field]}
+                value={String(herd[field.field] ?? "")}
                 permission={
-                  herd[`${field.field}_privacy` as keyof ExtendedHerd] ?? null
+                  (herd[
+                    `${field.field}_privacy` as keyof ExtendedHerd
+                  ] as PrivacyLevel) ?? null
                 }
                 setValue={setFormField}
                 fieldType={field.type ?? "text"}
@@ -246,10 +251,10 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
                   <FieldWithPermission
                     field={field.field}
                     label={field.label}
-                    value={herd[field.field]}
+                    value={String(herd[field.field] ?? "")}
+                    permission="private"
                     setValue={setFormField}
                     fieldType={field.type ?? "text"}
-                    disablePrivacy // Custom prop to disable privacy options
                   />
                 </Grid>
               ))}
