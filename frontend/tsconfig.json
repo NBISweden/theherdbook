@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "es5",
     "lib": ["es2019", "dom"],
-    "allowJs": true,
-    "checkJs": true,
+    "allowJs": false,
+    "checkJs": false,
     "sourceMap": true,
     "strict": true,
     "noImplicitAny": true,
@@ -24,11 +24,17 @@
 
     "moduleResolution": "node",
     "baseUrl": ".",
-    "paths": {"@app/*": ["src/*"]},
-    "esModuleInterop": true
+    "paths": { "@app/*": ["src/*"] },
+    "esModuleInterop": true,
+
+    "rootDir": "./src",
+    "outDir": "./dist"
   },
+  "include": ["src/**/*"],
   "exclude": [
     "**/node_modules/*",
-    "**/dist/*"
+    "**/dist/*",
+    "jest.config.js",
+    "jest.setup.js"
   ]
 }
