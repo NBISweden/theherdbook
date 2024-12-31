@@ -2340,7 +2340,7 @@ def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
                         publish_info = f"Ja, men inte {' och '.join(excluded)}"
                 
                 report = {
-                    "genebank_number": r.herd.herd,  # Access through the joined Herd model
+                    "herd": r.herd.herd,  # Changed from genebank_number to herd
                     "name": r.herd.herd_name,
                     "status": status,
                     # Form data fields
@@ -2391,7 +2391,7 @@ def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
         
         # CSV Headers in Swedish - exactly matching the table view
         headers = [
-            "Genbanksnummer",
+            "Besättningsnummer",
             "Namn",
             "Status",
             "Antal kullar under året",
@@ -2418,7 +2418,7 @@ def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
         # Write data rows
         for report in reports:
             row = [
-                str(report["genebank_number"]),
+                str(report["herd"]),  # Changed from genebank_number to herd
                 report["name"] or "",
                 report["status"],
                 str(report["litter_count"]),
@@ -2439,12 +2439,13 @@ def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
             ]
             # Escape semicolons in fields and wrap in quotes if needed
             escaped_row = [
-                f'"{field}"' if ";" in str(field) or "," in str(field) or "\n" in str(field) else str(field)
+                f'"{field}"' if ";" in str(field) or "," in str(field) or "\n" in str(field) or '"' in str(field) else str(field)
                 for field in row
             ]
             output_lines.append(";".join(escaped_row))
         
-        return "\n".join(output_lines)
+        # Add BOM for Excel to properly detect UTF-8
+        return "\ufeff" + "\n".join(output_lines)
     except Exception as e:
         logger.error(f"Failed to export yearly reports as CSV: {str(e)}")
         raise

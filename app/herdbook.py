@@ -1310,8 +1310,15 @@ def get_yearly_reports(round_id, genebank_id):
         if not (current_user.is_admin or genebank_id in current_user.is_manager):
             return jsonify({"status": "error", "message": "Åtkomst nekad"}), 403
 
+        # Get the report round to include the year
+        report_round = da.YearlyReportRound.get_by_id(round_id)
         reports = da.get_yearly_reports(round_id, genebank_id)
-        return jsonify({"status": "success", "reports": reports})
+        
+        return jsonify({
+            "status": "success", 
+            "reports": reports,
+            "report_year": report_round.report_year
+        })
     except Exception as e:
         APP.logger.error(f"Failed to get yearly reports: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -1325,13 +1332,15 @@ def export_yearly_reports(round_id, genebank_id):
         if not (current_user.is_admin or genebank_id in current_user.is_manager):
             return jsonify({"status": "error", "message": "Åtkomst nekad"}), 403
 
+        # Get the report round to include the year in the filename
+        report_round = da.YearlyReportRound.get_by_id(round_id)
         csv_data = da.export_yearly_reports_csv(round_id, genebank_id)
         
         return Response(
             csv_data,
             mimetype="text/csv",
             headers={
-                "Content-Disposition": f"attachment;filename=arsrapporter-{genebank_id}-{round_id}.csv"
+                "Content-Disposition": f"attachment;filename=arsrapporter-{genebank_id}-{report_round.report_year}.csv"
             }
         )
     except Exception as e:

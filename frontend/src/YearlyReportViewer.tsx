@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface YearlyReport {
-  genebank_number: string;
+  herd: string;
   name: string;
   status: string;
   litter_count: number;
@@ -60,51 +60,6 @@ interface YearlyReport {
   submission_date: string;
 }
 
-// Mock data
-const mockReports: YearlyReport[] = [
-  {
-    genebank_number: "123",
-    name: "Testbesättning 1",
-    status: "Inskickad",
-    litter_count: 5,
-    total_kits_born: 25,
-    living_kits_6weeks: 20,
-    registered_females_yearend: 8,
-    registered_males_yearend: 6,
-    breeding_females_used: 4,
-    breeding_males_used: 2,
-    publish: "Ja för publicering i Koharen",
-    email: "test@example.com",
-    eligible_for_support: true,
-    bank_account: "1234-5678",
-    bank_name: "Testbanken",
-    defects_malformations: "Inga",
-    disease_cases: "Inga",
-    submission_date: "2023-12-31",
-  },
-  // Add one more mock entry
-  {
-    genebank_number: "456",
-    name: "Testbesättning 2",
-    status: "Ej inskickad",
-    litter_count: 3,
-    total_kits_born: 15,
-    living_kits_6weeks: 12,
-    registered_females_yearend: 6,
-    registered_males_yearend: 4,
-    breeding_females_used: 3,
-    breeding_males_used: 1,
-    publish: "Nej, ingen publicering",
-    email: "test2@example.com",
-    eligible_for_support: false,
-    bank_account: "8765-4321",
-    bank_name: "Testbanken",
-    defects_malformations: "Inga",
-    disease_cases: "Inga",
-    submission_date: "2023-12-31",
-  },
-];
-
 /**
  * Shows yearly reports for a specific round
  */
@@ -116,8 +71,9 @@ export function YearlyReportViewer() {
   const [selectedGenebank, setSelectedGenebank] = useState<Genebank | null>(
     null
   );
-  const [reports, setReports] = useState<YearlyReport[]>(mockReports);
+  const [reports, setReports] = useState<YearlyReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportYear, setReportYear] = useState<string>("");
 
   useEffect(() => {
     if (selectedGenebank) {
@@ -135,6 +91,9 @@ export function YearlyReportViewer() {
       );
       if (response.status === "success") {
         setReports(response.reports);
+        if (response.report_year) {
+          setReportYear(response.report_year.toString());
+        }
       } else {
         throw new Error(response.message);
       }
@@ -172,7 +131,7 @@ export function YearlyReportViewer() {
       link.href = url;
       link.setAttribute(
         "download",
-        `arsrapporter-${selectedGenebank.name}-${roundId}.csv`
+        `arsrapporter-${selectedGenebank.name}-${reportYear || roundId}.csv`
       );
       document.body.appendChild(link);
       link.click();
@@ -228,7 +187,7 @@ export function YearlyReportViewer() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Genbanksnummer</TableCell>
+                <TableCell>Besättningsnummer</TableCell>
                 <TableCell>Namn</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Antal kullar under året</TableCell>
@@ -254,8 +213,8 @@ export function YearlyReportViewer() {
             </TableHead>
             <TableBody>
               {reports.map((report) => (
-                <TableRow key={report.genebank_number}>
-                  <TableCell>{report.genebank_number}</TableCell>
+                <TableRow key={report.herd}>
+                  <TableCell>{report.herd}</TableCell>
                   <TableCell>{report.name}</TableCell>
                   <TableCell>{report.status}</TableCell>
                   <TableCell>{report.litter_count}</TableCell>
