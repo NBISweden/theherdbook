@@ -9,6 +9,8 @@ import logging
 import uuid
 from datetime import date, datetime, timedelta
 import json
+from typing import List, Dict, Optional, Union
+import csv
 
 from peewee import (
     JOIN,
@@ -2290,3 +2292,159 @@ def get_yearly_report_by_round(herd_id, round_id):
         return report_data
     except YearlyHerdReport.DoesNotExist:
         return None
+
+def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
+    """Get all yearly reports for a specific round and genebank."""
+    try:
+        with DATABASE.atomic():
+            reports = (YearlyHerdReport
+                .select(
+                    YearlyHerdReport,
+                    Herd
+                )
+                .join(Herd)
+                .where(
+                    (YearlyHerdReport.round == round_id) & 
+                    (Herd.genebank == genebank_id)
+                )
+            )
+            
+            formatted_reports = []
+            for r in reports:
+                # Parse the JSON data field
+                form_data = json.loads(r.data) if r.data else {}
+                
+                # Determine status based on the report data
+                status = "Aktiv genbank"  # Default status
+                if form_data.get("endingGenbank", False):
+                    status = "Vill avsluta genbank"
+                elif form_data.get("numberOfMalesWithCertificate", 0) == 0 or form_data.get("numberOfFemalesWithCertificate", 0) == 0:
+                    status = "Avslutad, men kvar som medlem"
+                
+                # Format publish information based on allowPublication array
+                publish_info = "Nej, ingen publicering"
+                allow_publication = form_data.get("allowPublication", [])
+                
+                if "all" in allow_publication:
+                    excluded = []
+                    if "noPhone" in allow_publication:
+                        excluded.append("telefonnummer")
+                    if "noEmail" in allow_publication:
+                        excluded.append("e-postadress")
+                    if "noAddress" in allow_publication:
+                        excluded.append("postnummer och ort")
+                    
+                    if not excluded:
+                        publish_info = "Ja för publicering i Koharen"
+                    else:
+                        publish_info = f"Ja, men inte {' och '.join(excluded)}"
+                
+                report = {
+                    "genebank_number": r.herd.herd,  # Access through the joined Herd model
+                    "name": r.herd.herd_name,
+                    "status": status,
+                    # Form data fields
+                    "litter_count": form_data.get("numberOfLitters", 0),
+                    "total_kits_born": form_data.get("totalBorn", 0),
+                    "living_kits_6weeks": form_data.get("totalAliveAfterSixWeeks", 0),
+                    "registered_females_yearend": form_data.get("numberOfFemalesWithCertificate", 0),
+                    "registered_males_yearend": form_data.get("numberOfMalesWithCertificate", 0),
+                    "breeding_females_used": form_data.get("numberOfFemalesUsedInBreeding", 0),
+                    "breeding_males_used": form_data.get("numberOfMalesUsedInBreeding", 0),
+                    # Privacy settings
+                    "publish": publish_info,
+                    # Contact and bank info - access through the joined Herd model
+                    "email": r.herd.email if "noEmail" not in allow_publication else None,
+                    "phone": r.herd.mobile_phone if "noPhone" not in allow_publication else None,
+                    "address": r.herd.physical_address if "noAddress" not in allow_publication else None,
+                    "bank_account": r.herd.bank_account_number,
+                    "bank_name": r.herd.bank_name,
+                    # Additional fields
+                    "eligible_for_support": form_data.get("eligibleForSupport", False),
+                    "defects_malformations": form_data.get("defectsMalformations", ""),
+                    # Disease cases from form data
+                    "disease_cases": format_disease_cases(form_data.get("diseases", {})),
+                    "submission_date": r.report_date.strftime("%Y-%m-%d") if r.report_date else None
+                }
+                formatted_reports.append(report)
+            
+            return formatted_reports
+    except Exception as e:
+        logger.error(f"Failed to get yearly reports: {str(e)}")
+        raise
+
+def format_disease_cases(diseases: Dict) -> str:
+    """Format disease cases into a readable string."""
+    cases = []
+    for disease, data in diseases.items():
+        if data.get("numberOfAffectedRabbits"):
+            if disease == "other" and data.get("diseaseName"):
+                cases.append(f"{data['diseaseName']}: {data['numberOfAffectedRabbits']} ({data.get('age', '')})")
+            else:
+                cases.append(f"{disease}: {data['numberOfAffectedRabbits']} ({data.get('age', '')})")
+    return "; ".join(cases) if cases else "Inga rapporterade sjukdomsfall"
+
+def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
+    """Export yearly reports as CSV data."""
+    try:
+        reports = get_yearly_reports(round_id, genebank_id)
+        
+        # CSV Headers in Swedish - exactly matching the table view
+        headers = [
+            "Genbanksnummer",
+            "Namn",
+            "Status",
+            "Antal kullar under året",
+            "Totalt antal födda ungar under året",
+            "Totalt antal levande ungar efter 6 veckor",
+            "Registrerade honor vid årsskiftet i genbanken, antal",
+            "Registrerade hanar vid årsskiftet i genbanken, antal",
+            "Använda honor i avel under året, antal",
+            "Använda hanar i avel under året, antal",
+            "Publicering i Koharen",
+            "E-post",
+            "Uppfyller kraven för stöd",
+            "Bankkontonr",
+            "Bank",
+            "Defekter/missbildningar",
+            "Sjukdomsfall under året",
+            "Datum för ifyllnad"
+        ]
+        
+        # Create output lines
+        output_lines = []
+        output_lines.append(";".join(headers))
+        
+        # Write data rows
+        for report in reports:
+            row = [
+                str(report["genebank_number"]),
+                report["name"] or "",
+                report["status"],
+                str(report["litter_count"]),
+                str(report["total_kits_born"]),
+                str(report["living_kits_6weeks"]),
+                str(report["registered_females_yearend"]),
+                str(report["registered_males_yearend"]),
+                str(report["breeding_females_used"]),
+                str(report["breeding_males_used"]),
+                report["publish"],
+                report["email"] or "",
+                "Ja" if report["eligible_for_support"] else "Nej",
+                report["bank_account"] or "",
+                report["bank_name"] or "",
+                report["defects_malformations"] or "",
+                report["disease_cases"] or "Inga rapporterade sjukdomsfall",
+                report["submission_date"] or ""
+            ]
+            # Escape semicolons in fields and wrap in quotes if needed
+            escaped_row = [
+                f'"{field}"' if ";" in str(field) or "," in str(field) or "\n" in str(field) else str(field)
+                for field in row
+            ]
+            output_lines.append(";".join(escaped_row))
+        
+        return "\n".join(output_lines)
+    except Exception as e:
+        logger.error(f"Failed to export yearly reports as CSV: {str(e)}")
+        raise

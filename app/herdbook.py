@@ -16,11 +16,12 @@ import sys
 import time
 import uuid
 from logging.handlers import TimedRotatingFileHandler
+from io import StringIO
 
 import apscheduler.schedulers.background
 import flask_session
 import requests
-from flask import Flask, abort, jsonify, redirect, request, session, url_for
+from flask import Flask, abort, jsonify, redirect, request, session, url_for, g, Response
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -1299,3 +1300,40 @@ if not db.verify():
     sys.exit(1)
 
 initialize_app()
+
+@APP.route("/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>")
+@login_required
+def get_yearly_reports(round_id, genebank_id):
+    """Get all yearly reports for a specific round and genebank."""
+    try:
+        # Check if user has permission for this genebank
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
+            return jsonify({"status": "error", "message": "Åtkomst nekad"}), 403
+
+        reports = da.get_yearly_reports(round_id, genebank_id)
+        return jsonify({"status": "success", "reports": reports})
+    except Exception as e:
+        APP.logger.error(f"Failed to get yearly reports: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@APP.route("/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>/export")
+@login_required
+def export_yearly_reports(round_id, genebank_id):
+    """Export yearly reports as CSV for a specific round and genebank."""
+    try:
+        # Check if user has permission for this genebank
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
+            return jsonify({"status": "error", "message": "Åtkomst nekad"}), 403
+
+        csv_data = da.export_yearly_reports_csv(round_id, genebank_id)
+        
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition": f"attachment;filename=arsrapporter-{genebank_id}-{round_id}.csv"
+            }
+        )
+    except Exception as e:
+        APP.logger.error(f"Failed to export yearly reports: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500

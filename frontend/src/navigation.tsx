@@ -39,6 +39,7 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
+import { YearlyReportViewer } from "@app/YearlyReportViewer";
 import {
   About,
   Medlem,
@@ -410,6 +411,13 @@ export function Navigation() {
                 Du måste logga in med ditt Gotlandskaninkonto{" "}
                 <a href="/api/login/google">Logga in</a>{" "}
               </Route>
+              <ui.Routed path="/yearly-reports-view/:roundId">
+                {() => (
+                  <Restricted>
+                    <YearlyReportViewer />
+                  </Restricted>
+                )}
+              </ui.Routed>
             </Switch>
           </Paper>
         </div>

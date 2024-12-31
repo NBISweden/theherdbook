@@ -28,6 +28,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import "date-fns/locale/sv";
 import { dateFormat } from "@app/data_context_global";
 import { useMessageContext } from "@app/message_context";
+import { useHistory } from "react-router-dom";
 
 interface YearlyReportRound {
   id: number;
@@ -75,6 +76,7 @@ const YearlyReportRounds: React.FC = () => {
   });
 
   const { userMessage } = useMessageContext();
+  const history = useHistory();
 
   useEffect(() => {
     fetchRounds();
@@ -241,6 +243,16 @@ const YearlyReportRounds: React.FC = () => {
                   >
                     Delete
                   </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      history.push(`/yearly-reports-view/${round.id}`)
+                    }
+                    style={{ marginLeft: "8px" }}
+                  >
+                    View Reports
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -277,7 +289,6 @@ const YearlyReportRounds: React.FC = () => {
                   KeyboardButtonProps={{
                     "aria-label": "ändra datum",
                   }}
-                  locale="sv"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -292,7 +303,6 @@ const YearlyReportRounds: React.FC = () => {
                   KeyboardButtonProps={{
                     "aria-label": "ändra datum",
                   }}
-                  locale="sv"
                 />
               </Grid>
               <Grid item xs={12}>
