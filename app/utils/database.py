@@ -162,8 +162,7 @@ class Genebank(BaseModel):
             "id": self.id,
             "name": self.name,
             "herds": [
-                h.short_info()
-                for h in Herd.select().where(Herd.genebank == self)
+                h.short_info() for h in Herd.select().where(Herd.genebank == self)
             ],
         }
 
@@ -475,9 +474,7 @@ def next_individual_number(herd, birth_date, breeding_event):
             else:
                 litter_number = query[0].get("litter_number")
                 real_litter_size = (
-                    query[0].get("litter_size")
-                    if query[0].get("litter_size")
-                    else 0
+                    query[0].get("litter_size") if query[0].get("litter_size") else 0
                 )
                 if real_litter_size == 0:
                     number_in_kull = 1
@@ -521,9 +518,9 @@ def next_individual_number(herd, birth_date, breeding_event):
                         litter_number_list.sort()
                         try:
                             number_in_kull = sorted(
-                                set(
-                                    range(1, min(real_litter_size + 1, 10))
-                                ).difference(litter_number_list)
+                                set(range(1, min(real_litter_size + 1, 10))).difference(
+                                    litter_number_list
+                                )
                             )[0]
                         except IndexError:
                             if (
@@ -542,7 +539,9 @@ def next_individual_number(herd, birth_date, breeding_event):
                                     "number": None,
                                 }
 
-        ind_number = f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{number_in_kull}"
+        ind_number = (
+            f"{herd}-{str(birth_date.year)[2:4]}{litter_number}{number_in_kull}"
+        )
 
         return {
             "status": "success",
@@ -669,9 +668,7 @@ class Individual(BaseModel):
         data = super().as_dict()
         data["genebank_id"] = self.current_herd.genebank.id
         data["is_active"] = self.active
-        data["is_registered"] = bool(
-            self.certificate or self.digital_certificate
-        )
+        data["is_registered"] = bool(self.certificate or self.digital_certificate)
         data["genebank"] = self.current_herd.genebank.name
         data["origin_herd"] = {
             "id": self.origin_herd.id,
@@ -689,12 +686,8 @@ class Individual(BaseModel):
             if self.breeding.birth_date
             else None
         )
-        data["litter_size"] = (
-            self.breeding.litter_size if self.breeding else None
-        )
-        data["litter_size6w"] = (
-            self.breeding.litter_size6w if self.breeding else None
-        )
+        data["litter_size"] = self.breeding.litter_size if self.breeding else None
+        data["litter_size6w"] = self.breeding.litter_size6w if self.breeding else None
 
         data["mother"] = (
             {
@@ -744,9 +737,11 @@ class Individual(BaseModel):
                     "herd_id": h.herd.id,
                     "herd": h.herd.herd,
                     "herd_name": h.herd.herd_name,
-                    "date": h.herd_tracking_date.strftime("%Y-%m-%d")
-                    if h.herd_tracking_date
-                    else None,
+                    "date": (
+                        h.herd_tracking_date.strftime("%Y-%m-%d")
+                        if h.herd_tracking_date
+                        else None
+                    ),
                 }
                 for h in ht_history
             ]
@@ -959,10 +954,7 @@ class User(BaseModel, UserMixin):
             if role["level"] == level:
                 if level == "admin":
                     return True
-                if (
-                    level in ["viewer", "manager"]
-                    and target_id == role["genebank"]
-                ):
+                if level in ["viewer", "manager"] and target_id == role["genebank"]:
                     return True
                 if level == "owner" and target_id == role["herd"]:
                     return True
@@ -984,10 +976,7 @@ class User(BaseModel, UserMixin):
             if role["level"] == level:
                 if level == "admin":
                     continue
-                if (
-                    level in ["viewer", "manager"]
-                    and target_id == role["genebank"]
-                ):
+                if level in ["viewer", "manager"] and target_id == role["genebank"]:
                     continue
                 if level == "owner" and target_id == role["herd"]:
                     continue
@@ -1068,9 +1057,7 @@ class User(BaseModel, UserMixin):
             query = query.where(Genebank.id.in_(self.accessible_genebanks))
 
         # Using a list comprehension here will turn the iterator into a list
-        return [
-            g for g in query.execute()
-        ]  # pylint: disable=unnecessary-comprehension
+        return [g for g in query.execute()]  # pylint: disable=unnecessary-comprehension
 
     def get_genebank(self, genebank_id):
         """
@@ -1116,8 +1103,7 @@ class User(BaseModel, UserMixin):
                         self.is_owner
                         and individual.current_herd.herd in self.is_owner
                         or self.is_manager
-                        and individual.current_herd.genebank_id
-                        in self.is_manager
+                        and individual.current_herd.genebank_id in self.is_manager
                     ):
                         return True
             except DoesNotExist:
@@ -1126,15 +1112,12 @@ class User(BaseModel, UserMixin):
         elif re.match("^([a-zA-Z][0-9]+-[0-9]+)$", identifier):
             try:
                 with DATABASE.atomic():
-                    individual = Individual.get(
-                        Individual.number == identifier
-                    )
+                    individual = Individual.get(Individual.number == identifier)
                     if (
                         self.is_owner
                         and individual.current_herd.herd in self.is_owner
                         or self.is_manager
-                        and individual.current_herd.genebank_id
-                        in self.is_manager
+                        and individual.current_herd.genebank_id in self.is_manager
                     ):
                         return True
             except DoesNotExist:
@@ -1320,9 +1303,7 @@ def insert_data(filename="default_data.json"):
 
     for table, values in data.items():
         if table not in [m.__name__ for m in MODELS]:
-            logger.error(
-                "Unknown data table '%s' in file '%s'", table, filename
-            )
+            logger.error("Unknown data table '%s' in file '%s'", table, filename)
             continue
         model = [m for m in MODELS if m.__name__ == table][0]
         logger.info("Inserting %s data from %s", model.__name__, filename)
@@ -1356,9 +1337,7 @@ def init():
         Breeding._schema.create_foreign_key(Breeding.mother)
         Breeding._schema.create_foreign_key(Breeding.father)
 
-    sh_bootstrap = SchemaHistory(
-        version=CURRENT_SCHEMA_VERSION, comment="Bootstrapped"
-    )
+    sh_bootstrap = SchemaHistory(version=CURRENT_SCHEMA_VERSION, comment="Bootstrapped")
 
     with DATABASE.atomic():
         sh_bootstrap.save()
@@ -1479,18 +1458,12 @@ def migrate_3_to_4():
             )
         if "colour_id" in cols:
             migrate(
-                DATABASE_MIGRATOR.rename_column(
-                    "individual", "colour_id", "color_id"
-                )
+                DATABASE_MIGRATOR.rename_column("individual", "colour_id", "color_id")
             )
 
         cols = [x.name for x in DATABASE.get_columns("color")]
         if "colour_id" in cols:
-            migrate(
-                DATABASE_MIGRATOR.rename_column(
-                    "color", "colour_id", "color_id"
-                )
-            )
+            migrate(DATABASE_MIGRATOR.rename_column("color", "colour_id", "color_id"))
 
         SchemaHistory.insert(  # pylint: disable=E1120
             version=4,
@@ -1549,9 +1522,7 @@ def migrate_5_to_6():
 
         if "password_hash" in cols:
             # Go through hbuser and fill in authenticators from the old data.
-            pw_cursor = DATABASE.execute_sql(
-                "select user_id,password_hash from hbuser"
-            )
+            pw_cursor = DATABASE.execute_sql("select user_id,password_hash from hbuser")
 
             for user_data in pw_cursor.fetchmany():
                 auth = Authenticators(
@@ -1586,9 +1557,7 @@ def migrate_6_to_7():
         if "fullname" not in cols:
             # Go through hbuser and fill in authenticators from the old data.
             migrate(
-                DATABASE_MIGRATOR.add_column(
-                    "hbuser", "fullname", TextField(null=True)
-                )
+                DATABASE_MIGRATOR.add_column("hbuser", "fullname", TextField(null=True))
             )
         SchemaHistory.insert(  # pylint: disable=E1120
             version=7,
@@ -1764,9 +1733,7 @@ def migrate_11_to_12():
                     "bank_account_number_privacy",
                     CharField(15, null=True, default="private"),
                 ),
-                DATABASE_MIGRATOR.add_column(
-                    "herd", "bank_name", TextField(null=True)
-                ),
+                DATABASE_MIGRATOR.add_column("herd", "bank_name", TextField(null=True)),
                 DATABASE_MIGRATOR.add_column(
                     "herd",
                     "bank_name_privacy",

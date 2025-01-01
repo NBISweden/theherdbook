@@ -148,13 +148,8 @@ def load_user_from_request(request):
         user = da.authenticate_user(username, password)
 
         if user:
-            if (
-                user.username != "rapiuser"
-                and user.username != "r-api-system-user"
-            ):
-                APP.logger.info(
-                    "User %s logged in from request header", user.username
-                )
+            if user.username != "rapiuser" and user.username != "r-api-system-user":
+                APP.logger.info("User %s logged in from request header", user.username)
 
             session["user_id"] = user.uuid
             session.modified = True
@@ -214,9 +209,7 @@ def get_users():
     defaults={"u_id": False},
     methods=["GET", "UPDATE", "PATCH", "POST"],
 )
-@APP.route(
-    "/api/manage/user/<u_id>", methods=["GET", "UPDATE", "PATCH", "POST"]
-)
+@APP.route("/api/manage/user/<u_id>", methods=["GET", "UPDATE", "PATCH", "POST"])
 @login_required
 def manage_user(u_id):
     """
@@ -246,9 +239,7 @@ def manage_user(u_id):
     return jsonify(retval)
 
 
-@APP.route(
-    "/api/manage/setpassword/", defaults={"u_id": False}, methods=["POST"]
-)
+@APP.route("/api/manage/setpassword/", defaults={"u_id": False}, methods=["POST"])
 @APP.route("/api/manage/setpassword/<u_id>", methods=["POST"])
 def change_userpassword(u_id):
     """
@@ -319,9 +310,7 @@ def manage_herd():
 @APP.route("/api/breeding/date/<birth_date>")
 @login_required
 def breedings_from_date(birth_date):
-    breedings = da.get_breeding_events_by_date(
-        birth_date, session.get("user_id", None)
-    )
+    breedings = da.get_breeding_events_by_date(birth_date, session.get("user_id", None))
     return jsonify(breedings=breedings)
 
 
@@ -341,9 +330,7 @@ def herd_breeding_list(h_id):
     calculate breed date from birth date to find a match or take the
     exact birth date if it exists.
     """
-    breedings = da.get_breeding_events_with_ind(
-        h_id, session.get("user_id", None)
-    )
+    breedings = da.get_breeding_events_with_ind(h_id, session.get("user_id", None))
 
     if request.method == "POST":
         form = request.json
@@ -552,9 +539,7 @@ def external_login_handler(service):
         None,
         username=accountdetails["username"],
         validated=True,
-        fullname=accountdetails["fullname"]
-        if "fullname" in accountdetails
-        else None,
+        fullname=accountdetails["fullname"] if "fullname" in accountdetails else None,
         privileges=[
             {"level": "viewer", "genebank": 1},
             {"level": "viewer", "genebank": 2},
@@ -599,9 +584,7 @@ def external_login_handler(service):
                 }
                 da.update_role(form, user.uuid, skip_role_check=True)
             else:
-                APP.logger.warning(
-                    "Could not find herd id for herd %s" % h.strip()
-                )
+                APP.logger.warning("Could not find herd id for herd %s" % h.strip())
 
     login_user(user)
 
@@ -739,9 +722,7 @@ def individual(i_number):
             )
         except requests.exceptions.ConnectionError as error:
             APP.logger.error("%s", error)
-            ind["inbreeding"] = (
-                ind["inbreeding"] if "inbreeding" in ind else None
-            )
+            ind["inbreeding"] = ind["inbreeding"] if "inbreeding" in ind else None
             ind["MK"] = None
     return jsonify(ind)
 
@@ -765,9 +746,7 @@ def edit_individual():
         if request.method == "POST":
             retval = da.add_individual(form, session.get("user_id", None))
     except Exception as error:
-        APP.logger.error(
-            "Unexpected error when edit individual: " + str(error)
-        )
+        APP.logger.error("Unexpected error when edit individual: " + str(error))
         return (
             jsonify(
                 {
@@ -806,9 +785,7 @@ def check_ind_number():
                 }
             )
     except Exception as error:
-        APP.logger.error(
-            "Unexpected error when checking number: " + str(error)
-        )
+        APP.logger.error("Unexpected error when checking number: " + str(error))
         return (
             jsonify(
                 {
@@ -853,9 +830,7 @@ def check_ind_intyg():
                     }
                 )
     except Exception as error:
-        APP.logger.error(
-            "Unexpected error when checking number: " + str(error)
-        )
+        APP.logger.error("Unexpected error when checking number: " + str(error))
         return (
             jsonify(
                 {
@@ -926,9 +901,7 @@ def get_kinship(g_id):
     Fetch kinship matrix from R-api of the genebank given  by `g_id`.
     """
     response = requests.get(
-        "http://{}:{}/kinship/{}".format(
-            settings.rapi.host, settings.rapi.port, g_id
-        ),
+        "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
         params={"update_data": "TRUE"},
         timeout=30,
     )
@@ -1053,9 +1026,7 @@ def update_certificate(i_number):
                 da.update_breeding(breed_data, user_id)
             da.update_individual(ind_data_copy, user_id)
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.error(
-            "Unexpected error while updating certificate: " + str(ex)
-        )
+        APP.logger.error("Unexpected error while updating certificate: " + str(ex))
         return jsonify({"response": "Error processing your request"}), 404
 
     if uploaded:
@@ -1104,9 +1075,9 @@ def issue_certificate(i_number):
         # keep the ind_data object intact
         ind_data_copy = copy.copy(ind_data)
         # Update breeding if litter size has changed
-        if breed_data.get("litter_size") != form.get(
-            "litter_size"
-        ) or breed_data.get("litter_size6w") != form.get("litter_size6w"):
+        if breed_data.get("litter_size") != form.get("litter_size") or breed_data.get(
+            "litter_size6w"
+        ) != form.get("litter_size6w"):
             breed_data.update(litter_size6w=form.get("litter_size6w"))
             breed_data.update(litter_size=form.get("litter_size"))
             da.update_breeding(breed_data, user_id)
@@ -1158,9 +1129,7 @@ def preview_certificate(i_number):
         data = get_certificate_data(ind, user_id)
         pdf_bytes = get_certificate(data)
 
-    return create_pdf_response(
-        pdf_bytes=pdf_bytes.getvalue(), obj_name="preview.pdf"
-    )
+    return create_pdf_response(pdf_bytes=pdf_bytes.getvalue(), obj_name="preview.pdf")
 
 
 @APP.route("/api/certificates/verify/<i_number>", methods=["POST"])
@@ -1182,14 +1151,10 @@ def verify_certificate(i_number):
         signed = verify_signature(uploaded_bytes)
         present = verify_certificate_checksum(i_number, checksum=checksum)
     except Exception as ex:  # pylint: disable=broad-except
-        APP.logger.info(
-            "Unexpected error while verifying certificate " + str(ex)
-        )
+        APP.logger.info("Unexpected error while verifying certificate " + str(ex))
         return (
             jsonify(
-                {
-                    "response": "Oväntat fel vid verifiering av intyget kontakta Admin."
-                }
+                {"response": "Oväntat fel vid verifiering av intyget kontakta Admin."}
             ),
             400,
         )
@@ -1320,9 +1285,7 @@ def update_yearly_report_round(round_id):
         return jsonify(result), 403
 
 
-@APP.route(
-    "/api/manage/yearly_report_round/<int:round_id>", methods=["DELETE"]
-)
+@APP.route("/api/manage/yearly_report_round/<int:round_id>", methods=["DELETE"])
 @login_required
 def delete_yearly_report_round(round_id):
     """
@@ -1366,9 +1329,7 @@ def initialize_app():
     # Create loggers depending on Genbanks entry in database
     with db.DATABASE.atomic():
         for genebank in db.Genebank.select():
-            gblogging.create_genebank_logs(
-                settings.service.logfolder, genebank.name
-            )
+            gblogging.create_genebank_logs(settings.service.logfolder, genebank.name)
 
 
 # Connect to the database, or wait for database and then connect.
@@ -1393,9 +1354,7 @@ def get_yearly_reports(round_id, genebank_id):
     """Get all yearly reports for a specific round and genebank."""
     try:
         # Check if user has permission for this genebank
-        if not (
-            current_user.is_admin or genebank_id in current_user.is_manager
-        ):
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
             return (
                 jsonify({"status": "error", "message": "Åtkomst nekad"}),
                 403,
@@ -1417,17 +1376,13 @@ def get_yearly_reports(round_id, genebank_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@APP.route(
-    "/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>/export"
-)
+@APP.route("/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>/export")
 @login_required
 def export_yearly_reports(round_id, genebank_id):
     """Export yearly reports as CSV for a specific round and genebank."""
     try:
         # Check if user has permission for this genebank
-        if not (
-            current_user.is_admin or genebank_id in current_user.is_manager
-        ):
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
             return (
                 jsonify({"status": "error", "message": "Åtkomst nekad"}),
                 403,
