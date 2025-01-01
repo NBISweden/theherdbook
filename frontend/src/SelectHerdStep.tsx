@@ -153,6 +153,7 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
         },
         (error) => {
           userMessage("Kunde inte hämta kullar.", "error");
+          console.error("Failed to fetch breedings:", error);
         }
       );
     } else {

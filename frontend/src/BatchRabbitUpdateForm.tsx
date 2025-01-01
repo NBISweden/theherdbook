@@ -26,6 +26,7 @@ import { dateFormat, inputVariant, BodyFat } from "@app/data_context_global";
 import {
   filterRabbitsForYearlyReport,
   Individual,
+  hasValidTrackingInPeriod,
 } from "./utils/rabbit_filters";
 import { RabbitList } from "./BatchRabbitUpdateStep";
 
@@ -96,6 +97,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
   const [rabbits, setRabbits] = useState<RabbitData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [reportRound, setReportRound] = useState<any>(null);
   const { userMessage } = useMessageContext();
   const { loadData } = useDataContext();
 
@@ -127,6 +129,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
           setLoading(false);
           return;
         }
+        setReportRound(reportRound);
         const startDate = new Date(`${reportYear}-12-01`);
         const endDate = new Date(reportRound.end_date);
 
@@ -143,10 +146,8 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
 
         // Initialize rabbit data for those needing updates
         const rabbitDataList: RabbitData[] = needUpdate.map((individual) => {
-          const hasValidTracking = individual.herd_tracking?.some(
-            (tracking: { date: string }) =>
-              new Date(tracking.date) >= new Date(`${reportYear}-12-31`)
-          );
+          // Default date for new measurements
+          const defaultDate = new Date(`${reportYear}-12-31`);
 
           // Check for existing weight/bodyfat in the period
           const periodWeight = individual.weights?.find((w) => {
@@ -159,9 +160,6 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             return bfDate >= startDate && bfDate <= endDate;
           }) as Bodyfat | undefined;
 
-          // Default date for new measurements
-          const defaultDate = new Date(`${reportYear}-12-31`);
-
           return {
             individual,
             isAlive: true,
@@ -170,7 +168,7 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
             weightDate: periodWeight
               ? new Date(periodWeight.date)
               : defaultDate,
-            bodyFat: periodBodyfat ? periodBodyfat.bodyfat : "normal",
+            bodyFat: periodBodyfat ? periodBodyfat.bodyfat : "",
             bodyFatDate: periodBodyfat
               ? new Date(periodBodyfat.date)
               : defaultDate,
@@ -205,16 +203,24 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
           `Ange ett dödsdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
         );
       }
-      if (rabbit.isAlive) {
-        if (!rabbit.weight || !rabbit.weightDate) {
-          errors.push(
-            `Ange vikt och viktdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
-          );
-        }
-        if (!rabbit.bodyFat || !rabbit.bodyFatDate) {
-          errors.push(
-            `Ange hull och hulldatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
-          );
+      if (rabbit.isAlive && reportYear) {
+        // Check if rabbit was born during the report year
+        const birthYear = rabbit.individual.birth_date
+          ? new Date(rabbit.individual.birth_date).getFullYear()
+          : 0;
+        const requireMeasurements = birthYear < reportYear;
+
+        if (requireMeasurements) {
+          if (!rabbit.weight || !rabbit.weightDate) {
+            errors.push(
+              `Ange vikt och viktdatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+            );
+          }
+          if (!rabbit.bodyFat || !rabbit.bodyFatDate) {
+            errors.push(
+              `Ange hull och hulldatum för kaninen ${rabbit.individual.name} ${rabbit.individual.number}.`
+            );
+          }
         }
       }
     }
@@ -233,11 +239,11 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
         };
 
         if (rabbit.isAlive) {
-          // Check if we have tracking on or after report date
-          const latestTracking = rabbit.individual.herd_tracking?.[0];
-          const hasValidTracking =
-            latestTracking &&
-            new Date(latestTracking.date) >= new Date(rabbit.reportDate || "");
+          // Check if we have tracking on or after report date using shared function
+          const hasValidTracking = hasValidTrackingInPeriod(
+            rabbit.individual,
+            reportYear!
+          );
 
           // Only include yearly_report_date if no valid tracking exists
           if (rabbit.reportDate && !hasValidTracking) {
@@ -303,11 +309,12 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
     return <div>Laddar...</div>;
   }
 
-  if (isCompleted && reportYear) {
+  if (isCompleted && reportYear && reportRound) {
     return (
       <RabbitList
         rabbits={rabbits.map((r) => r.individual)}
         reportYear={reportYear}
+        reportRoundEndDate={reportRound.end_date}
       />
     );
   }
@@ -436,25 +443,42 @@ const BatchRabbitUpdateForm: React.FC<BatchRabbitUpdateFormProps> = ({
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      label="Hull"
-                      variant={inputVariant}
-                      select
-                      SelectProps={{
-                        native: true,
-                      }}
-                      value={rabbit.bodyFat}
-                      onChange={(e) => {
-                        const updatedRabbits = [...rabbits];
-                        updatedRabbits[index].bodyFat = e.target.value;
-                        setRabbits(updatedRabbits);
-                      }}
-                      fullWidth
+                    <FormControl
+                      component="fieldset"
+                      className={classes.wideControl}
                     >
-                      <option value="low">Låg</option>
-                      <option value="normal">Normal</option>
-                      <option value="high">Hög</option>
-                    </TextField>
+                      <FormLabel component="legend">Hull</FormLabel>
+                      <RadioGroup
+                        row
+                        value={rabbit.bodyFat}
+                        onChange={(e) => {
+                          const updatedRabbits = [...rabbits];
+                          updatedRabbits[index].bodyFat = e.target.value;
+                          setRabbits(updatedRabbits);
+                        }}
+                      >
+                        <FormControlLabel
+                          value=""
+                          control={<Radio />}
+                          label="Ej angett"
+                        />
+                        <FormControlLabel
+                          value="low"
+                          control={<Radio />}
+                          label="Under"
+                        />
+                        <FormControlLabel
+                          value="normal"
+                          control={<Radio />}
+                          label="Normal"
+                        />
+                        <FormControlLabel
+                          value="high"
+                          control={<Radio />}
+                          label="Över"
+                        />
+                      </RadioGroup>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <KeyboardDatePicker
