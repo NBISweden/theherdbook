@@ -2543,6 +2543,7 @@ def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
                     "submission_date": (
                         r.report_date.strftime("%Y-%m-%d") if r.report_date else None
                     ),
+                    "fullname": r.generated_by.fullname,
                 }
                 formatted_reports.append(report)
 
@@ -2593,6 +2594,7 @@ def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
             "Defekter/missbildningar",
             "Sjukdomsfall under året",
             "Datum för ifyllnad",
+            "Ifylld av",
         ]
 
         # Create output lines
@@ -2620,6 +2622,7 @@ def export_yearly_reports_csv(round_id: int, genebank_id: int) -> str:
                 report["defects_malformations"] or "",
                 report["disease_cases"] or "Inga rapporterade sjukdomsfall",
                 report["submission_date"] or "",
+                report["fullname"] or "",
             ]
             # Escape semicolons in fields and wrap in quotes if needed
             escaped_row = [
