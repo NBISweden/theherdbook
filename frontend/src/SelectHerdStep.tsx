@@ -215,7 +215,7 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
   // Helper function to determine if a row should be highlighted
   const getRowStyle = (breeding: any) => {
     // Red background for missing birth date or missing litter size at 6 weeks
-    if (!breeding.birth_date || breeding.litter_size6w === undefined) {
+    if (!breeding.birth_date || breeding.litter_size6w == null) {
       return { backgroundColor: "#ffebee" }; // Light red background
     }
     // Yellow background when litter size at 6 weeks is 0 (for verification)
