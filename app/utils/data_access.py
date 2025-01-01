@@ -767,6 +767,14 @@ def get_latest_yearly_report(herd_id):
     
 def save_yearly_report(herd_id, form_data, user):
     try:
+        # Validate herd exists and user has permission
+        try:
+            herd = Herd.get_by_id(herd_id)
+            if not user.can_edit(herd.herd):
+                return {"status": "error", "message": "You don't have permission to modify this herd"}
+        except DoesNotExist:
+            return {"status": "error", "message": "Invalid herd ID"}
+
         # Prepare the data
         report_data_json = json.dumps(form_data.get('data', {}))
         report_date = date.today()
