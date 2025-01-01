@@ -58,7 +58,6 @@ export const hasValidTrackingInPeriod = (
   individual: Individual,
   reportYear: number
 ): boolean => {
-  console.log(`Checking tracking for ${individual.number}:`);
   // Remove duplicate tracking entries and sort
   const uniqueTrackings = Array.from(
     new Map(
@@ -69,10 +68,6 @@ export const hasValidTrackingInPeriod = (
     (a: HerdTracking, b: HerdTracking) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-  console.log(
-    "Tracking dates:",
-    sortedTrackings.map((t) => t.date)
-  );
 
   // Get the report year end date
   const yearEnd = new Date(`${reportYear}-12-31T23:59:59`);
@@ -80,7 +75,6 @@ export const hasValidTrackingInPeriod = (
 
   // If rabbit has a death note but no death date, consider it inactive
   if (individual.death_note && !individual.death_date) {
-    console.log("Has death note but no death date - invalid");
     return false;
   }
 
@@ -89,7 +83,6 @@ export const hasValidTrackingInPeriod = (
     const deathDate = new Date(individual.death_date);
     deathDate.setHours(0, 0, 0, 0);
     if (deathDate <= yearEnd) {
-      console.log("Died before year end - invalid");
       return false;
     }
   }
@@ -101,7 +94,6 @@ export const hasValidTrackingInPeriod = (
     return trackDate >= yearEnd;
   });
 
-  console.log("Has valid tracking on/after year end:", hasValidTracking);
   return hasValidTracking;
 };
 
@@ -197,11 +189,8 @@ export function filterRabbitsForYearlyReport(
   const yearEndDate = new Date(`${reportYear}-12-31`);
 
   for (const individual of individuals) {
-    console.log(`\nChecking rabbit ${individual.number}:`);
-
     // Skip rabbits without certificates
     if (!individual.certificate && !individual.digital_certificate) {
-      console.log("No certificate - skipping");
       continue;
     }
 
@@ -210,13 +199,11 @@ export function filterRabbitsForYearlyReport(
       ? new Date(individual.death_date)
       : null;
     if (deathDate && deathDate <= yearEndDate) {
-      console.log("Died before year end - skipping");
       continue;
     }
 
     // Skip rabbits with death note but no death date (considered dead)
     if (individual.death_note && !individual.death_date) {
-      console.log("Has death note but no death date - skipping");
       continue;
     }
 
@@ -226,18 +213,14 @@ export function filterRabbitsForYearlyReport(
       currentHerdId,
       yearEndDate
     );
-    console.log("Belongs to herd at year end:", belongsToHerd);
     if (!belongsToHerd) {
-      console.log("Not in herd at year end - skipping");
       continue;
     }
 
     // Skip rabbits born after the report year
     if (individual.birth_date) {
       const birthYear = new Date(individual.birth_date).getFullYear();
-      console.log("Birth year:", birthYear, "Report year:", reportYear);
       if (birthYear > reportYear) {
-        console.log("Born after report year - skipping");
         continue;
       }
     }
@@ -249,13 +232,10 @@ export function filterRabbitsForYearlyReport(
       endDate,
       reportYear
     );
-    console.log("Has valid measurements:", hasValidMeasurements);
 
     if (hasValidMeasurements) {
-      console.log("Adding to canSkip");
       canSkip.push(individual);
     } else {
-      console.log("Adding to needUpdate");
       needUpdate.push(individual);
     }
   }
