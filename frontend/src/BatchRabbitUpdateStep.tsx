@@ -31,10 +31,6 @@ export const RabbitList: React.FC<{
 
   return (
     <div>
-      <Typography>
-        Alla kaniner har redan uppdaterad information. Detta steg kan hoppas
-        över.
-      </Typography>
       <Typography variant="h6" style={{ marginTop: "1em" }}>
         Följande kaniner kommer att inkluderas i årsrapporten:
       </Typography>
@@ -110,8 +106,8 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
   reportYear,
   onUpdateStatus,
 }) => {
-  const [skipStep, setSkipStep] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [skipStep, setSkipStep] = useState(false);
   const [skippedRabbits, setSkippedRabbits] = useState<Individual[]>([]);
   const [reportRound, setReportRound] = useState<any>(null);
   const { userMessage } = useMessageContext();
@@ -156,10 +152,14 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
         herdId
       );
 
-      setSkippedRabbits(canSkip);
+      // If all rabbits can be skipped, show the list immediately
       if (needUpdate.length === 0) {
+        setSkippedRabbits([...canSkip]);
         setSkipStep(true);
         onUpdateStatus?.("completed");
+      } else {
+        // Otherwise, show the form with rabbits that need updates
+        setSkippedRabbits(canSkip);
       }
     } catch (error) {
       console.error(error);
@@ -205,9 +205,27 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
       reportYear={reportYear}
       reportRoundId={reportRoundId}
       onUpdateStatus={onUpdateStatus}
-      onUpdateComplete={() => {
+      onUpdateComplete={async () => {
         if (herdId && reportYear && reportRoundId) {
-          fetchValidRabbits(herdId, reportYear, reportRoundId);
+          // Fetch all rabbits again to get the complete list
+          const herdResponse = await get(`/api/herd/${herdId}`);
+          const individualsData = herdResponse.individuals || [];
+          const startDate = new Date(`${reportYear}-12-01`);
+          const endDate = new Date(reportRound.end_date);
+
+          // Filter rabbits using the shared filtering logic
+          const { needUpdate, canSkip } = filterRabbitsForYearlyReport(
+            individualsData,
+            reportYear,
+            startDate,
+            endDate,
+            herdId
+          );
+
+          // Set both lists to show all rabbits that will be in the report
+          setSkippedRabbits([...needUpdate, ...canSkip]);
+          setSkipStep(true);
+          onUpdateStatus?.("completed");
         }
       }}
     />

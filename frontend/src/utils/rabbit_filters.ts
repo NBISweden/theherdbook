@@ -69,46 +69,53 @@ export const hasValidTrackingInPeriod = (
       new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  // Get the most recent tracking that's not after the report year end
+  // Get the report year end date
   const yearEnd = new Date(`${reportYear}-12-31T23:59:59`);
-  const cutOffDate = new Date(yearEnd);
-  cutOffDate.setMonth(cutOffDate.getMonth() - 13);
-
-  // Set all dates to start of day for comparison
   yearEnd.setHours(0, 0, 0, 0);
-  cutOffDate.setHours(0, 0, 0, 0);
 
-  // Find the most recent tracking before or during the report year
-  const relevantTracking = sortedTrackings.find((track) => {
-    const trackDate = new Date(track.date);
-    trackDate.setHours(0, 0, 0, 0);
-    return trackDate <= yearEnd;
-  });
-
-  if (!relevantTracking) return false;
-
-  const trackingDate = new Date(relevantTracking.date);
-  trackingDate.setHours(0, 0, 0, 0);
-
-  // If rabbit has a death note but no death date, it must have tracking after the death note
+  // If rabbit has a death note but no death date, consider it inactive
   if (individual.death_note && !individual.death_date) {
-    return false; // Consider these rabbits inactive
+    return false;
   }
 
-  // Tracking must be between cutoff and year end
-  return trackingDate >= cutOffDate && trackingDate <= yearEnd;
+  // If rabbit died before year end, it's not valid
+  if (individual.death_date) {
+    const deathDate = new Date(individual.death_date);
+    deathDate.setHours(0, 0, 0, 0);
+    if (deathDate <= yearEnd) {
+      return false;
+    }
+  }
+
+  // For all rabbits, must have tracking on or after year end
+  const hasValidTracking = sortedTrackings.some((track) => {
+    const trackDate = new Date(track.date);
+    trackDate.setHours(0, 0, 0, 0);
+    return trackDate >= yearEnd;
+  });
+
+  return hasValidTracking;
 };
 
 export const hasValidMeasurementsInPeriod = (
   rabbit: Individual,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  reportYear: number
 ): boolean => {
   // Set all dates to start of day for comparison
   const periodStart = new Date(startDate);
   const periodEnd = new Date(endDate);
   periodStart.setHours(0, 0, 0, 0);
   periodEnd.setHours(0, 0, 0, 0);
+
+  // If rabbit was born during the report year and has valid tracking, skip measurement check
+  const birthYear = rabbit.birth_date
+    ? new Date(rabbit.birth_date).getFullYear()
+    : 0;
+  if (birthYear === reportYear) {
+    return hasValidTrackingInPeriod(rabbit, reportYear);
+  }
 
   const isValidMeasurementDate = (date: string) => {
     const measurementDate = new Date(date);
@@ -201,15 +208,29 @@ export function filterRabbitsForYearlyReport(
     }
 
     // Skip rabbits that didn't belong to this herd at year end
-    if (!belongedToHerdOnDate(individual, currentHerdId, yearEndDate)) {
+    const belongsToHerd = belongedToHerdOnDate(
+      individual,
+      currentHerdId,
+      yearEndDate
+    );
+    if (!belongsToHerd) {
       continue;
+    }
+
+    // Skip rabbits born after the report year
+    if (individual.birth_date) {
+      const birthYear = new Date(individual.birth_date).getFullYear();
+      if (birthYear > reportYear) {
+        continue;
+      }
     }
 
     // Check if rabbit has valid measurements in the period
     const hasValidMeasurements = hasValidMeasurementsInPeriod(
       individual,
       startDate,
-      endDate
+      endDate,
+      reportYear
     );
 
     if (hasValidMeasurements) {
