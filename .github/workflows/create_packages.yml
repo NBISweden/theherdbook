@@ -79,7 +79,7 @@ jobs:
         run: |
           # Only build changed images and their dependents
           if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 frontend main
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
           elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
             docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
           fi
