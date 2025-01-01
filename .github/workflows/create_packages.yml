@@ -66,9 +66,13 @@ jobs:
       # Pull existing images for layer caching
       - name: Pull existing images
         run: |
+          # Sanitize branch name for docker tags
+          branch="${{ github.ref_name }}"
+          safe_branch="${branch//\//-}"  # Replace / with -
+
           for image in herdbook_r-api herdbook_main herdbook_frontend; do
             docker pull "ghcr.io/nbisweden/$image:latest" || true
-            docker pull "ghcr.io/nbisweden/$image:${{ github.ref_name }}" || true
+            docker pull "ghcr.io/nbisweden/$image:$safe_branch" || true
           done
 
       # Build images using docker compose
@@ -91,14 +95,16 @@ jobs:
       # Push images
       - name: Push images
         run: |
+          # Sanitize branch name for docker tags
           branch="${{ github.ref_name }}"
+          safe_branch="${branch//\//-}"  # Replace / with -
 
           # Function to push an image if it was built
           push_if_built() {
             local image="$1"
             if docker image inspect "$image:latest" >/dev/null 2>&1; then
-              docker tag "$image:latest" "ghcr.io/nbisweden/$image:$branch"
-              docker push "ghcr.io/nbisweden/$image:$branch"
+              docker tag "$image:latest" "ghcr.io/nbisweden/$image:$safe_branch"
+              docker push "ghcr.io/nbisweden/$image:$safe_branch"
               
               if [[ "$branch" == "main" || "$branch" == "master" || "$branch" == "develop" ]]; then
                 docker tag "$image:latest" "ghcr.io/nbisweden/$image:latest"
