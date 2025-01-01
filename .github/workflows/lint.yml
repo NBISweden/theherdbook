@@ -16,41 +16,39 @@ name: Lint Code Base
 #############################
 on:
   push:
-    branches-ignore: [master,develop]
+    branches-ignore: [master, develop]
     # Remove the line above to run when pushing to master
   pull_request:
-    branches: [master,develop]
+    branches: [master, develop]
 
 ###############
 # Set the Job #
 ###############
+permissions: {}
+
 jobs:
   build:
-    # Name the Job
-    name: Lint Code Base
-    # Set the agent to run on
+    name: Lint
     runs-on: ubuntu-latest
 
-    ##################
-    # Load all steps #
-    ##################
+    permissions:
+      contents: read
+      packages: read
+      # To report GitHub Actions status checks
+      statuses: write
+
     steps:
-      ##########################
-      # Checkout the code base #
-      ##########################
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          # Full git history is needed to get a proper list of changed files within `super-linter`
+          # super-linter needs the full git history to get the
+          # list of files that changed across commits
           fetch-depth: 0
 
-      ################################
-      # Run Linter against code base #
-      ################################
-      - name: Lint Code Base
-        uses: github/super-linter/slim@v4
+      - name: Super-linter
+        uses: super-linter/super-linter/slim@v7 # x-release-please-version
         env:
+          # To report GitHub Actions status checks
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: develop
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
