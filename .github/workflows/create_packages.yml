@@ -1,3 +1,4 @@
+---
 name: Create packages
 on: push
 
@@ -23,7 +24,8 @@ jobs:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          echo "${GHCR_PAT}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+          echo "${GHCR_PAT}" | \
+            docker login ghcr.io -u "${GHCR_USER}" --password-stdin
 
           branch=${GITHUB_REF##*/}
 
