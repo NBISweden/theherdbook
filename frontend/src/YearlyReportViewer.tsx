@@ -58,6 +58,7 @@ interface YearlyReport {
   defects_malformations: string;
   disease_cases: string;
   submission_date: string;
+  fullname?: string;
 }
 
 /**
@@ -209,6 +210,7 @@ export function YearlyReportViewer() {
                 <TableCell>Defekter/missbildningar</TableCell>
                 <TableCell>Sjukdomsfall under året</TableCell>
                 <TableCell>Datum för ifyllnad</TableCell>
+                <TableCell>Ifylld av</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -234,6 +236,7 @@ export function YearlyReportViewer() {
                   <TableCell>{report.defects_malformations}</TableCell>
                   <TableCell>{report.disease_cases}</TableCell>
                   <TableCell>{report.submission_date}</TableCell>
+                  <TableCell>{report.fullname}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
