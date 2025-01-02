@@ -165,6 +165,11 @@ export function IndividualReport({ individual }: { individual: Individual }) {
                 label="Datum för årsrapporten"
                 format="yyyy-MM-dd"
                 value={reportDate ?? null}
+                InputProps={{
+                  classes: {
+                    input: "data-hj-allow",
+                  },
+                }}
                 InputLabelProps={{
                   shrink: true,
                 }}

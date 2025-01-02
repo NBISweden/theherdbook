@@ -58,6 +58,7 @@ import {
   withStyles,
 } from "@material-ui/core";
 import { MenuProps } from "@material-ui/core/Menu";
+import hotjar from "react-hotjar";
 
 import "./style.css";
 import YearlyReportMultiStepForm from "./YearlyReportMultiStepForm";
@@ -269,17 +270,6 @@ export function Navigation() {
       icon: <GroupIcon />,
     },
     {
-      label: "Inställningar",
-      path: "/settings",
-      component: (
-        <Restricted>
-          <Settings />
-        </Restricted>
-      ),
-      visible: is_logged_in,
-      icon: <GroupIcon />,
-    },
-    {
       label: "Logga in",
       path: "",
       on_click: () => {
@@ -326,6 +316,14 @@ export function Navigation() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  React.useEffect(() => {
+    return history.listen((location) => {
+      hotjar.hotjar.identify(user?.username, {
+        is_manager: user?.is_manager,
+        is_owner: user?.is_owner?.toString(),
+      });
+    });
+  }, [history]);
 
   const { Tabs, TabbedRoutes } = ui.useRoutedTabs(tabs);
 
@@ -343,17 +341,12 @@ export function Navigation() {
             <span className="trigram">☰</span>
             <Typography variant="subtitle1">Menu</Typography>
           </Button>
-          {is_logged_in && (
-            <Button
-              onClick={() => {
-                history.push("/settings");
-              }}
-            >
-              <b>
-                <Typography variant="subtitle1">{user.username}</Typography>
-              </b>
-            </Button>
-          )}
+
+          <Button>
+            <b>
+              <Typography variant="subtitle1">{user?.username}</Typography>
+            </b>
+          </Button>
 
           <StyledMenu
             id="customized-menu"

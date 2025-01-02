@@ -11,6 +11,16 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+  pgadmin:
+    restart: always
+    image: dpage/pgadmin4:latest
+    hostname: pgadmin
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=UPDATEME
+      - PGADMIN_DEFAULT_PASSWORD=UPDATEME
+      - GUNICORN_ACCESS_LOGFILE=/dev/null
   main:
     image: ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
     container_name: herdbook-main
