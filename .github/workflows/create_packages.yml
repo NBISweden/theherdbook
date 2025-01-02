@@ -87,20 +87,15 @@ jobs:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          # Always build all images for tags and production branches
-          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1
-          else
-            # Only build changed images and their dependents for other branches
-            if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
-            elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
-              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
-            fi
+          # Only build changed images and their dependents
+          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
+          elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
+          fi
 
-            if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
-              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 r-api
-            fi
+          if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 r-api
           fi
 
       # Push images
@@ -124,20 +119,13 @@ jobs:
             fi
           }
 
-          # For tags and production/test-prod branches, push all images
-          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" || "${{ github.ref_name }}" == "test-prod" ]]; then
+          # Push only the images that were built
+          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
             push_if_built "herdbook_frontend"
+          fi
+          if [[ "${{ needs.changes.outputs.main }}" == "true" || "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
             push_if_built "herdbook_main"
+          fi
+          if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
             push_if_built "herdbook_r-api"
-          else
-            # For other branches, push only the images that were built
-            if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-              push_if_built "herdbook_frontend"
-            fi
-            if [[ "${{ needs.changes.outputs.main }}" == "true" || "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-              push_if_built "herdbook_main"
-            fi
-            if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
-              push_if_built "herdbook_r-api"
-            fi
           fi
