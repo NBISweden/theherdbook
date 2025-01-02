@@ -32,6 +32,9 @@ services:
             - type: bind
               source: ./logs
               target: /logs
+            - type: bind
+              source: ./cache
+              target: /var/cache/herdbook
         depends_on:
             - database
             - r-api

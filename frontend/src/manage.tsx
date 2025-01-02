@@ -80,7 +80,7 @@ export function Manage() {
     }
     const genebank = genebanks.find((g) => g.name == topic);
     if (genebank) {
-      return { value: genebank.id, label: genebank.name };
+      return { value: String(genebank.id), label: genebank.name } as OptionType;
     }
     return null;
   }, [genebanks, topic]);
@@ -250,17 +250,19 @@ export function Manage() {
 
   // Set initial view and topic on component mount
   React.useEffect(() => {
-    if (genebanks.length > 0) {
+    if (genebanks.length > 0 && user && typeof user.is_admin !== "undefined") {
       const defaultGenebank = user.is_admin
         ? genebanks[0].name
-        : genebanks[user.is_manager[0] - 1].name;
+        : Array.isArray(user.is_manager) && user.is_manager.length > 0
+        ? genebanks[user.is_manager[0] - 1].name
+        : genebanks[0].name;
       setTopic(defaultGenebank);
       setGenebank(defaultGenebank);
       setHerdOptions(defaultGenebank);
       setView("herds");
       history.push(`/manage/${defaultGenebank}`);
     }
-  }, [genebanks]);
+  }, [genebanks, user]);
 
   return (
     <>
@@ -281,7 +283,7 @@ export function Manage() {
                   options={
                     genebanks
                       ? genebanks.map((g: Genebank) => {
-                          return { value: g.id, label: g.name };
+                          return { value: String(g.id), label: g.name };
                         })
                       : []
                   }
@@ -409,9 +411,12 @@ export function Manage() {
             <Paper className={styles.inputForm}>
               <HerdForm
                 id={selected?.value}
-                genebank={genebankValue?.value}
+                genebank={
+                  genebankValue?.value ? String(genebankValue.value) : undefined
+                }
                 view={"form"}
                 change={false}
+                fromHerd={undefined}
               />
             </Paper>
           </Route>

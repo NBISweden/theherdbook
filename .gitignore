@@ -56,3 +56,6 @@ s3data/*
 
 # Logs
 logs/*
+
+#
+cache/*

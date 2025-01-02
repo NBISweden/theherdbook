@@ -71,7 +71,7 @@ APP.config.update(
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="FileSystemCache",
-    CACHE_DIR="/tmp",
+    CACHE_DIR="/var/cache/herdbook",
     CACHE_DEFAULT_TIMEOUT=300,
 )
 
@@ -1176,6 +1176,10 @@ def verify_certificate(i_number):
 @APP.route("/api/herd/<h_id>/yearlyreport", methods=["GET", "POST"])
 @login_required
 def herd_yearly_report(h_id):
+    """Get or create yearly report for a herd."""
+    if not user.can_edit(resource_type="herd", resource_id=h_id):
+        return {"status": "error", "message": "Not authorized"}
+
     user_id = session.get("user_id", None)
     user = da.fetch_user_info(user_id)
 

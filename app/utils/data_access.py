@@ -892,16 +892,37 @@ def save_yearly_report(herd_id, form_data, user):
 
         try:
             report_round = YearlyReportRound.get_by_id(report_round_id)
+            
+            # Validate report round is active
             if not (report_round.is_active or report_round.manually_activated):
                 return {
                     "status": "error",
                     "message": "Report round is not active",
                 }
+                
+            # Validate report year matches
             if report_round.report_year != report_year:
                 return {
                     "status": "error",
                     "message": "Report year does not match report round year",
                 }
+                
+            # Validate that no other report exists for this herd in this year
+            existing_reports = (
+                YearlyHerdReport.select()
+                .join(YearlyReportRound)
+                .where(
+                    (YearlyHerdReport.herd == herd_id) &
+                    (YearlyReportRound.report_year == report_year) &
+                    (YearlyHerdReport.round != report_round_id)
+                )
+            )
+            if existing_reports.exists():
+                return {
+                    "status": "error",
+                    "message": f"A report for year {report_year} already exists for this herd in a different report round",
+                }
+                
         except YearlyReportRound.DoesNotExist:
             return {"status": "error", "message": "Invalid report round ID"}
 

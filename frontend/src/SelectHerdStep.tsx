@@ -76,7 +76,7 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
 
   const handleHerdSelect = (id: string) => {
     setHerdId(id);
-    onUpdateStatus?.("completed");
+    // onUpdateStatus will be called after breeding data is loaded
   };
 
   const filterBreedingsForYear = (breedings: any[], year: number) => {
@@ -149,17 +149,20 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
               }));
             }
             setSelectedHerdBreedings(filteredBreedings);
+            // Mark step as completed only after breeding data is loaded
+            onUpdateStatus?.("completed");
           }
         },
         (error) => {
           userMessage("Kunde inte hämta kullar.", "error");
           console.error("Failed to fetch breedings:", error);
+          onUpdateStatus?.("error");
         }
       );
     } else {
       setSelectedHerdBreedings([]);
     }
-  }, [herdId, reportYear, userMessage]);
+  }, [herdId, reportYear, userMessage, onUpdateStatus]);
 
   const handleBreedingsChanged = () => {
     // Refresh the breedings data
