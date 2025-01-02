@@ -57,6 +57,8 @@
     "styled-components": "^5.2.3",
     "vis-data": "^7.1.2",
     "vis-network": "^9.0.4",
-    "vis-util": "^5.0.2"
+    "vis-util": "^5.0.2",
+    "formik": "^2.2.9",
+    "yup": "1.4.0"
   }
 }

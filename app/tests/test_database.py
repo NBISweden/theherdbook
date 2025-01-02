@@ -48,6 +48,9 @@ class TestDatabase(DatabaseTest):
         """
         Checks the database.Genebank class.
         """
+        # Enable full diff for debugging
+        self.maxDiff = None
+
         # .short_info()
         gb0_info = self.genebanks[0].short_info()
         gb0_expected = {
@@ -122,6 +125,12 @@ class TestDatabase(DatabaseTest):
                 "latitude": self.herds[index].latitude,
                 "longitude": self.herds[index].longitude,
                 "coordinates_privacy": self.herds[index].coordinates_privacy,
+                "bank_account_number": self.herds[index].bank_account_number,
+                "bank_name": self.herds[index].bank_name,
+                "bank_account_number_privacy": self.herds[
+                    index
+                ].bank_account_number_privacy,
+                "bank_name_privacy": self.herds[index].bank_name_privacy,
             }
 
         # admin
@@ -159,6 +168,10 @@ class TestDatabase(DatabaseTest):
         del gb0_expected[1]["longitude"]
         del gb0_expected[1]["coordinates_privacy"]
         del gb0_expected[1]["email_privacy"]
+        del gb0_expected[1]["bank_account_number"]
+        del gb0_expected[1]["bank_name"]
+        del gb0_expected[1]["bank_account_number_privacy"]
+        del gb0_expected[1]["bank_name_privacy"]
 
         self.assertDictEqual(gb0_herds[0], gb0_expected[0])
         self.assertDictEqual(gb0_herds[1], gb0_expected[1])
@@ -168,7 +181,11 @@ class TestDatabase(DatabaseTest):
         Checks the database.Herd class.
         """
         # .individuals()
-        g1_expected = [self.parents[0], self.individuals[0], self.individuals[3]]
+        g1_expected = [
+            self.parents[0],
+            self.individuals[0],
+            self.individuals[3],
+        ]
         g2_expected = [self.individuals[1]]
         m3_expected = [self.individuals[2], self.individuals[4]]
 
@@ -230,6 +247,10 @@ class TestDatabase(DatabaseTest):
             "longitude",
             "coordinates_privacy",
             "email_privacy",
+            "bank_account_number",
+            "bank_account_number_privacy",
+            "bank_name",
+            "bank_name_privacy",
         ]
 
         # remove fields that non-owners can't access
@@ -287,10 +308,12 @@ class TestDatabase(DatabaseTest):
             ],
         )
         self.assertListEqual(
-            self.parents[2].children, [self.individuals[2], self.individuals[4]]
+            self.parents[2].children,
+            [self.individuals[2], self.individuals[4]],
         )
         self.assertListEqual(
-            self.parents[3].children, [self.individuals[2], self.individuals[4]]
+            self.parents[3].children,
+            [self.individuals[2], self.individuals[4]],
         )
 
         # .as_dict()
@@ -360,12 +383,12 @@ class TestDatabase(DatabaseTest):
         # .list_info()
         for individual in self.individuals:
             self.assertDictEqual(
-                individual.list_info(), super(db.Individual, individual).as_dict()
+                individual.list_info(),
+                super(db.Individual, individual).as_dict(),
             )
 
         # .short_info()
         for individual in self.individuals:
-
             mother = {
                 "id": individual.breeding.mother.id,
                 "number": individual.breeding.mother.number,
@@ -467,7 +490,8 @@ class TestDatabase(DatabaseTest):
             [{"level": "viewer", "genebank": self.genebanks[0].id}],
         )
         self.assertListEqual(
-            self.owner.privileges, [{"level": "owner", "herd": self.herds[0].id}]
+            self.owner.privileges,
+            [{"level": "owner", "herd": self.herds[0].id}],
         )
 
     def test_user_has_role(self):
@@ -761,15 +785,6 @@ class TestDatabase(DatabaseTest):
         verifying the table.
         """
         self.assertTrue(db.YearlyHerdReport.table_exists())
-
-    def test_genebank_report(self):
-        """
-        Checks the database.GenebankReport class.
-
-        Currently there are no functions on this class to test, so we stick to
-        verifying the table.
-        """
-        self.assertTrue(db.GenebankReport.table_exists())
 
     def test_herd_tracking(self):
         """

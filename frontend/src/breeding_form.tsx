@@ -99,7 +99,7 @@ export function BreedingForm({
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
-  const [showBirthForm, setShowBirthForm] = React.useState(false);
+  const [showBirthForm, setShowBirthForm] = React.useState(true);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);

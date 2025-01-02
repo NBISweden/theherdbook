@@ -16,11 +16,22 @@ import sys
 import time
 import uuid
 from logging.handlers import TimedRotatingFileHandler
+from io import StringIO
 
 import apscheduler.schedulers.background
 import flask_session
 import requests
-from flask import Flask, abort, jsonify, redirect, request, session, url_for
+from flask import (
+    Flask,
+    abort,
+    jsonify,
+    redirect,
+    request,
+    session,
+    url_for,
+    g,
+    Response,
+)
 from flask_caching import Cache
 from flask_login import (
     LoginManager,
@@ -60,7 +71,7 @@ APP.config.update(
     SESSION_TYPE="filesystem",
     DEBUG=True,  # some Flask specific configs
     CACHE_TYPE="FileSystemCache",
-    CACHE_DIR="/tmp",
+    CACHE_DIR="/var/cache/herdbook",
     CACHE_DEFAULT_TIMEOUT=300,
 )
 
@@ -772,7 +783,10 @@ def check_ind_number():
             .exists()
         ):
             return jsonify(
-                {"status": "error", "message": "Individual number already exists"}
+                {
+                    "status": "error",
+                    "message": "Individual number already exists",
+                }
             )
     except Exception as error:
         APP.logger.error("Unexpected error when checking number: " + str(error))
@@ -1021,7 +1035,8 @@ def update_certificate(i_number):
 
     if uploaded:
         return create_pdf_response(
-            pdf_bytes=signed_data.getvalue(), obj_name=f'{ind_data["certificate"]}.pdf'
+            pdf_bytes=signed_data.getvalue(),
+            obj_name=f'{ind_data["certificate"]}.pdf',
         )
 
     return jsonify({"response": "Certificate was not updated"}), 404
@@ -1151,12 +1166,146 @@ def verify_certificate(i_number):
     if present and signed:
         return jsonify({"response": "Certificate is valid"}), 200
     elif not present and signed:
-        return jsonify({"response": "Certificate valid but file not present"}), 202
+        return (
+            jsonify({"response": "Certificate valid but file not present"}),
+            202,
+        )
 
     return (
         jsonify({"response": "The uploaded certificate is not valid"}),
         404,
     )
+
+
+@APP.route("/api/herd/<h_id>/yearlyreport", methods=["GET", "POST"])
+@login_required
+def herd_yearly_report(h_id):
+    """Get or create yearly report for a herd."""
+    if not user.can_edit(resource_type="herd", resource_id=h_id):
+        return {"status": "error", "message": "Not authorized"}
+
+    user_id = session.get("user_id", None)
+    user = da.fetch_user_info(user_id)
+
+    # Fetch the herd data using the existing get_herd function
+    herd_data = da.get_herd(h_id, user_id)
+    if not herd_data:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Herd not found or access denied",
+                }
+            ),
+            404,
+        )
+
+    # Use user.can_edit with h_id (herd code)
+    if not user.can_edit(h_id):
+        return (
+            jsonify({"status": "error", "message": "Permission denied"}),
+            403,
+        )
+
+    # Get the herd_id from the herd_data
+    herd_id = herd_data["id"]
+
+    if request.method == "GET":
+        # Get the round_id from query parameters
+        round_id = request.args.get("round_id", type=int)
+        if not round_id:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Report round ID is required",
+                    }
+                ),
+                400,
+            )
+
+        # Get the report for the specific round
+        report = da.get_yearly_report_by_round(herd_id, round_id)
+        if report:
+            return jsonify({"status": "success", "report": report})
+        else:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "No report found for this round",
+                    }
+                ),
+                404,
+            )
+
+    elif request.method == "POST":
+        # Create or update the yearly report
+        form = request.json
+        result = da.save_yearly_report(herd_id, form, user)
+        if result["status"] == "success":
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+
+
+@APP.route("/api/manage/yearly_report_rounds", methods=["GET"])
+@login_required
+def get_yearly_report_rounds():
+    user_id = session.get("user_id", None)
+    rounds = da.get_yearly_report_rounds_with_counts(user_id)
+    if rounds is not None:
+        return jsonify({"status": "success", "rounds": rounds})
+    else:
+        return jsonify({"status": "error", "message": "Unauthorized"})
+
+
+@APP.route("/api/manage/yearly_report_round", methods=["POST"])
+@login_required
+def create_yearly_report_round():
+    """
+    Creates a new YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    form = request.json
+    result = da.create_yearly_report_round(form, user_id)
+    if result["status"] == "success":
+        return jsonify(result), 201
+    else:
+        return jsonify(result), 403
+
+
+@APP.route("/api/manage/yearly_report_round/<int:round_id>", methods=["PATCH"])
+@login_required
+def update_yearly_report_round(round_id):
+    """
+    Updates an existing YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    form = request.json
+    form["id"] = round_id
+    result = da.update_yearly_report_round(round_id, form, user_id)
+    if result["status"] == "success":
+        return jsonify(result)
+    else:
+        return jsonify(result), 403
+
+
+@APP.route("/api/manage/yearly_report_round/<int:round_id>", methods=["DELETE"])
+@login_required
+def delete_yearly_report_round(round_id):
+    """
+    Deletes an existing YearlyReportRound.
+    Only accessible to admin or manager users.
+    """
+    user_id = session.get("user_id", None)
+    result = da.delete_yearly_report_round(round_id, user_id)
+    if result["status"] == "success":
+        return jsonify(result)
+    else:
+        return jsonify(result), 403
 
 
 @APP.route("/", defaults={"path": ""})
@@ -1205,3 +1354,59 @@ if not db.verify():
     sys.exit(1)
 
 initialize_app()
+
+
+@APP.route("/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>")
+@login_required
+def get_yearly_reports(round_id, genebank_id):
+    """Get all yearly reports for a specific round and genebank."""
+    try:
+        # Check if user has permission for this genebank
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
+            return (
+                jsonify({"status": "error", "message": "Åtkomst nekad"}),
+                403,
+            )
+
+        # Get the report round to include the year
+        report_round = da.YearlyReportRound.get_by_id(round_id)
+        reports = da.get_yearly_reports(round_id, genebank_id)
+
+        return jsonify(
+            {
+                "status": "success",
+                "reports": reports,
+                "report_year": report_round.report_year,
+            }
+        )
+    except Exception as e:
+        APP.logger.error(f"Failed to get yearly reports: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@APP.route("/api/manage/yearly-reports/<int:round_id>/<int:genebank_id>/export")
+@login_required
+def export_yearly_reports(round_id, genebank_id):
+    """Export yearly reports as CSV for a specific round and genebank."""
+    try:
+        # Check if user has permission for this genebank
+        if not (current_user.is_admin or genebank_id in current_user.is_manager):
+            return (
+                jsonify({"status": "error", "message": "Åtkomst nekad"}),
+                403,
+            )
+
+        # Get the report round to include the year in the filename
+        report_round = da.YearlyReportRound.get_by_id(round_id)
+        csv_data = da.export_yearly_reports_csv(round_id, genebank_id)
+
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition": f"attachment;filename=arsrapporter-{genebank_id}-{report_round.report_year}.csv"
+            },
+        )
+    except Exception as e:
+        APP.logger.error(f"Failed to export yearly reports: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500

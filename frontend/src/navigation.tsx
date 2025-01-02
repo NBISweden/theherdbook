@@ -22,6 +22,7 @@ import PersonAddIcon from "@material-ui/icons/PersonAdd";
 import PostAddIcon from "@material-ui/icons/PostAdd";
 import NaturePeopleIcon from "@material-ui/icons/NaturePeople";
 import EmojiNatureIcon from "@material-ui/icons/EmojiNature";
+import BallotIcon from "@material-ui/icons/Ballot";
 import EcoIcon from "@material-ui/icons/Eco";
 import { Help } from "@material-ui/icons";
 
@@ -38,6 +39,7 @@ import { HerdPedigree } from "@app/herd_pedigree";
 import { useUserContext } from "@app/user_context";
 import { InbreedingForm } from "@app/testbreed_form";
 import { Register } from "@app/register";
+import { YearlyReportViewer } from "@app/YearlyReportViewer";
 import {
   About,
   Medlem,
@@ -59,6 +61,8 @@ import { MenuProps } from "@material-ui/core/Menu";
 import hotjar from "react-hotjar";
 
 import "./style.css";
+import YearlyReportMultiStepForm from "./YearlyReportMultiStepForm";
+import { useState, useEffect } from "react";
 
 const StyledMenu = withStyles({
   paper: {
@@ -91,26 +95,37 @@ const StyledMenuItem = withStyles((theme) => ({
   },
 }))(MenuItem);
 
-function Restricted(props: { children: React.ReactElement }) {
-  /*
-  If user reloads page we do not have any usercontext yet.
-  User will always be null even if user is logged in in backend
-  This will check with backen if api/user returns data then the user is logged in
-  and we can proceed the user to the restricted component. If not then redirect to Google login.
-  If user is clicking the link the usercontext is already loaded and we can assume the user is
-  logged in.
-  */
+interface RestrictedProps {
+  children: React.ReactElement;
+}
+
+const Restricted: React.FC<RestrictedProps> = (props) => {
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const { user } = useUserContext();
 
-  if (user == null) {
-    get("/api/user").then((data) => {
-      return data
-        ? props.children
-        : (window.location.href = "/api/login/google");
-    });
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (user === null) {
+        const data = await get("/api/user");
+        if (!data) {
+          window.location.href = "/api/login/google";
+        } else {
+          setIsAuthorized(true);
+        }
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+
+    checkAuth();
+  }, [user]);
+
+  if (isAuthorized === null) {
+    return <div>Loading...</div>;
   }
-  return props.children;
-}
+
+  return <>{props.children}</>;
+};
 
 export function Navigation() {
   const { logout } = useUserContext();
@@ -122,6 +137,41 @@ export function Navigation() {
   const is_logged_in = !!user;
   const theme = createTheme({}, svSE);
   const history = useHistory();
+  const [yearlyReportRounds, setYearlyReportRounds] = useState<any[]>([]);
+
+  // Fetch yearly report rounds
+  useEffect(() => {
+    const fetchYearlyReportRounds = async () => {
+      try {
+        const response = await get("/api/manage/yearly_report_rounds");
+        if (response.status === "success") {
+          setYearlyReportRounds(response.rounds);
+        }
+      } catch (error) {
+        console.error("Error fetching yearly report rounds:", error);
+      }
+    };
+
+    if (is_logged_in) {
+      fetchYearlyReportRounds();
+    }
+  }, [is_logged_in]);
+
+  // Determine active report rounds based on user role
+  const activeReportRounds = yearlyReportRounds.filter((round) => {
+    if (is_owner && round.is_active) {
+      return true;
+    }
+    if (is_admin && (round.is_active || round.manually_activated)) {
+      return true;
+    }
+    return false;
+  });
+
+  // Sort active rounds by report year in descending order
+  const sortedActiveReportRounds = [...activeReportRounds].sort(
+    (a, b) => b.report_year - a.report_year
+  );
 
   const tabs: ui.RoutedTab[] = [
     {
@@ -167,6 +217,35 @@ export function Navigation() {
       ),
       visible: is_owner,
       icon: <NaturePeopleIcon />,
+    },
+    {
+      label: "Årsrapport",
+      path: "/yearly",
+      component: (
+        <Restricted>
+          <YearlyReportMultiStepForm
+            reportRoundId={
+              sortedActiveReportRounds.length > 0
+                ? sortedActiveReportRounds[0].id
+                : undefined
+            }
+            reportYear={
+              sortedActiveReportRounds.length > 0
+                ? sortedActiveReportRounds[0].report_year
+                : undefined
+            }
+          />
+        </Restricted>
+      ),
+      visible:
+        sortedActiveReportRounds.length > 0 &&
+        ((is_owner &&
+          sortedActiveReportRounds.some((round) => round.is_active)) ||
+          (is_admin &&
+            sortedActiveReportRounds.some(
+              (round) => round.is_active || round.manually_activated
+            ))),
+      icon: <BallotIcon />,
     },
     {
       label: "Registrera",
@@ -343,6 +422,13 @@ export function Navigation() {
                 Du måste logga in med ditt Gotlandskaninkonto{" "}
                 <a href="/api/login/google">Logga in</a>{" "}
               </Route>
+              <ui.Routed path="/yearly-reports-view/:roundId">
+                {() => (
+                  <Restricted>
+                    <YearlyReportViewer />
+                  </Restricted>
+                )}
+              </ui.Routed>
             </Switch>
           </Paper>
         </div>

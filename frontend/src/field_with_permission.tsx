@@ -72,7 +72,6 @@ export function FieldWithPermission({
   const options = [
     { value: "private", label: "Endast Manager" },
     { value: "authenticated", label: "Endast Inloggade" },
-    { value: "public", label: "Alla kan se" },
   ];
 
   return (
