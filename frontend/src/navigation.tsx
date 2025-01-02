@@ -94,26 +94,37 @@ const StyledMenuItem = withStyles((theme) => ({
   },
 }))(MenuItem);
 
-function Restricted(props: { children: React.ReactElement }) {
-  /*
-  If user reloads page we do not have any usercontext yet.
-  User will always be null even if user is logged in in backend
-  This will check with backend if api/user returns data then the user is logged in
-  and we can proceed the user to the restricted component. If not then redirect to Google login.
-  If user is clicking the link the usercontext is already loaded and we can assume the user is
-  logged in.
-  */
+interface RestrictedProps {
+  children: React.ReactElement;
+}
+
+const Restricted: React.FC<RestrictedProps> = (props) => {
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const { user } = useUserContext();
 
-  if (user == null) {
-    get("/api/user").then((data) => {
-      return data
-        ? props.children
-        : (window.location.href = "/api/login/google");
-    });
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (user === null) {
+        const data = await get("/api/user");
+        if (!data) {
+          window.location.href = "/api/login/google";
+        } else {
+          setIsAuthorized(true);
+        }
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+
+    checkAuth();
+  }, [user]);
+
+  if (isAuthorized === null) {
+    return <div>Loading...</div>;
   }
-  return props.children;
-}
+
+  return <>{props.children}</>;
+};
 
 export function Navigation() {
   const { logout } = useUserContext();
