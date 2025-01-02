@@ -65,7 +65,7 @@ const YearlyReportRounds: React.FC = () => {
 
   const nextYear = new Date().getFullYear() + 1;
   const defaultStartDate = new Date(nextYear, 0, 1); // January 1st next year
-  const defaultEndDate = new Date(nextYear, 2, 31); // March 31st next year
+  const defaultEndDate = new Date(nextYear, 2, 31); // March 31st next year (month is 0-based, so 2 = March)
 
   const [newRound, setNewRound] = useState({
     start_date: defaultStartDate,
@@ -97,9 +97,31 @@ const YearlyReportRounds: React.FC = () => {
   const handleDateChange = (date: Date | null, name: string) => {
     setNewRound((prevState) => {
       const updatedState = { ...prevState, [name]: date };
-      if (name === "start_date" && date) {
+
+      // Don't update if date is null
+      if (!date) {
+        return prevState;
+      }
+
+      // Update report year when start date changes
+      if (name === "start_date") {
         updatedState.report_year = date.getFullYear() - 1;
       }
+
+      // Validate date range when either date changes
+      if (name === "start_date" && updatedState.end_date) {
+        if (date > updatedState.end_date) {
+          userMessage("Startdatum kan inte vara efter slutdatum", "error");
+          return prevState;
+        }
+      }
+      if (name === "end_date" && updatedState.start_date) {
+        if (date < updatedState.start_date) {
+          userMessage("Slutdatum kan inte vara före startdatum", "error");
+          return prevState;
+        }
+      }
+
       return updatedState;
     });
   };
@@ -121,6 +143,18 @@ const YearlyReportRounds: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate dates before submission
+    if (!newRound.start_date || !newRound.end_date) {
+      userMessage("Både start- och slutdatum måste anges", "error");
+      return;
+    }
+
+    if (newRound.start_date > newRound.end_date) {
+      userMessage("Startdatum kan inte vara efter slutdatum", "error");
+      return;
+    }
+
     try {
       const payload = {
         start_date: newRound.start_date.toISOString().split("T")[0],

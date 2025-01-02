@@ -1265,7 +1265,7 @@ class YearlyHerdReport(BaseModel):
     storing it in a JSONField so that we could still use sqlite for testing.
     """
 
-    id = AutoField(primary_key=True, column_name="disease_id")
+    id = AutoField(primary_key=True, column_name="yearly_herd_report_id")
     herd = ForeignKeyField(Herd)
     report_date = DateField()
     generated_by = ForeignKeyField(User)
