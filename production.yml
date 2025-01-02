@@ -12,7 +12,7 @@ services:
         volumes:
             - ./postgres-data:/var/lib/postgresql/data
     main:
-        image: ghcr.io/nbisweden/herdbook_main:${TAG:?TAG-not-set}
+        image: ghcr.io/nbisweden/herdbook_main:test-prod
         container_name: herdbook-main
         env_file:
             - ./.docker/database-variables.env
@@ -38,9 +38,30 @@ services:
         restart: always
 
     r-api:
-        image: ghcr.io/nbisweden/herdbook_r-api:${TAG:?TAG-not-set}
+        image: ghcr.io/nbisweden/herdbook_r-api:test-prod
         container_name: r-api
+        volumes:
+            - type: bind
+              source: ./R
+              target: /code
         env_file:
             - ./.docker/database-variables.env
             - ./.docker/r-api-variables.env
         restart: always
+    s3backend:
+        command: -c 'echo s3user:x:$$(stat -c %u /data):0:s3 user:/:/bin/sh >> /etc/passwd && su s3user -c "mkdir -p /data/$${S3_BUCKET} && minio server /data"'
+        entrypoint: /bin/sh
+        container_name: s3backend
+        environment:
+            - MINIO_ACCESS_KEY=accesskeytest
+            - MINIO_SECRET_KEY=secretkeytest
+        env_file:
+            - ./.docker/main-api-variables.env
+        volumes:
+            - ./s3data:/data
+        healthcheck:
+            test: ["CMD", "curl", "-fkq", "http://localhost:9000/minio/health/live"]
+            interval: 5s
+            timeout: 20s
+            retries: 3
+        image: minio/minio:RELEASE.2021-04-18T19-26-29Z
