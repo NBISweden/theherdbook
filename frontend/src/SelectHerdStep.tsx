@@ -21,9 +21,10 @@ interface SelectHerdStepProps {
   genebankName: string | null;
   herdId: string | null;
   setHerdId: (id: string) => void;
-  genebank?: string; // Made optional
-  change?: boolean; // Made optional
+  genebank?: string;
+  change?: boolean;
   reportYear?: number;
+  onUpdateStatus?: (status: string) => void;
 }
 
 export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
@@ -34,6 +35,7 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
   genebank,
   change = false,
   reportYear,
+  onUpdateStatus,
 }): React.ReactElement => {
   const { genebanks } = useDataContext();
   const [herdOptions, setHerdOptions] = useState<any[]>([]);
@@ -48,11 +50,9 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     if (genebankName) {
       const foundGenebank = genebanks.find((g: any) => g.name === genebankName);
       if (foundGenebank) {
-        // Assuming foundGenebank.herds contains the list of herds
         setHerdOptions(foundGenebank.herds);
       }
     } else if (user?.is_owner && user.is_owner.length > 0) {
-      // For regular users with herds
       setHerdOptions(
         genebanks.flatMap((g: any) =>
           g.herds.filter((herd: any) => user.is_owner.includes(herd.herd))
@@ -60,6 +60,24 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
       );
     }
   }, [genebankName, genebanks, user]);
+
+  // Automatically set herdId if user owns only one herd and specific conditions are met
+  useEffect(() => {
+    if (
+      !genebankName &&
+      user?.is_owner &&
+      user.is_owner.length === 1 &&
+      !user.is_admin &&
+      (!user.is_manager || user.is_manager.length === 0)
+    ) {
+      handleHerdSelect(user.is_owner[0]);
+    }
+  }, [genebankName, user]);
+
+  const handleHerdSelect = (id: string) => {
+    setHerdId(id);
+    onUpdateStatus?.("completed");
+  };
 
   // Fetch breedings for the selected herdId
   useEffect(() => {
@@ -116,19 +134,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
       setSelectedHerdBreedings([]);
     }
   }, [herdId, reportYear, userMessage]);
-
-  // Automatically set herdId if user owns only one herd and specific conditions are met
-  useEffect(() => {
-    if (
-      !genebankName &&
-      user?.is_owner &&
-      user.is_owner.length === 1 &&
-      !user.is_admin &&
-      (!user.is_manager || user.is_manager.length === 0)
-    ) {
-      setHerdId(user.is_owner[0]);
-    }
-  }, [genebankName, user, setHerdId]);
 
   const handleBreedingClick = (breeding: any) => {
     setSelectedBreeding(breeding);
@@ -498,7 +503,7 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
                   key={herd.herd}
                   variant={herd.herd === herdId ? "contained" : "outlined"}
                   color={herd.herd === herdId ? "primary" : "default"}
-                  onClick={() => setHerdId(herd.herd)}
+                  onClick={() => handleHerdSelect(herd.herd)}
                   style={{ margin: "0.5em" }}
                 >
                   {herd.herd_name || herd.herd}

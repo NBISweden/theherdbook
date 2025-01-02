@@ -9,14 +9,21 @@ interface SelectGenebankStepProps {
   user: any;
   genebankName: string | null;
   setGenebankName: (name: string) => void;
+  onUpdateStatus?: (status: string) => void;
 }
 
 export const SelectGenebankStep: React.FC<SelectGenebankStepProps> = ({
   user,
   genebankName,
   setGenebankName,
+  onUpdateStatus,
 }) => {
   const { genebanks } = useDataContext();
+
+  const handleGenebankSelect = (name: string) => {
+    setGenebankName(name);
+    onUpdateStatus?.("completed");
+  };
 
   const availableGenebanks = genebanks.filter((g: any) => {
     if (user.is_admin) {
@@ -42,7 +49,7 @@ export const SelectGenebankStep: React.FC<SelectGenebankStepProps> = ({
           key={genebank.name}
           variant={genebank.name === genebankName ? "contained" : "outlined"}
           color={genebank.name === genebankName ? "primary" : "default"}
-          onClick={() => setGenebankName(genebank.name)}
+          onClick={() => handleGenebankSelect(genebank.name)}
           style={{ margin: "0.5em" }}
         >
           {genebank.name}

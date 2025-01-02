@@ -26,9 +26,10 @@ interface ExtendedHerd extends Herd {
 }
 
 interface HerdContactUpdateStepProps {
-  herdData: ExtendedHerd | null;
+  herdData: any;
   herdId: string | null;
   loadData: (args: any) => void;
+  onUpdateStatus?: (status: string) => void;
 }
 
 type ContactField = {
@@ -49,6 +50,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
   herdData,
   herdId,
   loadData,
+  onUpdateStatus,
 }) => {
   const classes = useStyles();
   const { user } = useUserContext();
@@ -92,6 +94,10 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
       setLoading(false);
     }
   }, [herdData, herdId]);
+
+  useEffect(() => {
+    onUpdateStatus?.("pending");
+  }, []);
 
   const setInitialHerdData = (data: ExtendedHerd) => {
     let postalcode = "";
@@ -177,6 +183,7 @@ export const HerdContactUpdateStep: React.FC<HerdContactUpdateStepProps> = ({
     } finally {
       setLoading(false);
     }
+    onUpdateStatus?.("completed");
   };
 
   if (loading || !herd) {

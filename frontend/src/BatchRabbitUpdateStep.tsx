@@ -10,17 +10,23 @@ interface BatchRabbitUpdateStepProps {
   herdId: string | null;
   reportRoundId?: number;
   reportYear?: number;
+  onUpdateStatus?: (status: string) => void;
 }
 
 export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
   herdId,
   reportRoundId,
   reportYear,
+  onUpdateStatus,
 }) => {
   const [skipStep, setSkipStep] = useState(false);
   const [loading, setLoading] = useState(true);
   const [skippedRabbits, setSkippedRabbits] = useState<any[]>([]);
   const { userMessage } = useMessageContext();
+
+  useEffect(() => {
+    onUpdateStatus?.("pending");
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,12 +50,10 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
         // Separate rabbits into those needing update and those that can be skipped
         const { needUpdate, canSkip } = rabbitsWithStatus.reduce(
           (acc: { needUpdate: any[]; canSkip: any[] }, rabbit: any) => {
-            // Sort herd_tracking entries by date in descending order
             const sortedTrackings = [...(rabbit.herd_tracking || [])].sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
             );
 
-            // Get the latest tracking date
             const latestTracking = sortedTrackings[0];
             const latestTrackingDate = latestTracking
               ? new Date(latestTracking.date)
@@ -57,7 +61,6 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
             const endDate = new Date(yearEndDate);
 
             if (latestTrackingDate && latestTrackingDate >= endDate) {
-              // Add the sorted tracking dates to the rabbit object for display
               acc.canSkip.push({
                 ...rabbit,
                 herd_tracking: sortedTrackings,
@@ -74,10 +77,12 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
 
         if (needUpdate.length === 0) {
           setSkipStep(true);
+          onUpdateStatus?.("completed");
         }
       } catch (error) {
         console.error(error);
         userMessage("Kunde inte hämta kanindata.", "error");
+        onUpdateStatus?.("error");
       } finally {
         setLoading(false);
       }
@@ -119,6 +124,7 @@ export const BatchRabbitUpdateStep: React.FC<BatchRabbitUpdateStepProps> = ({
       herdId={herdId!}
       reportYear={reportYear}
       reportRoundId={reportRoundId}
+      onUpdateStatus={onUpdateStatus}
     />
   );
 };
