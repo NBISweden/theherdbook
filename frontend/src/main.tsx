@@ -12,6 +12,7 @@ import { WithMessageContext } from "@app/message_context";
 import { WithBreedingContext } from "@app/breeding_context";
 import { Navigation } from "@app/navigation";
 import { StylesProvider } from "@material-ui/core";
+import hotjar from "react-hotjar";
 
 const Main = (
   <>
@@ -40,5 +41,6 @@ const Main = (
 
 ReactDOM.render(Main, document.querySelector("#root"));
 
+hotjar.hotjar.initialize(3131066, 6);
 // https://www.snowpack.dev/#hot-module-replacement
 import.meta?.hot?.accept(); // Dan: OK to ignore esbuild warning on this line
