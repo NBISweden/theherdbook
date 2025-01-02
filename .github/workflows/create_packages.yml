@@ -38,8 +38,9 @@ jobs:
               - 'docker/main.Dockerfile'
               - '.docker/main'
             r-api:
-              - 'r-api/**'
+              - 'R/**'
               - 'docker/r-api.Dockerfile'
+              - '.docker/r-api'
 
   build:
     needs: changes
