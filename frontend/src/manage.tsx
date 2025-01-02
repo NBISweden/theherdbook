@@ -27,6 +27,7 @@ import { HerdForm } from "@app/herdForm";
 import { UserForm } from "@app/userForm";
 import { ActiveUsers } from "@app/activeUsers";
 import { Autocomplete } from "@material-ui/lab";
+import YearlyReportRounds from "./YearlyReportRounds";
 
 const useStyles = makeStyles({
   main: {
@@ -79,7 +80,7 @@ export function Manage() {
     }
     const genebank = genebanks.find((g) => g.name == topic);
     if (genebank) {
-      return { value: genebank.id, label: genebank.name };
+      return { value: String(genebank.id), label: genebank.name } as OptionType;
     }
     return null;
   }, [genebanks, topic]);
@@ -222,6 +223,47 @@ export function Manage() {
   console.log("topic:", topic);
   console.log("genebank:", genebank, "target:", target);
 
+  const is_admin = !!(user?.is_manager || user?.is_admin);
+  const [view, setView] = useState("");
+
+  const handleViewChange = (newView: string) => {
+    setView(newView);
+    // Clear selection and options when switching views
+    setSelected(null);
+
+    if (newView === "user") {
+      setTopic("user");
+      setUserOptions();
+    } else if (newView === "herds" && genebanks.length > 0) {
+      const defaultGenebank = genebanks[0].name;
+      setTopic(defaultGenebank);
+      setGenebank(defaultGenebank);
+      setHerdOptions(defaultGenebank);
+      history.push(`/manage/${defaultGenebank}`);
+      return;
+    } else {
+      // Clear options for other views
+      setOptions([]);
+    }
+    history.push(`/manage/${newView}`);
+  };
+
+  // Set initial view and topic on component mount
+  React.useEffect(() => {
+    if (genebanks.length > 0 && user && typeof user.is_admin !== "undefined") {
+      const defaultGenebank = user.is_admin
+        ? genebanks[0].name
+        : Array.isArray(user.is_manager) && user.is_manager.length > 0
+        ? genebanks[user.is_manager[0] - 1].name
+        : genebanks[0].name;
+      setTopic(defaultGenebank);
+      setGenebank(defaultGenebank);
+      setHerdOptions(defaultGenebank);
+      setView("herds");
+      history.push(`/manage/${defaultGenebank}`);
+    }
+  }, [genebanks, user]);
+
   return (
     <>
       <Paper className={styles.main}>
@@ -230,7 +272,9 @@ export function Manage() {
             <div className={styles.rightControls}>
               <div
                 className={
-                  topic == "user" || topic == "active_users"
+                  topic == "user" ||
+                  topic == "active_users" ||
+                  topic == "yearly_report_rounds"
                     ? styles.hidden
                     : undefined
                 }
@@ -239,7 +283,7 @@ export function Manage() {
                   options={
                     genebanks
                       ? genebanks.map((g: Genebank) => {
-                          return { value: g.id, label: g.name };
+                          return { value: String(g.id), label: g.name };
                         })
                       : []
                   }
@@ -268,36 +312,39 @@ export function Manage() {
             <div className={styles.leftControls}>
               <Button
                 variant="contained"
-                color={
-                  topic != "user" && topic != "active_users"
-                    ? "primary"
-                    : "default"
-                }
-                onClick={() =>
-                  history.push(`/manage/${genebank}/${target ? target : ""}`)
-                }
+                color={view === "herds" ? "primary" : "default"}
+                onClick={() => handleViewChange("herds")}
               >
                 Besättningar
               </Button>
               <Button
                 variant="contained"
-                color={topic == "user" ? "primary" : "default"}
-                onClick={() =>
-                  history.push(`/manage/user/${target ? target : ""}`)
-                }
+                color={view === "user" ? "primary" : "default"}
+                onClick={() => handleViewChange("user")}
               >
                 Användare
               </Button>
+              {is_admin && (
+                <Button
+                  variant="contained"
+                  color={
+                    view === "yearly_report_rounds" ? "primary" : "default"
+                  }
+                  onClick={() => handleViewChange("yearly_report_rounds")}
+                >
+                  Årsrapportomgångar
+                </Button>
+              )}
               <Button
                 variant="contained"
-                color={topic == "active_users" ? "primary" : "default"}
-                onClick={() => history.push(`/manage/active_users`)}
+                color={view === "active_users" ? "primary" : "default"}
+                onClick={() => handleViewChange("active_users")}
               >
                 Lista inloggade aktiva användare
               </Button>
             </div>
           </div>
-          {topic !== "active_users" && (
+          {topic !== "active_users" && view !== "yearly_report_rounds" && (
             <>
               <Autocomplete
                 options={filtered(options) ?? []}
@@ -309,18 +356,25 @@ export function Manage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={topic == "user" ? "Sök användare" : "Sök besättning"}
+                    label={
+                      topic === "user" ? "Sök användare" : "Sök besättning"
+                    }
                     variant={inputVariant}
                     margin="normal"
                   />
                 )}
                 onChange={(event: any, newValue: OptionType | null) => {
-                  newValue &&
-                    history.push(`/manage/${topic}/${newValue.value}`);
+                  if (newValue) {
+                    const path =
+                      topic === "user"
+                        ? `/manage/user/${newValue.value}`
+                        : `/manage/${topic}/${newValue.value}`;
+                    history.push(path);
+                  }
                 }}
               />
               <FormControlLabel
-                disabled={!topic == "user" || topic == "active_users"}
+                disabled={view !== "herds"}
                 control={
                   <Checkbox
                     checked={showInactive}
@@ -338,6 +392,11 @@ export function Manage() {
 
         {/* Only show the input form for the currently selected type */}
         <Switch>
+          <Route path="/manage/yearly_report_rounds">
+            <Paper className={styles.inputForm}>
+              <YearlyReportRounds />
+            </Paper>
+          </Route>
           <Route path="/manage/active_users">
             <Paper className={styles.inputForm}>
               <ActiveUsers />
@@ -348,13 +407,16 @@ export function Manage() {
               <UserForm id={selected?.value} />
             </Paper>
           </Route>
-          <Route path="/manage/">
+          <Route path="/manage/:genebank">
             <Paper className={styles.inputForm}>
               <HerdForm
                 id={selected?.value}
-                genebank={genebankValue?.value}
+                genebank={
+                  genebankValue?.value ? String(genebankValue.value) : undefined
+                }
                 view={"form"}
                 change={false}
+                fromHerd={undefined}
               />
             </Paper>
           </Route>
