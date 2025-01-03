@@ -375,8 +375,8 @@ export function Footer() {
           och utbildningar, transport av värdefulla djur samt obduktioner.
         </Typography>
 
-        <Typography className="euText">
-          Stamboken Online version :{" "}
+        <Typography className="versionText">
+          Stamboken Online version:{" "}
           <a
             target={"_blank"}
             rel={"noopener noreferrer"}

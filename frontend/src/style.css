@@ -128,10 +128,19 @@ list-item {
 /* Used in static_pages.tsx */
 .euText {
   margin: 10px;
-  display: inline;
+  display: block;
   font-size: 0.65em;
   text-align: center;
   flex-grow: 2;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.versionText {
+  margin-top: 20px;
+  display: block;
+  text-align: center;
+  font-size: 0.65em;
 }
 
 /* Used in static_pages.tsx */
