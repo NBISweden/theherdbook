@@ -1181,11 +1181,11 @@ def verify_certificate(i_number):
 @login_required
 def herd_yearly_report(h_id):
     """Get or create yearly report for a herd."""
-    if not user.can_edit(resource_type="herd", resource_id=h_id):
-        return {"status": "error", "message": "Not authorized"}
-
     user_id = session.get("user_id", None)
     user = da.fetch_user_info(user_id)
+
+    if not user.can_edit(h_id):
+        return {"status": "error", "message": "Not authorized"}
 
     # Fetch the herd data using the existing get_herd function
     herd_data = da.get_herd(h_id, user_id)
@@ -1198,13 +1198,6 @@ def herd_yearly_report(h_id):
                 }
             ),
             404,
-        )
-
-    # Use user.can_edit with h_id (herd code)
-    if not user.can_edit(h_id):
-        return (
-            jsonify({"status": "error", "message": "Permission denied"}),
-            403,
         )
 
     # Get the herd_id from the herd_data
