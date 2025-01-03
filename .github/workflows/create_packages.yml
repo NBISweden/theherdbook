@@ -52,7 +52,7 @@ jobs:
         with:
           file: frontend/src/tags.json
           field: gitBranch
-          value: ${{github.ref_name}}
+          value: ${{ github.ref_name }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -85,15 +85,36 @@ jobs:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          # Only build on production branch, tags will just retag existing images
-          if [[ "${{ github.ref_name }}" == "production" ]]; then
-            docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
-          elif [[ "${{ github.ref_type }}" != "tag" ]]; then
-            # For other branches (except tags), only build changed images and their dependents
+          # For tags, we rebuild frontend and main with the correct version
+          # For production, we build fresh
+          # For other branches, we build only changed components
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "Tag detected - rebuilding frontend and main with version ${{ github.ref_name }}"
+            # Pull production image for r-api
+            docker pull "ghcr.io/nbisweden/herdbook_r-api:production"
+            # Build frontend and main with new version
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg COMMIT_SHA="${{ github.sha }}" \
+              --label "org.opencontainers.image.revision=${{ github.sha }}" \
+              herdbook-frontend main
+          elif [[ "${{ github.ref_name }}" == "production" ]]; then
+            echo "Production branch - building fresh images"
+            docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg COMMIT_SHA="${{ github.sha }}" \
+              --label "org.opencontainers.image.revision=${{ github.sha }}" \
+              herdbook-frontend main
+          else
+            # For other branches, only build changed images and their dependents
             if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
+                --build-arg COMMIT_SHA="${{ github.sha }}" \
+                --label "org.opencontainers.image.revision=${{ github.sha }}" \
+                herdbook-frontend main
             elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
-              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
+                --build-arg COMMIT_SHA="${{ github.sha }}" \
+                --label "org.opencontainers.image.revision=${{ github.sha }}" \
+                main
             fi
 
             if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
@@ -113,9 +134,25 @@ jobs:
             local image="$1"
             local is_tag="${2:-false}"
             
-            # For tags, try to pull the production image first
+            # For tags, try to pull the production image first and verify commit SHA
             if [[ "$is_tag" == "true" ]]; then
-              docker pull "ghcr.io/nbisweden/$image:production" || return 1
+              echo "Pulling production image for $image..."
+              docker pull "ghcr.io/nbisweden/$image:production" || { echo "Failed to pull production image"; return 1; }
+              
+              # Extract commit SHA from production image label
+              prod_sha=$(docker inspect "ghcr.io/nbisweden/$image:production" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+              current_sha="${{ github.sha }}"
+              
+              echo "Production image commit: $prod_sha"
+              echo "Tag commit: $current_sha"
+              
+              if [[ "$prod_sha" != "$current_sha" ]]; then
+                echo "Error: Production image was not built from the same commit as this tag"
+                echo "Production commit: $prod_sha"
+                echo "Tag commit: $current_sha"
+                return 1
+              fi
+              
               docker tag "ghcr.io/nbisweden/$image:production" "$image:latest"
             fi
             
@@ -132,8 +169,14 @@ jobs:
 
           # For tags, retag production images. For production, push built images
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            push_if_built "herdbook_frontend" true
-            push_if_built "herdbook_main" true
+            # Frontend and main were rebuilt with new version
+            push_if_built "herdbook_frontend"
+            push_if_built "herdbook_main"
+            # R-API uses production image
+            docker tag "ghcr.io/nbisweden/herdbook_r-api:production" "ghcr.io/nbisweden/herdbook_r-api:$safe_branch"
+            docker tag "ghcr.io/nbisweden/herdbook_r-api:production" "ghcr.io/nbisweden/herdbook_r-api:latest"
+            docker push "ghcr.io/nbisweden/herdbook_r-api:$safe_branch"
+            docker push "ghcr.io/nbisweden/herdbook_r-api:latest"
           elif [[ "${{ github.ref_name }}" == "production" ]]; then
             push_if_built "herdbook_frontend"
             push_if_built "herdbook_main"
