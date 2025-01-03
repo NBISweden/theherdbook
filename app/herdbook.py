@@ -907,7 +907,7 @@ def get_kinship(g_id):
     response = requests.get(
         "http://{}:{}/kinship/{}".format(settings.rapi.host, settings.rapi.port, g_id),
         params={"update_data": "TRUE"},
-        timeout=30,
+        timeout=60,
     )
 
     if response.status_code == 200:

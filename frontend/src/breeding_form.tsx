@@ -70,7 +70,7 @@ export function BreedingForm({
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
-  handleBreedingsChanged: () => void;
+  handleBreedingsChanged: (shouldClose?: boolean) => void;
   handleActive: (breeding: Breeding) => void;
 }) {
   const {
@@ -496,7 +496,8 @@ export function BreedingForm({
 
         if (breeding.birth_date === null) {
           userMessage("Kullen har sparats.", "success");
-
+          await setHerdChangeListener(herdChangeListener + 1);
+          handleBreedingsChanged();
           return;
         }
 
@@ -520,7 +521,7 @@ export function BreedingForm({
             );
           }
           await setHerdChangeListener(herdChangeListener + 1);
-          handleBreedingsChanged();
+          handleBreedingsChanged(true);
         }
         break;
       case 1:
@@ -529,13 +530,13 @@ export function BreedingForm({
         breeding.mother = breedingMatch.mother;
         await handleEditableBreedingUpdates(breeding, breedingMatch);
         await setHerdChangeListener(herdChangeListener + 1);
-        handleBreedingsChanged();
+        handleBreedingsChanged(!!breeding.birth_date);
         break;
       default:
         // update breeding event
         await handleEditableBreedingUpdates(breeding, breedingMatch);
         await setHerdChangeListener(herdChangeListener + 1);
-        handleBreedingsChanged();
+        handleBreedingsChanged(!!breeding.birth_date);
         break;
     }
   };
