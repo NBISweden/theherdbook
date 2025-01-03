@@ -486,6 +486,7 @@ export function FilterTable({
           <>
             {currentFilters.map((filter) => (
               <Tooltip
+                key={`${filter.field}-${filter.label}`}
                 arrow
                 title={
                   <React.Fragment>
@@ -494,11 +495,11 @@ export function FilterTable({
                 }
               >
                 <FormControlLabel
-                  key={filter.label}
+                  key={`${filter.field}-${filter.label}`}
                   control={
                     <Checkbox
                       name={filter.field}
-                      key={filter.field + filter.label}
+                      key={`${filter.field}-${filter.label}`}
                       checked={filter.active ?? false}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         if (
@@ -542,7 +543,9 @@ export function FilterTable({
               >
                 <TableHead>
                   <TableRow>
-                    {action && <TableCell>{actionLabel}</TableCell>}
+                    {action && (
+                      <TableCell key="action">{actionLabel}</TableCell>
+                    )}
                     {visibleColumns.map((column) => (
                       <TableCell
                         key={column.field}
@@ -572,11 +575,12 @@ export function FilterTable({
                 <TableBody>
                   {sortedIndividuals
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row, index) => {
+                    .map((row) => {
                       return (
                         <TableRow key={row.number} hover tabIndex={-1}>
                           {action && (
                             <TableCell
+                              key="action"
                               className="functionLink"
                               onClick={(event) => action && action(event, row)}
                             >
@@ -586,7 +590,7 @@ export function FilterTable({
                           {visibleColumns.map((column) => {
                             return (
                               <TableCell
-                                key={column.field}
+                                key={`${row.number}-${column.field}`}
                                 align={column.numeric ? "right" : "left"}
                               >
                                 {column.render
