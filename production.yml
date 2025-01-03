@@ -53,6 +53,10 @@ services:
   r-api:
     image: ghcr.io/nbisweden/herdbook_r-api:${TAG:?TAG-not-set}
     container_name: r-api
+    volumes:
+      - type: bind
+        source: ./R
+        target: /code
     env_file:
       - ./.docker/database-variables.env
       - ./.docker/r-api-variables.env
