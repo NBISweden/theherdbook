@@ -32,14 +32,12 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
-              - 'docker/frontend.Dockerfile'
+              - '.docker/frontend'
             main:
               - 'app/**'
-              - 'docker/main.Dockerfile'
               - '.docker/main'
             r-api:
               - 'R/**'
-              - 'docker/r-api.Dockerfile'
               - '.docker/r-api'
 
   build:
@@ -89,7 +87,7 @@ jobs:
         run: |
           # Only build on production branch, tags will just retag existing images
           if [[ "${{ github.ref_name }}" == "production" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
+            docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
           elif [[ "${{ github.ref_type }}" != "tag" ]]; then
             # For other branches (except tags), only build changed images and their dependents
             if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
