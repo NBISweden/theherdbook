@@ -169,7 +169,8 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
   const handleBreedingDialogClose = useCallback(() => {
     setSelectedBreeding(null);
     setIsBreedingDialogOpen(false);
-  }, []);
+    fetchBreedings();
+  }, [fetchBreedings]);
 
   // Get filtered breedings for the report year
   const selectedHerdBreedings = useMemo(() => {
@@ -481,9 +482,13 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
               <BreedingForm
                 data={selectedBreeding}
                 herdId={herdId || undefined}
-                handleBreedingsChanged={() => {
-                  handleBreedingDialogClose();
+                handleBreedingsChanged={(shouldClose?: boolean) => {
+                  // Refresh the data first
                   fetchBreedings();
+                  // Close if explicitly told to do so by the form
+                  if (shouldClose) {
+                    handleBreedingDialogClose();
+                  }
                 }}
                 handleActive={() => {}}
               />
