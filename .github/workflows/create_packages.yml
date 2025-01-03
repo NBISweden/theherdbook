@@ -87,11 +87,11 @@ jobs:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          # For tags and production branch, build frontend and main
-          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" ]]; then
+          # Only build on production branch, tags will just retag existing images
+          if [[ "${{ github.ref_name }}" == "production" ]]; then
             docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
-          else
-            # For other branches, only build changed images and their dependents
+          elif [[ "${{ github.ref_type }}" != "tag" ]]; then
+            # For other branches (except tags), only build changed images and their dependents
             if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
               docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
             elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
@@ -110,9 +110,17 @@ jobs:
           branch="${{ github.ref_name }}"
           safe_branch="${branch//\//-}"  # Replace / with -
 
-          # Function to push an image if it was built
+          # Function to push an image if it was built or if we're tagging
           push_if_built() {
             local image="$1"
+            local is_tag="${2:-false}"
+            
+            # For tags, try to pull the production image first
+            if [[ "$is_tag" == "true" ]]; then
+              docker pull "ghcr.io/nbisweden/$image:production" || return 1
+              docker tag "ghcr.io/nbisweden/$image:production" "$image:latest"
+            fi
+            
             if docker image inspect "$image:latest" >/dev/null 2>&1; then
               docker tag "$image:latest" "ghcr.io/nbisweden/$image:$safe_branch"
               docker push "ghcr.io/nbisweden/$image:$safe_branch"
@@ -124,8 +132,11 @@ jobs:
             fi
           }
 
-          # For tags and production branch, push frontend and main
-          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" ]]; then
+          # For tags, retag production images. For production, push built images
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            push_if_built "herdbook_frontend" true
+            push_if_built "herdbook_main" true
+          elif [[ "${{ github.ref_name }}" == "production" ]]; then
             push_if_built "herdbook_frontend"
             push_if_built "herdbook_main"
           else
