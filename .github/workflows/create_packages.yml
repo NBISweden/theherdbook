@@ -95,25 +95,21 @@ jobs:
             # Build frontend and main with new version
             docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg COMMIT_SHA="${{ github.sha }}" \
-              --label "org.opencontainers.image.revision=${{ github.sha }}" \
               herdbook-frontend main
           elif [[ "${{ github.ref_name }}" == "production" ]]; then
             echo "Production branch - building fresh images"
             docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg COMMIT_SHA="${{ github.sha }}" \
-              --label "org.opencontainers.image.revision=${{ github.sha }}" \
               herdbook-frontend main
           else
             # For other branches, only build changed images and their dependents
             if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
               docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
                 --build-arg COMMIT_SHA="${{ github.sha }}" \
-                --label "org.opencontainers.image.revision=${{ github.sha }}" \
                 herdbook-frontend main
             elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
               docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
                 --build-arg COMMIT_SHA="${{ github.sha }}" \
-                --label "org.opencontainers.image.revision=${{ github.sha }}" \
                 main
             fi
 
