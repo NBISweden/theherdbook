@@ -55,33 +55,36 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
   onUpdateStatus,
 }): React.ReactElement => {
   const { genebanks } = useDataContext();
+  const { userMessage } = useMessageContext();
+  const breedingContext = useBreedingContext();
+
   const [herdOptions, setHerdOptions] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [herdBreedings, setHerdBreedings] = useState<ExtendedBreeding[]>([]);
-  const { userMessage } = useMessageContext();
   const [selectedBreeding, setSelectedBreeding] = useState<
     ExtendedBreeding | "new" | null
   >(null);
   const [isBreedingDialogOpen, setIsBreedingDialogOpen] = useState(false);
-  const breedingContext = useBreedingContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize herd options based on genebankName and user ownership
-  useEffect(() => {
-    if (genebankName) {
-      const foundGenebank = genebanks.find((g: any) => g.name === genebankName);
-      if (foundGenebank) {
-        setHerdOptions(foundGenebank.herds);
-      }
-    } else if (user?.is_owner && user.is_owner.length > 0) {
-      const filteredHerds = genebanks.flatMap((g: any) =>
-        g.herds.filter((herd: any) => user.is_owner.includes(herd.herd))
-      );
-      setHerdOptions(filteredHerds);
-    }
-  }, [genebankName, genebanks, user]);
+  // Define all callback functions first
+  const handleHerdSelect = useCallback(
+    (id: string) => {
+      setHerdId(id);
+    },
+    [setHerdId]
+  );
 
-  // Fetch breedings function
+  const handleBreedingClick = useCallback((breeding: ExtendedBreeding) => {
+    setSelectedBreeding(breeding);
+    setIsBreedingDialogOpen(true);
+  }, []);
+
+  const handleNewBreedingClick = useCallback(() => {
+    setSelectedBreeding("new");
+    setIsBreedingDialogOpen(true);
+  }, []);
+
   const fetchBreedings = useCallback(async () => {
     if (!herdId || isLoading) return;
 
@@ -96,7 +99,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
         return;
       }
 
-      // Sort breedings by birth_date ascending, then by id ascending
       const sortedBreedings = data.breedings.sort(
         (a: RawBreeding, b: RawBreeding) => {
           const dateA = new Date(a.birth_date || "9999-12-31");
@@ -107,7 +109,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
         }
       );
 
-      // Add numbering and ensure all properties are present
       const processedBreedings: ExtendedBreeding[] = sortedBreedings.map(
         (breeding: RawBreeding, index: number) => ({
           ...breeding,
@@ -138,39 +139,63 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     }
   }, [herdId, isLoading, onUpdateStatus, userMessage]);
 
-  // Fetch breedings when herdId changes
-  useEffect(() => {
-    if (!herdId) {
-      setHerdBreedings([]);
-      onUpdateStatus?.("error");
-      return;
-    }
-
-    fetchBreedings();
-  }, [herdId]);
-
-  const handleHerdSelect = useCallback(
-    (id: string) => {
-      setHerdId(id);
-    },
-    [setHerdId]
-  );
-
-  const handleBreedingClick = useCallback((breeding: ExtendedBreeding) => {
-    setSelectedBreeding(breeding);
-    setIsBreedingDialogOpen(true);
-  }, []);
-
-  const handleNewBreedingClick = useCallback(() => {
-    setSelectedBreeding("new");
-    setIsBreedingDialogOpen(true);
-  }, []);
-
   const handleBreedingDialogClose = useCallback(() => {
     setSelectedBreeding(null);
     setIsBreedingDialogOpen(false);
     fetchBreedings();
   }, [fetchBreedings]);
+
+  // Then define effects
+  useEffect(() => {
+    if (!genebanks.length || !user) return;
+
+    if (user.is_admin) {
+      // For admins, show all herds in the selected genebank
+      if (genebankName) {
+        const foundGenebank = genebanks.find(
+          (g: any) => g.name === genebankName
+        );
+        if (foundGenebank) {
+          setHerdOptions(foundGenebank.herds);
+        }
+      }
+    } else if (user.is_manager?.length > 0) {
+      // For managers, show herds they manage in the selected genebank
+      if (genebankName) {
+        const foundGenebank = genebanks.find(
+          (g: any) => g.name === genebankName
+        );
+        if (foundGenebank && user.is_manager.includes(foundGenebank.id)) {
+          setHerdOptions(foundGenebank.herds);
+        }
+      }
+    } else {
+      // For regular users, only show their owned herds
+      if (user.is_owner && user.is_owner.length > 0) {
+        const filteredHerds = genebanks.flatMap((g: any) =>
+          g.herds.filter((herd: any) => user.is_owner.includes(herd.herd))
+        );
+        setHerdOptions(filteredHerds);
+
+        // Auto-select if user has only one herd
+        if (filteredHerds.length === 1 && !herdId) {
+          handleHerdSelect(filteredHerds[0].herd);
+          onUpdateStatus?.("completed");
+        }
+      }
+    }
+  }, [genebanks, user, herdId, handleHerdSelect, onUpdateStatus, genebankName]);
+
+  // Fetch breedings when herdId changes
+  useEffect(() => {
+    if (!herdId || isLoading) {
+      setHerdBreedings([]);
+      return;
+    }
+
+    // Only fetch if we have a valid herdId and we're not already loading
+    fetchBreedings();
+  }, [herdId]); // Only depend on herdId changes
 
   // Get filtered breedings for the report year
   const selectedHerdBreedings = useMemo(() => {
@@ -232,10 +257,6 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     }
     return {};
   }, []);
-
-  if (!genebankName && (!user?.is_owner || user.is_owner.length === 0)) {
-    return <Typography>Du äger ingen besättning.</Typography>;
-  }
 
   // Helper function to render the info card
   const renderInfoCard = (selectedHerdId: string) => (
@@ -499,6 +520,25 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
     );
   };
 
+  // Render logic
+  if (!genebankName && (!user?.is_owner || user.is_owner.length === 0)) {
+    return <Typography>Du äger ingen besättning.</Typography>;
+  }
+
+  // Skip rendering selection UI if user has only one herd and is not admin/manager
+  if (
+    user?.is_owner?.length === 1 &&
+    !user.is_admin &&
+    (!user.is_manager || user.is_manager.length === 0)
+  ) {
+    return (
+      <div style={{ width: "100%" }}>
+        {renderInfoCard(user.is_owner[0])}
+        {renderBreedingTable()}
+      </div>
+    );
+  }
+
   return (
     <div
       className="yearly-report-container"
@@ -518,34 +558,32 @@ export const SelectHerdStep: React.FC<SelectHerdStepProps> = ({
           {renderBreedingTable()}
         </div>
       ) : (
-        /* Multiple Herds or Genebank Users - Selection UI */
-        (genebankName || (user?.is_owner && user.is_owner.length > 1)) && (
-          <>
-            <Typography variant="h6">
-              Välj besättning för årsrapport:
-            </Typography>
-            <TextField
-              label="Sök besättning"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
-            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-              {filteredHerds.map((herd: any) => (
-                <Button
-                  key={herd.herd}
-                  variant={herd.herd === herdId ? "contained" : "outlined"}
-                  color={herd.herd === herdId ? "primary" : "default"}
-                  onClick={() => handleHerdSelect(herd.herd)}
-                  style={{ margin: "0.5em" }}
-                >
-                  {herd.herd_name || herd.herd}
-                </Button>
-              ))}
-            </div>
-          </>
-        )
+        /* Show selection UI for all users who can see multiple herds */
+        <>
+          <Typography variant="h6">Välj besättning för årsrapport:</Typography>
+          <TextField
+            label="Sök besättning"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+            {filteredHerds.map((herd: any) => (
+              <Button
+                key={herd.herd}
+                variant={herd.herd === herdId ? "contained" : "outlined"}
+                color={herd.herd === herdId ? "primary" : "default"}
+                onClick={() => handleHerdSelect(herd.herd)}
+                style={{ margin: "0.5em" }}
+              >
+                {herd.herd_name
+                  ? `${herd.herd} - ${herd.herd_name}`
+                  : herd.herd}
+              </Button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

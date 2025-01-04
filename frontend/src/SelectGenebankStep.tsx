@@ -29,7 +29,7 @@ export const SelectGenebankStep: React.FC<SelectGenebankStepProps> = ({
     if (user.is_admin) {
       return true;
     }
-    if (user.is_manager) {
+    if (user.is_manager?.length > 0) {
       return user.is_manager.includes(g.id);
     }
     return false;
