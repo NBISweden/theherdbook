@@ -62,17 +62,13 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   });
 
   const { isManagerOrAdmin, isHerdContactUpdateStep } = useMemo(() => {
-    // Check if user is admin or manages the Gotlandskanin genebank
     const isSystemAdmin = user?.is_admin;
-    const managesGotlandskanin =
-      user?.is_manager && user.is_manager.includes(1); // Check if actually a manager
+    const isManager = user?.is_manager && user.is_manager.length > 0;
 
     return {
-      isManagerOrAdmin: isSystemAdmin || managesGotlandskanin,
+      isManagerOrAdmin: isSystemAdmin || isManager,
       isHerdContactUpdateStep:
-        isSystemAdmin || managesGotlandskanin
-          ? activeStep === 2
-          : activeStep === 1,
+        isSystemAdmin || isManager ? activeStep === 2 : activeStep === 1,
     };
   }, [user, activeStep]);
 
@@ -96,7 +92,6 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   }, [user]);
 
   useEffect(() => {
-    // Update canProceed based on step status
     const currentStep = isManagerOrAdmin ? activeStep : activeStep + 1;
     switch (currentStep) {
       case 0:
@@ -115,13 +110,27 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         setCanProceed(stepStatus.batchUpdate === "completed");
         break;
       case 4:
-        // For the final step, we should allow proceeding if we've reached this step
         setCanProceed(true);
         break;
       default:
         setCanProceed(true);
     }
   }, [activeStep, stepStatus, isManagerOrAdmin]);
+
+  useEffect(() => {
+    if (hasAutoSelected || !user) return;
+
+    if (!user.is_admin && (!user.is_manager || user.is_manager.length === 0)) {
+      setGenebankName("Gotlandskanin");
+      handleStepStatus("genebank", "completed");
+      setHasAutoSelected(true);
+
+      if (user.is_owner?.length === 1) {
+        setHerdId(user.is_owner[0]);
+        handleStepStatus("herd", "completed");
+      }
+    }
+  }, [user, hasAutoSelected]);
 
   const handleNext = () => {
     // Validation before moving to next step
@@ -140,6 +149,10 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         return;
       }
     }
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleAutoAdvance = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -235,30 +248,12 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   };
 
   const getStepContent = (step: number) => {
-    console.log("Getting step content", {
-      step,
-      user: {
-        is_admin: user?.is_admin,
-        is_manager: user?.is_manager,
-        is_owner: user?.is_owner,
-      },
-      genebankName,
-      herdId,
-    });
-
-    // Wait for user data to be loaded
     if (!user) {
       return <div>Laddar...</div>;
     }
 
-    // For non-admin/non-manager users, skip genebank selection
-    const managesGotlandskanin = user.is_manager && user.is_manager.includes(1);
-    if (!user.is_admin && !managesGotlandskanin) {
-      console.log("Rendering regular user step", {
-        step,
-        genebankName,
-        herdId,
-      });
+    const isManager = user.is_manager && user.is_manager.length > 0;
+    if (!user.is_admin && !isManager) {
       switch (step) {
         case 0:
           return (
@@ -310,7 +305,6 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
       }
     }
 
-    // For admin/manager users, show all steps including genebank selection
     switch (step) {
       case 0:
         return (
@@ -319,6 +313,7 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
             genebankName={genebankName}
             setGenebankName={setGenebankName}
             onUpdateStatus={(status) => handleStepStatus("genebank", status)}
+            handleNext={handleAutoAdvance}
           />
         );
       case 1:
@@ -366,79 +361,6 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         return <div>Okänt steg</div>;
     }
   };
-
-  // Initialize state when user data is loaded
-  useEffect(() => {
-    console.log("Auto-select effect", {
-      hasAutoSelected,
-      user: {
-        is_admin: user?.is_admin,
-        is_manager: user?.is_manager,
-        is_owner: user?.is_owner,
-      },
-      currentStep: activeStep,
-      genebankName,
-      herdId,
-    });
-
-    // Skip if we've already auto-selected or if user data isn't loaded yet
-    if (hasAutoSelected || !user) {
-      console.log("Skipping auto-select", {
-        hasAutoSelected,
-        user: !!user,
-      });
-      return;
-    }
-
-    // For non-admin/non-manager users, auto-select Gotlandskanin
-    if (!user.is_admin && (!user.is_manager || user.is_manager.length === 0)) {
-      console.log("Setting up for regular user");
-      setGenebankName("Gotlandskanin");
-      handleStepStatus("genebank", "completed");
-      setHasAutoSelected(true);
-
-      // If user has only one herd, auto-select it too
-      if (user.is_owner?.length === 1) {
-        console.log("Auto-selecting for single herd owner", {
-          herd: user.is_owner[0],
-          currentStep: activeStep,
-        });
-        setHerdId(user.is_owner[0]);
-        handleStepStatus("herd", "completed");
-      }
-    }
-  }, [user, activeStep, genebankName, herdId]);
-
-  // Track step status changes
-  useEffect(() => {
-    console.log("Step status update", {
-      stepStatus,
-      currentStep: activeStep,
-      isManagerOrAdmin:
-        user?.is_admin || (user?.is_manager && user.is_manager.length > 0),
-    });
-  }, [stepStatus, activeStep, user]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log("YearlyReportMultiStepForm - State update", {
-      activeStep,
-      genebankName,
-      herdId,
-      selectedHerd,
-      selectedGenebank,
-      canProceed,
-      user: user?.is_owner,
-    });
-  }, [
-    activeStep,
-    genebankName,
-    herdId,
-    selectedHerd,
-    selectedGenebank,
-    canProceed,
-    user,
-  ]);
 
   return (
     <Paper style={{ padding: "2em" }}>
