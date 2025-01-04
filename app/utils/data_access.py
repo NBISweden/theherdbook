@@ -2492,11 +2492,15 @@ def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
                 status = "Aktiv genbank"  # Default status
                 if form_data.get("endingGenbank", False):
                     status = "Vill avsluta genbank"
-                elif (
-                    form_data.get("numberOfMalesWithCertificate", 0) == 0
-                    or form_data.get("numberOfFemalesWithCertificate", 0) == 0
-                ):
-                    status = "Avslutad, men kvar som medlem"
+                else:
+                    males = form_data.get("numberOfMalesWithCertificate", 0)
+                    females = form_data.get("numberOfFemalesWithCertificate", 0)
+                    if males == 0 and females == 0:
+                        status = "Automatisk avslutad: Saknar djur med intyg"
+                    elif males == 0:
+                        status = "Automatisk avslutad: Saknar hane med intyg"
+                    elif females == 0:
+                        status = "Automatisk avslutad: Saknar hona med intyg"
 
                 # Format publish information based on allowPublication array
                 publish_info = "Nej, ingen publicering"
