@@ -41,6 +41,7 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   const { user } = useUserContext();
   const { userMessage } = useMessageContext();
   const { loadData } = useDataContext();
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   const [activeStep, setActiveStep] = useState(0);
   const [genebankName, setGenebankName] = useState<string | null>(null);
@@ -61,35 +62,36 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   });
 
   const { isManagerOrAdmin, isHerdContactUpdateStep } = useMemo(() => {
-    const isAdmin =
-      user?.is_admin || (user?.is_manager ? user.is_manager.length > 0 : false);
+    const isSystemAdmin = user?.is_admin;
+    const isManager = user?.is_manager && user.is_manager.length > 0;
+
     return {
-      isManagerOrAdmin: isAdmin,
-      isHerdContactUpdateStep: isAdmin ? activeStep === 2 : activeStep === 1,
+      isManagerOrAdmin: isSystemAdmin || isManager,
+      isHerdContactUpdateStep:
+        isSystemAdmin || isManager ? activeStep === 2 : activeStep === 1,
     };
   }, [user, activeStep]);
 
-  const steps = useMemo(
-    () =>
-      isManagerOrAdmin
-        ? [
-            "Välj Genbank",
-            "Välj Besättning",
-            "Uppdatera Kontaktinformation",
-            "Uppdatera Kaniner",
-            "Årsrapport",
-          ]
-        : [
-            "Välj Besättning",
-            "Uppdatera Kontaktinformation",
-            "Uppdatera Kaniner",
-            "Årsrapport",
-          ],
-    [isManagerOrAdmin]
-  );
+  const steps = useMemo(() => {
+    if (!user) return [];
+
+    return user.is_admin || (user.is_manager && user.is_manager.length > 0)
+      ? [
+          "Välj Genbank",
+          "Välj Besättning",
+          "Uppdatera Kontaktinformation",
+          "Uppdatera Kaniner",
+          "Årsrapport",
+        ]
+      : [
+          "Välj Besättning",
+          "Uppdatera Kontaktinformation",
+          "Uppdatera Kaniner",
+          "Årsrapport",
+        ];
+  }, [user]);
 
   useEffect(() => {
-    // Update canProceed based on step status
     const currentStep = isManagerOrAdmin ? activeStep : activeStep + 1;
     switch (currentStep) {
       case 0:
@@ -108,13 +110,27 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         setCanProceed(stepStatus.batchUpdate === "completed");
         break;
       case 4:
-        // For the final step, we should allow proceeding if we've reached this step
         setCanProceed(true);
         break;
       default:
         setCanProceed(true);
     }
   }, [activeStep, stepStatus, isManagerOrAdmin]);
+
+  useEffect(() => {
+    if (hasAutoSelected || !user) return;
+
+    if (!user.is_admin && (!user.is_manager || user.is_manager.length === 0)) {
+      setGenebankName("Gotlandskanin");
+      handleStepStatus("genebank", "completed");
+      setHasAutoSelected(true);
+
+      if (user.is_owner?.length === 1) {
+        setHerdId(user.is_owner[0]);
+        handleStepStatus("herd", "completed");
+      }
+    }
+  }, [user, hasAutoSelected]);
 
   const handleNext = () => {
     // Validation before moving to next step
@@ -133,6 +149,10 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         return;
       }
     }
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
+
+  const handleAutoAdvance = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -228,72 +248,18 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
   };
 
   const getStepContent = (step: number) => {
-    if (isManagerOrAdmin) {
-      switch (step) {
-        case 0:
-          return (
-            <SelectGenebankStep
-              user={user}
-              genebankName={genebankName}
-              setGenebankName={setGenebankName}
-              onUpdateStatus={(status) => handleStepStatus("genebank", status)}
-            />
-          );
-        case 1:
-          return (
-            <SelectHerdStep
-              user={user}
-              genebankName={genebankName}
-              herdId={herdId}
-              setHerdId={setHerdId}
-              reportYear={reportYear}
-              onUpdateStatus={(status) => handleStepStatus("herd", status)}
-            />
-          );
-        case 2:
-          return (
-            <HerdContactUpdateStep
-              herdData={herdData}
-              herdId={herdId}
-              loadData={loadData}
-              onUpdateStatus={(status) =>
-                handleStepStatus("herdContact", status)
-              }
-            />
-          );
-        case 3:
-          return (
-            <BatchRabbitUpdateStep
-              herdId={herdId}
-              reportYear={reportYear}
-              reportRoundId={reportRoundId}
-              onUpdateStatus={(status) =>
-                handleStepStatus("batchUpdate", status)
-              }
-            />
-          );
-        case 4:
-          return (
-            <YearlyReportStep
-              herdId={herdId}
-              reportRoundId={reportRoundId}
-              reportYear={reportYear}
-              onUpdateStatus={(status) =>
-                handleStepStatus("yearlyReport", status)
-              }
-              formRef={yearlyReportRef}
-            />
-          );
-        default:
-          return <div>Okänt steg</div>;
-      }
-    } else {
+    if (!user) {
+      return <div>Laddar...</div>;
+    }
+
+    const isManager = user.is_manager && user.is_manager.length > 0;
+    if (!user.is_admin && !isManager) {
       switch (step) {
         case 0:
           return (
             <SelectHerdStep
               user={user}
-              genebankName={genebankName}
+              genebankName="Gotlandskanin"
               herdId={herdId}
               setHerdId={setHerdId}
               reportYear={reportYear}
@@ -337,6 +303,62 @@ const YearlyReportMultiStepForm: React.FC<Props> = ({
         default:
           return <div>Okänt steg</div>;
       }
+    }
+
+    switch (step) {
+      case 0:
+        return (
+          <SelectGenebankStep
+            user={user}
+            genebankName={genebankName}
+            setGenebankName={setGenebankName}
+            onUpdateStatus={(status) => handleStepStatus("genebank", status)}
+            handleNext={handleAutoAdvance}
+          />
+        );
+      case 1:
+        return (
+          <SelectHerdStep
+            user={user}
+            genebankName={genebankName}
+            herdId={herdId}
+            setHerdId={setHerdId}
+            reportYear={reportYear}
+            onUpdateStatus={(status) => handleStepStatus("herd", status)}
+          />
+        );
+      case 2:
+        return (
+          <HerdContactUpdateStep
+            herdData={herdData}
+            herdId={herdId}
+            loadData={loadData}
+            onUpdateStatus={(status) => handleStepStatus("herdContact", status)}
+          />
+        );
+      case 3:
+        return (
+          <BatchRabbitUpdateStep
+            herdId={herdId}
+            reportYear={reportYear}
+            reportRoundId={reportRoundId}
+            onUpdateStatus={(status) => handleStepStatus("batchUpdate", status)}
+          />
+        );
+      case 4:
+        return (
+          <YearlyReportStep
+            herdId={herdId}
+            reportRoundId={reportRoundId}
+            reportYear={reportYear}
+            onUpdateStatus={(status) =>
+              handleStepStatus("yearlyReport", status)
+            }
+            formRef={yearlyReportRef}
+          />
+        );
+      default:
+        return <div>Okänt steg</div>;
     }
   };
 
