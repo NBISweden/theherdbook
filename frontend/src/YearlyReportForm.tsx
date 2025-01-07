@@ -195,6 +195,8 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
     );
     values.numberOfFemalesUsedInBreeding = uniqueMothers.size;
     values.numberOfMalesUsedInBreeding = uniqueFathers.size;
+    values.numberOfFemalesWithCertificate = femaleRabbits.length;
+    values.numberOfMalesWithCertificate = maleRabbits.length;
 
     return values;
   };
