@@ -1,52 +1,69 @@
-FROM rocker/r-ver:4.2 as R-build
+FROM rocker/r-ver:4.4.2 as r-build
 
-RUN apt update \
-  && apt install -y --no-install-recommends \
-  libpq-dev \
-  libglu1-mesa-dev \
-  libpng-dev \
-  libgl1-mesa-dev \
-  zlib1g-dev \
-  libudunits2-dev \
-  libgdal-dev \
-  gdal-bin \
-  libgeos-dev \
-  libproj-dev \
-  libsqlite3-dev \
-  pandoc\
-  make \
-  cmake \
-  libicu-dev \
-  libfreetype6-dev \
-  libmagick++-dev \
-  libcurl4-openssl-dev \
-  libssl-dev \
-  libxml2-dev \
-  pkg-config \
-  libsodium-dev \
-  libicu-dev \
-  && apt autoremove -y \
-  && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    libglu1-mesa-dev \
+    libpng-dev \
+    libgl1-mesa-dev \
+    zlib1g-dev \
+    libudunits2-dev \
+    libgdal-dev \
+    gdal-bin \
+    libgeos-dev \
+    libproj-dev \
+    libsqlite3-dev \
+    pandoc \
+    make \
+    cmake \
+    libicu-dev \
+    libfreetype6-dev \
+    libmagick++-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    pkg-config \
+    libsodium-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN install2.r -d TRUE --error --ncpus 6 --repos "https://packagemanager.rstudio.com/cran/__linux__/jammy/2023-02-24" --repos "https://ftp.acc.umu.se/mirror/CRAN/" --repos "https://cloud.r-project.org/" optiSel readr plumber rjson dplyr remotes
-RUN installGithub.r rmsharp/nprcgenekeepr
+# Create directory for package caching
+RUN mkdir -p /pkg_cache
 
+# Install CRAN packages more efficiently with caching (excluding optiSel)
+RUN --mount=type=cache,target=/pkg_cache \
+    PKGS="readr plumber rjson dplyr remotes" && \
+    install2.r --error --ncpus $(nproc) --skipinstalled --repos https://packagemanager.posit.co/cran/__linux__/noble/2025-01-08 $PKGS && \
+    rm -rf /tmp/downloaded_packages
 
-FROM rocker/r-ver:4.2
+# Try to install optiSel binary first, fall back to source if needed
+RUN --mount=type=cache,target=/pkg_cache \
+    Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2025-01-08")); install.packages("optiSel", dependencies=TRUE)'
 
-COPY --from=R-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
+# Install GitHub package with caching
+RUN --mount=type=cache,target=/pkg_cache \
+    Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2025-01-08")); remotes::install_github("rmsharp/nprcgenekeepr", upgrade = "never", dependencies = TRUE)' && \
+    rm -rf /tmp/downloaded_packages
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-  libpq5 \
-  libglu1-mesa \
-  pandoc \
-  supervisor \
-  rsync \
-  inotify-tools && \
-  mkdir -p /code /usr/local/r-api && \
-  chown www-data:www-data /usr/local/r-api && \
-  rm -rf /var/lib/apt/lists/*
+FROM rocker/r-ver:4.4.2
+
+# Copy R libraries from build stage
+COPY --from=r-build /usr/local/lib/R/site-library /usr/local/lib/R/site-library
+
+# Install runtime dependencies and set up directories in a single layer
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+        libpq5 \
+        libglu1-mesa \
+        pandoc \
+        supervisor \
+        rsync \
+        inotify-tools \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /code /usr/local/r-api \
+    && chown www-data:www-data /usr/local/r-api
 
 WORKDIR /usr/local/r-api
 
