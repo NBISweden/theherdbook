@@ -829,8 +829,12 @@ def add_herd(form, user_uuid):
     user = fetch_user_info(user_uuid)
     if user is None:
         return {"status": "error", "message": "Not logged in"}
-    if not (user.is_admin or (user.is_manager and form["genebank"] in user.is_manager)):
-        return {"status": "error", "message": "Forbidden"}
+    try:
+        genebank_id = int(form["genebank"])
+        if not (user.is_admin or (user.is_manager and genebank_id in user.is_manager)):
+            return {"status": "error", "message": "Forbidden"}
+    except (ValueError, KeyError):
+        return {"status": "error", "message": "Invalid genebank ID"}
 
     with DATABASE.atomic():
         try:
