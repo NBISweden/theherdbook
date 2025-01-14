@@ -294,7 +294,7 @@ export function BreedingForm({
       return false;
     }
 
-    if (userInput?.litter_size6w > userInput?.litter_size) {
+    if (Number(userInput?.litter_size6w) > Number(userInput?.litter_size)) {
       userMessage(
         "Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.",
         "warning"
