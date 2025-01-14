@@ -244,7 +244,9 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
     if (!breeding.litter_size6w) {
       return Math.min(breedingUpdates.litter_size6w, 9);
     }
-    if (breeding.litter_size6w < breedingUpdates.litter_size6w) {
+    if (
+      Number(breeding.litter_size6w) < Number(breedingUpdates.litter_size6w)
+    ) {
       return (
         Math.min(breedingUpdates.litter_size6w, 9) -
         Math.min(breeding.litter_size6w, 9)
