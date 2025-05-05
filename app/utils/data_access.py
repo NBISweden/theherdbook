@@ -2510,7 +2510,9 @@ def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
                 publish_info = "Nej, ingen publicering"
                 allow_publication = form_data.get("allowPublication", [])
 
-                if "all" in allow_publication:
+                if "noPublication" in allow_publication:
+                    publish_info = "Nej, ingen publicering"
+                elif "all" in allow_publication:
                     excluded = []
                     if "noPhone" in allow_publication:
                         excluded.append("telefonnummer")
@@ -2523,6 +2525,20 @@ def get_yearly_reports(round_id: int, genebank_id: int) -> List[Dict]:
                         publish_info = "Ja för publicering i Koharen"
                     else:
                         publish_info = f"Ja, men inte {' och '.join(excluded)}"
+                else:
+                    # Handle individual publication settings
+                    excluded = []
+                    if "noPhone" in allow_publication:
+                        excluded.append("telefonnummer")
+                    if "noEmail" in allow_publication:
+                        excluded.append("e-postadress")
+                    if "noAddress" in allow_publication:
+                        excluded.append("postnummer och ort")
+                    
+                    if excluded:
+                        publish_info = f"Ja, men inte {' och '.join(excluded)}"
+                    else:
+                        publish_info = "Ja för publicering i Koharen"
 
                 report = {
                     "herd": r.herd.herd,  # Changed from genebank_number to herd
