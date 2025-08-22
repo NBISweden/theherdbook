@@ -8,8 +8,8 @@ import sys
 import os
 import argparse
 
-# Add the current directory to the Python path (since we're running from /app)
-sys.path.insert(0, os.path.dirname(__file__))
+# Change to the app directory where utils is located
+os.chdir('/app')
 
 import utils.database as db
 from regenerate_certificates import get_individuals_with_digital_certificates, select_user_for_herd
