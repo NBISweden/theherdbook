@@ -8,8 +8,8 @@ import sys
 import os
 import argparse
 
-# Change to the app directory where utils is located
-os.chdir('/app')
+# Change to the code directory where utils is located (files are copied from /api_src to /code)
+os.chdir('/code')
 
 import utils.database as db
 from regenerate_certificates import get_individuals_with_digital_certificates, select_user_for_herd
@@ -29,7 +29,7 @@ def test_user_selection():
     
     # Initialize database connection
     try:
-        db.init_database()
+        db.connect()
         print("✓ Database connection established")
     except Exception as e:
         print(f"✗ Failed to initialize database: {e}")

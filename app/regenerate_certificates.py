@@ -187,7 +187,7 @@ def main():
     
     # Initialize database connection
     try:
-        db.init_database()
+        db.connect()
         logger.info("Database connection established")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
