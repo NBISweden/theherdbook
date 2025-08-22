@@ -129,22 +129,25 @@ def select_user_for_herd(herd_id, herd_name):
             print("\nOperation cancelled by user")
             return None
 
-def regenerate_certificate(individual, user):
+def regenerate_certificate(individual, user, force=False):
     """
     Regenerate certificate for a single individual.
     """
     try:
         logger.info(f"Processing individual {individual.number} (certificate {individual.digital_certificate})")
         
-        # Check if certificate already exists in S3
-        try:
-            exists = check_certificate_s3(ind_number=individual.number)
-            if exists:
-                logger.info(f"Certificate for {individual.number} already exists in S3, skipping")
-                return True
-        except Exception as e:
-            # If check fails, assume it doesn't exist and continue
-            logger.debug(f"Certificate check failed for {individual.number}: {e}")
+        # Check if certificate already exists in S3 (unless force is used)
+        if not force:
+            try:
+                exists = check_certificate_s3(ind_number=individual.number)
+                if exists:
+                    logger.info(f"Certificate for {individual.number} already exists in S3, skipping")
+                    return True
+            except Exception as e:
+                # If check fails, assume it doesn't exist and continue
+                logger.debug(f"Certificate check failed for {individual.number}: {e}")
+        else:
+            logger.info(f"Force flag used - regenerating certificate for {individual.number} even if it exists")
         
         # Get individual data as dictionary
         ind_data = individual.as_dict()
@@ -187,10 +190,11 @@ def main():
     parser = argparse.ArgumentParser(description='Regenerate certificates for individuals with digital certificates')
     parser.add_argument('--limit', type=int, help='Limit the number of individuals to process (for testing)')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without actually doing it')
+    parser.add_argument('--force', action='store_true', help='Force regeneration even if certificate already exists in S3')
     args = parser.parse_args()
     
-    print(f"Arguments: limit={args.limit}, dry_run={args.dry_run}")
-    logger.info(f"Arguments: limit={args.limit}, dry_run={args.dry_run}")
+    print(f"Arguments: limit={args.limit}, dry_run={args.dry_run}, force={args.force}")
+    logger.info(f"Arguments: limit={args.limit}, dry_run={args.dry_run}, force={args.force}")
     logger.info("Starting certificate regeneration process")
     if args.limit:
         logger.info(f"Limiting to {args.limit} individuals for testing")
@@ -268,7 +272,7 @@ def main():
             print(f"  Dry run completed for {individual.number}")
         else:
             print(f"  Calling regenerate_certificate for {individual.number}...")
-            if regenerate_certificate(individual, user):
+            if regenerate_certificate(individual, user, force=args.force):
                 print(f"  ✓ Certificate regenerated successfully for {individual.number}")
                 success_count += 1
             else:
