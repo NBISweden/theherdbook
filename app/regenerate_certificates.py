@@ -173,12 +173,16 @@ def main():
     """
     Main function to regenerate all certificates.
     """
+    print("=== Starting certificate regeneration process ===")
+    
     # Parse command line arguments
+    print("Parsing command line arguments...")
     parser = argparse.ArgumentParser(description='Regenerate certificates for individuals with digital certificates')
     parser.add_argument('--limit', type=int, help='Limit the number of individuals to process (for testing)')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without actually doing it')
     args = parser.parse_args()
     
+    print(f"Arguments: limit={args.limit}, dry_run={args.dry_run}")
     logger.info("Starting certificate regeneration process")
     if args.limit:
         logger.info(f"Limiting to {args.limit} individuals for testing")
@@ -186,17 +190,22 @@ def main():
         logger.info("DRY RUN MODE - No certificates will be generated or uploaded")
     
     # Initialize database connection
+    print("Connecting to database...")
     try:
         db.connect()
+        print("✓ Database connected successfully")
         logger.info("Database connection established")
     except Exception as e:
+        print(f"✗ Database connection failed: {e}")
         logger.error(f"Failed to initialize database: {e}")
         return 1
     
     # Get all individuals with digital certificates
+    print("Getting individuals with digital certificates...")
     individuals = get_individuals_with_digital_certificates()
     
     if not individuals:
+        print("No individuals with digital certificates found")
         logger.warning("No individuals with digital certificates found")
         return 0
     
