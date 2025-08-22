@@ -149,15 +149,6 @@ def regenerate_certificate(individual, user):
         # Get individual data as dictionary
         ind_data = individual.as_dict()
         
-        # Fix the herd field to use origin herd instead of current herd
-        # The certificate should show the origin herd (where the rabbit was born)
-        origin_herd = individual.origin_herd
-        ind_data["herd"] = {
-            "id": origin_herd.id,
-            "herd": origin_herd.herd,
-            "herd_name": origin_herd.herd_name
-        }
-        
         # Get certificate data using the user's UUID
         cert_data = get_certificate_data(ind_data, user.uuid)
         
