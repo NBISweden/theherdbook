@@ -45,8 +45,10 @@ def get_individuals_with_digital_certificates():
     """
     Get all individuals that have digital certificates in the database.
     """
+    print("  Executing database query...")
     try:
         # Query for individuals with digital certificates
+        print("  Building query...")
         individuals = (
             db.Individual
             .select()
@@ -54,9 +56,14 @@ def get_individuals_with_digital_certificates():
             .order_by(db.Individual.number)
         )
         
-        logger.info(f"Found {len(individuals)} individuals with digital certificates")
-        return list(individuals)
+        print("  Converting to list...")
+        individuals_list = list(individuals)
+        print(f"  Found {len(individuals_list)} individuals with digital certificates")
+        
+        logger.info(f"Found {len(individuals_list)} individuals with digital certificates")
+        return individuals_list
     except Exception as e:
+        print(f"  Error querying individuals: {e}")
         logger.error(f"Error querying individuals: {e}")
         return []
 
