@@ -30,16 +30,15 @@ from utils.cert_acess import (
     check_certificate_s3
 )
 
-# Set up logging
+# Set up logging - console only for now
+print("Setting up console logging...")
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(f'{settings.service.logfolder}/certificate_regeneration.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
+print("✓ Console logging setup completed")
 
 def get_individuals_with_digital_certificates():
     """
