@@ -237,9 +237,12 @@ def main():
         # Get the origin herd for this individual
         print(f"  Getting origin herd for {individual.number}...")
         origin_herd = individual.origin_herd
+        current_herd = individual.current_herd
         herd_id = origin_herd.id
         herd_name = origin_herd.herd_name or origin_herd.herd
         print(f"  Origin herd: {herd_id} ({herd_name})")
+        print(f"  Current herd: {current_herd.id} ({current_herd.herd})")
+        print(f"  Using origin herd for certificate generation ✓")
         
         # Get or select user for this herd
         print(f"  Getting user for herd {herd_id}...")
