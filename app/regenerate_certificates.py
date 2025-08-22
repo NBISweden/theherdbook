@@ -217,32 +217,43 @@ def main():
         return 0
     
     # Apply limit if specified
+    print("Applying limit...")
     if args.limit and args.limit > 0:
         individuals = individuals[:args.limit]
+        print(f"Limited to first {len(individuals)} individuals")
         logger.info(f"Limited to first {len(individuals)} individuals")
     
     # Process each individual
+    print("Starting to process individuals...")
     success_count = 0
     failure_count = 0
     processed_herds = {}  # Cache for herd owners to avoid repeated prompts
     
     for i, individual in enumerate(individuals, 1):
+        print(f"Processing {i}/{len(individuals)}: {individual.number}")
         logger.info(f"Processing {i}/{len(individuals)}: {individual.number}")
         
         # Get the origin herd for this individual
+        print(f"  Getting origin herd for {individual.number}...")
         origin_herd = individual.origin_herd
         herd_id = origin_herd.id
         herd_name = origin_herd.herd_name or origin_herd.herd
+        print(f"  Origin herd: {herd_id} ({herd_name})")
         
         # Get or select user for this herd
+        print(f"  Getting user for herd {herd_id}...")
         if herd_id not in processed_herds:
+            print(f"  Herd {herd_id} not in cache, selecting user...")
             user = select_user_for_herd(herd_id, herd_name)
             if user is None:
+                print(f"  Could not determine user for herd {herd_id}, skipping individual {individual.number}")
                 logger.error(f"Could not determine user for herd {herd_id}, skipping individual {individual.number}")
                 failure_count += 1
                 continue
             processed_herds[herd_id] = user
+            print(f"  Selected user: {user.fullname or user.username}")
         else:
+            print(f"  Herd {herd_id} in cache, using cached user")
             user = processed_herds[herd_id]
         
         if args.dry_run:
