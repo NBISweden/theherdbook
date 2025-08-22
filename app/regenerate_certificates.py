@@ -181,6 +181,7 @@ def main():
     Main function to regenerate all certificates.
     """
     print("=== Starting certificate regeneration process ===")
+    logger.info("=== Certificate regeneration script started ===")
     
     # Parse command line arguments
     print("Parsing command line arguments...")
@@ -190,6 +191,7 @@ def main():
     args = parser.parse_args()
     
     print(f"Arguments: limit={args.limit}, dry_run={args.dry_run}")
+    logger.info(f"Arguments: limit={args.limit}, dry_run={args.dry_run}")
     logger.info("Starting certificate regeneration process")
     if args.limit:
         logger.info(f"Limiting to {args.limit} individuals for testing")
@@ -256,28 +258,41 @@ def main():
             print(f"  Herd {herd_id} in cache, using cached user")
             user = processed_herds[herd_id]
         
+        print(f"  Checking if dry run...")
         if args.dry_run:
+            print(f"  DRY RUN: Would regenerate certificate for {individual.number} using user {user.fullname or user.username}")
             logger.info(f"DRY RUN: Would regenerate certificate for {individual.number} using user {user.fullname or user.username}")
             success_count += 1
+            print(f"  Dry run completed for {individual.number}")
         else:
+            print(f"  Calling regenerate_certificate for {individual.number}...")
             if regenerate_certificate(individual, user):
+                print(f"  ✓ Certificate regenerated successfully for {individual.number}")
                 success_count += 1
             else:
+                print(f"  ✗ Certificate regeneration failed for {individual.number}")
                 failure_count += 1
     
+    print("Certificate regeneration completed:")
+    print(f"  Total individuals: {len(individuals)}")
+    print(f"  Successful: {success_count}")
+    print(f"  Failed: {failure_count}")
     logger.info(f"Certificate regeneration completed:")
     logger.info(f"  Total individuals: {len(individuals)}")
     logger.info(f"  Successful: {success_count}")
     logger.info(f"  Failed: {failure_count}")
     
     if args.dry_run:
+        print("DRY RUN COMPLETED - No actual changes were made")
         logger.info("DRY RUN COMPLETED - No actual changes were made")
         return 0
     
     if failure_count > 0:
+        print(f"{failure_count} certificates failed to regenerate")
         logger.warning(f"{failure_count} certificates failed to regenerate")
         return 1
     
+    print("All certificates regenerated successfully")
     logger.info("All certificates regenerated successfully")
     return 0
 
