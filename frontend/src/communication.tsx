@@ -19,6 +19,11 @@ export async function get(url: string) {
       "Content-Type": "application/json",
     },
   });
+  // Handle 401 Unauthorized - return null for user context compatibility
+  // with herdbook2 API which returns 401 instead of null for unauthenticated users
+  if (resp.status === 401) {
+    return null;
+  }
   return await resp.json();
 }
 
