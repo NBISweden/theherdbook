@@ -7,6 +7,7 @@ const credentials_policy = "same-origin";
 
 /**
  * Creates a GET request to the given `url`, and returns the reply as json.
+ * Returns null for 401 (unauthorized) responses to maintain backwards compatibility.
  *
  * @param url The target URL for the GET request
  */
@@ -19,6 +20,10 @@ export async function get(url: string) {
       "Content-Type": "application/json",
     },
   });
+  // Return null for 401 to maintain backwards compatibility with user auth checks
+  if (resp.status === 401) {
+    return null;
+  }
   return await resp.json();
 }
 
