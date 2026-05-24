@@ -208,7 +208,7 @@ class CertificateGenerator:
                     widget.update()
                     xref = widget.xref
                     n_obj = doc.xref_get_key(xref, "AP/N")
-                    if n_obj[0] == "indirect":
+                    if n_obj[0] == "xref":
                         try:
                             n_xref = int(n_obj[1].split()[0])
                             stream = doc.xref_stream(n_xref)
