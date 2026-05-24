@@ -207,14 +207,21 @@ class CertificateGenerator:
                         widget.field_value = val
                     widget.update()
                     xref = widget.xref
-                    ap_entry = doc.xref_get_key(xref, "AP")
-                    if ap_entry[0] == "dict" and "/N " in ap_entry[1]:
-                        n_xref = int(ap_entry[1].split("/N ")[1].split(" ")[0])
-                        stream = doc.xref_stream(n_xref)
-                        if stream:
-                            patched = re.sub(rb"(\n)0 ([0-9.]+) Td", rb"\g<1>2 \2 Td", stream)
-                            if patched != stream:
-                                doc.update_stream(n_xref, patched)
+                    n_obj = doc.xref_get_key(xref, "AP/N")
+                    if n_obj[0] == "indirect":
+                        try:
+                            n_xref = int(n_obj[1].split()[0])
+                            stream = doc.xref_stream(n_xref)
+                            if stream:
+                                patched = re.sub(
+                                    rb"(\n)0 ([0-9.]+) Td",
+                                    rb"\g<1>2 \2 Td",
+                                    stream,
+                                )
+                                if patched != stream:
+                                    doc.update_stream(n_xref, patched)
+                        except (ValueError, IndexError):
+                            logger.debug("Skipped AP/N patching for widget %s", widget.field_name)
                     widget = widget.next
             doc.save(out)
         out.seek(0)
