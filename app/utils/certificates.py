@@ -1,8 +1,10 @@
 """
 PDF certificate handler
 """
+
 import datetime
 import logging
+import re
 from io import BytesIO
 from pathlib import Path
 
@@ -131,13 +133,12 @@ class CertificateGenerator:
                         if form_key:
                             val = form_data.get(form_key, "")
                             vals = self._encode_pdf_string(val)
-                            annotation.update(pdfrw.PdfDict(AP=vals, V=vals, Ff=1))
+                            annotation.update(pdfrw.PdfDict(V=vals, Ff=1))
 
-        reader.Root.AcroForm.update(
-            pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject("true"))
-        )
+        reader.Root.AcroForm.update(pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject("false")))
         buffered = BytesIO()
         writer.write(buffered, reader)
+        buffered = self._generate_appearances(buffered)
         return buffered
 
     @staticmethod
@@ -188,6 +189,43 @@ class CertificateGenerator:
                         key = annotation["/T"][1:-1]
                         annots.append(key)
         return annots
+
+    @staticmethod
+    def _generate_appearances(pdf_bytes):
+        """Use PyMuPDF to generate proper appearance streams for all form
+        widgets so the PDF renders correctly in all viewers including Edge."""
+        if hasattr(pdf_bytes, "seek"):
+            pdf_bytes.seek(0)
+        out = BytesIO()
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            for page in doc:
+                widget = page.first_widget
+                while widget:
+                    widget.border_width = 0
+                    val = widget.field_value
+                    if val is not None:
+                        widget.field_value = val
+                    widget.update()
+                    xref = widget.xref
+                    n_obj = doc.xref_get_key(xref, "AP/N")
+                    if n_obj[0] == "xref":
+                        try:
+                            n_xref = int(n_obj[1].split()[0])
+                            stream = doc.xref_stream(n_xref)
+                            if stream:
+                                patched = re.sub(
+                                    rb"(\n)0 ([0-9.]+) Td",
+                                    rb"\g<1>2 \2 Td",
+                                    stream,
+                                )
+                                if patched != stream:
+                                    doc.update_stream(n_xref, patched)
+                        except (ValueError, IndexError):
+                            logger.debug("Skipped AP/N patching for widget %s", widget.field_name)
+                    widget = widget.next
+            doc.save(out)
+        out.seek(0)
+        return out
 
     @staticmethod
     def _encode_pdf_string(value):

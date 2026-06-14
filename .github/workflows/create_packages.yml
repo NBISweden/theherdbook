@@ -2,14 +2,19 @@
 name: Create packages
 on:
   push:
-    paths:
-      - "frontend/**" # Frontend changes
-      - "app/**" # Main app changes
-      - "r-api/**" # R API changes
-      - "docker/**" # Docker related changes
-      - ".docker/**" # Docker config changes
-      - "docker-compose.yml" # Docker compose changes
-      - ".github/workflows/create_packages.yml" # Workflow changes
+    tags:
+      - "v*" # Trigger on version tags
+    branches:
+      - "main"
+      - "master"
+      - "develop"
+      - "production"
+      - "test-prod"
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - "LICENSE"
 
 jobs:
   changes:
@@ -81,15 +86,20 @@ jobs:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          # Only build changed images and their dependents
-          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
-          elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
-          fi
+          # Always build all images for tags and production branches
+          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" ]]; then
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1
+          else
+            # Only build changed images and their dependents for other branches
+            if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 herdbook-frontend main
+            elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 main
+            fi
 
-          if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
-            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 r-api
+            if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 r-api
+            fi
           fi
 
       # Push images
@@ -106,20 +116,27 @@ jobs:
               docker tag "$image:latest" "ghcr.io/nbisweden/$image:$safe_branch"
               docker push "ghcr.io/nbisweden/$image:$safe_branch"
               
-              if [[ "$branch" == "main" || "$branch" == "master" || "$branch" == "develop" ]]; then
+              if [[ "${{ github.ref_type }}" == "tag" || "$branch" == "main" || "$branch" == "master" || "$branch" == "develop" || "$branch" == "production" || "$branch" == "test-prod" ]]; then
                 docker tag "$image:latest" "ghcr.io/nbisweden/$image:latest"
                 docker push "ghcr.io/nbisweden/$image:latest"
               fi
             fi
           }
 
-          # Push only the images that were built
-          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+          # For tags and production/test-prod branches, push all images
+          if [[ "${{ github.ref_type }}" == "tag" || "${{ github.ref_name }}" == "production" || "${{ github.ref_name }}" == "test-prod" ]]; then
             push_if_built "herdbook_frontend"
-          fi
-          if [[ "${{ needs.changes.outputs.main }}" == "true" || "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
             push_if_built "herdbook_main"
-          fi
-          if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
             push_if_built "herdbook_r-api"
+          else
+            # For other branches, push only the images that were built
+            if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+              push_if_built "herdbook_frontend"
+            fi
+            if [[ "${{ needs.changes.outputs.main }}" == "true" || "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+              push_if_built "herdbook_main"
+            fi
+            if [[ "${{ needs.changes.outputs.r-api }}" == "true" ]]; then
+              push_if_built "herdbook_r-api"
+            fi
           fi

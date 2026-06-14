@@ -70,7 +70,7 @@ export function BreedingForm({
 }: {
   data: Breeding | "new";
   herdId: string | undefined;
-  handleBreedingsChanged: () => void;
+  handleBreedingsChanged: (shouldClose?: boolean) => void;
   handleActive: (breeding: Breeding) => void;
 }) {
   const {
@@ -99,7 +99,7 @@ export function BreedingForm({
   const [formState, setFormState] = React.useState(
     emptyBreeding as ExtendedBreeding
   );
-  const [showBirthForm, setShowBirthForm] = React.useState(true);
+  const [showBirthForm, setShowBirthForm] = React.useState(false);
   let defaultDate = new Date();
   defaultDate.setFullYear(defaultDate.getFullYear() - 10);
   const [fromDate, setFromDate] = React.useState(defaultDate as Date);
@@ -206,16 +206,39 @@ export function BreedingForm({
   };
 
   const autoFillBreedDate = (dateString: string) => {
-    let breedDate: Date | number = new Date(dateString);
-    breedDate.setDate(breedDate.getDate() - 30);
-    const breedDateLocal = breedDate.toLocaleDateString(locale);
-    setFormField("breed_date", breedDateLocal);
+    try {
+      // Parse the birth date string (expecting YYYY-MM-DD format)
+      const [year, month, day] = dateString.split("-").map(Number);
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        return;
+      }
+
+      // Create date object (month is 0-based in JavaScript)
+      const birthDate = new Date(year, month - 1, day);
+      // Validate that we have a real date
+      if (isNaN(birthDate.getTime())) {
+        return;
+      }
+
+      const breedDate = new Date(birthDate);
+      breedDate.setDate(birthDate.getDate() - 30);
+
+      // Format as YYYY-MM-DD for API
+      const breedYear = breedDate.getFullYear();
+      const breedMonth = String(breedDate.getMonth() + 1).padStart(2, "0");
+      const breedDay = String(breedDate.getDate()).padStart(2, "0");
+      const formattedDate = `${breedYear}-${breedMonth}-${breedDay}`;
+
+      setFormField("breed_date", formattedDate);
+    } catch (error) {
+      console.error("Error calculating breed date:", error);
+    }
   };
 
   React.useEffect(() => {
     if (
-      formState.breed_date == null &&
-      typeof formState.birth_date == "string"
+      (!formState.breed_date || formState.breed_date === "") &&
+      formState.birth_date
     ) {
       autoFillBreedDate(formState.birth_date);
     }
@@ -271,7 +294,7 @@ export function BreedingForm({
       return false;
     }
 
-    if (userInput?.litter_size6w > userInput?.litter_size) {
+    if (Number(userInput?.litter_size6w) > Number(userInput?.litter_size)) {
       userMessage(
         "Kullstorleken efter 6 veckor får inte vara större än kullstorleken vid födseln.",
         "warning"
@@ -496,7 +519,8 @@ export function BreedingForm({
 
         if (breeding.birth_date === null) {
           userMessage("Kullen har sparats.", "success");
-
+          await setHerdChangeListener(herdChangeListener + 1);
+          handleBreedingsChanged();
           return;
         }
 
@@ -520,7 +544,7 @@ export function BreedingForm({
             );
           }
           await setHerdChangeListener(herdChangeListener + 1);
-          handleBreedingsChanged();
+          handleBreedingsChanged(true);
         }
         break;
       case 1:
@@ -529,13 +553,13 @@ export function BreedingForm({
         breeding.mother = breedingMatch.mother;
         await handleEditableBreedingUpdates(breeding, breedingMatch);
         await setHerdChangeListener(herdChangeListener + 1);
-        handleBreedingsChanged();
+        handleBreedingsChanged(!!breeding.birth_date);
         break;
       default:
         // update breeding event
         await handleEditableBreedingUpdates(breeding, breedingMatch);
         await setHerdChangeListener(herdChangeListener + 1);
-        handleBreedingsChanged();
+        handleBreedingsChanged(!!breeding.birth_date);
         break;
     }
   };
