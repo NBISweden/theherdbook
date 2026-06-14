@@ -379,7 +379,10 @@ export function Footer() {
   return (
     <div className="footer">
       <div className="euLogo">
-        <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
+        <img
+          src="/images/medfinansieras-av-eu-horizontal.svg"
+          alt="Medfinansieras av Europeiska unionen"
+        />
       </div>
       <div>
         <Typography className="euText">
