@@ -134,10 +134,15 @@ export function WithUserContext(props: { children: React.ReactNode }) {
     return false;
   }
 
-  function logout() {
-    let status = handleLogin(get("/api/logout"));
+  async function logout(): Promise<Result> {
+    try {
+      await get("/api/logout");
+    } catch (e) {
+      console.error(e);
+    }
+    setUser(null);
     loadData("none");
-    return status;
+    return "logged_out";
   }
 
   function on_mount() {

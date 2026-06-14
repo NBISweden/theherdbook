@@ -114,19 +114,13 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
   ): ReportValues => {
     // Start with default values
     const values: ReportValues = {
+      // User-editable fields - can come from existing data
       genebankNumber: herdData.herd || "",
       breed: herdData.breed || "",
       gotlandskanin: herdData.genebank === 1,
       mellerudskanin: herdData.genebank === 2,
       breedingYear: reportYear || new Date().getFullYear(),
       endingGenbank: existingData?.endingGenbank || false,
-      numberOfLitters: 0,
-      totalBorn: 0,
-      totalAliveAfterSixWeeks: 0,
-      numberOfFemalesUsedInBreeding: 0,
-      numberOfMalesUsedInBreeding: 0,
-      numberOfFemalesWithCertificate: 0,
-      numberOfMalesWithCertificate: 0,
       allowPublication: existingData?.allowPublication || [],
       eligibleForSupport: existingData?.eligibleForSupport || false,
       notEligibleForSupport: existingData?.notEligibleForSupport || false,
@@ -150,6 +144,14 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           age: "",
         },
       },
+      // Computed fields - always start at 0, will be calculated below
+      numberOfLitters: 0,
+      totalBorn: 0,
+      totalAliveAfterSixWeeks: 0,
+      numberOfFemalesUsedInBreeding: 0,
+      numberOfMalesUsedInBreeding: 0,
+      numberOfFemalesWithCertificate: 0,
+      numberOfMalesWithCertificate: 0,
     };
 
     // Calculate values based on current herd data
@@ -220,18 +222,30 @@ const YearlyReportForm: React.FC<YearlyReportFormProps> = ({
           reportYear || new Date().getFullYear()
         } ${herdResponse.herd} ${herdName}`;
 
-        // Recalculate all computed values before submitting
-        const computedValues = calculateInitialValues(herdResponse, null);
         const payload = {
           data: {
-            ...values,
-            ...computedValues,
-            // Only include user-editable fields from values
+            // Use the values from the form - they are already correctly calculated
+            // and are read-only in the form
+            numberOfLitters: values.numberOfLitters,
+            totalBorn: values.totalBorn,
+            totalAliveAfterSixWeeks: values.totalAliveAfterSixWeeks,
+            numberOfFemalesUsedInBreeding: values.numberOfFemalesUsedInBreeding,
+            numberOfMalesUsedInBreeding: values.numberOfMalesUsedInBreeding,
+            numberOfFemalesWithCertificate:
+              values.numberOfFemalesWithCertificate,
+            numberOfMalesWithCertificate: values.numberOfMalesWithCertificate,
+            // User-editable fields
             allowPublication: values.allowPublication,
             diseases: values.diseases,
             defectsMalformations: values.defectsMalformations,
             endingGenbank: values.endingGenbank,
             eligibleForSupport: values.eligibleForSupport,
+            // Other required fields
+            genebankNumber: values.genebankNumber,
+            breed: values.breed,
+            gotlandskanin: values.gotlandskanin,
+            mellerudskanin: values.mellerudskanin,
+            breedingYear: values.breedingYear,
           },
           name: reportName,
           version: "1.0",

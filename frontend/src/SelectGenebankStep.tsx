@@ -10,6 +10,7 @@ interface SelectGenebankStepProps {
   genebankName: string | null;
   setGenebankName: (name: string) => void;
   onUpdateStatus?: (status: string) => void;
+  handleNext?: () => void;
 }
 
 export const SelectGenebankStep: React.FC<SelectGenebankStepProps> = ({
@@ -17,19 +18,21 @@ export const SelectGenebankStep: React.FC<SelectGenebankStepProps> = ({
   genebankName,
   setGenebankName,
   onUpdateStatus,
+  handleNext,
 }) => {
   const { genebanks } = useDataContext();
 
   const handleGenebankSelect = (name: string) => {
     setGenebankName(name);
     onUpdateStatus?.("completed");
+    handleNext?.();
   };
 
   const availableGenebanks = genebanks.filter((g: any) => {
     if (user.is_admin) {
       return true;
     }
-    if (user.is_manager) {
+    if (user.is_manager?.length > 0) {
       return user.is_manager.includes(g.id);
     }
     return false;

@@ -267,7 +267,7 @@ export function IndividualBreedingForm({
 
     if (
       (userInput.birth_date, userInput.litter_size) !== null &&
-      !(userInput.litter_size > 0)
+      !(Number(userInput.litter_size) > 0)
     ) {
       userMessage("Ange en kullstorlek större än 0", "warning");
       return false;
@@ -365,7 +365,7 @@ export function IndividualBreedingForm({
       const newBirthData: Birth = {
         date: breeding.birth_date,
         litter_size: breeding.litter_size,
-        litter_size6w: breeding.litter_size,
+        litter_size6w: breeding.litter_size6w,
         notes: breeding.birth_notes !== "" ? breeding.birth_notes : undefined,
         id: newBreeding.breeding_id,
       };
