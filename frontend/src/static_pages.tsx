@@ -365,7 +365,10 @@ export function Footer() {
   return (
     <div className="footer">
       <div className="euLogo">
-        <img src="/images/EU-flagga-Europeiska-jordbruksfonden-färg.jpg" />
+        <img
+          src="/images/medfinansieras-av-eu-horizontal.svg"
+          alt="Medfinansieras av Europeiska unionen"
+        />
       </div>
       <div>
         <Typography className="euText">
@@ -375,8 +378,8 @@ export function Footer() {
           och utbildningar, transport av värdefulla djur samt obduktioner.
         </Typography>
 
-        <Typography className="euText">
-          Stamboken Online version :{" "}
+        <Typography className="versionText">
+          Stamboken Online version:{" "}
           <a
             target={"_blank"}
             rel={"noopener noreferrer"}
