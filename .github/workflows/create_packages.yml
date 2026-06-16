@@ -92,21 +92,35 @@ jobs:
             echo "Tag detected - rebuilding frontend and main with version ${{ github.ref_name }}"
             # Pull production image for r-api
             docker pull "ghcr.io/nbisweden/herdbook_r-api:production"
-            # Build frontend and main with new version
+            # Build frontend and main with new version.
+            # Build frontend FIRST so main's `COPY --from=herdbook_frontend:latest`
+            # resolves the locally-built image instead of trying to pull it from a
+            # registry (building both in one `docker compose build` fails to resolve it).
             docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg COMMIT_SHA="${{ github.sha }}" \
-              herdbook-frontend main
+              herdbook-frontend
+            docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg COMMIT_SHA="${{ github.sha }}" \
+              main
           elif [[ "${{ github.ref_name }}" == "production" ]]; then
             echo "Production branch - building fresh images"
+            # Build frontend FIRST so main can COPY --from the local image.
             docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg COMMIT_SHA="${{ github.sha }}" \
-              herdbook-frontend main
+              herdbook-frontend
+            docker compose build --no-cache --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg COMMIT_SHA="${{ github.sha }}" \
+              main
           else
             # For other branches, only build changed images and their dependents
             if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+              # Build frontend FIRST so main can COPY --from the local image.
               docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
                 --build-arg COMMIT_SHA="${{ github.sha }}" \
-                herdbook-frontend main
+                herdbook-frontend
+              docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
+                --build-arg COMMIT_SHA="${{ github.sha }}" \
+                main
             elif [[ "${{ needs.changes.outputs.main }}" == "true" ]]; then
               docker compose build --build-arg BUILDKIT_INLINE_CACHE=1 \
                 --build-arg COMMIT_SHA="${{ github.sha }}" \
