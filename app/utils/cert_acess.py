@@ -101,9 +101,16 @@ def get_certificate_data(ind, user_id):
 
     date = datetime.datetime.utcnow()
     date = date.strftime("%Y%m%d")
-    herd = ind["herd"]
-    if type(herd) == dict:
-        herd = herd["herd"]
+    
+    # Use origin herd for certificate generation, not current herd
+    # The certificate should show where the rabbit was born
+    if "origin_herd" in ind and ind["origin_herd"]:
+        herd = ind["origin_herd"]["herd"]
+    else:
+        # Fallback to current herd if origin_herd not available
+        herd = ind["herd"]
+        if type(herd) == dict:
+            herd = herd["herd"]
 
     genebank = ind["number"].split("-")
     fullname = da.fetch_user_info(user_id).fullname

@@ -262,7 +262,11 @@ export function IndividualCertificate({
 
   // Used to activate the button for ordering the certificate
   async function authenticate(userInput: string) {
-    if (userInput == individual.herd.herd) {
+    // Use origin_herd for certificate generation, not current herd
+    // The certificate should be issued by the owner of the herd where the rabbit was born
+    const herdToCheck = individual.origin_herd?.herd || individual.herd.herd;
+
+    if (userInput == herdToCheck) {
       setIsUserGood(true);
     } else {
       userMessage("Tyvärr fel besättningsnummer!", "error");
@@ -425,9 +429,10 @@ export function IndividualCertificate({
           >
             <h2>Bekräftelse</h2>
             <p>
-              För att intyga att allt är korrekt, ange ditt besättningsnummer i
-              format {individual.number ? individual.number[0] : "X"}XXX.{" "}
-              <br></br>Vill du göra ändringar, kan du gå tillbaka.
+              För att intyga att allt är korrekt, ange besättningsnummer för
+              ursprungsbesättningen på formatet{" "}
+              {individual.number ? individual.number[0] : "X"}XXX. <br></br>Vill
+              du göra ändringar, kan du gå tillbaka.
             </p>
             <div className={style.flexbox}>
               <TextField
