@@ -89,7 +89,7 @@ export function CertificateVerification({
           "Content-Type": "application/pdf",
         },
       })
-        .then((res) => {
+        .then(async (res) => {
           if (res.status === 200) {
             setCertValid(true);
           } else if (res.status === 202) {
@@ -97,7 +97,12 @@ export function CertificateVerification({
           } else if (res.status === 404) {
             setCertNotFound(true);
           } else {
-            throw new Error("Något gick fel.");
+            // 400 carries the API's own text in `response`; nginx 413 (file
+            // too large) and 5xx answer HTML, so fall back to the status.
+            const body = await res.json().catch(() => null);
+            throw new Error(
+              (body && body.response) || `Något gick fel (${res.status}).`
+            );
           }
         })
         .catch((error) => {
