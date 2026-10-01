@@ -22,9 +22,12 @@ export function ActiveUsers() {
   const [minutes, setMinutes] = useState(15);
 
   useEffect(() => {
+    // A 401 (expired session, logout in another tab) answers a JSON error
+    // object; handing that to setUsers crashed the component on users.map.
     fetch(`/api/active_users?minutes=${minutes}`)
-      .then((response) => response.json())
-      .then(setUsers);
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => setUsers([]));
   }, [minutes]);
 
   const handleMinutesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
