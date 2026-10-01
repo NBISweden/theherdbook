@@ -73,7 +73,8 @@ export function YearlyReportViewer() {
     null
   );
   const [reports, setReports] = useState<YearlyReport[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Nothing is being fetched until a genebank is selected.
+  const [loading, setLoading] = useState(false);
   const [reportYear, setReportYear] = useState<string>("");
 
   useEffect(() => {
