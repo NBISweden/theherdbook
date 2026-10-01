@@ -6,6 +6,22 @@ declare const process: { env: { NODE_ENV: string } };
 const credentials_policy = "same-origin";
 
 /**
+ * Parses a mutating request's reply. nginx (413/502/504) and unhandled Flask
+ * errors answer HTML, which made resp.json() throw inside callers that never
+ * catch; return a legacy-shaped error instead so the forms can show it.
+ */
+async function jsonOrError(resp: Response) {
+  try {
+    return await resp.json();
+  } catch {
+    return {
+      status: "error",
+      message: `Servern svarade ${resp.status} ${resp.statusText}`.trim(),
+    };
+  }
+}
+
+/**
  * Creates a GET request to the given `url`, and returns the reply as json.
  * Returns null for 401 (unauthorized) responses to maintain backwards compatibility.
  *
@@ -44,7 +60,7 @@ export async function post(url: string, content: any) {
       "Content-Type": "application/json",
     },
   });
-  return await resp.json();
+  return await jsonOrError(resp);
 }
 
 /**
@@ -64,7 +80,7 @@ export async function patch(url: string, content: any) {
       "Content-Type": "application/json",
     },
   });
-  return await resp.json();
+  return await jsonOrError(resp);
 }
 
 /**
