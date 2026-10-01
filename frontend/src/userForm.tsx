@@ -275,11 +275,11 @@ export function UserForm({ id }: { id: number | "new" | undefined }) {
             userMessage("Användaren har redan denna rättighet", "info");
             break;
           default: {
-            if (data.message) {
-              userMessage(
-                "Något gick fel kontakta Admin: " + data.message,
-                "error"
-              );
+            // The last-admin guard answers problem+json: the text is in
+            // `detail`, not `message`.
+            const detail = data.message || (data as { detail?: string }).detail;
+            if (detail) {
+              userMessage("Något gick fel kontakta Admin: " + detail, "error");
             }
             console.error("error:", data); // "failed" or other error
           }

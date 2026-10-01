@@ -95,8 +95,12 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
       return;
     }
 
+    // The API answers in Swedish since the herdbook2 backend (date rules,
+    // ownership, litter numbers): show its message instead of a generic error.
     userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      breedingEvent.message
+        ? breedingEvent.message
+        : "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
       "error"
     );
     return;
@@ -129,8 +133,12 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
       return;
     }
 
+    // The API answers in Swedish since the herdbook2 backend (date rules,
+    // ownership, litter numbers): show its message instead of a generic error.
     userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      birthCreationResponse.message
+        ? birthCreationResponse.message
+        : "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
       "error"
     );
     return;
@@ -156,8 +164,12 @@ export const WithBreedingContext = (props: { children: React.ReactNode }) => {
       return;
     }
 
+    // The API answers in Swedish since the herdbook2 backend (date rules,
+    // ownership, litter numbers): show its message instead of a generic error.
     userMessage(
-      "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
+      breedingUpdateResponse.message
+        ? breedingUpdateResponse.message
+        : "Okänt fel - något gick fel på grund av tekniska problem. Kontakta en administratör.",
       "error"
     );
     return;
