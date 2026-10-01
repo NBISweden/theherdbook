@@ -121,6 +121,7 @@ export function WithDataContext(props: { children: React.ReactNode }) {
     return await get("/api/genebanks").then(
       (data) => {
         if (!data) {
+          retryGenebanks();
           return false;
         }
         // note that individuals aren't loaded, and send a request to load them
@@ -141,9 +142,22 @@ export function WithDataContext(props: { children: React.ReactNode }) {
       },
       (error) => {
         console.error(error);
+        retryGenebanks();
         return false;
       }
     );
+  }
+
+  // The genebank list is fetched once at start-up and never again; a failed
+  // or empty first answer (API still starting, dropped connection) left every
+  // genebank-driven view empty for the whole session. Retry a few times.
+  const genebankRetries = React.useRef(0);
+  function retryGenebanks() {
+    if (genebankRetries.current >= 3) {
+      return;
+    }
+    genebankRetries.current += 1;
+    setTimeout(getGenebanks, 5000 * genebankRetries.current);
   }
 
   /**
